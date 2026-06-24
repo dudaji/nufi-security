@@ -6,6 +6,16 @@
 
 ## 재현 방법
 
+**한 번에 시연 (권장):** 6개 시나리오를 실제 HTTP 게이트웨이에 대해 실행·검증하고 PASS/FAIL 을 출력한다(멱등·빈 포트 자동 선택).
+
+```bash
+cd security
+python3 -m pip install -r requirements.txt
+./scripts/demo.sh            # ① private ② RRN 차단 ③ 비밀 차단 ④ 약한 PII 가명화 ⑤ 감사로그 ⑥ 자동검증
+```
+
+수동 단계별 재현:
+
 ```bash
 cd security
 python3 -m pip install -r requirements.txt   # PyYAML·fastapi·uvicorn·httpx (코어는 stdlib+PyYAML만으로도 동작)
