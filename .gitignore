@@ -1,25 +1,5 @@
-# Python
 __pycache__/
-*.py[cod]
+*.pyc
+logs/
 .venv/
-venv/
-env/
 *.egg-info/
-
-# Models / large artifacts
-*.onnx
-models/
-*.bin
-*.safetensors
-
-# Secrets / local config
-.env
-*.local
-
-# Logs / audit dumps
-*.log
-audit_logs/
-*.jsonl
-
-# OS
-.DS_Store

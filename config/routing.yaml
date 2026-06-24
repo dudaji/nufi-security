@@ -1,0 +1,36 @@
+# 라우팅·프로바이더 분류 (NFR3: 설정으로 백엔드/규칙 변경 가능 — SPEC M1 기준 3).
+version: 1
+
+# 앱이 호출하는 가상 모델 → 백엔드 라우팅.
+routes:
+  nufi-default:
+    primary: private-llm        # 기본 private
+    fallback: claude-3-5-sonnet # 실패/명시 시 public
+  nufi-fast:
+    primary: private-llm
+    fallback: gpt-4o-mini
+
+# 백엔드 정의 + egress 분류(public 여부 판정 테이블 — SPEC M1).
+backends:
+  private-llm:
+    provider: local
+    egress_class: private
+    api_base: http://localhost:8000/v1
+  claude-3-5-sonnet:
+    provider: anthropic
+    egress_class: public
+    api_base: https://api.anthropic.com
+  gpt-4o-mini:
+    provider: openai
+    egress_class: public
+    api_base: https://api.openai.com/v1
+
+# 프로바이더 → egress 분류 폴백(백엔드 미정의 모델명 대비)
+provider_egress:
+  local: private
+  vllm: private
+  ollama: private
+  anthropic: public
+  openai: public
+  google: public
+  azure: public

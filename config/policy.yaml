@@ -1,0 +1,29 @@
+# Egress-Audit 정책 (NFR3: 운영자가 갱신 가능한 외부 설정)
+# 엔티티 클래스별 동작: block | redact | pseudonymize | warn | allow
+# 강한 PII·비밀정보 = block, 약한 PII = pseudonymize/redact, 그 외 = warn
+version: 1
+
+# 기본 동작 (매핑에 없는 엔티티)
+default_action: warn
+
+# 하나의 요청에서 아래 동작이 하나라도 결정되면 그 요청은 차단된다.
+blocking_actions: [block]
+
+entities:
+  # --- 강한 PII (기본 차단) ---
+  KR_RRN:           { action: block, severity: critical }   # 주민등록번호
+  KR_FOREIGNER_REG: { action: block, severity: critical }   # 외국인등록번호
+  KR_PASSPORT:      { action: block, severity: high }        # 여권번호
+  KR_DRIVER_LICENSE: { action: block, severity: high }       # 운전면허번호
+  CREDIT_CARD:      { action: block, severity: critical }    # 카드번호 (Luhn)
+  KR_ACCOUNT:       { action: block, severity: high }        # 계좌번호
+
+  # --- 약한 PII (가명화/마스킹; 가역 원복은 M3) ---
+  KR_BRN:           { action: pseudonymize, severity: medium } # 사업자등록번호
+  KR_PHONE:         { action: pseudonymize, severity: medium } # 전화번호
+  EMAIL:            { action: pseudonymize, severity: low }
+  KR_PERSON:        { action: pseudonymize, severity: medium } # 인명 (NER)
+  KR_LOCATION:      { action: warn, severity: low }            # 지명 (NER)
+
+  # --- 비밀정보 (기본 차단) ---
+  SECRET:           { action: block, severity: critical }

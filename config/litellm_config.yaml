@@ -1,0 +1,34 @@
+# LiteLLM Proxy 설정 (SPEC M1 권장 구현, 프로덕션 경로).
+#   기동: litellm --config config/litellm_config.yaml
+#   callback: gateway/litellm_hook.py 의 EgressAuditHook (pre_call 탐지 + 100% 감사 로깅)
+#
+# private 기본 라우팅 + public 폴백을 model_list/fallbacks 로 정의한다.
+# private 백엔드는 PoC에서 로컬 vLLM/Ollama 스텁이면 충분(SPEC).
+model_list:
+  # --- private (온프렘) : 기본 라우팅 대상 ---
+  - model_name: nufi-default            # 앱이 호출하는 가상 모델명
+    litellm_params:
+      model: openai/private-llm         # OpenAI 호환 로컬 엔드포인트
+      api_base: http://localhost:8000/v1   # vLLM/Ollama 스텁
+      api_key: "sk-local-noauth"
+    model_info:
+      egress_class: private
+
+  # --- public 폴백 : private 실패/명시 시 ---
+  - model_name: nufi-default-public
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-20241022
+      api_key: os.environ/ANTHROPIC_API_KEY
+    model_info:
+      egress_class: public
+
+# private 실패 시 public 으로 폴백
+router_settings:
+  fallbacks:
+    - nufi-default: ["nufi-default-public"]
+
+litellm_settings:
+  # gateway/litellm_hook.py 의 인스턴스. pre_call 탐지 + 감사 로깅을 수행.
+  callbacks: gateway.litellm_hook.egress_audit_hook
+
+# public/ private 판정은 model_info.egress_class 또는 provider 매핑(router.py)으로.
