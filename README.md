@@ -70,6 +70,9 @@ curl -s localhost:4000/v1/chat/completions \
 | `egress_audit/pseudonymize.py` | 마스킹 + 결정적 가명화(HMAC). 가역 원복은 M3 |
 | `egress_audit/audit.py` | public 요청 100% JSONL 감사 로거 |
 | `egress_audit/message_store.py` | **(CMP-85 P0)** private/public in·out 메시지 **분리 저장**, 본문 보존 정책(`config/audit_profiles.yaml`) |
+| `capture/targets.py` | **(CMP-85 P1)** public 목적지 파생(routing.yaml)·`capture_targets.yaml` 캐시·BPF 빌드·우회 판정 |
+| `capture/content_dump.py` | **(CMP-85 P1)** 게이트웨이 출구 평문(TLS 직전) content dump writer |
+| `capture/flow_tap.py` | **(CMP-85 P1)** public 목적지 flow tap(BPF) + `--simulate` 리플레이 + 우회 탐지 |
 | `gateway/router.py` | private 기본 + public 폴백 라우팅, public/private 분류(`config/routing.yaml`) |
 | `gateway/core.py` · `gateway/app.py` | 게이트웨이 코어 + FastAPI(standalone PoC) |
 | `gateway/litellm_hook.py` | **LiteLLM Proxy 콜백**(프로덕션 경로, `config/litellm_config.yaml`) |
@@ -91,6 +94,32 @@ curl -s localhost:4000/v1/chat/completions \
 > - 변경 절차: 기본 off. 켤 경우 **CPO 리뷰 후 CEO 정렬** 필요(거버넌스).
 
 검증: `python3 tests/test_cmp85_p0.py` → **4/4 PASS**.
+
+## 패킷 레이어 캡처 + 게이트웨이 우회 탐지 (CMP-85 P1)
+
+애플리케이션 인라인 감사는 **우회 가능**하다(클라이언트 오설정·사람 실수로 게이트웨이를 거치지 않고 public LLM 으로 직접 전송). 따라서 **특정 public LLM 목적지로 가는 패킷만** 패킷 레이어에서 본다. HTTPS 본문은 와이어에서 암호화되므로 두 갈래로 설계한다.
+
+- **(a) Content dump** (`capture/content_dump.py`) — 게이트웨이가 public 으로 내보내기 **직전(TLS 적용 전)** 의 직렬화된 HTTP 요청을 `logs/packets/public/dump-YYYY-MM-DD.jsonl` 로 기록(평문 본문 감사용, P2 봇 입력). 본문 보존 정책은 P0 와 동일하게 `audit_profiles.retain_raw` 를 따른다.
+- **(b) Flow tap** (`capture/flow_tap.py`) — public LLM 목적지에만 거는 연결 메타 캡처. 목적지 집합은 `routing.yaml` 의 `egress_class: public` 백엔드에서 파생해 `config/capture_targets.yaml` 로 캐시·갱신(NFR3). 기록: 5-튜플·SNI·시각·PID/프로세스·바이트수 → `logs/packets/public/flow-YYYY-MM-DD.jsonl`.
+  - **우회 판정:** flow 의 src 가 `capture_targets.yaml` 의 `gateway`(hosts/process)가 **아니면** = 게이트웨이 우회 → `bypass: true` + `severity: high` (P2 봇이 alert 로 승격).
+  - **목적지 필터:** public LLM 목적지로 가는 연결만 캡처(타 목적지 0건).
+
+```bash
+# 캡처 대상 갱신(routing.yaml → capture_targets.yaml) + BPF 확인
+python3 -m capture.targets --refresh --bpf
+#  => tcp and (dst host api.anthropic.com or dst host api.openai.com) and (dst port 443)
+
+# flow tap — root 없이(에어갭/CI) simulate 리플레이
+python3 -m capture.flow_tap --simulate samples/flow_replay.jsonl
+#  => seen=8 captured=4 dropped=4 (gateway=2 bypass=2)  ⚠ 우회 의심 2건
+
+# root/CAP_NET_RAW 가능 환경의 라이브 캡처(BPF=public 목적지)
+sudo python3 -m capture.flow_tap --live --iface any --duration 30
+```
+
+> **권한:** 라이브 `tcpdump` 캡처는 root/CAP_NET_RAW 가 필요하다. 에어갭·CI·데모는 `--simulate`(미리 만든 flow 로그 리플레이)로 동일 로직(목적지 필터·우회 판정)을 root 없이 재현한다.
+
+검증: `python3 tests/test_cmp85_p1.py` → **5/5 PASS**.
 
 ## 두 가지 실행 경로 (설계 결정)
 
@@ -115,6 +144,6 @@ curl -s localhost:4000/v1/chat/completions \
 - **M1** 게이트웨이 PoC (private 기본 + public 폴백 + public 100% 로깅) — ✅ 본 인계
 - **M2** 탐지 파이프라인 (PII 체크섬 + KoELECTRA/gazetteer NER + 비밀정보 + 정책) — ✅ 본 인계
 - M3 가역 가명화/원복 + 매핑 Vault · M4 기밀 1차 · M5 벤치/하드닝 — 후속 인계
-- **CMP-85 P0** 메시지 스토어 분리(private/public in·out) — ✅ 본 인계 / P1 패킷 캡처·P2 비동기 봇·P3 데모 — 후속
+- **CMP-85 P0** 메시지 스토어 분리(private/public in·out) — ✅ / **P1** 패킷 레이어 캡처(content dump + flow tap)·게이트웨이 우회 탐지 — ✅ 본 인계 / P2 비동기 봇·P3 데모 — 후속
 
 상세는 [`docs/SPEC.md`](docs/SPEC.md).

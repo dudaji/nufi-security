@@ -9,8 +9,10 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
 from egress_audit import EgressGuard, AuditLogger, MessageStore
+from capture import ContentDumpWriter
 from gateway.router import Router, RouteDecision
 
 
@@ -51,13 +53,16 @@ def _stub_completion(model: str, content: str) -> Dict[str, Any]:
 class Gateway:
     def __init__(self, guard: Optional[EgressGuard] = None, router: Optional[Router] = None,
                  audit: Optional[AuditLogger] = None, ner_backend: Optional[str] = None,
-                 messages: Optional[MessageStore] = None):
+                 messages: Optional[MessageStore] = None,
+                 content_dump: Optional[ContentDumpWriter] = None):
         self.guard = guard or EgressGuard(
             ner_backend=ner_backend or os.environ.get("EGRESS_NER_BACKEND", "auto"))
         self.router = router or Router()
         self.audit = audit or AuditLogger()
         # P0: private/public in·out 분리 메시지 스토어.
         self.messages = messages or MessageStore()
+        # P1(a): public 출구 평문 content dump(TLS 직전 직렬화 요청).
+        self.content_dump = content_dump or ContentDumpWriter()
 
     @property
     def ner_backend(self) -> str:
@@ -78,6 +83,29 @@ class Gateway:
             egress_class=route.egress_class, model=route.backend,
             provider=route.provider, body=body, raw_body=raw_body,
             inline_decision=inline_decision, source="gateway")
+
+    @staticmethod
+    def _dst(api_base: Optional[str]) -> tuple[str, int, str]:
+        """api_base → (host, port, path). https 기본 443."""
+        if not api_base:
+            return "unknown", 443, "/"
+        u = urlparse(api_base if "://" in api_base else "https://" + api_base)
+        host = u.hostname or "unknown"
+        port = u.port or (80 if u.scheme == "http" else 443)
+        path = (u.path or "/") + "/chat/completions"
+        return host, port, path.replace("//", "/")
+
+    def _dump_egress(self, *, conversation_id: str, route: RouteDecision,
+                     body: Any, body_retained: str) -> None:
+        """public 출구 평문 content dump (P1(a))."""
+        host, port, path = self._dst(route.api_base)
+        self.content_dump.dump(
+            conversation_id=conversation_id, dst_host=host, dst_port=port,
+            backend=route.backend, provider=route.provider, body=body,
+            method="POST", path=path,
+            headers={"Content-Type": "application/json"},
+            body_retained=body_retained,
+            extra={"requested_model": route.requested_model})
 
     def process(self, body: Dict[str, Any]) -> GatewayResponse:
         requested_model = body.get("model", "nufi-default")
@@ -130,6 +158,12 @@ class Gateway:
         aid = self.audit.log(model=route.backend, provider=route.provider, is_public=True,
                              request_body=body, decision_summary=result.summary,
                              findings=findings, outcome=outcome, extra=meta)
+
+        # P1(a): public 으로 실제 내보내는 요청을 TLS 직전 평문으로 dump(본문 감사 입력).
+        self._dump_egress(conversation_id=conv_id, route=route, body=sanitized_in,
+                          body_retained=("raw" if self.messages.retain_raw("public")
+                                         else "sanitized"))
+
         resp_body = _stub_completion(route.backend, "[public-llm stub response]")
         self._store(conversation_id=conv_id, turn=turn, direction="out", route=route,
                     body=resp_body, inline_decision=result.summary)
