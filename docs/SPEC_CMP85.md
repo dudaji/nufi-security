@@ -153,11 +153,25 @@ public LLM은 TLS이므로 **원시 tcpdump로는 본문을 읽을 수 없다.**
 
 1. **라우팅 모델 = (a) failover 재서술.** 내부 로직 불변. 사용자는 단일 논리 엔드포인트 `nufi-default`만 호출하고 백엔드를 지정하지 않는다. **파이프라인이 라우팅을 소유**한다: `routing.yaml`의 `primary: private-llm → fallback: public`(private 우선·public 폴백). 보드 모델과 현 동작이 이미 일치하므로 **신규 라우팅 로직 도입 안 함**. 콘텐츠·정책 기반 라우팅(b)과 다중 백엔드 병렬 호출+병합(c)은 **PoC 비범위(향후 로드맵)** — M1 내부 로직 변경 + 신규 CMP-58 승인이 필요하고, 본 데모 가치에 불필요.
 2. **"결과 취합" = 요청당 단일 백엔드 결과 반환(현행).** 파이프라인이 라우팅으로 **하나의 백엔드를 선택→호출→응답을 `nufi-default` 통합 계약으로 정규화해 사용자에게 반환**하는 것이 곧 "취합"이다. private+public **동시 호출 후 병합 아님**(동일 질의를 public에도 보내는 것은 데이터-보호 목적에 역행). 가시화를 위해 **파이프라인 결정 로그 1줄**(`pipeline: route=private|public, reason=…, backend=…`)을 출력에 추가한다 — 관측성만 추가, **라우팅 로직 변경 0**.
-3. **S4 우회 헤드라인 = 유지(재서술).** "사용자가 일부러 public 직접 호출"이 아니라 **"정규 파이프라인을 우회(오설정·사람 실수)한 트래픽을 flow tap이 잡는다"**로 재서술. 파이프라인-우회 탐지가 최대 차별점이므로 유지.
+3. **S4 우회 헤드라인 = 유지·강화(탐지→차단).** "사용자가 일부러 public 직접 호출"이 아니라 **"정규 파이프라인을 우회(오설정·사람 실수)한 트래픽을 flow tap이 잡는다"**로 재서술. 파이프라인-우회 탐지가 최대 차별점이므로 유지. **보드 후속 입력(2026-06-24): 우회 패킷을 "탐지"에서 "막는다(차단)"까지 강화 요청.** → 아래 "우회 차단(Enforcement) — S4 강화" 섹션으로 범위·순서·거버넌스 확정. **요지: 탐지는 본 데모 범위(빌드 완료), 실제 egress 차단(drop)은 P0~P2 감사 범위를 넘는 신규 enforcement 기능 → 별도 빌드 이슈 + 신규 CMP-58 승인.**
 4. **신규 시나리오 불필요.** 기존 S1~S4 **재서술 + 파이프라인 결정 로그 1줄**로 "파이프라인이 결정→호출→취합·반환"이 충분히 가시화됨. 별도 orchestration 시나리오는 스코프 크리프 → 추가 안 함.
 5. **S2/S3 토글 재서술.** `EGRESS_PRIVATE_DOWN=1`은 "사용자 선택"이 아니라 **"파이프라인의 운영상 failover 결정(private 용량 불가)"**로 재서술. 토글은 테스트 트리거로 유지하되 서술은 파이프라인 결정으로 통일.
 
 > 구현 영향: 내부 라우팅 로직 변경 없음(서술·문구 재구성 + 결정 로그 1줄 추가). 기존 P3 구현 승인 `3053e076` 범위 내 추가 산출물로 처리. Engineer는 결정 로그 라인이 신규 코드면 동일 승인 하위 구현 디테일로 진행.
+
+### 우회 차단(Enforcement) — S4 강화 (CMP-92 추가 확정 · 보드 입력 2026-06-24)
+
+보드 후속 요청: "사용자가 우회해서 public LLM을 이용하려는 packet을 감시·탐지해서 **막는** 시나리오를 강화." CPO 확정(Value-vs-Effort · MoSCoW · Milestone-hygiene 렌즈):
+
+- **두 트랙으로 분리.** "탐지"와 "차단"은 능력·범위·승인이 다르다.
+  - **트랙 A — 탐지 + 차단 결정 시연(CMP-89, 지금):** flow tap은 **관찰 전용**(연결 메타데이터, TLS 본문·인라인 drop 불가). 따라서 P3 데모는 **탐지 → high-sev 알림 → enforcement 결정 한 줄(`action=BLOCK … mode=SIMULATED`) + 차단 제어점 스텁**까지 보인다. "빌드된 것만 시연" 원칙 준수: 탐지는 실제, 차단은 명시적 SIMULATED 라벨. → **이것이 CMP-89를 unblock**하며 헤드라인 스토리(우회→탐지→차단)를 정직하게 전달.
+  - **트랙 B — 실제 egress 차단 빌드(신규 이슈):** 실제 패킷 drop은 **P0~P2 감사 범위를 넘는 신규 enforcement 기능** → 별도 설계·빌드 이슈로 분리. 기존 승인 `3053e076`(감사 P0~P3)과 **별개의 신규 CMP-58 승인 게이트** 필요.
+- **enforcement 아키텍처 권고(트랙 B 설계에서 확정):**
+  - **(a) nftables/iptables egress 허용목록 = MVP 권고.** public LLM 목적지로의 **직결 egress drop**, 게이트웨이 출처(프로세스/호스트)만 허용. 가장 단순·호스트 레벨·시연 용이·on-prem 정합. **1순위.**
+  - **(c) 투명 아웃바운드 프록시 강제** = 프로덕션 하드닝 타깃(미인가 직결 차단 + 정책 일원화). 2순위.
+  - **(b) eBPF/네트워크 정책(프로세스 단위 egress 차단)** = 세밀 제어·향후. 3순위.
+- **순서(sequence):** ① 트랙 A로 CMP-89 데모 완결(지금) → ② 트랙 B 설계 이슈(CPO, egress-enforcement 스펙: 모델 (a) MVP) → ③ 빌드 이슈(Engineer, 신규 CMP-58 승인 후) → ④ ENFORCED 모드를 S4 데모에 후속 통합.
+- **거버넌스:** 트랙 B 설계=CPO(설계 트랙, 본인). 빌드=Engineer 구현, **신규 CMP-58 승인 필수**. 데모(트랙 A)는 신규 승인 없이 `3053e076` 하위(탐지+SIMULATED 결정 로그=관측성).
 
 ### 데모 시나리오 (구체 — CMP-92 확정 반영)
 프로듀서(게이트웨이+캡처)와 컨슈머(감사 봇)를 함께 띄운 뒤. **모든 시나리오에서 사용자는 `nufi-default` 단일 엔드포인트만 호출**하고, **파이프라인이 private/public을 결정**한다:
@@ -165,7 +179,7 @@ public LLM은 TLS이므로 **원시 tcpdump로는 본문을 읽을 수 없다.**
 1. **S1 — private 라우팅:** 사용자가 `nufi-default`로 질의 → **파이프라인이 private 라우팅 결정**(primary) → `logs/messages/private/`에 in/out 저장, 봇은 **경량 프로파일** 감사(외부 미전송, public dump 0건). 검증: private 싱크에만 적재 + 결정 로그 `route=private`.
 2. **S2 — public 라우팅 + 약한 PII:** 동일 요청 형태 → **파이프라인이 public failover 결정**(private 용량 불가, `EGRESS_PRIVATE_DOWN`=운영상 결정) + 전화/이메일 → 인라인은 **즉시 통과(가명화)로 사용자 무지연**, 봇이 `public` 메시지/content dump를 읽어 **준실시간 finding** 생성. 검증: finding 존재 + 지연 ≤ 5s + 결정 로그 `route=public`.
 3. **S3 — public 라우팅 + 강한 PII/비밀:** 동일 경로(파이프라인 public 결정) → 인라인 fast hard-block(403, 기존 동작) + 봇이 차단 이벤트도 감사 로그로 상관. 검증: 403 + finding.
-4. **S4(헤드라인) — 파이프라인 우회 탐지:** 클라이언트가 **정규 파이프라인을 거치지 않고** `api.anthropic.com`로 직접 전송(오설정/사람 실수 시뮬레이션, `--simulate`로 flow 리플레이). 파이프라인은 못 봤지만 **flow tap이 패킷 레이어에서 탐지** → 봇이 **high-severity 우회 알림** 준실시간 생성. 검증: alert 존재 + src≠게이트웨이.
+4. **S4(헤드라인) — 파이프라인 우회 탐지 → 차단 결정(시뮬레이션 enforcement 훅):** 클라이언트가 **정규 파이프라인을 거치지 않고** `api.anthropic.com`로 직접 전송(오설정/사람 실수 시뮬레이션, `--simulate`로 flow 리플레이). 파이프라인은 못 봤지만 **flow tap이 패킷 레이어에서 탐지** → 봇이 **high-severity 우회 알림** 준실시간 생성 → **enforcement 결정 한 줄**(`enforce: action=BLOCK dest=api.anthropic.com src=<pid/host> mode=SIMULATED`)을 출력하고, "이 지점에서 차단 규칙이 적용된다"는 **차단 제어점(스텁)**을 명시적으로 시연한다. **데모에서 실제 패킷 drop은 하지 않는다**(`--simulate`·root 불요 원칙 유지) — `mode=SIMULATED`로 분명히 라벨. 실제 drop(`mode=ENFORCED`)은 신규 enforcement 빌드(아래)에서 제공. 검증: alert 존재 + src≠게이트웨이 + enforcement 결정 로그(`action=BLOCK, mode=SIMULATED`) 출력.
 5. **S5 — 무지연·준실시간 증명:** 사용자 경로 지연(p95) 무변 + producer→finding 지연(p95 ≤ 5s) 출력.
 6. **S6 — 자동 검증:** 위 전부 PASS/FAIL 출력(멱등).
 
