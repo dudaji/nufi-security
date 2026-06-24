@@ -23,6 +23,9 @@
 cd security
 python3 -m pip install -r requirements.txt    # 코어: PyYAML·fastapi·uvicorn·httpx
 
+# 0) 통합 데모 (CMP-85 P0~P2: 차등 감사 6개 시나리오 자동 PASS/FAIL · root 불필요)
+./scripts/demo_cmp85.sh          # 매뉴얼: docs/DEMO_CMP85.md
+
 # 1) 수용 기준 자동 검증 (M1/M2 binary 전부)
 python3 tests/run_acceptance.py
 
@@ -171,6 +174,6 @@ python3 -m egress_audit.audit_bot --report   # => enqueue→finding p95 = … ms
 - **M1** 게이트웨이 PoC (private 기본 + public 폴백 + public 100% 로깅) — ✅ 본 인계
 - **M2** 탐지 파이프라인 (PII 체크섬 + KoELECTRA/gazetteer NER + 비밀정보 + 정책) — ✅ 본 인계
 - M3 가역 가명화/원복 + 매핑 Vault · M4 기밀 1차 · M5 벤치/하드닝 — 후속 인계
-- **CMP-85 P0** 메시지 스토어 분리(private/public in·out) — ✅ / **P1** 패킷 레이어 캡처(content dump + flow tap)·게이트웨이 우회 탐지 — ✅ / **P2** 비동기 감사 봇(producer/consumer·차등 프로파일·우회 상관·준실시간) — ✅ 본 인계 / P3 통합 데모 — 후속
+- **CMP-85 P0** 메시지 스토어 분리(private/public in·out) — ✅ / **P1** 패킷 레이어 캡처(content dump + flow tap)·게이트웨이 우회 탐지 — ✅ / **P2** 비동기 감사 봇(producer/consumer·차등 프로파일·우회 상관·준실시간) — ✅ / **P3** 통합 데모(`scripts/demo_cmp85.sh` + `docs/DEMO_CMP85.md`, 6/6 PASS) — ✅
 
 상세는 [`docs/SPEC.md`](docs/SPEC.md).
