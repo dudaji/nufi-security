@@ -162,6 +162,20 @@ for k in sys.argv[1].split("."):
     d = d.get(k, "") if isinstance(d, dict) else ""
 print(json.dumps(d, ensure_ascii=False) if isinstance(d,(list,dict)) else d)' "$1"; }
 
+# 파이프라인 라우팅 결정 로그(관측성만 — 라우팅 로직 변경 0, CMP-92 §P3).
+# 사용자는 nufi-default 단일 엔드포인트만 호출하고, 파이프라인이 private/public 결정.
+# $1=scenario $2=route $3=reason $4=backend
+plog() {
+  printf '  %spipeline: route=%s reason=%s backend=%s%s\n' "$c_d" "$2" "$3" "$4" "$c_0"
+  "$PY" - "$WS/pipeline_decisions.jsonl" "$1" "$2" "$3" "$4" <<'PY'
+import json, sys
+path, scen, route, reason, backend = sys.argv[1:6]
+with open(path, "a", encoding="utf-8") as f:
+    f.write(json.dumps({"scenario": scen, "route": route, "reason": reason,
+                        "backend": backend}, ensure_ascii=False) + "\n")
+PY
+}
+
 printf '%s%s%s\n' "$c_b" "NuFi 차등 감사 데모 (CMP-85 P0~P2 통합) · CMP-89" "$c_0"
 printf '%s실행: %s · NER=%s · mode=%s · ws=%s%s\n' "$c_d" \
   "$("$PY" -c 'import time;print(time.strftime("%Y-%m-%d %H:%M:%S"))')" \
@@ -175,32 +189,35 @@ BOT_PID=$!
 printf '%s감사 봇 데몬 기동(pid=%s, poll=0.25s) — 사용자 경로와 분리되어 백그라운드 감사%s\n' \
   "$c_d" "$BOT_PID" "$c_0"
 
-# ───────────────────────── S1: private 분리 저장 ─────────────────────────
-sect "S1 — private 질의: private 싱크 분리 저장(외부 미전송, public dump 0)"
+# ───────────────────────── S1: private 라우팅(파이프라인 결정) ─────────────────────────
+sect "S1 — 사용자가 LLM 호출 → 파이프라인이 private 라우팅 결정 → private 분리 저장"
 start_gateway 0 || exit 1
-echo "  \$ POST /v1/chat/completions  model=nufi-default  conv=s1  \"내부 회의록 요약해줘\""
+echo "  \$ POST /v1/chat/completions  model=nufi-default  conv=s1  \"내부 회의록 요약해줘\"  (사용자는 백엔드 미지정)"
 chat "S1" "nufi-default" "s1" "내부 회의록 요약해줘"
-printf '  %s→ HTTP %s · model=%s%s\n' "$c_d" "$CODE" "$(printf '%s' "$BODY" | jget model)" "$c_0"
+plog "S1" "private" "primary(기본 private 우선)" "private-llm"
+printf '  %s→ HTTP %s · 파이프라인 취합·반환 model=%s (외부 미전송)%s\n' "$c_d" "$CODE" "$(printf '%s' "$BODY" | jget model)" "$c_0"
 cleanup_server() { [[ -n "$SERVER_PID" ]] && kill "$SERVER_PID" 2>/dev/null && wait "$SERVER_PID" 2>/dev/null; SERVER_PID=""; }
 cleanup_server
 
-# ─────────────── S2~S3: public 폴백(private 불가 → public) ───────────────
-start_gateway 1 || exit 1     # EGRESS_PRIVATE_DOWN=1 → nufi-default public 폴백
+# ─────────────── S2~S3: 파이프라인이 public failover 결정(운영상 private 용량 불가) ───────────────
+start_gateway 1 || exit 1     # EGRESS_PRIVATE_DOWN=1 = 파이프라인의 운영상 failover 결정(사용자 선택 아님)
 
-sect "S2 — public 약한 PII: 인라인 즉시 통과(가명화·무지연) + 봇 준실시간 finding"
-echo "  \$ POST … conv=s2  \"연락처 정리: 010-1234-5678, hong@dudaji.com 회신\""
+sect "S2 — 사용자가 LLM 호출 → 파이프라인 public failover + 약한 PII: 인라인 가명화(무지연) + 봇 준실시간 finding"
+echo "  \$ POST … conv=s2  \"연락처 정리: 010-1234-5678, hong@dudaji.com 회신\"  (동일 단일 엔드포인트)"
 chat "S2" "nufi-default" "s2" "연락처 정리: 010-1234-5678, hong@dudaji.com 으로 회신"
+plog "S2" "public" "failover(파이프라인 운영상 결정: private 용량 불가)" "claude-3-5-sonnet"
 printf '  %s→ HTTP %s · outcome=가명화후 전송(사용자 지연=인라인만)%s\n' "$c_d" "$CODE" "$c_0"
 
-sect "S3 — public 강한 PII: 인라인 fast hard-block(403) + 봇이 차단 내용 상관"
-echo "  \$ POST … conv=s3  \"김민수 주민번호 900101-1234568 으로 신청서 작성\""
+sect "S3 — 사용자가 LLM 호출 → 파이프라인 public failover + 강한 PII: 인라인 fast hard-block(403) + 봇 상관"
+echo "  \$ POST … conv=s3  \"김민수 주민번호 900101-1234568 으로 신청서 작성\"  (동일 단일 엔드포인트)"
 chat "S3" "nufi-default" "s3" "김민수님 주민번호 900101-1234568 으로 신청서 작성해줘"
+plog "S3" "public" "failover(파이프라인 운영상 결정: private 용량 불가)" "claude-3-5-sonnet"
 printf '  %s→ HTTP %s · error.entities=%s%s\n' "$c_d" "$CODE" \
   "$(printf '%s' "$BODY" | jget error.entities)" "$c_0"
 cleanup_server
 
-# ───────────────────────── S4: 게이트웨이 우회(헤드라인) ─────────────────────────
-sect "S4 — 게이트웨이 우회: flow tap 패킷 레이어 탐지 → 봇 high-sev 우회 알림  [헤드라인]"
+# ───────────────────────── S4: 파이프라인 우회 탐지 → 차단 결정(헤드라인) ─────────────────────────
+sect "S4 — 파이프라인 우회 탐지 → high-sev 알림 → 차단 결정(SIMULATED)  [헤드라인]"
 export PYTHONWARNINGS="ignore::RuntimeWarning"   # runpy '-m' 임포트 경고 억제(무해)
 if [[ $SIMULATE -eq 1 ]]; then
   echo "  \$ python3 -m capture.flow_tap --simulate samples/flow_replay.jsonl  (root 불필요)"
@@ -244,6 +261,13 @@ PY
 cleanup
 "$PY" -m egress_audit.audit_bot --profiles "$WS/profiles.yaml" --once >>"$WS/bot.log" 2>&1
 
+# ── S4 강화: 우회 high-sev 알림 → 차단 결정(SIMULATED) + 차단 제어점 스텁 ──
+#   flow tap 은 관찰 전용이라 실제 drop 없음 → mode=SIMULATED 로 정직하게.
+#   실제 egress drop(mode=ENFORCED)은 트랙 B(CMP-93, nftables MVP + 신규 CMP-58).
+printf '%s우회 알림 → enforcement 결정(차단 제어점 스텁, mode=SIMULATED):%s\n' "$c_d" "$c_0"
+"$PY" -m egress_audit.enforcement --alerts "$WS/alerts.jsonl" \
+  --out "$WS/enforcement.jsonl" --mode SIMULATED 2>&1 | sed 's/^/  /'
+
 # ───────────────────────── S5~S6: 무지연·준실시간 증명 + 자동 검증 ─────────────────────────
 sect "S5~S6 — 무지연·준실시간 증명 + 6개 시나리오 자동 PASS/FAIL"
 "$PY" - "$WS" "$ROOT" <<'PY'
@@ -279,6 +303,11 @@ flows = []
 if ddir.exists():
     for p in sorted(ddir.glob("flow-*.jsonl")):
         flows += [json.loads(l) for l in p.read_text(encoding="utf-8").splitlines() if l.strip()]
+pipe      = load(WS / "pipeline_decisions.jsonl")   # 파이프라인 라우팅 결정 로그
+enforce   = load(WS / "enforcement.jsonl")          # 우회 차단 결정(SIMULATED)
+def pipe_route(scen):
+    r = [p for p in pipe if p.get("scenario") == scen]
+    return r[0].get("route") if r else None
 
 G, R, Y, B, D, Z = "\033[32m", "\033[31m", "\033[33m", "\033[1m", "\033[2m", "\033[0m"
 rows = []
@@ -311,19 +340,20 @@ s1_ok = (
     and not by_conv(pub, "s1")                      # public 싱크엔 s1 없음
     and not any(d.get("conversation_id") == "s1" for d in dumps)  # public dump 0
     and not any(f.get("conversation_id") == "s1" for f in findings)  # 봇 finding 0(경량)
+    and pipe_route("S1") == "private"               # 파이프라인이 private 라우팅 결정
 )
-check("S1 private 질의 → private 싱크에만 in·out 분리 저장(외부 미전송, public dump 0)",
-      s1_ok, f"private in·out={sorted(s1_dirs)}, public(s1)={len(by_conv(pub,'s1'))}, "
-             f"dump(s1)=0, finding(s1)=0")
+check("S1 사용자→단일 엔드포인트 · 파이프라인 private 라우팅 → private 싱크에만 in·out(외부 미전송, dump 0)",
+      s1_ok, f"pipeline route={pipe_route('S1')}, private in·out={sorted(s1_dirs)}, "
+             f"public(s1)={len(by_conv(pub,'s1'))}, dump(s1)=0, finding(s1)=0")
 
 # ── S2: public 약한 PII 인라인 무지연 + 봇 준실시간 finding ──
 s2_lat = [r for r in lat if r["scenario"] == "S2"]
 s2_200 = bool(s2_lat) and all(r["status"] == 200 for r in s2_lat)
 s2_finding = bool(f_s2) and any("weak_pii" in f.get("detectors", []) for f in f_s2)
 s2_lat_ok = bool(f_s2) and all(f["latency_ms"] <= 5000 for f in f_s2)
-s2_ok = s2_200 and s2_finding and s2_lat_ok
-check("S2 public 약한 PII → 인라인 200(가명화·무지연) + 봇 준실시간 weak_pii finding(≤5s)",
-      s2_ok, f"HTTP200={s2_200}, weak_pii finding={len(f_s2)}건, "
+s2_ok = s2_200 and s2_finding and s2_lat_ok and pipe_route("S2") == "public"
+check("S2 파이프라인 public failover + 약한 PII → 인라인 200(가명화·무지연) + 봇 준실시간 weak_pii finding(≤5s)",
+      s2_ok, f"pipeline route={pipe_route('S2')}, HTTP200={s2_200}, weak_pii finding={len(f_s2)}건, "
              f"finding 지연={[f['latency_ms'] for f in f_s2]}ms")
 
 # ── S3: public 강한 PII 인라인 차단(403) + 봇 상관(finding/alert) ──
@@ -331,9 +361,9 @@ s3_lat = [r for r in lat if r["scenario"] == "S3"]
 s3_403 = bool(s3_lat) and all(r["status"] == 403 for r in s3_lat)
 s3_finding = bool(f_s3) and any("strong_pii" in f.get("detectors", []) for f in f_s3)
 s3_alert = bool(a_s3) and any(a["severity"] in ("high", "critical") for a in a_s3)
-s3_ok = s3_403 and s3_finding and s3_alert
-check("S3 public 강한 PII → 인라인 403 fast hard-block + 봇 strong_pii finding/alert 상관",
-      s3_ok, f"HTTP403={s3_403}, strong_pii finding={len(f_s3)}건, "
+s3_ok = s3_403 and s3_finding and s3_alert and pipe_route("S3") == "public"
+check("S3 파이프라인 public failover + 강한 PII → 인라인 403 fast hard-block + 봇 strong_pii finding/alert 상관",
+      s3_ok, f"pipeline route={pipe_route('S3')}, HTTP403={s3_403}, strong_pii finding={len(f_s3)}건, "
              f"high/critical alert={len(a_s3)}건")
 
 # ── S4(헤드라인): 게이트웨이 우회 flow tap 탐지 → high-sev 알림 ──
@@ -343,14 +373,24 @@ flow_bypass = [f for f in flows if f.get("bypass")]
 bypass_high = bool(bypass_f) and all(f["severity"] == "high" for f in bypass_f)
 bypass_alerted = len(bypass_a) >= 1
 src_not_gw = all(not f.get("via_gateway") for f in flow_bypass) and bool(flow_bypass)
+# 차단 결정(SIMULATED): 우회 알림마다 action=BLOCK, mode=SIMULATED, 실제 drop 안 함, 제어점 명시.
+enf_block = [e for e in enforce if e.get("action") == "BLOCK"]
+enf_ok = (
+    len(enf_block) == len(bypass_a)               # 우회 알림 1건당 차단 결정 1건
+    and bool(enf_block)
+    and all(e.get("mode") == "SIMULATED" for e in enf_block)   # 정직한 라벨(실제 drop 아님)
+    and all(e.get("applied") is False for e in enf_block)      # 관찰 전용 = 미적용
+    and all(e.get("control_point") for e in enf_block)         # 차단 제어점 스텁 명시
+)
 s4_ok = (
     len(flows) > 0 and len(non443) == 0           # public 443 목적지만 캡처
     and len(flow_bypass) >= 1 and src_not_gw      # 우회(src≠게이트웨이) 식별
     and bypass_high and bypass_alerted            # 봇이 high-sev finding + alert
+    and enf_ok                                    # 탐지→차단 결정(SIMULATED) 강화
 )
-check("S4 게이트웨이 우회 → flow tap 패킷 레이어 탐지 → 봇 high-severity 우회 알림  [헤드라인]",
-      s4_ok, f"flow 캡처={len(flows)}건(호스트={sorted(captured_hosts)}), "
-             f"우회(src≠gw)={len(flow_bypass)}건, high finding={len(bypass_f)}, alert={len(bypass_a)}")
+check("S4 파이프라인 우회 → flow tap 탐지 → high-sev 알림 → 차단 결정(action=BLOCK, mode=SIMULATED)  [헤드라인]",
+      s4_ok, f"flow 캡처={len(flows)}(호스트={sorted(captured_hosts)}), 우회(src≠gw)={len(flow_bypass)}, "
+             f"high alert={len(bypass_a)}, 차단결정={len(enf_block)}(SIMULATED·미적용). 실제 drop=CMP-93(트랙B)")
 
 # ── S5: 무지연(사용자 경로) + 준실시간(봇 지연 p95 ≤ 5s) 증명 ──
 user_p95 = p95([r["elapsed_ms"] for r in lat]) if lat else None

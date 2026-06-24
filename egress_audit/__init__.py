@@ -10,9 +10,11 @@ from .message_store import MessageStore
 from .guard import EgressGuard, GuardResult
 from .file_queue import FileQueue, SourceSpec, Envelope
 from .audit_bot import AuditBot, p95_latency_ms
+from .enforcement import EnforcementPoint, SIMULATED, ENFORCED
 
 __all__ = [
     "DetectionPipeline", "Finding", "PolicyEngine", "Decision",
     "AuditLogger", "MessageStore", "EgressGuard", "GuardResult",
     "FileQueue", "SourceSpec", "Envelope", "AuditBot", "p95_latency_ms",
+    "EnforcementPoint", "SIMULATED", "ENFORCED",
 ]
