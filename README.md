@@ -69,11 +69,28 @@ curl -s localhost:4000/v1/chat/completions \
 | `egress_audit/policy.py` | block/redact/pseudonymize/warn 결정(+결정 로그), `config/policy.yaml` |
 | `egress_audit/pseudonymize.py` | 마스킹 + 결정적 가명화(HMAC). 가역 원복은 M3 |
 | `egress_audit/audit.py` | public 요청 100% JSONL 감사 로거 |
+| `egress_audit/message_store.py` | **(CMP-85 P0)** private/public in·out 메시지 **분리 저장**, 본문 보존 정책(`config/audit_profiles.yaml`) |
 | `gateway/router.py` | private 기본 + public 폴백 라우팅, public/private 분류(`config/routing.yaml`) |
 | `gateway/core.py` · `gateway/app.py` | 게이트웨이 코어 + FastAPI(standalone PoC) |
 | `gateway/litellm_hook.py` | **LiteLLM Proxy 콜백**(프로덕션 경로, `config/litellm_config.yaml`) |
 
-설정(NFR3, 운영자 갱신): `config/patterns.yaml`(룰) · `config/policy.yaml`(동작) · `config/routing.yaml`(라우팅) · `config/litellm_config.yaml`.
+설정(NFR3, 운영자 갱신): `config/patterns.yaml`(룰) · `config/policy.yaml`(동작) · `config/routing.yaml`(라우팅) · `config/audit_profiles.yaml`(메시지 스토어·본문 보존) · `config/litellm_config.yaml`.
+
+## 메시지 스토어 분리 (CMP-85 P0)
+
+고객 요청/응답을 **private/public 으로 분리**하고 양쪽 **in(요청)·out(응답)** 을 모두 저장한다(요구사항 1·2).
+
+- 싱크: `logs/messages/private/YYYY-MM-DD.jsonl` · `logs/messages/public/YYYY-MM-DD.jsonl` (라우팅 `egress_class` 로 선택 — `routing.yaml` 분류와 100% 일치).
+- in/out 은 동일 `conversation_id` 로 묶인다(레코드 스키마: `id·conversation_id·turn·direction·egress_class·model·provider·ts·body·body_retained·inline_decision·source`).
+- 본문 보존 정책은 `config/audit_profiles.yaml` 의 `profiles.{private|public}.retain_raw` 로 외부화(NFR3).
+  - 기본값: **private = 원문 보존(`retain_raw: true`)**, **public = 가명화 통과본만(`retain_raw: false`)**.
+
+> **⚠️ public `retain_raw: true` 운영 주의(보존정책).** public 을 원문 보존으로 켜면 경계 밖으로 나간 egress **원문(PII 포함 가능)** 이 디스크에 남는다. 켤 경우:
+> - 접근 제어: `logs/messages/public/` 는 감사 담당자 한정(파일권한 0700, 운영시 KMS/디스크 암호화).
+> - 보존기간: 컴플라이언스 기준에 따라 보존기간·파기 절차를 정의(기본 권고 ≤ 30일).
+> - 변경 절차: 기본 off. 켤 경우 **CPO 리뷰 후 CEO 정렬** 필요(거버넌스).
+
+검증: `python3 tests/test_cmp85_p0.py` → **4/4 PASS**.
 
 ## 두 가지 실행 경로 (설계 결정)
 
@@ -91,12 +108,13 @@ curl -s localhost:4000/v1/chat/completions \
 
 ## 검증 결과 (현재 저장소, gazetteer 백엔드)
 
-`python3 tests/run_acceptance.py` → **10/10 PASS** (M1 3 + M2 7). `scripts/bench.py` → PII recall 1.000, 지연 p95 ≈ 0.06ms.
+`python3 tests/run_acceptance.py` → **10/10 PASS** (M1 3 + M2 7). `python3 tests/test_cmp85_p0.py` → **4/4 PASS** (CMP-85 P0). `scripts/bench.py` → PII recall 1.000, 지연 p95 ≈ 0.06ms.
 
 ## 단계
 
 - **M1** 게이트웨이 PoC (private 기본 + public 폴백 + public 100% 로깅) — ✅ 본 인계
 - **M2** 탐지 파이프라인 (PII 체크섬 + KoELECTRA/gazetteer NER + 비밀정보 + 정책) — ✅ 본 인계
 - M3 가역 가명화/원복 + 매핑 Vault · M4 기밀 1차 · M5 벤치/하드닝 — 후속 인계
+- **CMP-85 P0** 메시지 스토어 분리(private/public in·out) — ✅ 본 인계 / P1 패킷 캡처·P2 비동기 봇·P3 데모 — 후속
 
 상세는 [`docs/SPEC.md`](docs/SPEC.md).

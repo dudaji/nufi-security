@@ -1,0 +1,35 @@
+# 감사 프로파일 + 본문 보존 정책 (NFR3: 운영자가 갱신 가능한 외부 설정)
+# CMP-86 P0: 메시지 스토어의 분리 싱크 위치와 본문 보존 정책을 외부화한다.
+# private/public 별로 본문 원문 보존 여부를 운영자가 토글한다.
+version: 1
+
+# 분리 메시지 스토어 (P0). 싱크 = {base_dir}/{egress_class}/YYYY-MM-DD.jsonl
+message_store:
+  base_dir: logs/messages          # private/ · public/ 하위 디렉터리 자동 생성
+  rotation: daily                  # 파일명 = 날짜(YYYY-MM-DD).jsonl
+
+# egress_class 별 본문 보존 정책.
+#   retain_raw: true  → 원문(raw) 그대로 저장
+#   retain_raw: false → 인라인 정책 통과본(가명화/마스킹본) 저장
+profiles:
+  private:
+    # 온프렘·경계 내 잔류 → 기본 원문 보존(감사·내부자 오남용 추적).
+    retain_raw: true
+
+  public:
+    # 경계 밖 전송 → 기본은 가명화 통과본만 저장(원문 미보존).
+    # retain_raw 를 true 로 켜면 egress 원문이 디스크에 남으므로,
+    # 접근 제어·보존기간을 README(보존정책)에 명시하고 CPO 리뷰 후 CEO 정렬 필요.
+    retain_raw: false
+
+# --- 아래는 P2(비동기 감사 봇)에서 사용할 탐지 프로파일 자리(선행 외부화). ---
+# P0 는 message_store / profiles.*.retain_raw 만 사용한다.
+detection:
+  private:
+    detectors: [secrets, strong_pii]     # 경량: 비밀 + 강한 PII
+    sampling_rate: 1.0
+    severity_threshold: high
+  public:
+    detectors: [secrets, strong_pii, weak_pii, confidential_keywords, bypass_correlation]
+    sampling_rate: 1.0
+    severity_threshold: low

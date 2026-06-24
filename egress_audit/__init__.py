@@ -6,9 +6,10 @@
 from .pipeline import DetectionPipeline, Finding
 from .policy import PolicyEngine, Decision
 from .audit import AuditLogger
+from .message_store import MessageStore
 from .guard import EgressGuard, GuardResult
 
 __all__ = [
     "DetectionPipeline", "Finding", "PolicyEngine", "Decision",
-    "AuditLogger", "EgressGuard", "GuardResult",
+    "AuditLogger", "MessageStore", "EgressGuard", "GuardResult",
 ]
