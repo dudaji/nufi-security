@@ -8,8 +8,11 @@ from .policy import PolicyEngine, Decision
 from .audit import AuditLogger
 from .message_store import MessageStore
 from .guard import EgressGuard, GuardResult
+from .file_queue import FileQueue, SourceSpec, Envelope
+from .audit_bot import AuditBot, p95_latency_ms
 
 __all__ = [
     "DetectionPipeline", "Finding", "PolicyEngine", "Decision",
     "AuditLogger", "MessageStore", "EgressGuard", "GuardResult",
+    "FileQueue", "SourceSpec", "Envelope", "AuditBot", "p95_latency_ms",
 ]

@@ -73,6 +73,8 @@ curl -s localhost:4000/v1/chat/completions \
 | `capture/targets.py` | **(CMP-85 P1)** public 목적지 파생(routing.yaml)·`capture_targets.yaml` 캐시·BPF 빌드·우회 판정 |
 | `capture/content_dump.py` | **(CMP-85 P1)** 게이트웨이 출구 평문(TLS 직전) content dump writer |
 | `capture/flow_tap.py` | **(CMP-85 P1)** public 목적지 flow tap(BPF) + `--simulate` 리플레이 + 우회 탐지 |
+| `egress_audit/file_queue.py` | **(CMP-85 P2)** 파일 기반 **무손실 큐**(byte 오프셋 원자 커밋, 부분 라인 안전 — NFR6) |
+| `egress_audit/audit_bot.py` | **(CMP-85 P2)** 비동기 감사 봇(producer/consumer): private/public 차등 프로파일·기밀 키워드·flow tap 우회 상관·준실시간 지연 측정 |
 | `gateway/router.py` | private 기본 + public 폴백 라우팅, public/private 분류(`config/routing.yaml`) |
 | `gateway/core.py` · `gateway/app.py` | 게이트웨이 코어 + FastAPI(standalone PoC) |
 | `gateway/litellm_hook.py` | **LiteLLM Proxy 콜백**(프로덕션 경로, `config/litellm_config.yaml`) |
@@ -121,6 +123,31 @@ sudo python3 -m capture.flow_tap --live --iface any --duration 30
 
 검증: `python3 tests/test_cmp85_p1.py` → **5/5 PASS**.
 
+## 비동기 감사 봇 — producer/consumer (CMP-85 P2)
+
+무거운 감사(NER·기밀 분류·교차 상관·우회 탐지)를 인라인에 넣으면 사용자가 느려진다. 따라서 **producer/consumer 비동기**로 분리한다(요구사항 3).
+
+- **Producer = 사용자 경로** — 게이트웨이(P0 메시지 스토어)와 캡처(P1 content dump·flow tap)는 jsonl 파일에 **append 만** 한다. 봇이 죽거나 느려도 사용자 경로 지연은 **증가하지 않는다**(NFR2: `gateway/core.py` 는 봇/큐를 일절 참조하지 않음 — 디커플링).
+- **Queue = 파일 기반 무손실 큐**(`egress_audit/file_queue.py`, NFR6) — 디렉터리를 tail 하며 처리 byte 오프셋을 `logs/audit_state/offsets.json` 에 **원자 커밋**(`os.replace`). 오프셋은 finding 이 디스크에 **fsync 된 뒤에만** 전진(무손실). 개행으로 끝나는 **완전한 라인만** 소비(producer 쓰는 중 부분 라인 안전). 재시작 시 **미처리분만 재개**, 중복은 finding 의 `source_id` 디둡으로 **0**.
+- **Consumer = 감사 봇**(`egress_audit/audit_bot.py`) — 레코드의 `egress_class` 로 **차등 프로파일** 선택(`config/audit_profiles.yaml` `detection`):
+  - **private(경량):** `secrets + strong_pii` 만, `sampling_rate`·`severity_threshold` 적용(컴플라이언스/내부자 오남용 로깅).
+  - **public(풀):** 강·약 PII + 비밀 + **기밀 키워드** + **flow tap 우회 상관**.
+  - **flow tap 우회**(P1 `bypass`/`via_gateway`)는 **high-severity** finding + `logs/alerts.jsonl` 알림(webhook/메일 훅 자리)으로 승격.
+- **출력:** `logs/audit_findings.jsonl`(마스킹 스팬만 — 원문 재유출 방지) + 준실시간 지연(`enqueue→finding` `latency_ms`) 측정(NFR5 p95 ≤ 5s).
+
+```bash
+# 배치/에어갭·CI: 미리 쌓인 dump 를 1회 드레인(root 불필요)
+python3 -m egress_audit.audit_bot --simulate
+
+# 데몬(준실시간): 워처 폴 루프 + 워커 N
+python3 -m egress_audit.audit_bot --daemon
+
+# 준실시간 지연 리포트(NFR5 검증)
+python3 -m egress_audit.audit_bot --report   # => enqueue→finding p95 = … ms (PASS vs NFR5 5000ms)
+```
+
+검증: `python3 tests/test_cmp85_p2.py` → **6/6 PASS** (수용기준 5 + 부분라인 무손실 보강). P1 `FlowTap` 실출력 → 봇 소비 end-to-end 확인(우회 2건 → high-sev finding/alert 2건).
+
 ## 두 가지 실행 경로 (설계 결정)
 
 1. **standalone FastAPI 게이트웨이** (`gateway/app.py`) — LiteLLM 미설치/에어갭 환경에서 PoC를 **즉시 실행·검증**. 본 저장소의 검증은 이 경로로 수행.
@@ -137,13 +164,13 @@ sudo python3 -m capture.flow_tap --live --iface any --duration 30
 
 ## 검증 결과 (현재 저장소, gazetteer 백엔드)
 
-`python3 tests/run_acceptance.py` → **10/10 PASS** (M1 3 + M2 7). `python3 tests/test_cmp85_p0.py` → **4/4 PASS** (CMP-85 P0). `scripts/bench.py` → PII recall 1.000, 지연 p95 ≈ 0.06ms.
+`python3 tests/run_acceptance.py` → **10/10 PASS** (M1 3 + M2 7). `python3 tests/test_cmp85_p0.py` → **4/4 PASS** (P0) · `tests/test_cmp85_p1.py` → **5/5 PASS** (P1) · `tests/test_cmp85_p2.py` → **6/6 PASS** (P2). `scripts/bench.py` → PII recall 1.000, 지연 p95 ≈ 0.06ms.
 
 ## 단계
 
 - **M1** 게이트웨이 PoC (private 기본 + public 폴백 + public 100% 로깅) — ✅ 본 인계
 - **M2** 탐지 파이프라인 (PII 체크섬 + KoELECTRA/gazetteer NER + 비밀정보 + 정책) — ✅ 본 인계
 - M3 가역 가명화/원복 + 매핑 Vault · M4 기밀 1차 · M5 벤치/하드닝 — 후속 인계
-- **CMP-85 P0** 메시지 스토어 분리(private/public in·out) — ✅ / **P1** 패킷 레이어 캡처(content dump + flow tap)·게이트웨이 우회 탐지 — ✅ 본 인계 / P2 비동기 봇·P3 데모 — 후속
+- **CMP-85 P0** 메시지 스토어 분리(private/public in·out) — ✅ / **P1** 패킷 레이어 캡처(content dump + flow tap)·게이트웨이 우회 탐지 — ✅ / **P2** 비동기 감사 봇(producer/consumer·차등 프로파일·우회 상관·준실시간) — ✅ 본 인계 / P3 통합 데모 — 후속
 
 상세는 [`docs/SPEC.md`](docs/SPEC.md).
