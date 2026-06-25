@@ -1,0 +1,67 @@
+NuFi Egress-Audit Gateway — end-to-end 데모 (M1+M2) · CMP-82
+실행: 2026-06-24 16:54:30 · NER=gazetteer · audit=logs/egress_audit.jsonl
+
+────────────────────────────────────────────────────────────────────────
+① private 기본 라우팅 — 외부 미전송(감사 0건)
+────────────────────────────────────────────────────────────────────────
+  $ POST /v1/chat/completions  model=nufi-default  content="내부 회의록 요약해줘"
+  → HTTP 200 · model=private-llm
+  [PASS] private 응답 200
+  [PASS] private-llm 백엔드로 처리(외부 미전송)
+  [PASS] 감사 로그 증가 0건 (private=외부 미전송)
+
+────────────────────────────────────────────────────────────────────────
+② public 폴백 + 주민등록번호(강한 PII) → 403 차단
+────────────────────────────────────────────────────────────────────────
+  $ POST … model=nufi-default  content="김민수님 주민번호 900101-1234568 으로 신청서 작성"
+  → HTTP 403 · error.type=egress_blocked · entities=["KR_RRN"]
+  [PASS] 강한 PII → 403 차단
+  [PASS] 차단 entity=KR_RRN 보고
+
+────────────────────────────────────────────────────────────────────────
+③ public 폴백 + API 키(비밀) → 403 차단
+────────────────────────────────────────────────────────────────────────
+  $ POST … model=nufi-default  content="이 키로 배포 sk-ant-api03-…"
+  → HTTP 403 · error.type=egress_blocked · entities=["SECRET"]
+  [PASS] 비밀(API 키) → 403 차단
+  [PASS] 차단 entity=SECRET 보고
+
+────────────────────────────────────────────────────────────────────────
+④ public 폴백 + 약한 PII(전화/이메일) → 가명화 후 전송(200)
+────────────────────────────────────────────────────────────────────────
+  $ POST … model=nufi-default  content="연락처: 010-1234-5678, hong@dudaji.com 으로 회신"
+  → HTTP 200 · (본문 가명화 후 public 전송)
+  [PASS] 약한 PII → 가명화 후 전송 200
+
+────────────────────────────────────────────────────────────────────────
+⑤ 감사 로그(logs/egress_audit.jsonl) — public 전송 100% 기록
+────────────────────────────────────────────────────────────────────────
+  기록 라인:
+    2026-06-24T16:54:32+0900  is_public=true   outcome=blocked      model=claude-3-5-sonnet
+    2026-06-24T16:54:32+0900  is_public=true   outcome=blocked      model=claude-3-5-sonnet
+    2026-06-24T16:54:32+0900  is_public=true   outcome=transformed  model=claude-3-5-sonnet
+  → 총 3건 · public 3건 · private(비public) 0건
+  [PASS] public 전송 3건 모두 기록(100%), private 0건
+  [PASS] private 경로는 감사 로그에 미기록(외부 미전송)
+
+────────────────────────────────────────────────────────────────────────
+⑥ 자동 검증 — acceptance(10/10) · unit · bench(recall·p95)
+────────────────────────────────────────────────────────────────────────
+  $ python3 tests/run_acceptance.py
+    10/10 기준 PASS
+  [PASS] 수용기준 10/10 PASS
+  $ python3 tests/test_unit.py
+    8/8 unit tests PASS
+  [PASS] 단위 테스트 PASS
+  $ python3 scripts/bench.py --ner gazetteer
+    PII recall          : 1.000 (23/23)  [목표 ≥ 0.9]
+    Secret recall       : 1.000 (9/9)
+    Latency ms (CPU)    : p50=0.04  p95=0.09  p99=0.12  [목표 p95 ≤ 150ms]
+    Latency target p95  : PASS
+  [PASS] 벤치 recall·p95 목표 충족
+
+────────────────────────────────────────────────────────────────────────
+요약
+────────────────────────────────────────────────────────────────────────
+  통과 13 / 13   실패 0
+  ✅ 6개 시나리오 전부 기대대로 동작 — 데모 PASS
