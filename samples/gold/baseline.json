@@ -10,11 +10,11 @@
     "KR_FOREIGNER_REG": 1.0,
     "KR_LOCATION": 0.875,
     "KR_PASSPORT": 1.0,
-    "KR_PERSON": 0.8333,
+    "KR_PERSON": 0.8968,
     "KR_PHONE": 1.0,
     "KR_RRN": 1.0,
     "SECRET": 1.0
   },
-  "pii_recall": 0.9461,
+  "pii_recall": 0.9433,
   "strong_recall": 1.0
 }

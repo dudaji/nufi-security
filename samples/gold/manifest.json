@@ -1,7 +1,7 @@
 {
   "seed": 20260625,
-  "total": 490,
-  "positives": 340,
+  "total": 620,
+  "positives": 470,
   "negatives": 150,
   "class_counts": {
     "KR_RRN": 30,
@@ -13,15 +13,15 @@
     "KR_ACCOUNT": 20,
     "KR_PHONE": 25,
     "EMAIL": 15,
-    "KR_PERSON": 80,
+    "KR_PERSON": 210,
     "KR_LOCATION": 40,
     "SECRET": 40,
     "benign_hard": 30,
     "benign": 120
   },
-  "dev_size": 196,
+  "dev_size": 248,
   "person_unlisted_ratio": 0.562,
-  "person_unlisted_n": 45,
+  "person_unlisted_n": 118,
   "split": {
     "dev_pct": 0.4,
     "test_pct": 0.6,

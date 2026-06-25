@@ -211,6 +211,91 @@ python3 scripts/bench_m5.py --backend onnx-int8   --split test       # INT8 reca
 python3 scripts/bench_m5.py --backend onnx-int8   --split test --baseline write   # 회귀 기준선
 ```
 
+## 부록 F — CMP-104: KR_PERSON sealed test 표본 확대(n≥120) + CI 재산정
+
+- 이슈: CMP-104 (Engineer) · 출처: CPO MoSCoW [CMP-101](/CMP/issues/CMP-101) 결정 1(등급 **Should**, option c).
+  거버넌스: 보안 상시승인(CMP-96).
+- 측정 환경: 부록 E 와 동일 박스(WSL2 i7-1360P CPU, GPU 미사용). `transformers 4.57.6 · torch 2.12.1+cpu ·
+  onnxruntime 1.27.0 · optimum`. 모델 `Leo97/KoELECTRA-small-v3-modu-ner`, INT8 ONNX(부록 E 산출물 `~/.cache/m5_onnx_int8/int8`).
+
+### F.1 문제와 방향
+부록 E.1 의 sealed test KR_PERSON 은 n=48(=80×0.6) 로 작아 Wilson CI [0.704, 0.913] 가 목표 0.85 를 폭넓게
+포함 → "현 fail 의 실체 = 측정 정밀도 한계"(dev 분포는 여유). CPO 가 option (c)**표본 확대로 CI 축소**를 1순위로
+선택. KR_PERSON 합성 표본을 **80 → 210**(test = int(210×0.6) = **126 ≥ 120**)으로 확대하고 KoELECTRA-INT8
+(프로덕션 목표)로 재측정한다.
+
+### F.2 변경 격리(측정 무결성)
+골드셋은 단일 시드 공유 rng 로 생성되므로 KR_PERSON 표본 수를 바꾸면 *이후* 클래스의 전역 draw 가 밀려
+**범위 밖 게이트가 부수적으로 흔들리는** 문제가 있었다(초기 무격리 확대본에서 KR_LOCATION 이 0.875→0.792 로
+표본노이즈 이동). 이를 막기 위해 `goldset/generate.py` 의 KR_PERSON 블록을 **build 단계 전역 rng 와 격리**:
+
+- **원본 80 표본**은 *전역* rng 로 동일 draw 시퀀스를 재생 → 이 블록 이후 모든 클래스(KR_LOCATION/SECRET/benign 등)
+  의 **build 시점 프롬프트가 CMP-100 과 동일**.
+- **확대분 130**은 *독립* rng(SEED+13 이름 / SEED+17 문맥)로 생성 → 전역 build stream 미접촉.
+- 미수록(gazetteer 미등재) 인명 비율 **0.562 유지**(118/210, 누수방지 핵심), 층화 dev40/test60·합성·test 봉인 원칙 동일.
+
+**격리 검증(실증):**
+- KR_PERSON 은 split 정렬(클래스명 사전순)에서 KR_LOCATION 뒤·KR_PHONE/KR_RRN/SECRET/benign 앞에 온다. 따라서
+  **KR_PERSON 앞에 정렬되는 클래스(KR_LOCATION 등)의 test split 멤버십은 불변** — 실제로 working vs HEAD 의
+  **KR_LOCATION test 24건 프롬프트가 바이트동일**, INT8/FP32 recall 도 **0.875 / 0.792 로 CMP-100(부록 E.1)과 정확히 일치**.
+- KR_PERSON 뒤에 정렬되는 결정적-경로 클래스(KR_RRN/KR_PHONE/SECRET, benign)는 KR_PERSON 의 더 큰 shuffle 가
+  split-rng 를 더 소비해 **같은 풀에서 다른 멤버를 재추출**한다(프롬프트 풀 자체는 build 격리로 동일). 단 이들은
+  recall **1.000**(정규식+체크섬, 멤버 무관) 또는 benign-FP **0/90**([CMP-103] 구조적 제외)로 **split-불변 게이트** →
+  멤버 재추출이 판정에 영향 없음(실측 strong 1.0 / secret 1.0 / benign-FP 0 으로 확인).
+- 결정성: 동일 시드 → 바이트동일 출력(재실행 검증).
+
+### F.3 KR_PERSON 재측정 (test 셋, n=126) — 점추정 + 좁아진 Wilson CI
+
+| 백엔드 | KR_PERSON recall | 95% CI(Wilson) | CI 폭 | 미수록 슬라이스(n=72) | 목표 0.85 |
+|---|---|---|---|---|---|
+| 이전 n=48 (CMP-100, INT8) | 0.8333 (40/48) | [0.704, 0.913] | 0.209 | 0.696 | ⚠️ CI 포함 |
+| **확대 n=126, FP32** | **0.9206 (116/126)** | **[0.860, 0.956]** | 0.096 | 0.889 | ✅ **CI 하한 ≥ 0.85** |
+| **확대 n=126, ONNX-INT8(프로덕션 목표)** | **0.8968 (113/126)** | **[0.832, 0.939]** | 0.107 | 0.847 | ✅ 점추정 / CI 하한 0.832 |
+
+- **CI 폭 ≈ 절반(0.209 → 0.10대)**, CI 하한 **0.704 → 0.832(INT8)·0.860(FP32)** 로 +0.13~0.16%p 상승. "측정 정밀도
+  한계" 가설대로 표본 확대가 불확실성을 크게 줄였다.
+- **점추정은 두 백엔드 모두 0.85 를 여유있게 상회**(INT8 0.897, FP32 0.921). **FP32 는 CI 하한(0.860)까지 0.85 위** →
+  CI 신뢰구간으로도 PASS. **INT8 은 점추정 PASS, CI 하한(0.832)이 0.85 를 ~1.8%p 하회**(여전히 0.85 를 경계 포함).
+- INT8−FP32 person 갭 = −2.38%p(113 vs 116, 3건 차) = 소표본 양자화 노이즈(CI 대폭 겹침). 헤드라인 **PII recall 은
+  INT8 0.9468 = FP32 0.9468 로 양자화 저하 0**(부록 E.2 §2.2 ≤1%p PASS 유지).
+
+### F.4 부수 확인(option a, 무비용) — gazetteer ∪ INT8 유니온 1회 (`scripts/union_check.py --split test`)
+
+| 지표 | INT8 단독 | 유니온(gaz ∪ INT8) | Δ(유니온−INT8) |
+|---|---|---|---|
+| KR_PERSON recall | 0.8968 | 0.8968 | **+0.000** |
+| KR_PERSON 미수록 슬라이스 | 0.8472 | 0.8472 | +0.000 |
+| PII precision | 1.000 | 0.9122 | **−0.0878** |
+| benign false-block | 0/90 | 0/90 | 0 |
+| KR_LOCATION recall | 0.875 | 0.9167 | +0.0417 |
+
+- **가설(부록 E.1) 확증:** 유니온의 KR_PERSON 증분 recall = **정확히 0** — INT8 의 인명 미스는 **gazetteer 미수록**
+  희귀 성씨에 집중하므로 gazetteer 합집합이 회복하지 못한다(양자화로 잃은 *수록* 인명도 없음 → 미수록 슬라이스 Δ 0).
+- 반대로 유니온은 **precision 을 −8.8%p 악화**(gazetteer 가 흔한 성씨에 과탐). **게이트 통과 경로 아님**(CPO 가
+  option a 를 reject 한 근거 실측 재확인). KR_LOCATION 은 +4%p 회복하나 본 이슈 범위 밖이고 precision 비용이 상쇄.
+
+### F.5 회귀 기준선 갱신
+sealed test 정의가 바뀌었으므로(`samples/gold/baseline.json`) **ONNX-INT8 기준선을 확대 골드셋으로 재기록** —
+KR_PERSON 바닥값 **0.833 → 0.897 로 상향**(더 엄격), KR_LOCATION 0.875 동일. `--baseline check` → `regressions: [], pass: true`.
+
+### F.6 게이트 판정(엔지니어 측정 소견 — 최종 판정은 CPO)
+§1.3 KR_PERSON 게이트는 **확대 측정에서 점추정 PASS(INT8 0.897 / FP32 0.921)**, **7개 게이트 전항이 점추정으로 PASS**
+(`acceptance_pass: True`; PII·강한PII·secret·precision·location·person·benign-FP). 남은 잔여는 **INT8 의 Wilson CI 하한이
+0.85 를 ~1.8%p 하회**하는 한 점뿐이며, 이는 소표본 양자화 노이즈(FP32 는 CI 하한까지 통과)로 해석된다.
+→ **소견:** Should 등급 게이트 충족으로 판단(점추정 여유·CI 절반 축소·FP32 완전통과·헤드라인 양자화 0). option (b)
+small→base 모델은 본 이슈 밖 M6 이연(CEO 결정 대기). **CPO 가 ‘점추정 PASS + INT8 CI 경계’를 게이트 종료로 인정할지
+최종 판정.**
+
+### F.7 재현
+```bash
+PYTHONPATH=~/.cache/m5_libs   # transformers/optimum/onnxruntime (부록 E 와 동일 스택)
+python3 goldset/generate.py                                          # 확대 골드셋(KR_PERSON 210, test 126)
+python3 scripts/bench_m5.py  --backend onnx-int8   --split test      # INT8 recall + 좁아진 CI(프로덕션 목표)
+python3 scripts/bench_m5.py  --backend transformers --split test     # FP32 비교
+python3 scripts/union_check.py --split test                          # option a 유니온 1회 확인
+python3 scripts/bench_m5.py  --backend onnx-int8 --split test --baseline write   # 회귀 기준선 갱신
+```
+
 ---
 
 ## M5 done 게이트 대비 현황
@@ -221,7 +306,7 @@ python3 scripts/bench_m5.py --backend onnx-int8   --split test --baseline write 
 | §3 채점 방법론(span/CI/회귀 가드) | ✅ 완료 |
 | §4 하드닝 전항 PASS | ✅ 완료(12/12, ner 백엔드 리팩터 후에도 유지) |
 | §2 지연 p95 ≤ 150ms | ✅ gazetteer 5.7ms / **KoELECTRA-INT8 38ms** (참고치, 프로덕션 재측정 권고) |
-| §1.3 recall 목표 (KoELECTRA/INT8) | ✅ PII/강한PII/secret/precision/location 5/7 · ⚠️ person 경계 + benign-FP(정규식) → CPO MoSCoW |
+| §1.3 recall 목표 (KoELECTRA/INT8) | ✅ 확대측정(부록 F) 7/7 점추정 PASS(`acceptance_pass: True`) · person INT8 0.897 / FP32 0.921(CI 절반 축소) · benign-FP 0/90([CMP-103]) · 잔여=INT8 CI 하한 0.832 경계 → CPO 최종판정 |
 
 **판정(CMP-100):** **백엔드 프로비저닝 + 실측 완료** — gazetteer→FP32→INT8 3종 실측, INT8 production-target
 권고(recall 보존·3.9× 경량·p95 38ms). §2.2 전항 PASS. §1.3 은 5/7 PASS + 2개(person 경계, benign-FP)
@@ -229,8 +314,11 @@ python3 scripts/bench_m5.py --backend onnx-int8   --split test --baseline write 
 
 ## 리스크
 
-- **R-RECALL(중, [CMP-100] 실측됨):** KoELECTRA 가 인명 recall 을 0.375→0.85대로 끌어올렸으나, sealed test
-  슬라이스(미수록 56%)에서 KR_PERSON 은 **0.85 경계**(점추정 0.833~0.854, CI 가 0.85 포함). 완화: 앙상블/큰모델/표본확대 → CPO MoSCoW. (dev 조기측정 person 0.94~0.97 로 일반 분포에선 여유.)
+- **R-RECALL(중→완화, [CMP-104] 표본확대 측정됨):** sealed test KR_PERSON 표본을 48→**126** 으로 확대하니 점추정이
+  **INT8 0.897 / FP32 0.921 로 0.85 를 여유 상회**, Wilson CI 폭이 **절반(0.209→0.10대)** 으로 좁아지고 하한이
+  **0.704→0.832(INT8)·0.860(FP32)** 로 상승. FP32 는 CI 하한까지 PASS, INT8 은 점추정 PASS·CI 하한만 0.85 를 ~1.8%p
+  하회(소표본 양자화 노이즈). 유니온(option a)은 인명 증분 recall +0(precision −8.8%p) 으로 게이트 경로 아님 확증.
+  잔여 옵션 (b) small→base 모델은 **M6 이연**(CEO 결정). 상세: 위 [부록 F](#부록-f--cmp-104-kr_person-sealed-test-표본-확대n120--ci-재산정).
 - **R-PRECISION(해소, [CMP-103]):** `KR_ACCOUNT` 정규식이 운송장/ISBN 등 숫자그룹과 충돌하던 benign FP 3/90 →
   구조적(ISBN) + 인접 비계좌 문맥 제외로 **0/90 으로 해소**, 강한PII recall 1.000 가드 유지. 상세: 위 [§ CMP-103 해소](#cmp-103-해소--kr_account-구조적문맥-오탐-제외-benign-fp-0033--00).
 - **R-INT8(중→완화, [CMP-100] 실측됨):** INT8 512자 p95 = 38ms(비프로덕션 CPU에서도 목표 4× 여유) → 저사양 우려 크게 감소.
