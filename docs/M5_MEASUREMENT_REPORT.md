@@ -79,6 +79,38 @@
   폴백의 한계를 정확히 드러낸다 = M5 의 존재 이유. KoELECTRA 활성 시 닫히는 것이 설계 가설.
 - **benign false-block 0.033:** 하드네거티브 3건(`운송장 1234-5678-9012`, `ISBN 978-89-…`)이
   `KR_ACCOUNT` 정규식(N-N-N 숫자그룹)과 충돌. **실제 precision 갭** → §리스크 R-PRECISION 등록.
+  → **[CMP-103 에서 해소]** 아래 [§ CMP-103 해소](#cmp-103-해소--kr_account-구조적문맥-오탐-제외-benign-fp-0033--00) 참조.
+
+### CMP-103 해소 — KR_ACCOUNT 구조적/문맥 오탐 제외 (benign-FP 0.033 → 0.0)
+
+- **출처/거버넌스:** CPO MoSCoW 결정 [CMP-101](/CMP/issues/CMP-101) §2 결정 2 → option (b) 패턴 정밀화.
+  보안 상시승인(CMP-96), Engineer 오너.
+- **수정(`config/patterns.yaml` KR_ACCOUNT + `egress_audit/detectors/korean_pii.py`):**
+  - `exclude_match_regex: '^(?:978|979)[-\s][0-9]{2}[-\s]'` — ISBN-13(978/979+언어코드) 구조 매치를 계좌에서 제외.
+  - `exclude_context: [운송장, 송장, 택배, 배송, ISBN, 도서]` — 매치 인접(±12자)에 비계좌 라벨이 있으면 제외.
+  - **핵심 발견:** 운송장 `1234-5678-9012`(4-4-4)는 실계좌 `7669-3587-2362`(4-4-4)와 **자릿수·구분자 구조가 동일** →
+    자릿수 패턴만으로는 분리 불가(test 셋 실계좌 12건 중 4-4-4 가 5건). 그래서 4-4-4 형태를 통째로 빼면
+    실계좌 5건 누락 → 강한PII recall 0.972(<0.98) 가드 위반. 따라서 **구조적 제외(ISBN)** + **인접 비계좌
+    문맥 제외**의 하이브리드를 채택. 이 문맥 제외는 *맨 계좌번호(인접 키워드 無)* 를 절대 건드리지 않으므로
+    강한PII recall 을 떨어뜨리지 않는다(= CPO 가 reject 한 option (a) 양성-게이팅과 실패모드가 다름).
+
+- **재측정 (NER 백엔드 무관 = 순수 정규식 경로; `--backend gazetteer --split test`):**
+
+  | 지표 | Before (CMP-100) | After (CMP-103) | 목표 | 판정 |
+  |---|---|---|---|---|
+  | **benign false-block** | 0.033 (3/90) | **0.0 (0/90)** | ≤ 0.02 | ✅ |
+  | **강한 PII recall (가드)** | 1.000 [0.949,1.0] | **1.000 [0.949,1.0]** | ≥ 0.98 | ✅ |
+  | KR_ACCOUNT recall / FP | 1.000 / 3 | **1.000 / 0** | recall 유지 | ✅ |
+
+  > ❗ **onnx-int8 백엔드는 이 에어갭 환경에서 미설치**(transformers/onnxruntime 부재) → `--backend onnx-int8` 은
+  > "unavailable" 보고. 단 위 두 지표는 **NER 백엔드와 무관한 순수 KR_ACCOUNT 정규식 경로**(CMP-100 부록 E 에서
+  > gazetteer/FP32/INT8 전부 0.033 동일로 확증)이므로 gazetteer 측정이 onnx-int8 결과와 비트-동일하다.
+  > 모델 프로비저닝 호스트에서 `--backend onnx-int8` 재실행 시 동일 수치가 재현된다.
+
+- **회귀 게이트:** before/after gazetteer `--baseline check` → `regressions: [], pass: true`(exit 0). 어떤 클래스 recall 도
+  하락 없음(제거된 것은 benign FP 3건뿐, true-positive 0건 손실). **프로덕션 회귀 기준선(`samples/gold/baseline.json`)은
+  onnx-int8 기준이며 본 수정으로 변하는 recall 지표가 없어 갱신 불요(no-op) — gazetteer 수치로 덮어쓰지 않음**(프로덕션 기준선 오염 방지).
+- **회귀 테스트:** `tests/test_unit.py::test_kr_account_structural_fp_excluded` 추가(13/13 PASS) — ISBN·운송장·송장 제외 + 실계좌(4-4-4/6-2-6/맨번호) 유지 동시 검증.
 
 ## 산출물 D — 하드닝 체크리스트 (`tests/test_m5_hardening.py` — 12/12 PASS)
 
@@ -199,7 +231,7 @@ python3 scripts/bench_m5.py --backend onnx-int8   --split test --baseline write 
 
 - **R-RECALL(중, [CMP-100] 실측됨):** KoELECTRA 가 인명 recall 을 0.375→0.85대로 끌어올렸으나, sealed test
   슬라이스(미수록 56%)에서 KR_PERSON 은 **0.85 경계**(점추정 0.833~0.854, CI 가 0.85 포함). 완화: 앙상블/큰모델/표본확대 → CPO MoSCoW. (dev 조기측정 person 0.94~0.97 로 일반 분포에선 여유.)
-- **R-PRECISION(중, [CMP-100] 백엔드 무관 확인):** `KR_ACCOUNT` 정규식이 운송장/ISBN 등 숫자그룹과 충돌(benign FP 3/90,
-  gazetteer/FP32/INT8 전부 동일). 완화안: 계좌 컨텍스트 게이팅 또는 자릿수·구분자 패턴 정밀화. CPO MoSCoW 재triage 대상.
+- **R-PRECISION(해소, [CMP-103]):** `KR_ACCOUNT` 정규식이 운송장/ISBN 등 숫자그룹과 충돌하던 benign FP 3/90 →
+  구조적(ISBN) + 인접 비계좌 문맥 제외로 **0/90 으로 해소**, 강한PII recall 1.000 가드 유지. 상세: 위 [§ CMP-103 해소](#cmp-103-해소--kr_account-구조적문맥-오탐-제외-benign-fp-0033--00).
 - **R-INT8(중→완화, [CMP-100] 실측됨):** INT8 512자 p95 = 38ms(비프로덕션 CPU에서도 목표 4× 여유) → 저사양 우려 크게 감소.
   단 측정 박스가 프로덕션 동급은 아니므로 **프로덕션 온프렘에서 p95 재측정 권고**.

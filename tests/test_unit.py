@@ -46,6 +46,27 @@ def test_pii_block_and_pseudonymize():
     assert "900101-1234568" not in res.transformed_text  # 본문에서 제거/치환
 
 
+def test_kr_account_structural_fp_excluded():
+    """CMP-103: KR_ACCOUNT 구조적/문맥 오탐 제외 — ISBN·운송장은 미탐지, 실계좌는 유지.
+
+    가드레일: 맨/계좌-문맥 계좌번호는 그대로 탐지(강한PII recall 비훼손).
+    """
+    g = EgressGuard(ner_backend="gazetteer")
+
+    def acct(text):
+        return any(f.entity_type == "KR_ACCOUNT" for f in g.inspect(text).findings)
+
+    # 비계좌(known FP) — 제외되어야 함
+    assert not acct("운송장 1234-5678-9012 배송 조회.")          # 운송장 문맥
+    assert not acct("도서 ISBN 978-89-12345-67-8 주문.")         # ISBN-13 구조+문맥
+    assert not acct("택배 송장번호 9876-5432-1098 확인.")        # 송장/택배 문맥
+
+    # 실계좌 — 4-4-4 가 운송장과 구조 동일해도 계좌-문맥/맨번호는 유지되어야 함
+    assert acct("환불 계좌 7669-3587-2362 로 입금 부탁드립니다.")   # 4-4-4 실계좌
+    assert acct("환불 계좌 283741-77-410126 로 입금 부탁드립니다.")  # 6-2-6 실계좌
+    assert acct("입금처 065-047987-13594 입니다.")               # 맨 계좌(인접 키워드 無)
+
+
 def test_secret_detection():
     g = EgressGuard(ner_backend="gazetteer")
     res = g.inspect("키 AKIAIOSFODNN7EXAMPLE 노출")
