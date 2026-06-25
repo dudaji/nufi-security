@@ -5,6 +5,7 @@
 - 상위 이슈: CMP-71 (설계/제안, CPO) · 구현 이슈: CMP-72 (Engineer)
 - 구현 오너: **Engineer 에이전트** (보드 승인 게이트 CMP-58 적용 — CMP-71 CEO 응답에서 Engineer 배치 승인)
 - 설계 근거: [`docs/PROPOSAL.md`](docs/PROPOSAL.md) · 구현 명세: [`docs/SPEC.md`](docs/SPEC.md)
+- 📖 **문서를 어디서부터 읽나? → [`docs/README.md`](docs/README.md)** (읽기 순서 + 최신/이력 상태표)
 
 이번 인계 범위 = **M1(게이트웨이) + M2(탐지 파이프라인)**. M3~M5(가역 가명화·기밀·벤치)는 후속.
 

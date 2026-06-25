@@ -1,0 +1,70 @@
+# 📖 security/docs — 읽기 진입점 (Entry Point)
+
+> 이 폴더는 **NuFi Egress-Audit Gateway**(하이브리드 LLM 외부전송 PII·기밀 감사 게이트웨이)의 설계·명세·데모·영업 문서를 담습니다.
+> 제품 자체를 빠르게 보려면 먼저 상위 [`../README.md`](../README.md)(제품 개요 + 빠른 시작)를 보세요.
+> **이 문서는 "무엇을 어떤 순서로 읽으면 되는지" 알려주는 지도입니다.**
+
+상태 범례: ✅ 구현완료 · 📐 설계확정 · 🔜 설계만(미구현) · 📄 참조/증거 · 🗂 영업자산
+
+---
+
+## 👉 여기서부터 읽으세요 (추천 순서)
+
+회사가 만든 보안 게이트웨이의 **전체 그림 → 현행 핵심 → 후속**을 따라가는 순서입니다.
+
+| 순서 | 문서 | 무엇 | 읽는 이유 |
+|---|---|---|---|
+| 1 | [`../README.md`](../README.md) | 제품 개요 + 빠른 시작 | 한 화면으로 "무엇/어떻게 돌리나" |
+| 2 | [`PROPOSAL.md`](PROPOSAL.md) | 제안서 (CMP-71) | **왜** 만드는가 — 배경·리서치·차별점(한국어 PII) |
+| 3 | [`SPEC.md`](SPEC.md) → [`DEMO.md`](DEMO.md) | M1+M2 명세·데모 | 기반 — 게이트웨이 인터셉트 + PII/비밀 탐지·차단 |
+| 4 | [`SPEC_CMP85.md`](SPEC_CMP85.md) → [`DEMO_CMP85.md`](DEMO_CMP85.md) → [`DEMO_RESULT_CMP85.md`](DEMO_RESULT_CMP85.md) | **현행 핵심** (CMP-85) | Public/Private 차등감사 + 패킷레이어 우회탐지 + 비동기 감사봇 |
+| 5 | [`SPEC_EGRESS_ENFORCEMENT.md`](SPEC_EGRESS_ENFORCEMENT.md) → [`ENFORCEMENT_BUILD_CMP94.md`](ENFORCEMENT_BUILD_CMP94.md) | 우회 차단 (CMP-93/94) | 탐지에서 **실제 차단(nftables)**으로 |
+| 6 | [`SPEC_M4.md`](SPEC_M4.md) | 다음 설계 (CMP-77) | 🔜 아직 안 만든 다음 단계(기밀 1차 탐지) |
+
+> **데모를 직접 돌려보고 싶다면** → [`DEMO_CMP85.md`](DEMO_CMP85.md)(재현 매뉴얼)가 현행 최신 데모입니다. (구버전 [`DEMO.md`](DEMO.md)는 M1+M2만 다룹니다.)
+
+---
+
+## 전체 문서 상태표 (어느 것이 최신인가)
+
+### 설계·명세
+| 문서 | 출처 | 단계 | 상태 |
+|---|---|---|---|
+| [`PROPOSAL.md`](PROPOSAL.md) | CMP-71 | 배경·제안 | ✅ 현행 (왜) |
+| [`SPEC.md`](SPEC.md) | CMP-72 | M1 게이트웨이 + M2 탐지 | ✅ 구현완료 (PoC 검수합격) |
+| [`SPEC_CMP85.md`](SPEC_CMP85.md) | CMP-85 | P0~P3 차등감사·패킷·봇 | ✅ 구현완료 — **현행 핵심 명세** |
+| [`SPEC_EGRESS_ENFORCEMENT.md`](SPEC_EGRESS_ENFORCEMENT.md) | CMP-93 | 우회 차단(트랙 B) | 📐 설계확정 → CMP-94로 빌드됨 |
+| [`SPEC_M4.md`](SPEC_M4.md) | CMP-77 | M4 기밀 1차 탐지 | 🔜 설계만 (미구현) |
+
+### 빌드·데모·결과
+| 문서 | 출처 | 무엇 | 상태 |
+|---|---|---|---|
+| [`ENFORCEMENT_BUILD_CMP94.md`](ENFORCEMENT_BUILD_CMP94.md) | CMP-94 | nftables 우회차단 MVP 빌드 | ✅ 구현완료 (보드 approved) |
+| [`DEMO.md`](DEMO.md) | CMP-72 | M1+M2 데모 | ✅ 완료 (구버전 — CMP-85로 확장) |
+| [`DEMO_CMP85.md`](DEMO_CMP85.md) | CMP-85 | 통합 데모 **재현 매뉴얼** | ✅ **현행 데모 진입점** |
+| [`DEMO_RESULT_CMP85.md`](DEMO_RESULT_CMP85.md) · [`.html`](DEMO_RESULT_CMP85.html) | CMP-85 | 데모 **결과 보고서** + 스크린샷 | ✅ 최신 결과 |
+| [`CMP-84_CPO_verification_transcript.txt`](CMP-84_CPO_verification_transcript.txt) | CMP-84 | M1+M2 독립검수 트랜스크립트 | 📄 증거 |
+| [`CMP-82_NuFi_Egress-Audit_다음단계.md`](CMP-82_NuFi_Egress-Audit_다음단계.md) | CMP-82 | 데모 이후 다음단계 정리 | 📄 참조 |
+
+### gtm/ — 영업 자산 (CMO)
+| 문서 | 출처 | 무엇 | 상태 |
+|---|---|---|---|
+| [`gtm/NuFi_Egress-Audit_GTM_아웃리치_패키지.md`](gtm/NuFi_Egress-Audit_GTM_아웃리치_패키지.md) | CMP-82 | 아웃리치 패키지 v1 | 🗂 |
+| [`gtm/CMP-90_Egress-Audit_아웃리치_실행키트.md`](gtm/CMP-90_Egress-Audit_아웃리치_실행키트.md) | CMP-90 | 숏리스트·개인화·POC 제안 | 🗂 |
+| [`gtm/CMP-90_첫컨택_캠페인_발송팩.md`](gtm/CMP-90_첫컨택_캠페인_발송팩.md) | CMP-90 | 계정별 개인화 발송팩 (외부발송 approved) | 🗂 최신 발송본 |
+| [`gtm/CMP-91_Egress-Audit_타겟어카운트_매핑.md`](gtm/CMP-91_Egress-Audit_타겟어카운트_매핑.md) | CMP-91 | 타겟 어카운트·담당자 매핑 | 🗂 |
+
+---
+
+## 진척 한눈에
+
+```
+M1 게이트웨이 + M2 PII/비밀 탐지  ──✅ PoC 검수합격·종결 (SPEC.md / DEMO.md)
+   └ CMP-85: Public/Private 차등감사 + 패킷레이어 + 비동기 감사봇 ──✅ (SPEC_CMP85 / DEMO_CMP85)
+        └ Enforcement: 우회 차단(nftables) ──✅ 설계(CMP-93)→빌드(CMP-94)
+M4 기밀 1차 탐지(키워드/EDM) ──🔜 설계만 (SPEC_M4) — 다음 구현 후보
+```
+
+> 거버넌스: 본 저장소(보안 도메인) 구현은 **상시 승인** 적용 — Engineer가 건별 보드승인 없이 착수 가능([../../GOVERNANCE.md](../../GOVERNANCE.md) 규칙 3, CMP-96). 설계 문서는 CPO 산출, 코드는 Engineer 구현.
+
+*최종 갱신: 2026-06-25 (CMP-96, CEO).*
