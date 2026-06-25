@@ -28,6 +28,25 @@ entities:
   # --- 비밀정보 (기본 차단) ---
   SECRET:           { action: block, severity: critical }
 
+  # --- M4 기밀 (신규) ---
+  # marking = 분류 표식(강신호, 등급 직결). EDM = 등록 데이터/문서 지문.
+  CONF_MARKING_RESTRICTED:   { action: block, severity: critical }
+  CONF_MARKING_CONFIDENTIAL: { action: block, severity: high }
+  CONF_MARKING_INTERNAL:     { action: warn,  severity: medium }   # 운영 선택 시 block
+  CONF_EDM_STRUCT_STRONG:    { action: block, severity: high }      # k-of-n 충족
+  CONF_EDM_STRUCT_WEAK:      { action: warn,  severity: medium }    # 단일 필드
+  CONF_EDM_DOC_HIGH:         { action: block, severity: high }      # 고유사도
+  CONF_EDM_DOC_MED:          { action: warn,  severity: low }       # 중유사도
+  # CONF_KEYWORD 는 entities 에 두지 않는다 — 아래 conf_class_actions 로 등급 분기.
+
+# 기밀 키워드(CONF_KEYWORD)의 class→action 보조표(§4.1).
+# entities 에 명시 매핑이 없는 기밀 finding 은 운반된 class 로 동작을 정한다.
+conf_class_actions:
+  RESTRICTED:   { action: block, severity: critical }
+  CONFIDENTIAL: { action: block, severity: high }
+  INTERNAL:     { action: warn,  severity: medium }
+  PUBLIC:       { action: allow, severity: low }
+
 # --- Egress Enforcement (트랙 B · CMP-94, 모델 (a) nftables 허용목록) ---
 # 우회(게이트웨이 미경유) public LLM 직결 패킷의 L3/L4 실제 drop 토글.
 # 정책 단일 출처(A7): public 목적지·게이트웨이는 routing.yaml 에서 파생/재사용.

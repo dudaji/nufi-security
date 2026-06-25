@@ -58,6 +58,41 @@ def test_benign_not_blocked():
     assert not g.inspect("오늘 회의 안건을 정리해줘").blocked
 
 
+def test_m4_marking_and_keyword_josa():
+    g = EgressGuard(ner_backend="gazetteer")
+    res = g.inspect("프로젝트 오로라는 극비입니다")   # 조사 결합 + 표식
+    ents = {f.entity_type for f in res.findings}
+    assert "CONF_KEYWORD" in ents and "CONF_MARKING_RESTRICTED" in ents
+    assert res.blocked
+    # 매치 원문은 결정 로그에 비기록
+    conf = [f for f in res.decision.findings if f.get("source") in {"keyword", "marking"}]
+    assert conf and all(not f.get("text") for f in conf)
+    assert all("class" in f and "match_meta" in f for f in conf)
+
+
+def test_m4_allowlist_no_false_positive():
+    g = EgressGuard(ner_backend="gazetteer")
+    res = g.inspect("오로라 공주 동화 줄거리 알려줘")
+    assert not any(f.source in {"keyword", "marking"} for f in res.findings)
+    assert not res.blocked
+
+
+def test_m4_edm_struct_kofn():
+    g = EgressGuard(ner_backend="gazetteer")
+    strong = g.inspect("고객 홍길동 연락처 010-2222-3456 등급 VIP")
+    assert any(f.entity_type == "CONF_EDM_STRUCT_STRONG" for f in strong.findings)
+    assert strong.blocked
+    single = g.inspect("성씨가 김인 고객")   # stop_value 단독 → 무시
+    assert not any(f.source == "edm_struct" for f in single.findings)
+
+
+def test_m4_edm_index_no_plaintext():
+    idx = ROOT / "config" / "edm" / "index.json"
+    raw = idx.read_text(encoding="utf-8")
+    for plain in ("홍길동", "010-2222-3456", "사천이백만원"):
+        assert plain not in raw   # 원문 비저장(NFR1)
+
+
 def test_router_private_default_public_fallback():
     r = Router()
     assert not r.resolve("nufi-default").is_public

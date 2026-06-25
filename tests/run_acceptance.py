@@ -160,10 +160,100 @@ def test_m2():
     print(f"  [info] PII 샘플셋 recall = {hit/tot:.3f} ({hit}/{tot}), NER backend={g.ner_backend}")
 
 
+# ----------------------------------------------------------------------------- M4
+def test_m4():
+    print("\n== M4 — 기밀 1차 탐지(키워드/EDM) ==")
+    g = EgressGuard(ner_backend="gazetteer")
+    conf_sources = {"keyword", "marking", "edm_struct", "edm_doc"}
+    samples = load("confidential_samples.jsonl")
+
+    # 1) 사전 외부화 로드 (markings/keywords/allowlist) + 리로드 경로
+    loaded = g.pipeline.confidential is not None and bool(g.pipeline.confidential.markings)
+    check("M4.1 confidential.yaml 사전 외부화 로드(markings/keywords/allowlist)",
+          loaded and bool(g.pipeline.confidential.allowlist),
+          f"ruleset={g.pipeline.conf_ruleset_version}")
+
+    # 2) 키워드/표식 탐지 + 한국어 정규화(조사/자모/공백) — 라벨 일치 + 오탐 0
+    detect_ok = miss = fp = 0
+    for s in samples:
+        res = g.inspect(s["prompt"])
+        ents = {f.entity_type for f in res.findings if f.source in conf_sources}
+        want = set(s["expect"])
+        if want:
+            if want & ents:
+                detect_ok += 1
+            else:
+                miss += 1
+        else:
+            if ents:
+                fp += 1
+    check("M4.2 키워드/표식/EDM 라벨 탐지(조사·자모·공백 변형 포함)",
+          miss == 0, f"hit={detect_ok} miss={miss}")
+    check("M4.3 오탐 관리(allowlist/stop_values) — benign 미탐",
+          fp == 0, f"false_positives={fp}")
+
+    # 4) Structured EDM: k-of-n 강신호 + 단일/저카디널리티 강등
+    strong = g.inspect("고객 홍길동 연락처 010-2222-3456 등급 VIP 확인")
+    single = g.inspect("성씨가 김인 고객")
+    s_ents = {f.entity_type for f in strong.findings}
+    check("M4.4 Structured EDM k-of-n 강신호 block + 단일필드 강등",
+          "CONF_EDM_STRUCT_STRONG" in s_ents and strong.blocked
+          and not any(f.source == "edm_struct" for f in single.findings),
+          f"strong_fields={[f.match_meta.get('k_of_n') for f in strong.findings if f.source=='edm_struct']}")
+
+    # 5) Unstructured EDM: 유사도 임계 분기(high→block / med→warn)
+    high = g.inspect(samples[12]["prompt"])
+    high_ent = {f.entity_type for f in high.findings if f.source == "edm_doc"}
+    check("M4.5 Unstructured EDM 문서지문 유사도 임계 매치(고유사도 block)",
+          "CONF_EDM_DOC_HIGH" in high_ent and high.blocked,
+          f"sim={[f.match_meta.get('similarity') for f in high.findings if f.source=='edm_doc']}")
+
+    # 6) 등록 원문 비저장(해시/지문만) — 인덱스에 평문 부재
+    idx_path = ROOT / "config" / "edm" / "index.json"
+    raw = idx_path.read_text(encoding="utf-8") if idx_path.exists() else ""
+    no_plaintext = ("홍길동" not in raw) and ("사천이백만원" not in raw) and ("010-2222-3456" not in raw)
+    check("M4.6 EDM 인덱스 원문 비저장(해시/시그니처만, NFR1)",
+          no_plaintext and idx_path.exists())
+
+    # 7) 정책 결합: M2(PII) + M4(기밀) 합산, block 우선
+    combo = g.inspect("극비 자료. 담당자 주민번호 900101-1234568")
+    types = {f.entity_type for f in combo.findings}
+    check("M4.7 정책 결합 M2+M4 합산 block 우선",
+          combo.blocked and "KR_RRN" in types and "CONF_MARKING_RESTRICTED" in types)
+
+    # 8) 결정 로그 확장 필드 + 매치 원문 미기록
+    d = combo.decision.findings
+    conf_recs = [f for f in d if f.get("source") in conf_sources]
+    has_fields = all(("class" in f and "confidence" in f and "match_meta" in f
+                      and "ruleset_version" in f["match_meta"]) for f in conf_recs)
+    no_text = all(not f.get("text") for f in conf_recs)
+    check("M4.8 결정 로그 확장(source/class/confidence/match_meta/ruleset_version) + 원문 미기록",
+          bool(conf_recs) and has_fields and no_text)
+    edm_strong_rec = [f for f in strong.decision.findings if f.get("source") == "edm_struct"]
+    no_cell = all("matched_fields" in f["match_meta"] and "010-2222-3456" not in json.dumps(f, ensure_ascii=False)
+                  for f in edm_strong_rec)
+    check("M4.8b EDM 결정 로그 — 필드명/k_of_n/지문 id 만(셀 원문 미기록)", bool(edm_strong_rec) and no_cell)
+
+    # 9) NFR2: 기밀 탐지 추가 지연 p95 측정(예산 150ms 내)
+    import time
+    base = EgressGuard(ner_backend="gazetteer", enable_confidential=False)
+    probe = "고객 홍길동 010-2222-3456 등급 VIP. 프로젝트 오로라 단가 문의. " + "일반 문장 채우기 " * 30
+
+    def p95(guard, n=120):
+        ts = []
+        for _ in range(n):
+            t0 = time.perf_counter(); guard.inspect(probe); ts.append((time.perf_counter() - t0) * 1000)
+        ts.sort(); return ts[int(0.95 * n) - 1]
+    added = p95(g) - p95(base)
+    check("M4.9 NFR2 기밀 탐지 추가 지연 p95 ≤ 150ms",
+          added <= 150.0, f"added_p95≈{added:.2f}ms")
+
+
 def main():
     with tempfile.TemporaryDirectory() as tmp:
         test_m1(tmp)
         test_m2()
+        test_m4()
     print("\n== 요약 ==")
     passed = sum(1 for _, ok, _ in results if ok)
     for crit, ok, _ in results:

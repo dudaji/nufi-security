@@ -3,7 +3,7 @@
 온프렘/에어갭 동작(NFR1): 모든 탐지 추론은 로컬. 외부 네트워크 호출 0.
 """
 
-from .pipeline import DetectionPipeline, Finding
+from .pipeline import DetectionPipeline, Finding, CONF_SOURCES
 from .policy import PolicyEngine, Decision
 from .audit import AuditLogger
 from .message_store import MessageStore
@@ -15,9 +15,12 @@ from .vault import MappingVault, VaultEntry, load_kek
 from .surrogate import (SurrogateMinter, StreamingDeanonymizer,
                         REVERSIBLE_ENTITIES, TAG_OF)
 from .reversible import ReversibleEgress, RevResult
+from .detectors.confidential import ConfidentialKeywordDetector
+from .edm import EdmMatcher, EdmIndex
 
 __all__ = [
-    "DetectionPipeline", "Finding", "PolicyEngine", "Decision",
+    "DetectionPipeline", "Finding", "CONF_SOURCES", "PolicyEngine", "Decision",
+    "ConfidentialKeywordDetector", "EdmMatcher", "EdmIndex",
     "AuditLogger", "MessageStore", "EgressGuard", "GuardResult",
     "FileQueue", "SourceSpec", "Envelope", "AuditBot", "p95_latency_ms",
     "EnforcementPoint", "SIMULATED", "ENFORCED",

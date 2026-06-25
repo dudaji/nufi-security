@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Iterator, List
+from typing import Iterator, List, Optional
 
 from .. import checksums
 
@@ -20,6 +20,10 @@ class RawSpan:
     end: int
     score: float
     source: str = "regex"
+    # M4 기밀 신호용 부가 메타(없으면 None) — PII/SECRET 경로는 미사용.
+    conf_class: Optional[str] = None       # RESTRICTED|CONFIDENTIAL|INTERNAL|PUBLIC
+    confidence: Optional[float] = None
+    match_meta: Optional[dict] = None
 
 
 class KoreanPiiDetector:
