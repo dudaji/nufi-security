@@ -136,6 +136,52 @@ def test_decision_promotion_schema(tmp_path):
     assert promoted["applied"] is True   # dry-run 은 set add 를 성공 처리
 
 
+def test_s4_enforced_demo_contract(tmp_path):
+    """S4 ENFORCED 데모 계약(CMP-95): scripts/demo_s4_enforced.sh 가 적재하는 산출물 ↔
+    scripts/demo_cmp85.sh --enforce 검증기의 enf_ok 술어가 일치하는지 root 불요로 보장.
+
+    하니스와 동일 경로(EnforcementPoint.decide → EnforcedDecisionLog.process →
+    DropFeedback)로 enforcement.jsonl·blocked_attempts·s4_enforced.json 을 만들고,
+    검증기의 ENFORCED 술어를 그대로 재현해 PASS 임을 확인한다(스크립트 간 드리프트 차단).
+    """
+    import json
+
+    # 1) 우회 알림 → ENFORCED 결정 승격(하니스의 netns 내부 호출과 동일 API).
+    enf_log = tmp_path / "enforcement.jsonl"
+    ep = EnforcementPoint(mode=ENFORCED, log_path=str(enf_log))
+    decision = ep.decide({"kind": "flow_bypass", "dst_host": "api.anthropic.com",
+                          "dst_port": 443, "src_ip": "127.0.0.1",
+                          "src_process": "rogue_sdk", "flow_id": "s4-enforced-bypass"})
+    log = EnforcedDecisionLog(applier=Applier(cfg=_cfg(), dry_run=True), point=ep)
+    log.process([decision], resolver=_resolver)      # enforcement.jsonl 로 emit
+    enforce = [json.loads(l) for l in enf_log.read_text(encoding="utf-8").splitlines() if l.strip()]
+    enf_block = [e for e in enforce if e.get("action") == "BLOCK"]
+
+    # 2) 관측된 drop → blocked_attempts 증가(A3).
+    fb = DropFeedback(counter_path=str(tmp_path / "blocked_attempts.json"),
+                      flow_dir=str(tmp_path / "packets" / "public"))
+    fb.ingest([_DROP_LINE])
+    blocked = json.loads((tmp_path / "blocked_attempts.json").read_text(encoding="utf-8"))
+
+    # 3) 하니스 요약(netns 프로브 결과).
+    s4enf = {"host": "api.anthropic.com", "mode": "ENFORCED", "applied": True,
+             "rule_id": enf_block[0]["rule_id"], "a1_pass": True, "a2_drop": True,
+             "blocked_attempts": blocked["blocked_attempts"]}
+
+    # 4) demo_cmp85.sh --enforce 검증기의 enf_ok 술어(ENFORCED 분기)를 그대로 재현.
+    enf_ok = (
+        bool(enf_block)
+        and all(e.get("mode") == "ENFORCED" for e in enf_block)
+        and all(e.get("applied") is True for e in enf_block)
+        and all(e.get("rule_id") for e in enf_block)
+        and bool(s4enf) and s4enf.get("a2_drop") is True
+        and s4enf.get("a1_pass") is True
+        and int(blocked.get("blocked_attempts", 0)) >= 1
+    )
+    assert enf_ok, "ENFORCED 데모 계약 위반 — 하니스 산출물이 검증기 술어를 만족하지 않음"
+    assert enf_block[0]["rule_id"] == "inet/nufi_egress/public_dst/203.0.113.10.443"
+
+
 # ---- drop 피드백(A3 감사 증적·blocked_attempts) ------------------------------
 _DROP_LINE = ("Jun 25 14:00:01 host kernel: nufi-egress-block "
               "IN= OUT=eth0 SRC=10.0.0.5 DST=203.0.113.10 LEN=60 "
