@@ -5,6 +5,7 @@ PyYAML>=6.0
 fastapi>=0.110
 uvicorn>=0.29
 httpx>=0.27            # FastAPI TestClient (테스트용)
+cryptography>=41.0     # M3 매핑 Vault AES-256-GCM 봉투암호화(at-rest). 평문 폴백 금지.
 
 # [선택·프로덕션] SPEC 권장 스택. 미설치 시 코어가 폴백으로 동작.
 #   - LiteLLM Proxy (MIT): config/litellm_config.yaml + gateway/litellm_hook.py

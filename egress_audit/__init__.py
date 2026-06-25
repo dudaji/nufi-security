@@ -11,10 +11,17 @@ from .guard import EgressGuard, GuardResult
 from .file_queue import FileQueue, SourceSpec, Envelope
 from .audit_bot import AuditBot, p95_latency_ms
 from .enforcement import EnforcementPoint, SIMULATED, ENFORCED
+from .vault import MappingVault, VaultEntry, load_kek
+from .surrogate import (SurrogateMinter, StreamingDeanonymizer,
+                        REVERSIBLE_ENTITIES, TAG_OF)
+from .reversible import ReversibleEgress, RevResult
 
 __all__ = [
     "DetectionPipeline", "Finding", "PolicyEngine", "Decision",
     "AuditLogger", "MessageStore", "EgressGuard", "GuardResult",
     "FileQueue", "SourceSpec", "Envelope", "AuditBot", "p95_latency_ms",
     "EnforcementPoint", "SIMULATED", "ENFORCED",
+    "MappingVault", "VaultEntry", "load_kek",
+    "SurrogateMinter", "StreamingDeanonymizer", "REVERSIBLE_ENTITIES", "TAG_OF",
+    "ReversibleEgress", "RevResult",
 ]
