@@ -1,0 +1,31 @@
+{
+  "seed": 20260625,
+  "total": 490,
+  "positives": 340,
+  "negatives": 150,
+  "class_counts": {
+    "KR_RRN": 30,
+    "KR_FOREIGNER_REG": 20,
+    "KR_BRN": 20,
+    "KR_PASSPORT": 15,
+    "KR_DRIVER_LICENSE": 15,
+    "CREDIT_CARD": 20,
+    "KR_ACCOUNT": 20,
+    "KR_PHONE": 25,
+    "EMAIL": 15,
+    "KR_PERSON": 80,
+    "KR_LOCATION": 40,
+    "SECRET": 40,
+    "benign_hard": 30,
+    "benign": 120
+  },
+  "dev_size": 196,
+  "person_unlisted_ratio": 0.562,
+  "person_unlisted_n": 45,
+  "split": {
+    "dev_pct": 0.4,
+    "test_pct": 0.6,
+    "stratified": true
+  },
+  "note": "test 셋은 튜닝 중 열람 금지(누수 방지). person_unlisted_ratio ≥ 0.5 보장."
+}

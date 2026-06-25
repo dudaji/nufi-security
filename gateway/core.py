@@ -4,6 +4,7 @@ app.py(FastAPI)와 acceptance 하니스가 공유한다.
 """
 from __future__ import annotations
 
+import hashlib
 import os
 import time
 import uuid
@@ -36,6 +37,20 @@ def extract_text(messages: List[Dict[str, Any]]) -> str:
         else:
             parts.append(str(c))
     return "\n".join(parts)
+
+
+def _mask_finding(d: Dict[str, Any]) -> Dict[str, Any]:
+    """M5 §4.3: 감사 레코드 finding 의 원문 PII 평문 제거 — 길이+sha256 단축해시만 보존.
+
+    엔티티 타입·span·source·score 는 유지(분석·집계 가능), text 만 마스킹.
+    """
+    text = d.get("text") or ""
+    if text:
+        h = hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+        d = dict(d)
+        d["text"] = ""
+        d["text_masked"] = f"len={len(text)}:sha256={h}"
+    return d
 
 
 def _stub_completion(model: str, content: str) -> Dict[str, Any]:
@@ -129,8 +144,25 @@ class Gateway:
                                    conversation_id=conv_id)
 
         # public 경로: 송신 직전 탐지(pre_call)
-        result = self.guard.inspect(prompt_text)
-        findings = [f.to_dict() for f in result.findings]
+        # M5 §4.2 fail-closed: 탐지 파이프라인 예외/타임아웃 → 해당 요청 차단(열림 폴백 금지).
+        try:
+            result = self.guard.inspect(prompt_text)
+        except Exception as exc:  # noqa: BLE001 — 어떤 탐지 실패든 안전측(차단)으로 수렴
+            meta = {"requested_model": requested_model, "is_fallback": route.is_fallback,
+                    "fail_closed": True, "error": type(exc).__name__}
+            aid = self.audit.log(model=route.backend, provider=route.provider, is_public=True,
+                                 request_body={"model": requested_model, "redacted": True},
+                                 decision_summary={"blocked": True, "fail_closed": True},
+                                 findings=[], outcome="blocked", extra=meta)
+            err_body = {"error": {"type": "egress_fail_closed",
+                                  "message": "탐지 파이프라인 오류로 안전 차단되었습니다(fail-closed).",
+                                  "reason": type(exc).__name__}}
+            self._store(conversation_id=conv_id, turn=turn, direction="out", route=route,
+                        body=err_body, inline_decision={"blocked": True, "fail_closed": True})
+            return GatewayResponse(403, route, "blocked", aid, err_body, ["FAIL_CLOSED"],
+                                   conversation_id=conv_id)
+
+        findings = [_mask_finding(f.to_dict()) for f in result.findings]
         meta = {"requested_model": requested_model, "is_fallback": route.is_fallback}
 
         # public in 메시지 저장: 기본 가명화 통과본(body=sanitized), 원문은 retain_raw 정책으로.
@@ -139,9 +171,14 @@ class Gateway:
         self._store(conversation_id=conv_id, turn=turn, direction="in", route=route,
                     body=sanitized_in, raw_body=body, inline_decision=result.summary)
 
+        # M5 §4.3: 감사 로그에는 원문 PII 평문 저장 금지 — 가명화/마스킹본만.
+        # 원문은 MessageStore 의 retain_raw 정책(통제된 싱크)에만 보존된다.
+        audit_body = {"model": requested_model, "text": result.transformed_text,
+                      "redacted": True}
+
         if result.blocked:
             aid = self.audit.log(model=route.backend, provider=route.provider, is_public=True,
-                                 request_body=body, decision_summary=result.summary,
+                                 request_body=audit_body, decision_summary=result.summary,
                                  findings=findings, outcome="blocked", extra=meta)
             ents = sorted({a["entity_type"] for a in result.decision.actions
                            if a["action"] in self.guard.policy.blocking_actions})
@@ -156,7 +193,7 @@ class Gateway:
         outcome = "transformed" if result.transformed_text != prompt_text else "forwarded"
         meta["transformed_prompt"] = result.transformed_text if outcome == "transformed" else None
         aid = self.audit.log(model=route.backend, provider=route.provider, is_public=True,
-                             request_body=body, decision_summary=result.summary,
+                             request_body=audit_body, decision_summary=result.summary,
                              findings=findings, outcome=outcome, extra=meta)
 
         # P1(a): public 으로 실제 내보내는 요청을 TLS 직전 평문으로 dump(본문 감사 입력).
