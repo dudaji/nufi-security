@@ -27,3 +27,17 @@ entities:
 
   # --- 비밀정보 (기본 차단) ---
   SECRET:           { action: block, severity: critical }
+
+# --- Egress Enforcement (트랙 B · CMP-94, 모델 (a) nftables 허용목록) ---
+# 우회(게이트웨이 미경유) public LLM 직결 패킷의 L3/L4 실제 drop 토글.
+# 정책 단일 출처(A7): public 목적지·게이트웨이는 routing.yaml 에서 파생/재사용.
+enforcement:
+  fail_mode: open          # open(기본·가용성 우선) | closed(옵트인·실패 시 전면 차단)
+  table: nufi_egress       # nftables inet 테이블명
+  # 게이트웨이 화이트리스트 셀렉터(선적용·1순위). 비우면 applier 가 routing.yaml
+  # gateway.process_names → 실행 중 프로세스 uid 로 런타임 해석.
+  gateway_uids: []         # 예: [1000]
+  gateway_cgroups: []      # 예: ["system.slice/nufi-gateway.service"]
+  cgroup_level: 2
+  # 운영 예외(임시 허용) — "host:port"/"ip:port". 변경 시 CPO 리뷰·사유 기록(§5.3).
+  allow_extra: []
