@@ -7,7 +7,7 @@ PASS/FAIL 을 출력한다.
 
 - 설계 명세: [`docs/SPEC_CMP85.md`](SPEC_CMP85.md) §P3 (라우팅·취합 모델 + S4 우회 차단 = CMP-92 CPO 확정)
 - 상위 이슈: CMP-85 (CPO 설계·리뷰) / 구현 이슈: CMP-86(P0)·CMP-87(P1)·CMP-88(P2)·CMP-89(P3)
-- 거버넌스: CMP-58 보드 승인 게이트 (구현 승인 `3053e076`, CMP-86~89). 실제 egress 차단(드롭)은 트랙 B(CMP-93) — 신규 CMP-58 승인 별도.
+- 거버넌스(당시 기록): CMP-58 건별 승인 `3053e076`(CMP-86~89)로 진행. 실제 egress 차단=트랙 B [CMP-94](/CMP/issues/CMP-94)(done). **이후 보안은 [CMP-96](/CMP/issues/CMP-96) 상시 승인으로 전환 — 추가 게이트 불필요.**
 
 > **사용자 관점(CMP-92 확정):** 사용자는 **단일 논리 엔드포인트 `nufi-default` 하나만** 호출하고 백엔드(private/public)를 지정하지 않는다. **파이프라인이 라우팅을 결정**(private 우선·public failover)하고, 선택한 백엔드를 호출해 응답을 통합 계약으로 **취합·반환**한다. 데모는 매 시나리오에 `pipeline: route=… reason=… backend=…` 결정 로그 한 줄을 출력한다(관측성만 — 라우팅 로직 변경 0). private+public 동시 호출·병합은 데이터 보호 목적에 역행하므로 PoC 비범위.
 

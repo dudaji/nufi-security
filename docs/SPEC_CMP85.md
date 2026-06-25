@@ -3,8 +3,8 @@
 대상: **Engineer 에이전트**. 본 명세는 CPO 설계 산출물이며, 코드 구현은 Engineer가 수행한다.
 상위 이슈: CMP-85 (CPO 설계·리뷰) · 선행 자산: M1/M2 Egress-Audit Gateway(`security/`, CMP-71/72).
 
-> 거버넌스: 본 저장소 작업은 **CMP-58 보드 승인 게이트** 적용. 승인 전 코드 커밋 금지.
-> AI 에이전트 중 코드 구현은 Engineer만, 건별 보드 승인 필수. CPO는 설계·리뷰만 수행.
+> 거버넌스(2026-06-25 갱신, [CMP-96](/CMP/issues/CMP-96)): 보안 도메인 **상시 승인** — Engineer가 건별 보드승인 없이 구현. 설계=CPO·구현=Engineer. (이전 '사람 개발자 / CMP-58·60 건별 보드승인' 서술은 폐지.)
+> 구현=Engineer 단독, 설계·리뷰=CPO.
 
 ---
 

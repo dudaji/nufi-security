@@ -5,7 +5,7 @@
 - **일자:** 2026-06-24
 - **상위 목표:** GPU→NPU migration 툴 및 MLOps, NPUOps 솔루션 개발·판매업 (company goal)
 - **프로젝트:** korea
-- **문서 성격:** 리서치 + 제안(Proposal). **본 문서는 설계/전략 산출물이며, 실제 구현은 사람 개발자 백로그로 인계한다(거버넌스 CMP-58/CMP-60 준수).**
+- **문서 성격:** 리서치 + 제안(Proposal). **본 문서는 설계/전략 산출물이며, 실제 구현은 Engineer가 수행한다(보안 도메인 상시 승인 [CMP-96](/CMP/issues/CMP-96) — 건별 보드승인 불필요).**
 
 ---
 
@@ -151,18 +151,18 @@
 
 ---
 
-## 6. 단계별 프로토타이핑 계획 (실행은 사람 개발자)
+## 6. 단계별 프로토타이핑 계획 (구현은 Engineer)
 
-> 거버넌스 CMP-58/60: 아래 구현 작업의 **오너는 사람 개발자**다. CPO는 설계/명세까지 담당하고, 구현 자식 이슈는 **사람 백로그**로 생성한다.
+> 거버넌스([CMP-96](/CMP/issues/CMP-96), 2026-06-25): 아래 구현 작업의 **오너는 Engineer**다. CPO는 설계/명세, 구현은 Engineer가 수행(보안 상시 승인 — 건별 보드승인 불필요).
 
 | 단계 | 내용 | 산출물 | Effort | 오너 |
 |---|---|---|---|---|
 | **M0 설계 확정** | 본 제안 검토·라우팅/정책 확정·KR 수치 합의 | 승인된 설계 | S | CPO + CEO |
-| **M1 게이트웨이 PoC** | LiteLLM Proxy로 private 기본+public 폴백, public 요청 로깅 | 동작하는 프록시 | S | 사람 개발자 |
-| **M2 탐지 파이프라인** | Presidio(한국 인식기)+KoELECTRA(ONNX)+detect-secrets `pre_call` 결합 | 인라인 스캐너 | M | 사람 개발자 |
-| **M3 가명화/원복** | 가역 가명화 + 응답 de-anonymize + 매핑 Vault | 라운드트립 데모 | M | 사람 개발자 |
-| **M4 기밀 1차** | 키워드/사전 + EDM 솔트해시 | 기밀 탐지 v1 | M | 사람 개발자 |
-| **M5 벤치/하드닝** | 한국어 PII recall/precision·지연 측정, 정책 UI 룰갱신 | 벤치 리포트 | M | 사람 개발자 |
+| **M1 게이트웨이 PoC** | LiteLLM Proxy로 private 기본+public 폴백, public 요청 로깅 | 동작하는 프록시 | S | Engineer (done) |
+| **M2 탐지 파이프라인** | Presidio(한국 인식기)+KoELECTRA(ONNX)+detect-secrets `pre_call` 결합 | 인라인 스캐너 | M | Engineer (done) |
+| **M3 가명화/원복** | 가역 가명화 + 응답 de-anonymize + 매핑 Vault | 라운드트립 데모 | M | Engineer ([CMP-97](/CMP/issues/CMP-97)) |
+| **M4 기밀 1차** | 키워드/사전 + EDM 솔트해시 | 기밀 탐지 v1 | M | Engineer ([CMP-98](/CMP/issues/CMP-98)) |
+| **M5 벤치/하드닝** | 한국어 PII recall/precision·지연 측정, 정책 UI 룰갱신 | 벤치 리포트 | M | Engineer ([CMP-99](/CMP/issues/CMP-99)) |
 
 **완료 기준(마일스톤 위생, binary):** M1=public 요청 100% 로깅 확인 / M2=샘플셋 PII 탐지 동작 / M3=가명화→원복 무손실 / M5=한국어 PII recall≥0.9 & p95 지연≤150ms(목표, M0에서 확정).
 
@@ -177,7 +177,7 @@
 | TLS MITM 운영/법무 부담 | 높음 | 높음 | 게이트웨이 방식 채택(앱 통합), 네트워크 탭은 후속 옵션 |
 | 기밀(비정형) 탐지 한계 | 높음 | 중 | 계층 방어(키워드→EDM→지문→분류기) 단계 도입 |
 | OSS 라이선스 오염 | 낮음 | 높음 | NC/ND 모델·AGPL 인라인 배제(본문 명시) |
-| 사람 개발자 미배치로 PoC 정체 | 중 | 높음 | M1 구현 이슈를 **사람 백로그**로 생성, CEO에 리소스 요청 |
+| ~~사람 개발자 미배치로 PoC 정체~~ (해소: [CMP-96](/CMP/issues/CMP-96) 보안 상시 승인) | — | — | Engineer가 구현 오너 |
 
 ## 적용 렌즈 — MoSCoW (PoC 범위 압박 시)
 - **Must:** LiteLLM 라우팅·public 로깅(M1), Presidio 한국 PII + 정규식(M2), 강한 PII 차단.
@@ -191,7 +191,7 @@
 
 1. **KR 수치 확정** — 한국어 PII recall 목표·인라인 지연 목표(2/6장 후보값 승인).
 2. **인터셉션 방식** — 게이트웨이(권장) vs 네트워크 탭. PoC는 게이트웨이로 가정.
-3. **사람 개발자 배치** — M1~M5 구현 오너(현재 NuFi 구현트랙은 사람 백로그). 6월 백엔드 0.5는 AI바우처 전용([nufi_studio_s0] 메모) → **별도 리소스 필요**.
+3. **구현 오너 = Engineer** — M1~M5 구현은 Engineer가 수행(보안 상시 승인 [CMP-96](/CMP/issues/CMP-96)). 별도 사람 리소스 불필요.
 4. **고객 PoC 연계** — 본 기능을 NuFi POC 파트너 전략([nufi_poc_strategy])의 무상 PoC 범위에 포함할지.
 5. **로드맵 배치** — NuFi Serve/Studio 트랙과의 우선순위(포트폴리오 로드 렌즈).
 
@@ -213,6 +213,6 @@
 
 ## 10. 다음 액션
 
-- [ ] CEO: 8장 결정사항 검토(특히 KR 수치·인터셉션 방식·사람 개발자 배치).
-- [ ] CPO: 승인 시 M1~M2 구현 명세를 사람 개발자 백로그 자식 이슈로 분해(거버넌스: 오너=사람).
+- [x] CEO: 8장 결정사항 검토(KR 수치·인터셉션 방식). 구현 오너=Engineer([CMP-96](/CMP/issues/CMP-96)).
+- [x] CPO: M1~M2 구현 명세 분해·Engineer 인계 완료(오너=Engineer). M3~M5=[CMP-97](/CMP/issues/CMP-97)/[CMP-98](/CMP/issues/CMP-98)/[CMP-99](/CMP/issues/CMP-99).
 - [ ] CPO: NuFi 로드맵에 "Egress-Audit 게이트웨이" 트랙 등재(POC 파트너 전략과 연계).

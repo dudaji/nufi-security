@@ -3,7 +3,7 @@
 하이브리드 LLM(private 우선 + public 폴백) 환경에서 **public LLM(Claude/OpenAI 등)으로 나가는 outbound 요청을 가로채(게이트웨이) PII·비밀을 인라인 탐지·차단·가명화**하는 PoC.
 
 - 상위 이슈: CMP-71 (설계/제안, CPO) · 구현 이슈: CMP-72 (Engineer)
-- 구현 오너: **Engineer 에이전트** (보드 승인 게이트 CMP-58 적용 — CMP-71 CEO 응답에서 Engineer 배치 승인)
+- 구현 오너: **Engineer 에이전트** (보안 도메인 **상시 승인** — [CMP-96](/CMP/issues/CMP-96) 규칙3, 건별 보드승인 불필요. M1/M2 당시엔 CMP-58 건별 승인이었음)
 - 설계 근거: [`docs/PROPOSAL.md`](docs/PROPOSAL.md) · 구현 명세: [`docs/SPEC.md`](docs/SPEC.md)
 - 📖 **문서를 어디서부터 읽나? → [`docs/README.md`](docs/README.md)** (읽기 순서 + 최신/이력 상태표)
 

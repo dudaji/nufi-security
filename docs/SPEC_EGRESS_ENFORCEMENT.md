@@ -1,9 +1,9 @@
 # SPEC — NuFi Egress Enforcement (우회 차단) · 트랙 B
 
 > 이슈: **CMP-93** ([CMP-85] NuFi Egress Enforcement — 설계 스펙, 트랙 B)
-> 소유: **CPO (설계 트랙)** · 거버넌스: **CMP-58** (본 문서=설계만, 코드/실제 차단 구현 없음)
+> 소유: **CPO (설계 트랙)** · 거버넌스: 보안 상시 승인([CMP-96](/CMP/issues/CMP-96)) — 구현=Engineer, 건별 보드승인 불필요. 본 문서=설계.
 > 상위 배경: `security/docs/SPEC_CMP85.md` §P3 "우회 차단(Enforcement) — S4 강화", CMP-92
-> 상태: **설계 확정 대기 → 빌드 이슈(Engineer, 신규 CMP-58) 인계용**
+> 상태: **설계 확정 → 빌드 완료([CMP-94](/CMP/issues/CMP-94), nftables MVP, done)**
 
 ---
 
@@ -215,9 +215,9 @@ enforce: action=BLOCK dst=api.anthropic.com:443 src=<host/pid> reason=gateway_by
 
 ---
 
-## 8. 빌드 작업 명세 (사람/Engineer 인계용)
+## 8. 빌드 작업 명세 (Engineer 인계용 — [CMP-94](/CMP/issues/CMP-94)로 구현 완료)
 
-> **거버넌스(CMP-58):** 아래는 **구현 트랙** → 오너=**사람 개발자/Engineer**. 본 스펙 확정 후 **별도 빌드 이슈** 생성 + **신규 CMP-58 승인 게이트**(기존 감사 승인 `3053e076` 과 별개) 필요. 본 CPO 이슈에서 구현하지 않는다.
+> **거버넌스:** 아래 구현 트랙은 오너=**Engineer**. 보안 상시 승인([CMP-96](/CMP/issues/CMP-96))으로 건별 보드승인 불필요. 본 스펙은 [CMP-94](/CMP/issues/CMP-94)로 빌드 완료.
 
 ### 8.1 빌드 대상 (MVP = 모델 (a))
 
@@ -266,12 +266,12 @@ enforce: action=BLOCK dst=api.anthropic.com:443 src=<host/pid> reason=gateway_by
 ```
 ① 트랙 A 로 CMP-89 데모 완결 (지금)        ← 탐지 + SIMULATED 차단결정
 ② 본 스펙 확정 (CPO, 본 문서 = CMP-93)      ← 설계 트랙
-③ 빌드 이슈 (Engineer, 신규 CMP-58 승인 후)  ← 구현 트랙·오너=사람
+③ 빌드 이슈 (Engineer) — [CMP-94] done  ← 구현 트랙·오너=Engineer
 ④ ENFORCED 모드 S4 데모 통합 (§9)
 ```
 
-- **본 이슈(CMP-93) = 설계만.** 코드/실제 차단 구현 없음 (CMP-58).
-- **③ 빌드 이슈 = 신규 CMP-58 승인 게이트.** 기존 감사 승인 `3053e076`(P0~P3 감사) 와 **별개**. 빌드 이슈는 본 스펙 확정 후 생성하고 신규 승인을 요청한다.
+- **본 이슈(CMP-93) = 설계만.** 구현은 [CMP-94](/CMP/issues/CMP-94)(Engineer, done).
+- **③ 빌드 이슈 = [CMP-94](/CMP/issues/CMP-94)(done).** (당시 신규 CMP-58 승인 `43dd134b`로 진행. 이후 보안은 [CMP-96](/CMP/issues/CMP-96)으로 상시 승인 전환 — 추가 게이트 불필요.)
 - **OKR 링크:** NuFi Egress-Audit 차별화(한국어 PII 갭 + 파이프라인 우회 통제) → enforcement 는 "탐지만 vs 실제 차단" 경쟁 우위. (포트폴리오: `project_nufi_egress_audit`)
 
 ---

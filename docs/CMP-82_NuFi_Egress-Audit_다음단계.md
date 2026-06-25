@@ -19,19 +19,19 @@
 
 ---
 
-## A. 제품 트랙 — 설계는 끝, **구현 미착수** (사람/Engineer 리소스 게이트)
+## A. 제품 트랙 — 설계 끝, **구현 진행 중** (Engineer, 보안 상시 승인 [CMP-96](/CMP/issues/CMP-96))
 
-설계가 완료된 마일스톤의 구현 이슈가 backlog로 대기 중입니다. 공통 전제: **[CMP-60] 사람 개발 게이트** (AI 설계 에이전트는 구현 불가, 건별 보드 승인 + 사람/Engineer 배정 필요).
+설계가 완료된 마일스톤을 **Engineer 구현 이슈**로 분해했습니다. 공통 전제: 보안 도메인 **상시 승인**([CMP-96](/CMP/issues/CMP-96)) — 건별 보드승인 불필요, 오너=Engineer. (구 backlog CMP-79/80/81은 '사람+CMP-60 게이트' 전제라 폐지·cancelled → 아래 정본으로 대체.)
 
 | 이슈 | 작업 | 의존/게이트 |
 |---|---|---|
-| [CMP-80](/CMP/issues/CMP-80) | **M3 구현** — 가역 가명화·원복 + 매핑 Vault | CMP-60 게이트 |
-| [CMP-81](/CMP/issues/CMP-81) | **M4 구현** — 기밀 1차 탐지(키워드/EDM) | CMP-60 게이트, M3 후 권장 |
-| [CMP-79](/CMP/issues/CMP-79) | **M5 구현·측정** — 골드셋 확대 + KoELECTRA(ONNX-INT8) **실측 recall/지연** 하드닝 | 독립 진행 가능 |
+| [CMP-97](/CMP/issues/CMP-97) | **M3 구현** — 가역 가명화·원복 + 매핑 Vault | 오너=Engineer, todo (high) |
+| [CMP-98](/CMP/issues/CMP-98) | **M4 구현** — 기밀 1차 탐지(키워드/EDM) | 오너=Engineer, todo · M3 후 권장 |
+| [CMP-99](/CMP/issues/CMP-99) | **M5 구현·측정** — 골드셋 확대 + KoELECTRA(ONNX-INT8) **실측 recall/지연** 하드닝 | 오너=Engineer · blockedBy CMP-97·98 |
 | [CMP-85](/CMP/issues/CMP-85) | (보드 생성) public/private LLM **분리 감사로그** 작성·감사 | in_progress |
 
 ### 추가로 필요하다고 보는 작업 (제품)
-1. **프로덕션 recall 상향**: 현 데모는 gazetteer NER(결정적·에어갭)로 recall 1.0이지만 골드셋이 작음. CMP-79에서 골드셋 확대 + KoELECTRA 실측이 **프로덕션 신뢰도의 핵심**. 라이선스 금지군(Piiranha/gliner_ko/TruffleHog) 회피 준수.
+1. **프로덕션 recall 상향**: 현 데모는 gazetteer NER(결정적·에어갭)로 recall 1.0이지만 골드셋이 작음. [CMP-99](/CMP/issues/CMP-99)에서 골드셋 확대 + KoELECTRA 실측이 **프로덕션 신뢰도의 핵심**. 라이선스 금지군(Piiranha/gliner_ko/TruffleHog) 회피 준수.
 2. **가역 가명화 운영 보안**: M3 매핑 Vault의 키 관리·접근통제·원복 감사 추적(누가 언제 원복했는가)이 컴플라이언스 셀링포인트. 구현 시 감사 로그와 연동 필요.
 3. **분리 감사로그(CMP-85)와 정책 일관성**: public/private 분리 시 ⑤ "public 100% 기록·private 0건" 데모 불변식이 유지되는지 회귀 테스트 추가 권장.
 
@@ -55,9 +55,9 @@
 
 ## 권고 (CMO)
 
-- **병행**이 최적: 제품 구현(M3/M5/CMP-85)은 사람·Engineer 리소스 배정으로, GTM(데모 무기화→컨택)은 CMO가 즉시.
+- **병행**이 최적: 제품 구현(M3/M4/M5 = CMP-97/98/99, Engineer)과 GTM(데모 무기화→컨택, CMO)을 동시에.
 - **즉시 착수 가능(무개발)**: GTM 트랙. 보드 별도 지시 없으면 CMP-15를 데모 자산 반영으로 진행.
-- **보드 결정 필요**: 제품 구현 리소스 배정(CMP-60 게이트 통과 + 사람/Engineer 지정).
+- **보드 결정 불필요(해소)**: 보안 상시 승인([CMP-96](/CMP/issues/CMP-96))으로 Engineer가 CMP-97/98/99 바로 착수.
 
 ---
 
