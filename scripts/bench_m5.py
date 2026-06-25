@@ -249,8 +249,14 @@ def build_guard(backend):
         if backend == "onnx-int8":
             try:
                 import onnxruntime  # noqa: F401
+                import optimum.onnxruntime  # noqa: F401
             except Exception:
-                return None, "onnx-int8 미설치(onnxruntime 없음) — 모델 양자화·프로비저닝 후 측정."
+                return None, "onnx-int8 미설치(onnxruntime/optimum 없음) — 모델 양자화·프로비저닝 후 측정."
+            try:
+                # 실제 INT8 ONNX 세션 로드(FP32 스텁 아님). 산출: scripts/export_onnx_int8.py
+                return EgressGuard(ner_backend="onnx-int8"), None
+            except Exception as e:
+                return None, f"onnx-int8 모델 미산출 — `python3 scripts/export_onnx_int8.py` 후 측정 ({e})"
         try:
             return EgressGuard(ner_backend="transformers"), None
         except Exception as e:

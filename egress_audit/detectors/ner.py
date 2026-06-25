@@ -104,16 +104,16 @@ class _GazetteerBackend:
                 start = idx + len(place)
 
 
-class _TransformersBackend:
-    """transformers token-classification 파이프라인 (KoELECTRA NER)."""
+class _PipelineBackend:
+    """transformers token-classification 파이프라인 공통 채점 로직.
 
-    name = "transformers"
+    하위 클래스가 `self._pipe`(HF token-classification 파이프라인)와
+    `name`/`source` 만 구성하면 detect() 가 공유된다. FP32(torch)·INT8(ONNX) 동일.
+    """
+
+    name = "pipeline"
+    source = "ner:koelectra"
     _LABEL_MAP = {"PS": "KR_PERSON", "PER": "KR_PERSON", "LC": "KR_LOCATION", "LOC": "KR_LOCATION"}
-
-    def __init__(self, model_id: str = "Leo97/KoELECTRA-small-v3-modu-ner"):
-        from transformers import pipeline  # type: ignore
-        self._pipe = pipeline("token-classification", model=model_id,
-                              aggregation_strategy="simple")
 
     def detect(self, text: str) -> Iterator[RawSpan]:
         for ent in self._pipe(text):
@@ -122,7 +122,50 @@ class _TransformersBackend:
             if not mapped:
                 continue
             yield RawSpan(mapped, ent["word"], int(ent["start"]), int(ent["end"]),
-                          float(ent["score"]), source="ner:koelectra")
+                          float(ent["score"]), source=self.source)
+
+
+class _TransformersBackend(_PipelineBackend):
+    """transformers token-classification 파이프라인 (KoELECTRA FP32, torch)."""
+
+    name = "transformers"
+    source = "ner:koelectra"
+
+    def __init__(self, model_id: str = "Leo97/KoELECTRA-small-v3-modu-ner"):
+        from transformers import pipeline  # type: ignore
+        self._pipe = pipeline("token-classification", model=model_id,
+                              aggregation_strategy="simple")
+
+
+class _OnnxInt8Backend(_PipelineBackend):
+    """ONNX 동적 INT8 런타임 백엔드 (optimum onnxruntime).
+
+    `scripts/export_onnx_int8.py` 가 산출한 INT8 ONNX 디렉터리를 로드한다.
+    경로는 `model_id`(디렉터리) 또는 env `M5_ONNX_DIR/int8` 로 지정.
+    """
+
+    name = "onnx-int8"
+    source = "ner:koelectra-onnx-int8"
+
+    def __init__(self, model_id: Optional[str] = None):
+        import os
+        from optimum.onnxruntime import ORTModelForTokenClassification  # type: ignore
+        from transformers import AutoTokenizer, pipeline  # type: ignore
+
+        model_dir = model_id or os.environ.get("M5_ONNX_DIR")
+        if model_dir and not str(model_dir).rstrip("/").endswith("int8"):
+            cand = os.path.join(model_dir, "int8")
+            if os.path.isdir(cand):
+                model_dir = cand
+        if not model_dir:
+            model_dir = os.path.join(os.path.expanduser("~/.cache/m5_onnx_int8"), "int8")
+        if not os.path.isdir(model_dir):
+            raise FileNotFoundError(
+                f"INT8 ONNX 디렉터리 없음: {model_dir} — 먼저 `python3 scripts/export_onnx_int8.py`")
+        model = ORTModelForTokenClassification.from_pretrained(model_dir)
+        tok = AutoTokenizer.from_pretrained(model_dir)
+        self._pipe = pipeline("token-classification", model=model, tokenizer=tok,
+                              aggregation_strategy="simple")
 
 
 class KoreanNerDetector:
@@ -133,6 +176,8 @@ class KoreanNerDetector:
 
     @staticmethod
     def _build_backend(backend: str, model_id: Optional[str]):
+        if backend == "onnx-int8":
+            return _OnnxInt8Backend(model_id=model_id)  # 미가용 시 예외 전파(폴백 금지: 명시 측정용)
         if backend in ("auto", "transformers"):
             try:
                 kwargs = {"model_id": model_id} if model_id else {}

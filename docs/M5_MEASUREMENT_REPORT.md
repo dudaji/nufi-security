@@ -49,12 +49,10 @@
 - **정규식 선필터 효과 분리(§2.2):** `regex_only(ner_off)` 5.46ms ≤ `always_ner(gazetteer)` 5.59ms →
   선필터 경로가 우월(설계 정당화). KoELECTRA 활성 시 차이는 더 벌어질 것으로 예상.
 
-> ⏸ **KoELECTRA(transformers FP32) / ONNX-INT8 실측은 BLOCKED.**
-> 본 에어갭 환경에 `transformers`/`onnxruntime` 및 `Leo97/KoELECTRA-small-v3-modu-ner`
-> 가중치가 없다. 하니스는 미설치 시 `backend_status: unavailable` 로 **명시 보고**(침묵 금지).
-> 모델·런타임 프로비저닝 후 `python3 scripts/bench_m5.py --backend onnx-int8 --split test` 로
-> §1.3 recall·§2.2 p95(512토큰 ≤ 150ms)·INT8 양자화 recall 저하 ≤ 1%p 를 측정해 닫는다.
-> → 후속 이슈로 분리(블로커: 모델/런타임 프로비저닝).
+> ✅ **[CMP-100 에서 해소] KoELECTRA(FP32) / ONNX-INT8 실측 완료 → 아래 [부록 E](#부록-e--cmp-100-koelectraonnx-int8-백엔드-프로비저닝--실측-블로커-해소) 참조.**
+> 본 CMP-99 시점의 에어갭 환경엔 런타임/가중치가 없어 `backend_status: unavailable` 로 명시 보고했으나,
+> CMP-100 에서 모델·런타임 가용 환경에 프로비저닝하여 `--backend transformers/onnx-int8` 실측으로 닫았다.
+> 결과: PII recall FP32 0.941 / INT8 0.946, INT8 512자 p95 38ms, INT8 저하 ≤1%p(헤드라인 +0.49%p).
 
 ## 산출물 C — 채점 방법론 (`scripts/bench_m5.py`)
 
@@ -102,23 +100,106 @@
   (신규: `gateway/core.py` `_mask_finding()` + 가명화본 로깅. 기존엔 차단 경로가 원문 적재 → 수정.)
 - ✅ **재현성** — 동일 입력 → 동일 결정(비결정성 0).
 
+## 부록 E — CMP-100: KoELECTRA/ONNX-INT8 백엔드 프로비저닝 + 실측 (블로커 해소)
+
+- 이슈: CMP-100 (Engineer) · 설계: CMP-78 §1.3·§2.2 · 거버넌스: 보안 상시승인(CMP-96).
+- 측정 환경(프로비저닝): Engineer 개발 박스 **i7-1360P / WSL2 4코어 / 2.6GHz / RAM 7.6GB, GPU 미사용**.
+  `transformers 4.57.6 · torch 2.12.1+cpu · onnxruntime 1.27.0 · optimum`. 모델 `Leo97/KoELECTRA-small-v3-modu-ner`.
+- **이 박스는 에어갭이 아니라 네트워크 가용** → 모델·런타임 프로비저닝으로 §B 블로커 해소. 단, **프로덕션 동급
+  하드웨어는 아님** → recall 수치는 하드웨어 독립(확정값)이나 **지연(p95)은 참고치**(프로덕션 온프렘에서 재측정 권고).
+- ONNX-INT8 산출: `scripts/export_onnx_int8.py` (FP32 ONNX 내보내기 → 동적 INT8 양자화). **FP32 56.5MB → INT8 14.6MB(3.9×↓)**.
+  bench `--backend onnx-int8` 은 이제 **실제 INT8 ONNX 세션**을 로드(기존 FP32 스텁 대체, `egress_audit/detectors/ner.py:_OnnxInt8Backend`).
+
+### E.1 recall (test 셋, n=294) — gazetteer → KoELECTRA FP32 → ONNX-INT8
+
+| 지표 | gazetteer | **KoELECTRA FP32** | **ONNX-INT8** | INT8 CI95 | 목표 | INT8 판정 |
+|---|---|---|---|---|---|---|
+| **PII recall(전체)** | 0.809 | **0.941** | **0.946** | [0.906, 0.970] | ≥0.90 | ✅ |
+| 강한 PII recall | 1.000 | 1.000 | **1.000** | — | ≥0.98 | ✅ |
+| Secret recall | 1.000 | 1.000 | **1.000** | — | ≥0.90 | ✅ |
+| PII precision | 0.891 | 0.985 | **0.985** | — | ≥0.85 | ✅ |
+| KR_PERSON recall | 0.375 | 0.854 (41/48) | **0.833 (40/48)** | [0.704, 0.913] | ≥0.85 | ⚠️ 경계 |
+| KR_PERSON 미수록 슬라이스 | 0.087 | 0.696 | **0.696** | — | — | (참고) |
+| KR_LOCATION recall | 0.625 | 0.792 (19/24) | **0.875 (21/24)** | [0.690, 0.957] | ≥0.85 | ✅(경계) |
+| benign false-block | 0.033 | 0.033 | **0.033 (3/90)** | — | ≤0.02 | ❌ |
+| span exact / incl-partial | 0.755/0.804 | 0.917/0.941 | **0.922/0.946** | — | — | (참고) |
+
+- **핵심 가설 검증 완료:** KoELECTRA 가 gazetteer 폴백의 인명 붕괴를 정확히 메운다 — KR_PERSON
+  **0.375→0.85대**, 미수록 슬라이스 **0.087→0.696**, 전체 PII recall **0.809→0.94대**. M5 의 존재 이유가 실측으로 닫힘.
+- **dev 조기신호(R-RECALL):** FP32 dev person=0.969·미수록=0.955·PII=0.985 / INT8 dev person=0.938·PII=0.971 — dev 에선 전 항목 여유.
+  **sealed test 슬라이스가 의도적으로 더 어렵다**(인명 56% gazetteer 미수록, 신규지명/건물명 포함).
+
+### E.2 INT8 양자화 recall 영향 (§2.2: FP32 대비 저하 ≤ 1%p)
+
+| 지표 | FP32 | INT8 | Δ(INT8−FP32) |
+|---|---|---|---|
+| **PII recall(헤드라인)** | 0.9412 | 0.9461 | **+0.49%p** |
+| 강한 PII / Secret | 1.000 | 1.000 | 0 |
+| KR_PERSON | 0.8542 | 0.8333 | −2.09%p |
+| KR_LOCATION | 0.7917 | 0.8750 | +8.33%p |
+| span incl-partial | 0.9412 | 0.9461 | +0.49%p |
+
+- **판정 — §2.2 INT8 저하 ≤1%p: PASS.** 헤드라인 PII recall 은 **저하 없음(+0.49%p)**. 클래스별 ±2~8%p
+  변동은 **소표본 양자화 노이즈**(person n=48·location n=24, ±1 적중 ≈ 2~4%p)로 Wilson CI 가 전부 겹친다 →
+  점추정 단독 판정 금지(§3) 원칙상 동치. INT8 은 recall 보존하며 모델 **3.9× 경량화**.
+
+### E.3 지연 (§2.2: 512토큰 p95 ≤ 150ms) — 참고치(비프로덕션 CPU)
+
+| 버킷 | gazetteer p95 | KoELECTRA FP32 p95 | **ONNX-INT8 p95** | 목표 |
+|---|---|---|---|---|
+| ≤128자 | 1.9ms | 58.4ms | **13.8ms** | — |
+| **512자** | 5.7ms | 95.3ms | **38.0ms** | ≤150ms ✅ |
+| 2048자 | 23.6ms | 227.7ms | **122.6ms** | — |
+
+- **INT8 이 512자 p95 = 38ms 로 목표 대비 4× 여유**(FP32 95ms 대비 2.5× 빠름). 비프로덕션 박스에서도 PASS →
+  프로덕션 온프렘에서도 안전 마진. **R-INT8 리스크 완화**: 저사양에서도 INT8 권장 경로가 p95 게이트 충족 가능성 높음.
+- 정규식 선필터 우월성 유지(`regex_only` < `always_ner`). KoELECTRA 활성 시 선필터 효과 더 큼(설계 정당화 재확인).
+
+### E.4 잔여 게이트 (CPO MoSCoW 재triage 대상 — 설계 §2.2 폴백 결정)
+
+§1.3 7개 게이트 중 **5개 PASS**(PII recall·강한PII·secret·precision·location). 미충족 2개는 **모델·정규식 한계**로
+설계 결정이 필요 → CPO 위임(이슈의 step4 경로):
+
+1. **KR_PERSON recall 경계(0.833~0.854, CI 가 0.85 포함):** sealed test 슬라이스(미수록 인명 56%)에서 KoELECTRA
+   단독은 0.85 를 점추정으로 안정적으로 넘지 못함. 옵션: (a) gazetteer+KoELECTRA **앙상블/유니온**(recall↑, precision 영향 점검),
+   (b) 더 큰 NER 모델(small→base, 지연 재측정), (c) test 인명 표본 확대로 CI 폭 축소. → **CPO MoSCoW**.
+2. **benign false-block 0.033(>0.02):** **NER 백엔드와 무관** — gazetteer/FP32/INT8 전부 동일(3/90). 원인은 `KR_ACCOUNT`
+   정규식이 운송장/ISBN 숫자그룹과 충돌(R-PRECISION). 완화: 계좌 컨텍스트 게이팅 또는 자릿수·구분자 정밀화. → **CPO MoSCoW**.
+
+**회귀 기준선:** `samples/gold/baseline.json` 을 **ONNX-INT8(프로덕션 목표)** 기준으로 갱신. `--baseline check` 동작 확인(회귀 0).
+
+### E.5 재현
+
+```bash
+# 모델·런타임 가용(비에어갭) 환경
+python3 scripts/export_onnx_int8.py                                  # FP32→INT8 ONNX 산출(~/.cache/m5_onnx_int8)
+python3 scripts/bench_m5.py --backend transformers --split dev       # 조기신호
+python3 scripts/bench_m5.py --backend transformers --split test      # FP32 recall+지연
+python3 scripts/bench_m5.py --backend onnx-int8   --split test       # INT8 recall+지연(프로덕션 목표)
+python3 scripts/bench_m5.py --backend onnx-int8   --split test --baseline write   # 회귀 기준선
+```
+
+---
+
 ## M5 done 게이트 대비 현황
 
 | 게이트(§5) | 상태 |
 |---|---|
 | §1 골드셋 확대·라벨·분할 | ✅ 완료 |
 | §3 채점 방법론(span/CI/회귀 가드) | ✅ 완료 |
-| §4 하드닝 전항 PASS | ✅ 완료(12/12) |
-| §2 지연 p95 ≤ 150ms (gazetteer) | ✅ / (KoELECTRA·INT8) ⏸ 모델 프로비저닝 대기 |
-| §1.3 recall 목표 (KoELECTRA 기준) | ⏸ KoELECTRA 백엔드 실측 대기(후속 이슈) |
+| §4 하드닝 전항 PASS | ✅ 완료(12/12, ner 백엔드 리팩터 후에도 유지) |
+| §2 지연 p95 ≤ 150ms | ✅ gazetteer 5.7ms / **KoELECTRA-INT8 38ms** (참고치, 프로덕션 재측정 권고) |
+| §1.3 recall 목표 (KoELECTRA/INT8) | ✅ PII/강한PII/secret/precision/location 5/7 · ⚠️ person 경계 + benign-FP(정규식) → CPO MoSCoW |
 
-**판정:** A·C·D + 측정 하니스(B 코드)는 본 이슈에서 **완료·검증**. 한국어 PII recall ≥ 0.9 최종 수치는
-KoELECTRA/ONNX-INT8 **모델·런타임 프로비저닝**이라는 환경 블로커에 묶여 있어, 동일 하니스로 후속 측정한다.
+**판정(CMP-100):** **백엔드 프로비저닝 + 실측 완료** — gazetteer→FP32→INT8 3종 실측, INT8 production-target
+권고(recall 보존·3.9× 경량·p95 38ms). §2.2 전항 PASS. §1.3 은 5/7 PASS + 2개(person 경계, benign-FP)
+설계 결정 필요 → CPO MoSCoW 재triage 로 위임. 회귀 기준선 INT8 로 갱신.
 
 ## 리스크
 
-- **R-RECALL(중/고):** KoELECTRA 활성 후에도 미수록 인명 recall < 0.85 가능 → 모델 교체/앙상블·gazetteer
-  보강 필요. 완화: dev 셋 조기 측정으로 신호 확보(하니스 준비 완료).
-- **R-PRECISION(중):** `KR_ACCOUNT` 정규식이 운송장/ISBN 등 숫자그룹과 충돌(benign FP 3건). 완화안:
-  계좌 컨텍스트 게이팅(은행/계좌 키워드 인접) 또는 자릿수·구분자 패턴 정밀화. CPO MoSCoW 재triage 대상.
-- **R-INT8(중):** 저사양 온프렘에서 INT8 p95 > 150ms 가능 → 설계 §2.2 폴백 결정 트리.
+- **R-RECALL(중, [CMP-100] 실측됨):** KoELECTRA 가 인명 recall 을 0.375→0.85대로 끌어올렸으나, sealed test
+  슬라이스(미수록 56%)에서 KR_PERSON 은 **0.85 경계**(점추정 0.833~0.854, CI 가 0.85 포함). 완화: 앙상블/큰모델/표본확대 → CPO MoSCoW. (dev 조기측정 person 0.94~0.97 로 일반 분포에선 여유.)
+- **R-PRECISION(중, [CMP-100] 백엔드 무관 확인):** `KR_ACCOUNT` 정규식이 운송장/ISBN 등 숫자그룹과 충돌(benign FP 3/90,
+  gazetteer/FP32/INT8 전부 동일). 완화안: 계좌 컨텍스트 게이팅 또는 자릿수·구분자 패턴 정밀화. CPO MoSCoW 재triage 대상.
+- **R-INT8(중→완화, [CMP-100] 실측됨):** INT8 512자 p95 = 38ms(비프로덕션 CPU에서도 목표 4× 여유) → 저사양 우려 크게 감소.
+  단 측정 박스가 프로덕션 동급은 아니므로 **프로덕션 온프렘에서 p95 재측정 권고**.
