@@ -15,9 +15,11 @@
 |---|---|
 | **서빙빌더 통합 매뉴얼** — NuFi 를 내 LLM 서빙 앞단에 끼우기(통합 경로·프리셋·`doctor`·감사 로그·private/public 결정 트리) | [`docs/INTEGRATION_GUIDE.md`](docs/INTEGRATION_GUIDE.md) |
 | **데모 1분 실행** — 차등 감사 6개 시나리오 자동 PASS/FAIL(root 불필요) | `./scripts/demo_cmp85.sh` → 재현 매뉴얼 [`docs/DEMO_CMP85.md`](docs/DEMO_CMP85.md) · 결과 [`docs/DEMO_RESULT_CMP85.md`](docs/DEMO_RESULT_CMP85.md) |
+| **v0.0.3 커버리지 보증 데모** (Operate · O2) — '내 트래픽 중 X% 가 게이트웨이 통과' 리포트 + 우회 모니터/알림(root 불필요) | `python3 -m enforcement.cli coverage --simulate samples/flow_replay.jsonl` · `… monitor --simulate samples/flow_bypass_burst.jsonl --threshold 1` → 매뉴얼 [`docs/CLI.md`](docs/CLI.md#coverage) |
+| **v0.0.3 감사 가시성 대시보드 데모** (Operate · O1, read-only) — 결정/해시체인/우회/추이 4패널 | `python3 -m dashboards.server --port 8099 --audit dashboards/sample/audit_chain.jsonl --flow-dir dashboards/sample` → `http://127.0.0.1:8099/viewer` · 매뉴얼 [`dashboards/README.md`](dashboards/README.md) |
 | **게이트웨이 직접 띄우기** — OpenAI 호환 `/v1/chat/completions` | 아래 [Quick Start](#quick-start) |
 | **SDK 한 줄 통합 예제** | [`examples/`](examples/) (`sdk_quickstart.py` · `sdk_block_and_audit.py` · `sdk_reversible_roundtrip.py` · `sdk_streaming.py`) |
-| **CLI 레퍼런스** — `nufi-egress` 전 서브커맨드(플래그·예시·종료코드) | [`docs/CLI.md`](docs/CLI.md) — `python3 -m enforcement.cli {render,apply,disable,status,feedback,doctor,init}` |
+| **CLI 레퍼런스** — `nufi-egress` 전 서브커맨드(플래그·예시·종료코드) | [`docs/CLI.md`](docs/CLI.md) — `python3 -m enforcement.cli {render,apply,disable,status,feedback,doctor,coverage,monitor,init}` |
 | **배선 검증** — `doctor` 5체크(core-3 GREEN) | `python3 -m enforcement.cli doctor` |
 | **전체 문서 지도**(설계·명세·데모·영업) | [`docs/README.md`](docs/README.md) |
 

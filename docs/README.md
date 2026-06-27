@@ -33,6 +33,10 @@
 >
 > **감사를 *읽는 화면*(read-only 대시보드)을 보려면** → [`../dashboards/README.md`](../dashboards/README.md)(v0.0.3 O1 / CMP-134 — 결정 뷰어·해시체인 무결성·우회 타임라인·카테고리 추이).
 >
+> **'내 트래픽 중 몇 %가 게이트웨이를 통과'(커버리지 보증·상시)를 보려면** → [`CLI.md#coverage`](CLI.md#coverage)(v0.0.3 O2 / CMP-133 — `coverage`/`monitor` 상시 리포트 + 우회 알림).
+>
+> **버전별 릴리스 기준(데모·매뉴얼·README 링크 DoD)을 보려면** → [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md)(보드 상시 지시 CMP-132).
+>
 > **데모를 직접 돌려보고 싶다면** → [`DEMO_CMP85.md`](DEMO_CMP85.md)(재현 매뉴얼)가 현행 최신 데모입니다. (구버전 [`DEMO.md`](DEMO.md)는 M1+M2만 다룹니다.)
 >
 > **M3 가역 가명화/원복 + 매핑 Vault**(CMP-97)는 별도 설계문서 없이 `../egress_audit/pseudonymize.py` 로 구현완료. M5 리포트의 fail-closed·감사 해시체인과 함께 동작.
