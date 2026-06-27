@@ -9,6 +9,19 @@
 
 ---
 
+## 📖 매뉴얼 · 데모 — 어디부터 보나
+
+| 무엇을 하려나 | 문서 / 명령 |
+|---|---|
+| **서빙빌더 통합 매뉴얼** — NuFi 를 내 LLM 서빙 앞단에 끼우기(통합 경로·프리셋·`doctor`·감사 로그·private/public 결정 트리) | [`docs/INTEGRATION_GUIDE.md`](docs/INTEGRATION_GUIDE.md) |
+| **데모 1분 실행** — 차등 감사 6개 시나리오 자동 PASS/FAIL(root 불필요) | `./scripts/demo_cmp85.sh` → 재현 매뉴얼 [`docs/DEMO_CMP85.md`](docs/DEMO_CMP85.md) · 결과 [`docs/DEMO_RESULT_CMP85.md`](docs/DEMO_RESULT_CMP85.md) |
+| **게이트웨이 직접 띄우기** — OpenAI 호환 `/v1/chat/completions` | 아래 [Quick Start](#quick-start) |
+| **SDK 한 줄 통합 예제** | [`examples/`](examples/) (`sdk_quickstart.py` · `sdk_block_and_audit.py` · `sdk_reversible_roundtrip.py` · `sdk_streaming.py`) |
+| **배선 검증** — `doctor` 5체크(core-3 GREEN) | `python3 -m enforcement.doctor` |
+| **전체 문서 지도**(설계·명세·데모·영업) | [`docs/README.md`](docs/README.md) |
+
+---
+
 ## Features
 
 - **하이브리드 게이트웨이** — private(온프렘) 기본 라우팅 + public 폴백. private 가 가능하면 외부로 나가지 않으며, public 경로는 항상 게이트웨이를 통과한다(OpenAI 호환 `/v1/chat/completions`).
