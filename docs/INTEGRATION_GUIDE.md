@@ -32,6 +32,19 @@ NuFi 를 붙이는 데 필요한 결정은 5개뿐입니다. 순서대로 따라
 NuFi 는 **하나의 탐지·정책·감사 코어(`egress_audit`)** 를 세 가지 방식으로 호출할 수 있습니다.
 앱 구조에 맞는 **단 하나**를 고르세요. 셋 다 같은 코어를 거치므로 탐지·차단·감사 동작은 동일합니다.
 
+> **지원 프로바이더 — NuFi 는 프로바이더에 종속되지 않습니다(provider-agnostic 코어).**
+> 어느 프로바이더로 나가든 같은 탐지·정책·감사 코어를 거칩니다. egress 분류는
+> [`config/routing.yaml`](../config/routing.yaml) 의 `backends` + `provider_egress` 가 결정합니다.
+>
+> | 분류 | 프로바이더 | egress |
+> |---|---|---|
+> | **private**(온프렘, 경계 밖으로 안 나감) | `local` · `vLLM` · `ollama` | 미전송 |
+> | **public**(탐지·감사 후 전송) | **Anthropic(Claude)** · OpenAI · Google · Azure | 통제된 길로만 |
+>
+> 즉 **Claude(Anthropic)는 이미 지원됩니다** — `routing.yaml` 의 `claude-3-5-sonnet` 백엔드
+> (`provider: anthropic`, `api_base: https://api.anthropic.com`)가 `nufi-default` 의 public 폴백으로
+> 배선돼 있고, `provider_egress.anthropic: public` 으로 분류됩니다. 붙이는 경로는 아래 결정 게이트를 보세요.
+
 ```
                        ┌─────────────────────────────────────────┐
    당신의 앱  ──(A SDK)─┤                                          │
@@ -49,9 +62,19 @@ NuFi 는 **하나의 탐지·정책·감사 코어(`egress_audit`)** 를 세 가
 | 여러 언어·서비스가 한 엔드포인트로 모임 / 비파이썬 | **B) 게이트웨이** | OpenAI 호환 HTTP 엔드포인트 1개를 앞단에 둠. 언어 무관. |
 | 이미 **LiteLLM Proxy** 로 멀티프로바이더 운영 중 | **C) LiteLLM 훅** | 기존 프록시에 콜백만 등록. 라우팅·키관리는 LiteLLM 이 유지. |
 
+> **Claude(Anthropic)로 붙이려면 → 경로 C(LiteLLM 훅) 권장.** 실 멀티프로바이더 egress 는 LiteLLM 이
+> 라우팅·키관리를 맡는 경로 C 가 가장 매끄럽습니다 — [`config/litellm_config.yaml`](../config/litellm_config.yaml)
+> 의 `nufi-default-public` 이 이미 `anthropic/claude-3-5-sonnet-20241022` + `os.environ/ANTHROPIC_API_KEY`
+> 로 구성돼 있어, `ANTHROPIC_API_KEY` 만 설정하면 private 실패/명시 시 Claude 로 폴백됩니다.
+> (경로 A/B 로도 Claude egress 는 가능합니다 — 아래 주석 참조.)
+
 ### A) thin client SDK — 파이썬 앱, 한 줄 전환
 
 기존 OpenAI 호출에서 **import 1줄 + 생성 1줄**만 바꿉니다. 호출부(`chat.completions.create`)는 그대로입니다.
+
+> 참고: 경로 A/B 의 OpenAI `chat.completions` 스키마는 **앱→NuFi 진입 인터페이스**일 뿐,
+> 최종 egress 프로바이더와는 무관합니다. 같은 호출이 라우팅 설정에 따라 private(온프렘)·Claude·
+> OpenAI·Google·Azure 어디로든 나갈 수 있습니다(분류는 `routing.yaml`).
 
 ```python
 # Before
