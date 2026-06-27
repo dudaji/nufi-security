@@ -112,29 +112,38 @@ class AuditLogger:
 
         반환: {ok, count, error, broken_seq}. 수정·삭제·재배열·시계역행 탐지.
         """
-        records = self.read_all()
-        prev = GENESIS_HASH
-        last_seq = -1
-        last_epoch = -1
-        for i, rec in enumerate(records):
-            ch = rec.get("chain")
-            if not ch:
-                return {"ok": False, "count": len(records), "broken_seq": i,
-                        "error": "chain 필드 없음(비체인 레코드)"}
-            if ch.get("seq") != last_seq + 1:
-                return {"ok": False, "count": len(records), "broken_seq": ch.get("seq"),
-                        "error": f"seq 불연속: {ch.get('seq')} (기대 {last_seq + 1}) — 행 삭제/재배열 의심"}
-            if ch.get("prev_hash") != prev:
-                return {"ok": False, "count": len(records), "broken_seq": ch.get("seq"),
-                        "error": "prev_hash 불일치 — 앞선 행 변조 의심"}
-            if _record_hash(rec) != ch.get("hash"):
-                return {"ok": False, "count": len(records), "broken_seq": ch.get("seq"),
-                        "error": "레코드 해시 불일치 — 본문 변조 의심"}
-            ep = rec.get("epoch_ms", 0)
-            if ep < last_epoch:
-                return {"ok": False, "count": len(records), "broken_seq": ch.get("seq"),
-                        "error": "타임스탬프 역행 — 시계 신뢰 위반(§4.3)"}
-            prev = ch["hash"]
-            last_seq = ch["seq"]
-            last_epoch = ep
-        return {"ok": True, "count": len(records), "error": None, "broken_seq": None}
+        return verify_chain_records(self.read_all())
+
+
+def verify_chain_records(records: list) -> dict:
+    """이미 로드된 레코드 리스트의 해시 체인 무결성 검증(M5 §4.3 변조탐지).
+
+    AuditLogger.verify_chain() 의 순수-검증 코어. 파일/디렉터리 생성 등 부수효과가
+    없어 read-only 관측(예: dashboards 어댑터)에서 안전하게 재사용된다.
+    반환: {ok, count, error, broken_seq}. 수정·삭제·재배열·시계역행 탐지.
+    """
+    prev = GENESIS_HASH
+    last_seq = -1
+    last_epoch = -1
+    for i, rec in enumerate(records):
+        ch = rec.get("chain")
+        if not ch:
+            return {"ok": False, "count": len(records), "broken_seq": i,
+                    "error": "chain 필드 없음(비체인 레코드)"}
+        if ch.get("seq") != last_seq + 1:
+            return {"ok": False, "count": len(records), "broken_seq": ch.get("seq"),
+                    "error": f"seq 불연속: {ch.get('seq')} (기대 {last_seq + 1}) — 행 삭제/재배열 의심"}
+        if ch.get("prev_hash") != prev:
+            return {"ok": False, "count": len(records), "broken_seq": ch.get("seq"),
+                    "error": "prev_hash 불일치 — 앞선 행 변조 의심"}
+        if _record_hash(rec) != ch.get("hash"):
+            return {"ok": False, "count": len(records), "broken_seq": ch.get("seq"),
+                    "error": "레코드 해시 불일치 — 본문 변조 의심"}
+        ep = rec.get("epoch_ms", 0)
+        if ep < last_epoch:
+            return {"ok": False, "count": len(records), "broken_seq": ch.get("seq"),
+                    "error": "타임스탬프 역행 — 시계 신뢰 위반(§4.3)"}
+        prev = ch["hash"]
+        last_seq = ch["seq"]
+        last_epoch = ep
+    return {"ok": True, "count": len(records), "error": None, "broken_seq": None}

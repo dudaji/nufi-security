@@ -31,6 +31,8 @@
 
 > **서빙빌더 통합·CLI 를 보려면** → [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md)(통합/사용 가이드) + [`CLI.md`](CLI.md)(`nufi-egress` 전 서브커맨드 레퍼런스).
 >
+> **감사를 *읽는 화면*(read-only 대시보드)을 보려면** → [`../dashboards/README.md`](../dashboards/README.md)(v0.0.3 O1 / CMP-134 — 결정 뷰어·해시체인 무결성·우회 타임라인·카테고리 추이).
+>
 > **데모를 직접 돌려보고 싶다면** → [`DEMO_CMP85.md`](DEMO_CMP85.md)(재현 매뉴얼)가 현행 최신 데모입니다. (구버전 [`DEMO.md`](DEMO.md)는 M1+M2만 다룹니다.)
 >
 > **M3 가역 가명화/원복 + 매핑 Vault**(CMP-97)는 별도 설계문서 없이 `../egress_audit/pseudonymize.py` 로 구현완료. M5 리포트의 fail-closed·감사 해시체인과 함께 동작.

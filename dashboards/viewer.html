@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>NuFi 감사 가시성 대시보드 (read-only)</title>
+<style>
+  :root { --bg:#0e1116; --card:#161b22; --line:#2b3340; --fg:#e6edf3; --mut:#8b949e;
+          --ok:#2ea043; --warn:#d29922; --bad:#f85149; --accent:#58a6ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font:14px/1.5 -apple-system,Segoe UI,Roboto,'Noto Sans KR',sans-serif; }
+  header { padding:16px 24px; border-bottom:1px solid var(--line); display:flex;
+           align-items:center; gap:12px; flex-wrap:wrap; }
+  header h1 { font-size:18px; margin:0; }
+  .badge { font-size:12px; padding:2px 8px; border-radius:10px; border:1px solid var(--line);
+           color:var(--mut); }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:24px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; }
+  .card h2 { font-size:14px; margin:0 0 10px; color:var(--accent); }
+  .span2 { grid-column:1 / span 2; }
+  table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  th,td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--mut); font-weight:600; }
+  .pill { font-size:11px; padding:1px 7px; border-radius:8px; border:1px solid var(--line); }
+  .blocked { color:var(--bad); border-color:var(--bad); }
+  .transformed { color:var(--warn); border-color:var(--warn); }
+  .forwarded { color:var(--ok); border-color:var(--ok); }
+  .high { color:var(--bad); font-weight:700; }
+  .info { color:var(--mut); }
+  .stat { font-size:30px; font-weight:700; }
+  .ok { color:var(--ok); } .bad { color:var(--bad); } .mut { color:var(--mut); }
+  .bar { height:10px; background:var(--accent); border-radius:3px; }
+  .row { display:flex; align-items:center; gap:8px; margin:3px 0; }
+  .row .lbl { width:110px; color:var(--mut); font-size:12px; }
+  code { color:var(--mut); }
+  .err { color:var(--bad); }
+  button { background:var(--card); color:var(--fg); border:1px solid var(--line);
+           border-radius:6px; padding:4px 10px; cursor:pointer; }
+</style>
+</head>
+<body>
+<header>
+  <h1>NuFi 감사 가시성 대시보드</h1>
+  <span class="badge">read-only · 프로덕션 무변경</span>
+  <span class="badge" id="meta">…</span>
+  <span style="flex:1"></span>
+  <button onclick="load()">새로고침</button>
+</header>
+<div class="grid">
+  <div class="card span2"><h2>① 결정 뷰어 (차단/가명화/경고)</h2><div id="decisions">로딩…</div></div>
+  <div class="card"><h2>② 감사 해시체인 무결성</h2><div id="chain">로딩…</div></div>
+  <div class="card"><h2>④ 카테고리별 탐지량</h2><div id="trend">로딩…</div></div>
+  <div class="card span2"><h2>③ 우회 탐지 이벤트 타임라인</h2><div id="bypass">로딩…</div></div>
+</div>
+<script>
+const esc = s => String(s==null?'':s).replace(/[&<>]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+async function j(u){ const r = await fetch(u); return r.json(); }
+
+function renderDecisions(p){
+  const rows = p.rows.slice(0,50).map(r=>`<tr>
+    <td><code>${esc((r.ts||'').slice(0,19))}</code></td>
+    <td><span class="pill ${esc(r.outcome)}">${esc(r.outcome)}</span></td>
+    <td>${esc(r.provider)} / ${esc(r.model)}</td>
+    <td>${esc((r.entity_types||[]).join(', ')) || '<span class=mut>—</span>'}</td>
+    <td>${esc(r.finding_count)}</td>
+    <td><code>${esc(JSON.stringify(r.action_counts))}</code></td>
+  </tr>`).join('');
+  document.getElementById('decisions').innerHTML =
+    `<div class="mut" style="margin-bottom:6px">${p.count}건 · 원문 PII 마스킹(redacted=${p.redacted})</div>
+     <table><tr><th>시각</th><th>결정</th><th>provider/model</th><th>카테고리</th><th>탐지</th><th>액션</th></tr>${rows}</table>`;
+}
+function renderChain(p){
+  const s = p.status;
+  const cls = s==='ok'?'ok':(s==='tampered'?'bad':'mut');
+  const label = s==='ok'?'무결 (OK)':(s==='tampered'?'변조 탐지':'체인 미부착');
+  document.getElementById('chain').innerHTML =
+    `<div class="stat ${cls}">${esc(label)}</div>
+     <div class="mut">레코드 ${esc(p.count)}건 · 체인 ${esc(p.chained_count)}건</div>
+     ${p.error?`<div class="err">${esc(p.error)} (seq ${esc(p.broken_seq)})</div>`:''}
+     ${p.tip_hash?`<div class="mut" style="margin-top:6px">tip: <code>${esc(p.tip_hash.slice(0,16))}…</code></div>`:''}
+     ${p.note?`<div class="mut" style="margin-top:6px">${esc(p.note)}</div>`:''}`;
+}
+function renderTrend(p){
+  const max = Math.max(1, ...Object.values(p.totals));
+  const rows = Object.entries(p.totals).map(([c,n])=>`<div class="row">
+    <span class="lbl">${esc(c)}</span>
+    <div class="bar" style="width:${Math.round(n/max*180)}px"></div>
+    <span>${esc(n)}</span></div>`).join('');
+  document.getElementById('trend').innerHTML = rows || '<span class=mut>데이터 없음</span>';
+}
+function renderBypass(p){
+  const rows = p.rows.slice(0,50).map(r=>`<tr>
+    <td><code>${esc((r.ts||'').slice(0,19))}</code></td>
+    <td class="${r.bypass?'high':'info'}">${r.bypass?'우회(high)':'정상(info)'}</td>
+    <td>${esc(r.dst_host)} <span class=mut>(${esc(r.provider)})</span></td>
+    <td>${esc(r.process)} · ${esc(r.src_ip)}</td>
+  </tr>`).join('');
+  document.getElementById('bypass').innerHTML =
+    `<div class="mut" style="margin-bottom:6px">${p.count}건 · 우회 ${p.bypass_count}건</div>
+     <table><tr><th>시각</th><th>판정</th><th>목적지</th><th>프로세스/출발지</th></tr>${rows||''}</table>`;
+}
+async function load(){
+  try {
+    const m = await j('/api/model');
+    document.getElementById('meta').textContent =
+      `감사 ${m.meta.audit_count}건 · flow ${m.meta.flow_count}건`;
+    renderDecisions(m.panels.decisions);
+    renderChain(m.panels.chain_integrity);
+    renderTrend(m.panels.category_trend);
+    renderBypass(m.panels.bypass_timeline);
+  } catch(e){
+    document.body.insertAdjacentHTML('beforeend',
+      `<p class="err" style="padding:24px">데이터소스 연결 실패: ${esc(e)} — server.py 가 떠 있는지 확인.</p>`);
+  }
+}
+load();
+</script>
+</body>
+</html>

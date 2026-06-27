@@ -1,0 +1,144 @@
+{
+  "__comment": "NuFi 감사 가시성 대시보드 (CMP-134 / v0.0.3 O1). read-only. Infinity 데이터소스(yesoreyeram-infinity-datasource)로 dashboards/server.py 의 JSON 엔드포인트를 조회. 변수 $base = 데이터소스 베이스 URL(예: http://127.0.0.1:8099). Import: Grafana > Dashboards > Import > Upload JSON. 데이터소스 변경 외 쓰기 경로 없음.",
+  "title": "NuFi Egress Audit Observability (read-only)",
+  "uid": "nufi-audit-o1",
+  "tags": ["nufi", "egress", "audit", "v0.0.3", "read-only"],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "time": { "from": "now-7d", "to": "now" },
+  "refresh": "30s",
+  "templating": {
+    "list": [
+      {
+        "name": "base",
+        "type": "textbox",
+        "label": "Datasource base URL",
+        "query": "http://127.0.0.1:8099",
+        "current": { "text": "http://127.0.0.1:8099", "value": "http://127.0.0.1:8099" }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "① 결정 뷰어 (차단/가명화/경고)",
+      "type": "table",
+      "datasource": { "type": "yesoreyeram-infinity-datasource" },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+      "description": "감사 결정 행. 원문 PII 는 어댑터에서 마스킹(redacted). 필터: ?outcome=&provider=&entity_type=&limit=",
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${base}/api/decisions?limit=200",
+          "root_selector": "rows",
+          "columns": [
+            { "selector": "ts", "text": "시각", "type": "string" },
+            { "selector": "outcome", "text": "결정", "type": "string" },
+            { "selector": "provider", "text": "provider", "type": "string" },
+            { "selector": "model", "text": "model", "type": "string" },
+            { "selector": "finding_count", "text": "탐지수", "type": "number" },
+            { "selector": "entity_types", "text": "카테고리", "type": "string" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "② 감사 해시체인 무결성",
+      "type": "stat",
+      "datasource": { "type": "yesoreyeram-infinity-datasource" },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 10 },
+      "description": "추가전용 해시 체인 검증(verify_chain). ok=무결, tampered=변조 탐지, unchained=체인 미부착.",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            { "type": "value", "options": { "ok": { "text": "무결 OK", "color": "green" } } },
+            { "type": "value", "options": { "tampered": { "text": "변조 탐지", "color": "red" } } },
+            { "type": "value", "options": { "unchained": { "text": "체인 미부착", "color": "text" } } }
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${base}/api/chain",
+          "root_selector": "",
+          "columns": [
+            { "selector": "status", "text": "status", "type": "string" },
+            { "selector": "chained_count", "text": "chained", "type": "number" },
+            { "selector": "count", "text": "count", "type": "number" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "④ 카테고리별 탐지량 추이",
+      "type": "barchart",
+      "datasource": { "type": "yesoreyeram-infinity-datasource" },
+      "gridPos": { "h": 8, "w": 16, "x": 8, "y": 10 },
+      "description": "finding entity_type(카테고리)별 누적 탐지량. 시간 추이는 /api/trend 의 series[].points 사용.",
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${base}/api/trend?bucket=day",
+          "root_selector": "series",
+          "columns": [
+            { "selector": "category", "text": "카테고리", "type": "string" },
+            { "selector": "total", "text": "탐지량", "type": "number" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "③ 우회 탐지 이벤트 타임라인",
+      "type": "table",
+      "datasource": { "type": "yesoreyeram-infinity-datasource" },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 18 },
+      "description": "flow tap 의 게이트웨이 우회(bypass=high) 이벤트. ?only_bypass=1 로 우회만.",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "severity" },
+            "properties": [
+              { "id": "mappings", "value": [
+                { "type": "value", "options": { "high": { "text": "우회(high)", "color": "red" } } },
+                { "type": "value", "options": { "info": { "text": "정상(info)", "color": "text" } } }
+              ] }
+            ]
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "type": "json",
+          "source": "url",
+          "format": "table",
+          "url": "${base}/api/bypass",
+          "root_selector": "rows",
+          "columns": [
+            { "selector": "ts", "text": "시각", "type": "string" },
+            { "selector": "severity", "text": "severity", "type": "string" },
+            { "selector": "dst_host", "text": "목적지", "type": "string" },
+            { "selector": "provider", "text": "provider", "type": "string" },
+            { "selector": "process", "text": "process", "type": "string" },
+            { "selector": "src_ip", "text": "출발지", "type": "string" }
+          ]
+        }
+      ]
+    }
+  ]
+}
