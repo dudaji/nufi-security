@@ -31,9 +31,11 @@
 
 > **서빙빌더 통합·CLI 를 보려면** → [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md)(통합/사용 가이드) + [`CLI.md`](CLI.md)(`nufi-egress` 전 서브커맨드 레퍼런스).
 >
-> **감사를 *읽는 화면*(read-only 대시보드)을 보려면** → [`../dashboards/README.md`](../dashboards/README.md)(v0.0.3 O1 / CMP-134 — 결정 뷰어·해시체인 무결성·우회 타임라인·카테고리 추이).
+> **감사를 *읽는 화면*(read-only 대시보드)을 보려면** → [`../dashboards/README.md`](../dashboards/README.md)(v0.0.3 O1 / CMP-134 — 결정 뷰어·해시체인 무결성·우회 타임라인·카테고리 추이). 1-명령 데모: [`scripts/demo_dashboards.sh`](../scripts/demo_dashboards.sh).
 >
-> **'내 트래픽 중 몇 %가 게이트웨이를 통과'(커버리지 보증·상시)를 보려면** → [`CLI.md#coverage`](CLI.md#coverage)(v0.0.3 O2 / CMP-133 — `coverage`/`monitor` 상시 리포트 + 우회 알림).
+> **'내 트래픽 중 몇 %가 게이트웨이를 통과'(커버리지 보증·상시)를 보려면** → [`CLI.md#coverage`](CLI.md#coverage)(v0.0.3 O2 / CMP-133 — `coverage`/`monitor` 상시 리포트 + 우회 알림). 1-명령 데모: [`scripts/demo_coverage.sh`](../scripts/demo_coverage.sh).
+>
+> **v0.0.3 데모를 직접 돌려보려면** → [`DEMO_v0.0.3.md`](DEMO_v0.0.3.md)(O1·O2 재현 매뉴얼) — `./scripts/demo_coverage.sh` · `./scripts/demo_dashboards.sh`(둘 다 root 불필요·1-명령 PASS/FAIL).
 >
 > **버전별 릴리스 기준(데모·매뉴얼·README 링크 DoD)을 보려면** → [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md)(보드 상시 지시 CMP-132).
 >
@@ -68,6 +70,7 @@
 | [`DEMO.md`](DEMO.md) | CMP-72 | M1+M2 데모 | ✅ 완료 (구버전 — CMP-85로 확장) |
 | [`DEMO_CMP85.md`](DEMO_CMP85.md) | CMP-85 | 통합 데모 **재현 매뉴얼** | ✅ **현행 데모 진입점** |
 | [`DEMO_RESULT_CMP85.md`](DEMO_RESULT_CMP85.md) · [`.html`](DEMO_RESULT_CMP85.html) | CMP-85 | 데모 **결과 보고서** + 스크린샷 | ✅ 최신 결과 |
+| [`DEMO_v0.0.3.md`](DEMO_v0.0.3.md) | CMP-138 | v0.0.3 O1·O2 **1-명령 데모** 재현 매뉴얼 — [`scripts/demo_coverage.sh`](../scripts/demo_coverage.sh)·[`scripts/demo_dashboards.sh`](../scripts/demo_dashboards.sh) | ✅ **v0.0.3 데모 진입점** |
 | [`CMP-84_CPO_verification_transcript.txt`](CMP-84_CPO_verification_transcript.txt) | CMP-84 | M1+M2 독립검수 트랜스크립트 | 📄 증거 |
 | [`CMP-82_NuFi_Egress-Audit_다음단계.md`](CMP-82_NuFi_Egress-Audit_다음단계.md) | CMP-82 | 데모 이후 다음단계 정리 | 📄 참조 |
 

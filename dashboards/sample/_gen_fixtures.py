@@ -4,7 +4,8 @@
 합성 플레이스홀더만 둔다. 해시 체인은 egress_audit.audit._record_hash 로 부착.
 
 재생성: python3 dashboards/sample/_gen_fixtures.py
-산출: audit_chain.jsonl (체인 부착 감사 3건), flow_bypass.jsonl (게이트웨이/우회 2건)
+산출: audit_chain.jsonl (체인 부착 감사 3건), flow-bypass.jsonl (게이트웨이/우회 2건)
+flow 파일명은 어댑터 디렉터리 글롭 `flow-*.jsonl` 과 일치해야 한다(README dir 모드).
 """
 from __future__ import annotations
 
@@ -94,7 +95,7 @@ _FLOWS = [
 
 
 def gen_flow_bypass() -> Path:
-    out = _HERE / "flow_bypass.jsonl"
+    out = _HERE / "flow-bypass.jsonl"
     out.write_text("\n".join(json.dumps(f, ensure_ascii=False) for f in _FLOWS) + "\n",
                    encoding="utf-8")
     return out

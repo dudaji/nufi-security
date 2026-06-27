@@ -21,8 +21,8 @@
 | 버전 | 기능 | 데모 | 매뉴얼 | README 링크 | 태그/푸시 |
 |---|---|---|---|---|---|
 | v0.0.2 | Adopt(SDK·doctor·프리셋·배포·통합가이드) | `demo_cmp85.sh` | `INTEGRATION_GUIDE.md`·`CLI.md` | ✅ | ✅ tag `v0.0.2` origin |
-| v0.0.3 | O2 커버리지 보증 | `coverage/monitor --simulate`(CLI) · *전용 `demo_*.sh` 래퍼 대기(Engineer)* | `CLI.md#coverage` | ✅ | ⏳ 미릴리스 |
-| v0.0.3 | O1 감사 대시보드(read-only) | `dashboards.server` + 샘플 픽스처 | `dashboards/README.md` | ✅ | ⏳ 미릴리스 |
+| v0.0.3 | O2 커버리지 보증 | `scripts/demo_coverage.sh`(1-명령 PASS/FAIL · CMP-138) | `CLI.md#coverage`·`DEMO_v0.0.3.md` | ✅ | ⏳ 미릴리스 |
+| v0.0.3 | O1 감사 대시보드(read-only) | `scripts/demo_dashboards.sh`(1-명령 PASS/FAIL · CMP-138) | `dashboards/README.md`·`DEMO_v0.0.3.md` | ✅ | ⏳ 미릴리스 |
 | v0.0.3 | O3 정책 운영 규모화 | (M2 backlog) | — | — | ⏳ |
 
-> **v0.0.3 릴리스 게이트(잔여):** ① O1/O2 전용 1-명령 `demo_*.sh` + DEMO 재현 문서(데모 바 = `demo_cmp85` 수준, Engineer) ② O3/CMP-136 in/out 보드 결정 ③ 릴리스 오너 태그/푸시. ①은 자식 이슈로 위임.
+> **v0.0.3 릴리스 게이트(잔여):** ✅ ① O1/O2 전용 1-명령 `demo_*.sh` + DEMO 재현 문서 — **완료(CMP-138)**: `scripts/demo_coverage.sh`·`scripts/demo_dashboards.sh`(둘 다 root 불필요 1-명령 PASS) + [`DEMO_v0.0.3.md`](DEMO_v0.0.3.md). 잔여: ② O3/CMP-136 in/out 보드 결정 ③ 릴리스 오너 태그/푸시.
