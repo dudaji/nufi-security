@@ -6,7 +6,19 @@
 
 ## [Unreleased]
 
+## [0.0.3] - 2026-06-28
+
+Operate(운영) 호라이즌 M1 릴리스 — *이미 100% 적재되는* 감사를 **읽고(O1)** 게이트웨이
+커버리지를 **보증(O2)** 하는 두 사용자 대면 기능. 상위 제안 CMP-132(보드 승인). O3(정책
+운영 규모화)는 M2 백로그로 이연(이번 릴리스 범위 밖).
+
 ### Added
+- **감사 가시성 대시보드 — read-only (CMP-134 · v0.0.3 M1·O1)**: 온프렘에 이미 적재되는
+  감사를 보안팀이 *읽는* 화면. 프로덕션 무변경·쓰기 권한 없음(GET/HEAD 만, 쓰기 405).
+  - read-only 데이터소스 `dashboards/server.py`(stdlib) + 백엔드 중립 어댑터
+    `dashboards/adapter.py` — 4 패널: 결정 뷰어/해시체인 무결성/우회 타임라인/카테고리 추이.
+  - 의존성 0 정적 뷰어 `dashboards/viewer.html` + 프로덕션용 `grafana_dashboard.json`.
+  - 매뉴얼 `dashboards/README.md`, 결정성 샘플 픽스처 `dashboards/sample/`(합성·비-PII).
 - **커버리지 보증 (CMP-133 · v0.0.3 M1·O2)**: `nufi doctor`(1회 진단)의 게이트웨이 통과
   점검을 **상시 런타임 보증**으로 연장. flow tap 의 우회 판정을 연계해 nftables 집행을
   '측정 가능한 보증'으로 만든다.
@@ -17,6 +29,14 @@
     서브커맨드 — 게이트웨이 우회 준실시간 탐지·임계 알림 + suppression(쿨다운 디바운스).
   - 단위 테스트 `tests/test_cmp133_coverage.py`, 우회 버스트 샘플
     `samples/flow_bypass_burst.jsonl`(suppression 실증).
+- **O1·O2 1-명령 데모 + 재현 매뉴얼 (CMP-138 · 보드 릴리스 DoD)**: `scripts/demo_coverage.sh`
+  (coverage PASS/누수탐지 + monitor 우회 알림) · `scripts/demo_dashboards.sh`(4 엔드포인트
+  200 + viewer 렌더 + read-only 405, 헤드리스 curl). 둘 다 root 불필요 1-명령 PASS/FAIL.
+  재현 매뉴얼 `docs/DEMO_v0.0.3.md`, PASS 경로용 샘플 `samples/flow_clean.jsonl`.
+
+### Fixed
+- 대시보드 샘플 flow 픽스처가 어댑터 디렉터리 글롭 `flow-*.jsonl` 과 불일치하여
+  (`flow_bypass.jsonl`) README dir-모드 우회 패널이 비던 문제 → `flow-bypass.jsonl` 로 정정.
 
 ## [0.0.2] - 2026-06-28
 
