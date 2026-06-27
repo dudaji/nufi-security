@@ -1,0 +1,205 @@
+{
+  "backend": "transformers",
+  "split": "test",
+  "targets": {
+    "pii_recall": 0.9,
+    "pii_precision": 0.85,
+    "strong_recall": 0.98,
+    "person_recall": 0.85,
+    "location_recall": 0.85,
+    "secret_recall": 0.9,
+    "benign_false_block": 0.02
+  },
+  "ner_backend_active": "transformers",
+  "scores": {
+    "n_rows": 372,
+    "pii_recall": 0.9468,
+    "pii_recall_ci95": [
+      0.9141,
+      0.9675
+    ],
+    "pii_precision": 1.0,
+    "strong_recall": 1.0,
+    "strong_recall_ci95": [
+      0.9493,
+      1.0
+    ],
+    "person_recall": 0.9206,
+    "person_unlisted_recall": 0.8889,
+    "person_unlisted_n": 72,
+    "location_recall": 0.7917,
+    "secret_recall": 1.0,
+    "benign_false_block": 0.0,
+    "benign_false_block_n": "0/90",
+    "span_exact_recall": 0.9043,
+    "span_recall_incl_partial": 0.9468,
+    "span_precision": 0.9926,
+    "span_partial": 12,
+    "per_class": {
+      "CREDIT_CARD": {
+        "recall": 1.0,
+        "hit": 12,
+        "exp": 12,
+        "ci95": [
+          0.7575,
+          1.0
+        ],
+        "fp": 0
+      },
+      "EMAIL": {
+        "recall": 1.0,
+        "hit": 9,
+        "exp": 9,
+        "ci95": [
+          0.7008,
+          1.0
+        ],
+        "fp": 0
+      },
+      "KR_ACCOUNT": {
+        "recall": 1.0,
+        "hit": 12,
+        "exp": 12,
+        "ci95": [
+          0.7575,
+          1.0
+        ],
+        "fp": 0
+      },
+      "KR_BRN": {
+        "recall": 1.0,
+        "hit": 12,
+        "exp": 12,
+        "ci95": [
+          0.7575,
+          1.0
+        ],
+        "fp": 0
+      },
+      "KR_DRIVER_LICENSE": {
+        "recall": 1.0,
+        "hit": 9,
+        "exp": 9,
+        "ci95": [
+          0.7008,
+          1.0
+        ],
+        "fp": 0
+      },
+      "KR_FOREIGNER_REG": {
+        "recall": 1.0,
+        "hit": 12,
+        "exp": 12,
+        "ci95": [
+          0.7575,
+          1.0
+        ],
+        "fp": 0
+      },
+      "KR_LOCATION": {
+        "recall": 0.7917,
+        "hit": 19,
+        "exp": 24,
+        "ci95": [
+          0.5953,
+          0.9076
+        ],
+        "fp": 0
+      },
+      "KR_PASSPORT": {
+        "recall": 1.0,
+        "hit": 9,
+        "exp": 9,
+        "ci95": [
+          0.7008,
+          1.0
+        ],
+        "fp": 0
+      },
+      "KR_PERSON": {
+        "recall": 0.9206,
+        "hit": 116,
+        "exp": 126,
+        "ci95": [
+          0.8601,
+          0.9563
+        ],
+        "fp": 0
+      },
+      "KR_PHONE": {
+        "recall": 1.0,
+        "hit": 15,
+        "exp": 15,
+        "ci95": [
+          0.7961,
+          1.0
+        ],
+        "fp": 0
+      },
+      "KR_RRN": {
+        "recall": 1.0,
+        "hit": 18,
+        "exp": 18,
+        "ci95": [
+          0.8241,
+          1.0
+        ],
+        "fp": 0
+      },
+      "SECRET": {
+        "recall": 1.0,
+        "hit": 24,
+        "exp": 24,
+        "ci95": [
+          0.862,
+          1.0
+        ],
+        "fp": 0
+      }
+    },
+    "person_recall_ci_low": 0.8601
+  },
+  "latency": {
+    "backend": "transformers",
+    "buckets": {
+      "<=128": {
+        "p50": 26.18,
+        "p95": 31.05,
+        "p99": 38.26,
+        "req_per_s": 37.3,
+        "len_chars": 128
+      },
+      "512": {
+        "p50": 80.77,
+        "p95": 124.23,
+        "p99": 201.23,
+        "req_per_s": 11.6,
+        "len_chars": 512
+      },
+      "2048": {
+        "p50": 233.88,
+        "p95": 329.2,
+        "p99": 441.95,
+        "req_per_s": 4.1,
+        "len_chars": 2048
+      }
+    },
+    "p95_512_target_150ms": "PASS"
+  },
+  "prefilter": {
+    "regex_only(ner_off)": 8.121,
+    "always_ner(gazetteer)": 6.594,
+    "prefilter_faster": false
+  },
+  "acceptance": {
+    "pii_recall>=0.90": true,
+    "pii_precision>=0.85": true,
+    "strong_recall>=0.98": true,
+    "person_recall>=0.85": true,
+    "person_recall_ci_low>=0.85": true,
+    "location_recall>=0.85": false,
+    "secret_recall>=0.90": true,
+    "benign_false_block<=0.02": true
+  },
+  "acceptance_pass": false
+}

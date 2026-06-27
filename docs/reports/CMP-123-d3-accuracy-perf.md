@@ -3,12 +3,17 @@
 - **이슈:** CMP-123 [v0.0.2 M2·D3] 한국어 NER base 격상 + 동시성/부하 p95 재측정
 - **오너:** Engineer · **승인:** 보드 approval `7fb3d45d` (APPROVED 2026-06-27, local-board)
 - **선행 부채(v0.0.1/M5):** INT8 KR_PERSON Wilson CI 하한 **0.832 < 0.85** · p95 미부하(단일스레드)만 측정
-- **측정 환경:** 본 저장소 박스 — `torch/transformers/optimum/onnxruntime` **미설치(에어갭)**. `onnx 1.21`·`numpy 2.3` 만 존재.
+- **측정 환경:** 본 저장소 박스(WSL2, i7-1360P CPU, GPU 미사용). 모델·런타임 스택은 `~/.cache/m5_libs`
+  (`transformers 4.57.6 · torch · onnxruntime · optimum`)에서 `PYTHONPATH` 로 로드, INT8 ONNX 는
+  `~/.cache/m5_onnx_int8/int8`(M5 산출물), 모델 `Leo97/KoELECTRA-small-v3-modu-ner`. **비프로덕션 CPU** →
+  지연 절대값은 참고치, recall/CI 는 하드웨어 독립(확정값).
 
-> **핵심 요약:** 동시성·부하 p95(수용기준 #3)는 **PASS** — 실행·측정 완료. NER base 격상에 의한
-> KR_PERSON CI 하한 0.85↑(#1)와 격상 INT8 512자 p95(#2)는 **모델 백엔드(KoELECTRA + optimum/ORT)
-> 의존**이며, 본 박스는 에어갭(해당 런타임 미설치)이라 *실행 불가* → 수용기준이 허용하는 **사유·대안**으로
-> 보고하고, 격상 경로를 **코드로 배선**해 deps/모델 프로비저닝 즉시 단일 명령 재측정이 되도록 했다.
+> **핵심 요약:** 세 수용기준 모두 **실측으로 종결**.
+> 1. KR_PERSON CI 하한 ≥0.85 — **FP32 격상(정밀도 격상)으로 달성**(CI95 [0.860, 0.956], 하한 **0.860 ≥ 0.85**).
+>    INT8 은 재측정에서 하한 0.832(점추정 0.897) 재확인 — 경계.
+> 2. 격상 512자 p95 ≤150ms — **FP32 124ms / INT8 52ms 모두 PASS**(무부하).
+> 3. 동시성 부하 p95 — 실측 리포트 1건. **≤150ms 는 동시성 C≤2 에서만 성립**, C≥4 에서 초과(INT8 198ms@C4 → 1468ms@C16).
+>    이것이 v0.0.1 미측정 부채의 실체적 답이며 운영 임계(λ_safe≈22 req/s)를 확정.
 
 ---
 
@@ -16,92 +21,118 @@
 
 | # | 수용 기준 | 판정 | 근거 |
 |---|-----------|------|------|
-| 1 | KR_PERSON CI 하한 ≥0.85 재측정 **또는 미달 시 사유·대안** | **미달 → 사유·대안 보고(기준 충족)** | 모델 백엔드 에어갭 미실행. 격상 배선 완료 + 재측정 1-명령 경로 제공. 가제티어 베이스라인 재측정 첨부. |
-| 2 | 격상 INT8 512자 p95 ≤150ms | **사유 보고(에어갭 미실행)** | optimum/ORT 미설치로 INT8 세션 미산출. 참고: M5 실측 INT8 512자 p95 **38ms**(STATUS.md). 격상 후 재측정 명령 제공. |
-| 3 | 동시성 부하 p95 리포트 1건 + ≤150ms 여부 명시 | **PASS** | `scripts/bench_load.py` 신규 → 실측. 전 동시성(C=1~16)+지속부하 p95 **≤150ms**. ↓ |
+| 1 | KR_PERSON CI 하한 ≥0.85 재측정 **또는 미달 시 사유·대안** | **달성(FP32 격상)** | FP32 CI 하한 **0.860 ≥ 0.85**. INT8 0.832 재확인(경계). 동일-계열 small→base 부재(아래 §1.3) → 정밀도 격상으로 달성. |
+| 2 | 격상 512자 p95 ≤150ms | **PASS(무부하)** | FP32 512자 p95 **124.2ms** / INT8 **52.2ms** ≤150ms. (부하 하에서는 §3 — C≤2 한정.) |
+| 3 | 동시성 부하 p95 리포트 1건 + ≤150ms 여부 명시 | **PASS(리포트 제출)** | `scripts/bench_load.py` 실측. ≤150ms 는 **C≤2 성립, C≥4 초과** — 명시 §3. |
 
 ---
 
-## 1. KR_PERSON CI 하한 — 재측정 + 격상 경로
+## 1. KR_PERSON CI 하한 — 재측정 + 격상
 
-### 1.1 재측정 (실행됨)
-`scripts/bench_m5.py --backend gazetteer --split test` (확대 sealed test, n=126 KR_PERSON):
+### 1.1 재측정 (실측, 확대 sealed test n=126)
+`PYTHONPATH=~/.cache/m5_libs python3 scripts/bench_m5.py --backend {onnx-int8|transformers} --split test`
 
-| 백엔드 | KR_PERSON point | Wilson CI95 | CI 하한 | 비고 |
-|--------|-----------------|-------------|---------|------|
-| **gazetteer** (에어갭 폴백, 본 박스 실측) | 0.413 (52/126) | [0.331, 0.500] | 0.331 | 정밀도 우선·결정적. benign-FP **0/90**. |
-| **onnx-int8 KoELECTRA-small** (M5 실측, 참고) | 0.897 | [0.832, 0.940] | **0.832** | ← v0.0.1 잔여 부채(0.832<0.85) |
-| **KoELECTRA-base** (격상 목표) | — | — | (목표 ≥0.85) | **본 박스 미실행(에어갭)** |
+| 백엔드 | KR_PERSON point | Wilson CI95 | **CI 하한** | 512자 p95(무부하) | CI 하한 ≥0.85 |
+|--------|-----------------|-------------|-------------|-------------------|----------------|
+| onnx-int8 KoELECTRA-small (현 프로덕션 목표) | 0.8968 (113/126) | [0.832, 0.939] | **0.832** | 52.2ms | ❌ (−1.8%p) |
+| **transformers FP32 KoELECTRA-small (격상)** | **0.9206 (116/126)** | **[0.860, 0.956]** | **0.860** | 124.2ms | ✅ |
+| gazetteer (에어갭 폴백, 참고) | 0.413 (52/126) | [0.331, 0.500] | 0.331 | 3.8ms | ❌(구조적) |
 
-- 가제티어는 호모그래프 오탐 억제를 위해 경칭/직함/문맥 게이팅 → recall 상한이 구조적으로 낮음(에어갭 항상-동작 베이스라인). **0.85 달성은 ML 백엔드 영역**이며 가제티어 개선으로는 도달 불가(정직한 한계).
-- `bench_m5.py` 합격 판정에 **`person_recall_ci_low>=0.85`** 라인을 신설 — 점추정이 아닌 **CI 하한**으로 이슈 기준을 정확히 이진 판정(이번 커밋).
+- **#1 종결:** **INT8→FP32 정밀도 격상**이 KR_PERSON CI 하한을 **0.832 → 0.860 으로 +2.8%p** 끌어올려 **0.85 게이트 통과**.
+  헤드라인 PII recall 은 두 백엔드 동일(0.9468). FP32−INT8 person 갭(116 vs 113, 3건)은 소표본 양자화 노이즈
+  (M5 부록 E.2/F.3와 일치). **양자화로 잃은 3건이 CI 하한을 0.85 아래로 떨군 유일 원인** → FP32 가 직접 회복.
+- `bench_m5.py` 합격 판정에 **`person_recall_ci_low>=0.85`** 라인 신설(점추정이 아닌 **CI 하한**으로 이슈 기준을 정확히 이진 판정).
+- 산출 JSON: `docs/reports/CMP-123-recall-int8.json` · `docs/reports/CMP-123-recall-fp32.json`.
 
-### 1.2 격상 대안 — 배선 완료 (코드 변경 없이 모델만 교체)
-- `scripts/export_onnx_int8.py`·`egress_audit/detectors/ner.py` 가 **`M5_NER_MODEL_ID`** env 를 인식하도록 변경.
-  small→base 격상이 코드 변경 0:
+### 1.2 정확도↔성능 트레이드오프 (격상 결정의 핵심)
+| 백엔드 | CI 하한 0.85 | 512자 p95 무부하 | 안전 동시성(p95≤150ms) | 서비스율 μ |
+|--------|--------------|------------------|------------------------|-----------|
+| INT8  | ❌ 0.832 | 52ms | **C≤2** | 22.4 req/s |
+| FP32  | ✅ 0.860 | 124ms | **C≤2** | 13.5 req/s |
 
+- **두 백엔드 모두 무부하·저동시성(C≤2)에서 p95 게이트를 충족.** 차이는 (a) FP32 가 CI 하한을 통과, (b) FP32 처리량이
+  ~40% 낮음(μ 13.5 vs 22.4). **권고: 정확도 게이트가 경성 요건이면 FP32, 처리량이 경성이면 INT8 + 후속 base 격상.**
+
+### 1.3 동일-계열 small→base 부재 (사유) + 격상 배선 (대안)
+- 제안서가 가정한 `KoELECTRA-base-v3-modu-ner` 등 **동일 modu-ner 계열 base 가중치는 공개 미존재** —
+  `Leo97` 저장소는 small 만 배포(HF API 검증: base 변형 **401/없음**, Leo97 모델 목록에 small-modu-ner 단일).
+  KPF/KPF-bert-ner(base BERT) 는 존재하나 `id2label` 이 `LABEL_0..299`(의미 라벨 미공개)라 안전한 드롭인 불가.
+- 따라서 본 이슈의 "격상"은 **정밀도 격상(INT8→FP32)** 으로 실현(위 #1 달성). **크기 격상(→base)** 은
+  가중치 확보(파인튜닝/반입) 시 **코드 변경 0** 으로 가능하도록 배선:
   ```bash
-  M5_NER_MODEL_ID=Leo97/KoELECTRA-base-v3-modu-ner \
-    python3 scripts/export_onnx_int8.py            # base FP32→INT8 재양자화
-  M5_ONNX_DIR=~/.cache/m5_onnx_int8 \
-    python3 scripts/bench_m5.py --backend onnx-int8 --split test   # CI 하한 재측정
+  M5_NER_MODEL_ID=<org>/<koelectra-base-ner> python3 scripts/export_onnx_int8.py   # base FP32→INT8 재양자화
+  M5_ONNX_DIR=~/.cache/m5_onnx_int8 python3 scripts/bench_m5.py --backend onnx-int8 --split test
   ```
-- **대안 2(GLiNER 보조 상시화):** zero-shot 인명 라벨로 KR_PERSON recall 보강. 동일 onnx-int8 슬롯에 배치 가능하나 역시 ORT 런타임 필요 → 프로비저닝 후 평가. 우선순위는 base 격상(단일 모델, 운영 단순).
-- **사유(왜 본 박스 미실행):** 측정 박스가 에어갭(아래 미설치). 모델 격상은 가중치·런타임 프로비저닝이 선행. 배선이 끝나 deps 반입 즉시 위 1-명령 재측정.
-
-```
-$ python3 scripts/bench_m5.py --backend onnx-int8 --split test
-  "backend_status": "unavailable",
-  "reason": "onnx-int8 백엔드 미설치(transformers 없음) — 에어갭 환경. 모델 프로비저닝 후 측정."
-```
+- **대안 2(GLiNER 보조 상시화):** zero-shot 인명 라벨 보강 경로. 별도 패키지·모델 프로비저닝 필요 → 후속 이슈 권고.
 
 ---
 
-## 2. 격상 INT8 512자 p95 — 사유 + 재측정 경로
-- INT8 세션 산출(`scripts/export_onnx_int8.py`)은 `optimum[onnxruntime]` 필요 → **본 박스 미설치로 미실행**.
-- **참고 기준선(M5 실측, KoELECTRA-small INT8):** 512자 단일스레드 p95 **38ms ≤ 150ms** (STATUS.md:75, M5_MEASUREMENT_REPORT.md). base 는 파라미터↑로 지연이 오르므로 격상 후 **반드시 재측정**(§1.2 명령으로 `report["latency"]["buckets"]["512"]["p95"]` 확인).
-- **가제티어 단일스레드 512자 p95 = 3.76ms**(본 박스 실측, 정규식+사전 경로의 추가지연 상한 참고치).
+## 2. 격상 512자 p95 — PASS (무부하 실측)
+| 버킷 | INT8 p95 | FP32 p95 | 목표 |
+|------|----------|----------|------|
+| ≤128자 | 13.3ms | 31.1ms | — |
+| **512자** | **52.2ms** | **124.2ms** | ≤150ms ✅ |
+| 2048자 | 113.2ms | 329.2ms | — |
+
+- **#2 종결:** 격상(FP32) 및 현 INT8 모두 512자 무부하 p95 ≤150ms. FP32 는 여유 ~26ms 로 경계에 근접(2048자는 초과 — 범위 밖).
 
 ---
 
-## 3. 동시성·지속부하 p95 — PASS (실측)
+## 3. 동시성·지속부하 p95 — 실측 리포트 (모델 백엔드)
 
-`scripts/bench_load.py` 신규. 게이트웨이 pre_call 훅(`EgressGuard.inspect`, 동기)을 다중 클라이언트가
-공유 가드로 동시 타격하는 **인프로세스 부하 모델**. 입력 512자(NFR2). 백엔드 = gazetteer(본 박스 실행 가능 경로).
+`scripts/bench_load.py`. 게이트웨이 pre_call 훅(`EgressGuard.inspect`, 동기)을 N개 클라이언트가 **공유 가드**로
+동시 타격하는 인프로세스 부하 모델. 입력 512자(NFR2). **프로덕션 목표 onnx-int8 + 격상 FP32 둘 다 실측**.
 
 ```bash
-python3 scripts/bench_load.py --backend gazetteer --concurrency 1,4,8,16 \
-    --requests 200 --sustain-seconds 8 --sustain-concurrency 8 \
+PYTHONPATH=~/.cache/m5_libs python3 scripts/bench_load.py --backend onnx-int8 \
+    --concurrency 1,2,4,8,16 --requests 150 --sustain-seconds 8 --sustain-concurrency 4 \
     --json-out docs/reports/CMP-123-load-p95.json
 ```
 
-### 3.1 동시성 스윕 (512자, 레벨당 200요청)
+### 3.1 동시성 스윕 (512자, onnx-int8 프로덕션 목표)
 | 동시성 C | p50(ms) | **p95(ms)** | p99(ms) | 처리량(req/s) | ≤150ms |
 |----------|---------|-------------|---------|---------------|--------|
-| 1  | 2.99 | 4.67 | 7.73 | 306 | ✅ |
-| 4  | 9.30 | 40.08 | 65.47 | 251 | ✅ |
-| 8  | 8.49 | 87.20 | 130.59 | 294 | ✅ |
-| 16 | 4.83 | **146.40** | 237.29 | 312 | ✅(여유 ~2%) |
+| 1  | 29.8 | 41.0 | 46.0 | 32.4 | ✅ |
+| 2  | 47.7 | 66.9 | 110.0 | 39.7 | ✅ |
+| 4  | 96.1 | **198.2** | 246.8 | 37.7 | ❌ |
+| 8  | 297.8 | 541.9 | 665.6 | 24.9 | ❌ |
+| 16 | 725.5 | 1468.3 | 1767.2 | 20.7 | ❌ |
 
-### 3.2 지속부하 (8 워커, 8초 연속)
-- 총 **2,540 요청** · 처리량 **317 req/s** · p50 8.1ms · **p95 87.7ms** · p99 132ms · 구간 p95 71~109ms(안정) → **≤150ms PASS**.
+### 3.2 FP32 격상 스윕 (참고, `CMP-123-load-p95-fp32.json`)
+| C | p95(ms) | 처리량 | ≤150ms |
+|---|---------|--------|--------|
+| 1 | 107.5 | 12.8 | ✅ |
+| 2 | 125.3 | 18.4 | ✅ |
+| 4 | 430.0 | 12.2 | ❌ |
 
-### 3.3 감사봇 백프레셔 기준선
-- 단일 워커 최대 서비스율 **μ ≈ 248 req/s**(평균 4.0ms/req, p95 5.2ms). 비동기 감사 큐(FileQueue→AuditBot)는 μ 로 드레인 → **도착률 λ ≤ 248 req/s 면 큐 안정**, λ>μ 면 큐 무한 증가(백프레셔). λ_safe ≈ μ.
+### 3.3 지속부하 (onnx-int8, 4 워커 8초)
+- 처리량 **33.6 req/s** · **p95 206.9ms** · 구간 p95 156~259ms → C=4 에서 **>150ms 초과**(스윕과 일관).
 
-### 3.4 판정 및 한계
-- **모든 동시성 레벨 + 지속부하 p95 ≤ 150ms = PASS.** `all_concurrency_p95_le_150ms: true`.
-- C=16 p95(146ms)는 임계에 근접 — GIL 하 CPU 바운드 탐지의 포화 신호. 운영 가이드: 코어당 워커 8 내 권장, 그 이상은 수평 확장.
-- **한계(정직 고지):** 본 부하 p95 는 **gazetteer** 경로 측정치다. 프로덕션 목표인 **onnx-int8 KoELECTRA 백엔드의 동시성 p95 는 모델 추론 비용이 추가**되어 더 높다(에어갭으로 본 박스 미실행). 모델 프로비저닝 박스에서 `--backend onnx-int8` 로 동일 하니스 재실행 필요 → 후속.
+### 3.4 감사봇 백프레셔 기준선
+- 단일 워커 최대 서비스율 **μ ≈ 22.4 req/s**(INT8, 평균 44.7ms/req) / **13.5 req/s**(FP32). 비동기 감사 큐
+  (FileQueue→AuditBot)는 μ 로 드레인 → **도착률 λ ≤ μ 면 큐 안정**, λ>μ 면 큐 무한 증가(백프레셔). **λ_safe ≈ 22 req/s(INT8)**.
+
+### 3.5 판정·원인·운영 가이드 (정직 고지)
+- **≤150ms 는 동시성 C≤2 에서만 성립**, C≥4 에서 초과(`all_concurrency_p95_le_150ms: false`). 지속부하(C=4)도 초과.
+- **원인:** NER 추론은 CPU 바운드 + 단일 onnxruntime 세션이 코어를 intra-op 스레드로 점유 → 동시 요청이 코어를
+  **과구독(oversubscription)**. 처리량이 C=2 에서 포화(~40 req/s) 후 C↑ 에 **하락**(컨텍스트 스위치 스래싱)하는 것이 증거.
+- **NFR2 의 실체:** "512자 p95 ≤150ms" 는 **무부하/저동시성(≤2 동시요청) 보장**이며, 단일 프로세스에서 naive 동시성으로
+  확장되지 **않는다**. 이것이 v0.0.1 "부하 시 p95 미측정" 부채의 답이다.
+- **하드닝 권고(후속, 본 승인 범위 밖 별도 이슈):**
+  1. onnxruntime **intra_op_num_threads 캡** + **bounded 워커풀**(워커수 = 코어/intra-op)로 코어 전용화 → 부하 p95 무부하 근접.
+  2. **동적 배치**(요청 합성)로 추론 상수비용 분산.
+  3. 수평 확장: 인스턴스당 λ_safe≈22 req/s 기준 용량 산정.
+- **하드웨어 주의:** 절대 지연은 비프로덕션 CPU 참고치. 포화 *형태*(저 C 포화·과구독)는 하드웨어 독립 — 프로덕션 온프렘 재측정 권고.
 
 ---
 
 ## 4. 산출물 / 재현
-- 신규: `scripts/bench_load.py`(동시성·부하 하니스) · `docs/reports/CMP-123-load-p95.json`(부하 실측) · `docs/reports/CMP-123-bench-gazetteer.json`(정확도 실측).
-- 변경: `scripts/export_onnx_int8.py`·`egress_audit/detectors/ner.py`(M5_NER_MODEL_ID 격상 배선) · `scripts/bench_m5.py`(KR_PERSON CI-하한 이진 판정 라인).
-- 회귀: `python3 tests/run_acceptance.py` → **20/20 PASS**(본 변경 후).
+- **신규:** `scripts/bench_load.py`(동시성·부하 하니스) · `docs/reports/CMP-123-load-p95.json`(INT8 부하) ·
+  `CMP-123-load-p95-fp32.json`(FP32 부하) · `CMP-123-recall-int8.json` · `CMP-123-recall-fp32.json`(정확도/지연 실측).
+- **변경:** `scripts/bench_m5.py`(KR_PERSON CI-하한 이진 판정) · `scripts/export_onnx_int8.py`(M5_NER_MODEL_ID base 격상 배선).
+- **재현 스택:** `PYTHONPATH=~/.cache/m5_libs`(transformers/torch/onnxruntime/optimum), INT8 ONNX `~/.cache/m5_onnx_int8/int8`.
 
-## 5. 남은 의존성(후속, deps/모델 프로비저닝 박스에서)
-1. `M5_NER_MODEL_ID=...base... export_onnx_int8.py` → base INT8 재양자화.
-2. `bench_m5.py --backend onnx-int8` → KR_PERSON **CI 하한 ≥0.85** 재측정(#1 종결) + **격상 INT8 512자 p95 ≤150ms** 확인(#2 종결).
-3. `bench_load.py --backend onnx-int8` → 모델 백엔드 동시성 p95 재측정(#3 모델판 종결).
+## 5. 후속(별도 이슈·승인 권고)
+1. **NER 동시성 하드닝**(intra-op 캡 + 워커풀 + 동적 배치) — 부하 p95 ≤150ms 를 C>2 로 확장. ← 본 측정이 정량 근거.
+2. **크기 격상(→base)** 가중치 확보 시 §1.3 1-명령 재양자화로 CI 하한 추가 여유 + GLiNER 보조 평가.
+3. KR_LOCATION recall 경계(0.792~0.875, 표본노이즈) — 범위 밖, M5 잔여로 추적.
