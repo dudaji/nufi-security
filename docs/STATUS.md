@@ -5,6 +5,40 @@
 
 ---
 
+## v0.0.3 트랙 — Operate 호라이즌 · 보드 승인·분해 (2026-06-27, CMP-132)
+
+테마 **Operate(관측·보증·운영)**. 보드가 **모든 v0.0.3 개발 작업을 블랭킷 승인**(CMP-132, 2026-06-27) → CPO 가 권장 Must+Should 세트를 자식 이슈로 분해. 제안서: [`PROPOSAL_v0.0.3.md`](PROPOSAL_v0.0.3.md).
+
+| 마일스톤 | 자식 | 트랙 | 오너 | 상태 |
+|---|---|---|---|---|
+| **M0 선행** | (O5) | v0.0.2 릴리스 태그 컷(VERSION/CHANGELOG 0.0.2 + tag) | **사람 릴리스 오너(미지정)** | blocked — CEO 지명 |
+| **M1 Observe+Assure** | CMP-133 | O2 상시 커버리지 보증 + 우회 모니터링/알림 | Engineer (CMP-96) | 승인됨→todo |
+| **M1 Observe+Assure** | (O1) | 감사 가시성 대시보드(read-only, Langfuse 기본) | Engineer (CMP-96) | todo |
+| **M2 Operate-at-Scale** | (O3) | 정책 운영 규모화(멀티프로파일·롤백) | Engineer (CMP-96) | backlog |
+
+> 거버넌스: 빌드 트랙=CMP-96 상시승인 카브아웃(+보드 v0.0.3 승인). 릴리스 권한(O5)=CMP-60 사람 게이트. OKR: `goalId`=null → CEO 링크 대기.
+> 조건부: O4 IDM 문서지문(디자인파트너 수요 신호 시 당김). Won't(이번): 멀티테넌시·RBAC·TLS MITM·임베딩 분류기 → v0.1.0 Scale.
+
+---
+
+## v0.0.2 트랙 — 보드 승인·분해 완료 (2026-06-27, CMP-118)
+
+테마 **Adopt(채택 마찰 해소)**. 보드가 체크박스로 트랙 **D1·D2(배포)·D3·D2(운영)** 채택 → CPO 가 자식 이슈로 분해, 오너=Engineer(보안 상시 승인 CMP-96). 제안서: [`PROPOSAL_v0.0.2.md`](PROPOSAL_v0.0.2.md).
+
+| 마일스톤 | 자식 이슈 | 내용 |
+|---|---|---|
+| **M1 Adopt** | CMP-119 | thin client SDK(Python, OpenAI 호환 base_url 심) |
+| **M1 Adopt** | CMP-120 | `nufi doctor` 진단 CLI(하이브리드 배선·카나리 PII E2E) |
+| **M1 Adopt** | CMP-121 | 파이프라인 프리셋(strict-kr-pii/audit-only/pseudonymize-roundtrip) + init |
+| **M1 Adopt** | CMP-122 | 단일명령 배포(Compose + 에어갭 번들 + Helm 스텁) |
+| **M1 Adopt** | CMP-125 | 서빙빌더 통합/사용 가이드 (capstone, CMP-119~122 blockedBy) |
+| **M2 Hardening** | CMP-123 | NER base 격상(KR_PERSON CI 0.85↑) + 동시성/부하 p95 재측정 |
+| **M2 Hardening** | CMP-124 | 정책 핫리로드+드라이런 + retain_raw/키 회전 하드닝 |
+
+> Won't(이번): D4 IDM/임베딩 분류기 · 멀티테넌시 · TLS MITM(수요/범위/리스크).
+
+---
+
 ## 보드 리뷰 — 전체 진척 한눈에 (2026-06-27)
 
 | 트랙 | 산출물 | 이슈 | 상태 | 핵심 증거 |
