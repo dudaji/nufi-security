@@ -6,6 +6,9 @@
   disable   킬스위치 — 전 규칙 즉시 제거(A8).
   status    현재 집행 상태(JSON).
   feedback  drop 로그(stdin/파일) → blocked_attempts 카운터 + flow 재유입.
+  doctor    하이브리드 배선 1회 진단(5체크 PASS/WARN/FAIL · CMP-120).
+  coverage  '내 트래픽 중 X% 게이트웨이 통과' 커버리지 보증 리포트(CMP-133).
+  monitor   게이트웨이 우회 상시 모니터링/임계 알림(suppression 포함 · CMP-133).
   init      파이프라인 프리셋에서 운영 config 구체화(CMP-121, fail-closed).
 
 예) 데모 승격: ``nufi-egress apply`` ↔ ``nufi-egress disable``.
@@ -89,6 +92,66 @@ def cmd_doctor(args) -> int:
     return 1 if report["summary"]["fail"] else 0
 
 
+def cmd_coverage(args) -> int:
+    # 커버리지 보증 리포트 — '내 트래픽 중 X% 가 게이트웨이를 통과'(CMP-133 O2 (a)(b)).
+    # flow_tap 의 via_gateway/bypass 분류를 상시 집계(capture/coverage.py).
+    import tempfile
+    from capture.flow_tap import FlowTap
+    from capture.coverage import CoverageAggregator, render_coverage_human, FAIL
+
+    if args.simulate:
+        # 데모/CI: 리플레이를 격리 디렉터리로 분류·적재 후 집계(운영 로그 미오염).
+        with tempfile.TemporaryDirectory(prefix="nufi-coverage-") as td:
+            tap = FlowTap(targets_path=args.targets, base_dir=td)
+            tap.simulate(args.simulate)
+            flows = tap.read_flows()
+    else:
+        tap = FlowTap(targets_path=args.targets, base_dir=args.out)
+        flows = tap.read_flows()
+
+    agg = CoverageAggregator.from_flows(flows, pass_min=args.pass_min,
+                                        fail_below=args.fail_below,
+                                        state_path=args.state)
+    if args.state:
+        agg.persist()  # 상시 집계: 누적 상태를 경량 영속.
+    snap = agg.snapshot()
+
+    if args.json:
+        print(json.dumps(snap.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        print(render_coverage_human(snap))
+        if not args.no_json:
+            print("\n--- JSON ---")
+            print(json.dumps(snap.to_dict(), ensure_ascii=False, indent=2))
+    return 1 if snap.status == FAIL else 0
+
+
+def cmd_monitor(args) -> int:
+    # 우회 상시 모니터링/임계 알림(suppression 포함 · CMP-133 O2 (c)).
+    import tempfile
+    from capture.flow_tap import FlowTap
+    from capture.bypass_monitor import BypassMonitor, render_monitor_human, FAIL
+
+    mon = BypassMonitor(threshold=args.threshold, window_sec=args.window,
+                        cooldown_sec=args.cooldown, alerts_path=args.alerts)
+    if args.simulate:
+        with tempfile.TemporaryDirectory(prefix="nufi-monitor-") as td:
+            tap = FlowTap(targets_path=args.targets, base_dir=td)
+            tap.simulate(args.simulate)
+            events = mon.observe_many(tap.read_flows())
+    else:
+        tap = FlowTap(targets_path=args.targets, base_dir=args.out)
+        events = mon.observe_many(tap.read_flows())
+
+    report = mon.report()
+    if args.json:
+        print(json.dumps({**report, "events": [e.to_dict() for e in events]},
+                         ensure_ascii=False, indent=2))
+    else:
+        print(render_monitor_human(report, events))
+    return 1 if report["status"] == FAIL else 0
+
+
 def cmd_feedback(args) -> int:
     fb = DropFeedback(counter_path=args.counter, flow_dir=args.flow_dir)
     if args.log and args.log != "-":
@@ -145,6 +208,37 @@ def main(argv: Optional[List[str]] = None) -> int:
     g.add_argument("--json", action="store_true", help="기계용 JSON 만 출력")
     g.add_argument("--no-json", action="store_true", help="사람읽기만 출력(JSON 생략)")
     p.set_defaults(func=cmd_doctor)
+
+    p = sub.add_parser("coverage",
+                       help="'내 트래픽 중 X% 게이트웨이 통과' 커버리지 보증 리포트(CMP-133)")
+    p.add_argument("--simulate", metavar="REPLAY.jsonl",
+                   help="flow 리플레이로 집계(에어갭/CI · 운영 로그 미오염)")
+    p.add_argument("--targets", default=None, help="capture_targets.yaml 경로")
+    p.add_argument("--out", default=None, help="flow 로그 base_dir(기본 logs/packets)")
+    p.add_argument("--state", default=None, help="경량 영속 카운터 JSON 경로(상시 누적)")
+    p.add_argument("--pass-min", type=float, default=1.0,
+                   help="PASS 최소 커버리지 비율(기본 1.0=100%%, 우회 0건)")
+    p.add_argument("--fail-below", type=float, default=0.90,
+                   help="FAIL 임계 커버리지 비율(기본 0.90)")
+    g = p.add_mutually_exclusive_group()
+    g.add_argument("--json", action="store_true", help="기계용 JSON 만 출력")
+    g.add_argument("--no-json", action="store_true", help="사람읽기만 출력(JSON 생략)")
+    p.set_defaults(func=cmd_coverage)
+
+    p = sub.add_parser("monitor",
+                       help="게이트웨이 우회 상시 모니터링/임계 알림(suppression · CMP-133)")
+    p.add_argument("--simulate", metavar="REPLAY.jsonl",
+                   help="flow 리플레이로 우회 모니터 1회 실행(에어갭/CI)")
+    p.add_argument("--threshold", type=int, default=1,
+                   help="알림 발화 임계 우회 횟수(키별 윈도 내, 기본 1)")
+    p.add_argument("--window", type=float, default=60.0, help="임계 누적 롤링 윈도(초)")
+    p.add_argument("--cooldown", type=float, default=300.0,
+                   help="발화 후 동일 키 억제(디바운스) 기간(초)")
+    p.add_argument("--alerts", default=None, help="알림 출력 경로(기본 logs/alerts.jsonl)")
+    p.add_argument("--targets", default=None, help="capture_targets.yaml 경로")
+    p.add_argument("--out", default=None, help="flow 로그 base_dir(기본 logs/packets)")
+    p.add_argument("--json", action="store_true", help="기계용 JSON 만 출력")
+    p.set_defaults(func=cmd_monitor)
 
     p = sub.add_parser("init", help="프리셋에서 운영 config 구체화(CMP-121)")
     p.add_argument("preset", nargs="?", help="프리셋 이름(생략 시 --list)")

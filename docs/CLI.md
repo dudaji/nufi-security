@@ -17,7 +17,7 @@ python3 -m enforcement.cli --help            # 전체 서브커맨드
 
 ```
 usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
-                   {render,apply,disable,status,feedback,doctor,init} ...
+                   {render,apply,disable,status,feedback,doctor,coverage,monitor,init} ...
 ```
 
 | 전역 옵션 | 무엇 | 기본 |
@@ -28,6 +28,8 @@ usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
 | 서브커맨드 | 한 줄 | 권한 |
 |---|---|---|
 | [`doctor`](#doctor) | 하이브리드 배선 1회 진단(5체크 PASS/WARN/FAIL) | 불필요 |
+| [`coverage`](#coverage) | '내 트래픽 중 X% 게이트웨이 통과' 커버리지 보증 리포트 | 불필요 |
+| [`monitor`](#monitor) | 게이트웨이 우회 상시 모니터링/임계 알림(suppression) | 불필요 |
 | [`init`](#init) | 프리셋에서 운영 config 구체화 | 불필요 |
 | [`render`](#render) | 집행 규칙 셋 출력(적용 안 함) | 불필요 |
 | [`apply`](#apply) | 규칙 원자 적용(정적 사전 차단) | nftables 적용 시 root |
@@ -212,6 +214,64 @@ usage: nufi-egress feedback [-h] [--log LOG] [--counter COUNTER]
 ```bash
 journalctl -k | grep nufi-egress-block | python3 -m enforcement.cli feedback --counter logs/blocked.json
 ```
+
+---
+
+## `coverage`
+
+`doctor` 의 게이트웨이 통과 점검을 **상시 런타임 보증**으로 연장합니다. flow tap(`capture/flow_tap.py`)이 적재한 public-LLM 행 연결에서 게이트웨이 경유 대 우회 비율을 집계해 **'내 트래픽 중 X% 가 게이트웨이를 통과'** 리포트(텍스트/JSON)를 산출합니다. 집계 엔진은 `capture/coverage.py` 의 `CoverageAggregator` 입니다.
+
+```
+usage: nufi-egress coverage [-h] [--simulate REPLAY.jsonl] [--targets TARGETS]
+                            [--out OUT] [--state STATE]
+                            [--pass-min PASS_MIN] [--fail-below FAIL_BELOW]
+                            [--json | --no-json]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--simulate REPLAY.jsonl` | flow 리플레이로 집계(에어갭/CI · 운영 로그 미오염) | — |
+| `--out DIR` | flow 로그 base_dir(라이브 누적분 읽기) | `logs/packets` |
+| `--state PATH` | 경량 영속 카운터 JSON(상시 누적) | — |
+| `--pass-min RATIO` | PASS 최소 커버리지 비율(우회 0건) | `1.0` |
+| `--fail-below RATIO` | FAIL 임계 커버리지 비율 | `0.90` |
+| `--json` / `--no-json` | 기계용 JSON 만 / 사람읽기만 | — |
+
+```bash
+python3 -m enforcement.cli coverage --simulate samples/flow_replay.jsonl --no-json
+# → 내 트래픽 중 50.0% 가 게이트웨이를 통과 (게이트웨이 2 / 관측 4, 우회 2) — 🔴 FAIL
+```
+
+> 종료코드: 커버리지 FAIL(임계 미만) 이면 1, 아니면 0 — CI 보증 게이트로 사용.
+
+---
+
+## `monitor`
+
+게이트웨이 **우회 outbound** 를 준실시간 탐지해 임계 초과 시 알림을 발화합니다. flow tap 의 우회 판정(`bypass`)을 재사용하고, 동일 (출처→목적지) 키의 반복 우회는 **suppression(쿨다운 디바운스)** 으로 억제합니다. 알림은 `logs/alerts.jsonl` 에 적재(감사 봇 알림과 동일 싱크)됩니다. 엔진은 `capture/bypass_monitor.py` 의 `BypassMonitor` 입니다.
+
+```
+usage: nufi-egress monitor [-h] [--simulate REPLAY.jsonl] [--threshold N]
+                           [--window SEC] [--cooldown SEC] [--alerts PATH]
+                           [--targets TARGETS] [--out OUT] [--json]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--simulate REPLAY.jsonl` | flow 리플레이로 우회 모니터 1회 실행 | — |
+| `--threshold N` | 알림 발화 임계 우회 횟수(키별 윈도 내) | `1` |
+| `--window SEC` | 임계 누적 롤링 윈도(초) | `60` |
+| `--cooldown SEC` | 발화 후 동일 키 억제(디바운스) 기간(초) | `300` |
+| `--alerts PATH` | 알림 출력 경로 | `logs/alerts.jsonl` |
+| `--out DIR` | flow 로그 base_dir(라이브 tail) | `logs/packets` |
+| `--json` | 기계용 JSON 만(events 포함) | — |
+
+```bash
+python3 -m enforcement.cli monitor --simulate samples/flow_bypass_burst.jsonl --threshold 1
+# → 관측 8 · 우회 6 · 알림 2 · 억제 4  — 🔴 FAIL
+```
+
+> 종료코드: 임계 초과 알림이 발화되면 1(FAIL), 아니면 0. 상시 데몬은 `BypassMonitor.run_forever` 로 flow 로그를 tail.
 
 ---
 

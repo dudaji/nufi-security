@@ -4,6 +4,20 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [Unreleased]
+
+### Added
+- **커버리지 보증 (CMP-133 · v0.0.3 M1·O2)**: `nufi doctor`(1회 진단)의 게이트웨이 통과
+  점검을 **상시 런타임 보증**으로 연장. flow tap 의 우회 판정을 연계해 nftables 집행을
+  '측정 가능한 보증'으로 만든다.
+  - 커버리지 집계기 `capture/coverage.py`(`CoverageAggregator`) — '내 트래픽 중 X% 가
+    게이트웨이를 통과' 경량 인메모리/영속 카운터(외부 의존 0).
+  - `nufi-egress coverage` 서브커맨드 — 커버리지 보증 리포트(텍스트/JSON, PASS/WARN/FAIL).
+  - 우회 상시 모니터 `capture/bypass_monitor.py`(`BypassMonitor`) + `nufi-egress monitor`
+    서브커맨드 — 게이트웨이 우회 준실시간 탐지·임계 알림 + suppression(쿨다운 디바운스).
+  - 단위 테스트 `tests/test_cmp133_coverage.py`, 우회 버스트 샘플
+    `samples/flow_bypass_burst.jsonl`(suppression 실증).
+
 ## [0.0.2] - 2026-06-28
 
 패키징·운영성(Day-1 도입) 릴리스. 코어 탐지/차단 엔진은 0.0.1 그대로 두고, 서빙 빌더가 실제로 깔고-띄우고-운영하는 데 필요한 CLI·SDK·배포·핫리로드·문서를 채웠다.
