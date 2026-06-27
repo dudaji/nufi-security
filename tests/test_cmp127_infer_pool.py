@@ -80,16 +80,18 @@ def test_env_overrides(monkeypatch):
     assert pool.workers == 5
 
 
-def test_default_worker_count_tracks_cores(monkeypatch):
-    """기본 W = cores (소코어 박스 직렬화 방지)."""
+def test_default_worker_count_formula(monkeypatch):
+    """기본 W = cores // K (코어 전용화). K=1(기본) → W=cores."""
     monkeypatch.delenv("NUFI_NER_INFER_WORKERS", raising=False)
-    assert worker_count() == max(1, cpu_count())
-
-
-def test_default_intra_op_capped(monkeypatch):
-    """기본 K = min(cores, 4): 소코어=코어수(회귀 없음), 다코어=4(폭발 차단)."""
     monkeypatch.delenv("NUFI_NER_INTRA_OP_THREADS", raising=False)
-    assert intra_op_threads() == min(cpu_count(), 4)
+    k = intra_op_threads()
+    assert worker_count() == max(1, cpu_count() // max(1, k))
+
+
+def test_default_intra_op_is_one(monkeypatch):
+    """기본 K = 1: onnxruntime 기본(=코어수)을 캡해 C×cores 과구독을 차단."""
+    monkeypatch.delenv("NUFI_NER_INTRA_OP_THREADS", raising=False)
+    assert intra_op_threads() == 1
 
 
 if __name__ == "__main__":
