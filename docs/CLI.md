@@ -1,0 +1,232 @@
+# 🖥 CLI 레퍼런스 — `nufi-egress`
+
+NuFi 의 단일 진입점 CLI 입니다. 배선 진단(`doctor`)·프리셋 적용(`init`)부터 실제 집행(`apply`/`disable`)·상태 조회까지 한 명령으로 다룹니다. 통합/도입 흐름(왜·언제)은 [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md), 프리셋 상세는 [`PRESETS.md`](PRESETS.md) 를 보세요. 이 문서는 **무엇을 어떤 플래그로 실행하나**의 레퍼런스입니다.
+
+> 모든 예시는 현재 저장소에서 실제 실행해 캡처한 출력입니다(목·발췌 표기). 클린 클론에서 그대로 재현됩니다.
+
+---
+
+## 실행 방법
+
+```bash
+cd security
+python3 -m pip install -r requirements.txt   # 코어: PyYAML·fastapi·uvicorn·httpx
+
+python3 -m enforcement.cli --help            # 전체 서브커맨드
+```
+
+```
+usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
+                   {render,apply,disable,status,feedback,doctor,init} ...
+```
+
+| 전역 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--routing PATH` | `routing.yaml` 경로 | `config/routing.yaml` |
+| `--policy PATH` | `policy.yaml` 경로 | `config/policy.yaml` |
+
+| 서브커맨드 | 한 줄 | 권한 |
+|---|---|---|
+| [`doctor`](#doctor) | 하이브리드 배선 1회 진단(5체크 PASS/WARN/FAIL) | 불필요 |
+| [`init`](#init) | 프리셋에서 운영 config 구체화 | 불필요 |
+| [`render`](#render) | 집행 규칙 셋 출력(적용 안 함) | 불필요 |
+| [`apply`](#apply) | 규칙 원자 적용(정적 사전 차단) | nftables 적용 시 root |
+| [`disable`](#disable) | 킬스위치 — 전 규칙 즉시 제거 | nftables 적용 시 root |
+| [`status`](#status) | 현재 집행 상태(JSON) | 불필요 |
+| [`feedback`](#feedback) | drop 로그 → `blocked_attempts` 카운터 + flow 재유입 | 불필요 |
+
+> **신규 도입 5분 경로:** `init audit-only` → SDK/게이트웨이 배선 → `doctor`(core-3 GREEN 확인) → `status`/감사 로그 관찰 → 준비되면 `apply`. 자세한 결정 트리는 [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md).
+
+---
+
+## `doctor`
+
+하이브리드(private 기본 + public 폴백) 배선을 1회 진단합니다. 5체크를 `PASS`/`WARN`/`FAIL` 로 보고합니다. **핵심 3체크(config·gateway·canary)가 PASS 이고 FAIL 0** 이면 탐지·정책·감사·차단 경로가 실제로 살아있다는 증거입니다(목/스텁 아님). `reachability`·`bypass` 는 외부 자원이 없으면 `WARN` 으로 dry-run 강등됩니다(FAIL 아님).
+
+```
+usage: nufi-egress doctor [-h] [--ner-backend NER_BACKEND]
+                          [--connect-timeout CONNECT_TIMEOUT] [--json | --no-json]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--ner-backend NAME` | 탐지 NER 백엔드 | `gazetteer`(결정론적·경량) |
+| `--connect-timeout SEC` | 도달성 점검 TCP 타임아웃(초) | `2.0` |
+| `--json` | 기계용 JSON 만 | — |
+| `--no-json` | 사람읽기만(JSON 생략) | — |
+
+```bash
+python3 -m enforcement.cli doctor            # 사람읽기 + JSON
+python3 -m enforcement.cli doctor --json     # CI 게이트용
+```
+
+실제 출력(사람읽기):
+
+```
+nufi doctor — 하이브리드 배선 진단 (v0.0.1)
+============================================================
+[PASS] ✔ config       라우트 2개·백엔드 3개 (public 2/private 1), 정책 엔티티 19개 — 구조·일관성 정상
+[WARN] ▲ reachability 미도달 1/3 — private-llm@localhost:8000(Connection refused) … dry-run 강등
+[PASS] ✔ gateway      public outbound 이 게이트웨이를 통과·감사 적재됨 (outcome=forwarded) — 실신호
+[WARN] ▲ bypass       관측된 flow 로그 없음 — 우회 판정 불가(강등). 탐지기 자가검증=OK
+[PASS] ✔ canary       합성 PII(KR_RRN) 가 403 차단되고 감사 적재 GREEN (blocked=['KR_RRN']) — 실신호(목 아님)
+------------------------------------------------------------
+종합: 🟡 YELLOW  (PASS 3 · WARN 2 · FAIL 0 / 5)
+```
+
+**종료 코드:** FAIL 이 1개라도 있으면 `1`, 아니면 `0`(WARN 은 `0`). `--json` 의 `summary.fail == 0` 을 CI 게이트로 그대로 씁니다.
+
+> 동일 진단을 단독 진입점으로도 호출 가능: `python3 -m enforcement.doctor`(동치).
+
+---
+
+## `init`
+
+**의견 있는 프리셋**에서 운영 config 를 구체화합니다(기본값 오설정으로 인한 조용한 누수 위험 감소). 프리셋은 config 만 바꾸고 런타임 경로는 그대로입니다.
+
+```
+usage: nufi-egress init [-h] [--list] [--out OUT] [--base-dir BASE_DIR]
+                        [--set KEY=VALUE] [--force] [--dry-run] [preset]
+```
+
+| 인자/옵션 | 무엇 | 기본 |
+|---|---|---|
+| `preset` | 프리셋 이름(생략 시 `--list` 동작) | — |
+| `--list` | 사용 가능한 프리셋 목록 | — |
+| `--out DIR` | config 출력 디렉터리 | `./config` |
+| `--base-dir DIR` | 오버레이 베이스 config 디렉터리 | — |
+| `--set KEY=VALUE` | 허용된 노브만 override | — |
+| `--force` | 기존 config 덮어쓰기 | off |
+| `--dry-run` | 구체화 결과만 출력(파일 미생성) | off |
+
+```bash
+python3 -m enforcement.cli init --list
+```
+
+```
+  audit-only               차단·변형 없이 전수 탐지·로깅만. 도입 초기 가시성 확보용(fail-open).
+  pseudonymize-roundtrip   약한 PII 를 가역 가명화로 치환·원복(효용 보존), 강한 PII·비밀은 차단 유지(fail-open).
+  strict-kr-pii            한국어 PII·비밀·기밀을 최대로 차단. 미지 엔티티 기본 차단, enforcement fail-closed.
+```
+
+```bash
+python3 -m enforcement.cli init strict-kr-pii --out ./config   # 운영 config 생성
+python3 -m enforcement.cli init audit-only --dry-run           # 적용 전 미리보기
+```
+
+**권장 도입 순서:** `audit-only`(관찰) → `pseudonymize-roundtrip`(효용 보존) 또는 `strict-kr-pii`(최대 보호). 선택 기준·동작 diff·fail-closed 보증은 [`PRESETS.md`](PRESETS.md).
+
+> 동일 기능 단독 진입점: `python3 -m egress_audit.init_cli ...`(동치).
+
+---
+
+## `render`
+
+집행 규칙 셋을 **출력만** 합니다(적용 안 함). 적용 전 무엇이 들어갈지 검토용.
+
+```bash
+python3 -m enforcement.cli render
+```
+
+**종료 코드:** `0`.
+
+---
+
+## `apply`
+
+집행 규칙을 **원자적으로 적용**합니다(정적 사전 차단). 라이브 nftables 적용은 root/권한이 필요하며, 권한이 없으면 dry-run 으로 강등됩니다.
+
+```
+usage: nufi-egress apply [-h] [--fail-mode {open,closed}] [--dry-run] [--show-rules]
+```
+
+| 옵션 | 무엇 |
+|---|---|
+| `--fail-mode {open,closed}` | 집행 실패 시 통과(open)/차단(closed) |
+| `--dry-run` | commit 생략(텍스트만) |
+| `--show-rules` | 적용 규칙 출력 |
+
+```bash
+python3 -m enforcement.cli apply --dry-run --show-rules   # 비권한 미리보기
+sudo python3 -m enforcement.cli apply --fail-mode closed  # 실제 적용(root)
+```
+
+> 데모 승격: `apply` ↔ `disable` 로 토글.
+
+---
+
+## `disable`
+
+킬스위치 — 전 집행 규칙을 즉시 제거합니다.
+
+```bash
+python3 -m enforcement.cli disable            # 미리보기/비권한
+sudo python3 -m enforcement.cli disable       # 실제 제거(root)
+```
+
+`--dry-run` 으로 commit 없이 확인 가능.
+
+---
+
+## `status`
+
+현재 집행 상태를 JSON 으로 출력합니다.
+
+```bash
+python3 -m enforcement.cli status
+```
+
+```json
+{
+  "backend": "iptables-nft",
+  "table": "nufi_egress",
+  "fail_mode": "open",
+  "active": false,
+  "rule_count": 0,
+  "log_prefix": "nufi-egress-block",
+  "privileged": false,
+  "dry_run": true
+}
+```
+
+`privileged=false`/`dry_run=true` 는 비권한 환경에서의 안전한 기본 상태입니다(라이브 집행은 root 필요).
+
+---
+
+## `feedback`
+
+drop 로그(stdin/파일)를 읽어 `blocked_attempts` 카운터로 집계하고 flow 로 재유입합니다(우회 상관·감사 봇 연계).
+
+```
+usage: nufi-egress feedback [-h] [--log LOG] [--counter COUNTER]
+                            [--flow-dir FLOW_DIR] [--no-reinject]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--log LOG` | drop 로그 파일 | stdin |
+| `--counter COUNTER` | 카운터 JSON 경로 | — |
+| `--flow-dir FLOW_DIR` | flow 재유입 디렉터리 | — |
+| `--no-reinject` | 카운터만, flow 미기록 | off |
+
+```bash
+journalctl -k | grep nufi-egress-block | python3 -m enforcement.cli feedback --counter logs/blocked.json
+```
+
+---
+
+## 관련 모듈 CLI (집행 외)
+
+`nufi-egress` 밖의 운영/관측 명령입니다. 라이브 패킷 캡처는 root/CAP_NET_RAW 가 필요하고, 에어갭·CI·데모는 `--simulate` 로 root 없이 재현합니다.
+
+| 명령 | 무엇 | 문서 |
+|---|---|---|
+| `python3 -m capture.targets --refresh --bpf` | 캡처 대상 갱신(routing→capture_targets) + BPF 확인 | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
+| `python3 -m capture.flow_tap --simulate samples/flow_replay.jsonl` | flow tap — 우회 판정(root 없이 리플레이) | [`SPEC_CMP85.md`](SPEC_CMP85.md) |
+| `python3 -m egress_audit.audit_bot --simulate / --daemon / --report` | 비동기 감사 봇(producer/consumer·지연 리포트) | [`SPEC_CMP85.md`](SPEC_CMP85.md) |
+| `python3 scripts/bench.py --ner gazetteer` | recall/precision + 지연 p95 벤치 | [`M5_MEASUREMENT_REPORT.md`](M5_MEASUREMENT_REPORT.md) |
+| `./scripts/demo_cmp85.sh` | 차등 감사 통합 데모(6시나리오, root 불필요) | [`DEMO_CMP85.md`](DEMO_CMP85.md) |
+
+---
+
+*작성: 2026-06-28 (CMP-125, Engineer) — v0.0.2 M1·D1 capstone. 통합 CLI(`enforcement/cli.py`, commit a1c1f4c) 표면을 `--help` 실측으로 기술. 단독 진입점(`enforcement.doctor`·`egress_audit.init_cli`)은 동치로 병기.*

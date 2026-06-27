@@ -29,6 +29,8 @@
 | 7 | [`SPEC_M4.md`](SPEC_M4.md) → [`IMPL_M4.md`](IMPL_M4.md) | M4 기밀 1차 탐지 (CMP-77/98, 역사적) | ✅ 키워드/표식 + EDM 구현완료 |
 | 8 | [`M5_MEASUREMENT_REPORT.md`](M5_MEASUREMENT_REPORT.md) | **M5 벤치·하드닝 실측** (CMP-99/100/103/104) | ✅ recall·지연 실측 + 게이트 최종판정 — **보드 리뷰 핵심 증거** |
 
+> **서빙빌더 통합·CLI 를 보려면** → [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md)(통합/사용 가이드) + [`CLI.md`](CLI.md)(`nufi-egress` 전 서브커맨드 레퍼런스).
+>
 > **데모를 직접 돌려보고 싶다면** → [`DEMO_CMP85.md`](DEMO_CMP85.md)(재현 매뉴얼)가 현행 최신 데모입니다. (구버전 [`DEMO.md`](DEMO.md)는 M1+M2만 다룹니다.)
 >
 > **M3 가역 가명화/원복 + 매핑 Vault**(CMP-97)는 별도 설계문서 없이 `../egress_audit/pseudonymize.py` 로 구현완료. M5 리포트의 fail-closed·감사 해시체인과 함께 동작.

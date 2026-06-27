@@ -166,6 +166,7 @@ python3 -m egress_audit.init_cli audit-only --dry-run
 ## 3. `nufi doctor` 로 검증
 
 배선이 맞았는지 한 번에 진단합니다. `doctor` 는 5개 체크를 PASS/WARN/FAIL 로 보고합니다.
+`doctor` 를 포함한 `nufi-egress` 전 서브커맨드의 플래그·예시·종료코드는 **[`CLI.md`](CLI.md) CLI 레퍼런스**에 정리돼 있습니다.
 
 ```bash
 python3 -m enforcement.cli doctor          # 사람읽기 + JSON  (통합 CLI)

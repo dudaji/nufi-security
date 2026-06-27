@@ -17,7 +17,7 @@
 | **데모 1분 실행** — 차등 감사 6개 시나리오 자동 PASS/FAIL(root 불필요) | `./scripts/demo_cmp85.sh` → 재현 매뉴얼 [`docs/DEMO_CMP85.md`](docs/DEMO_CMP85.md) · 결과 [`docs/DEMO_RESULT_CMP85.md`](docs/DEMO_RESULT_CMP85.md) |
 | **게이트웨이 직접 띄우기** — OpenAI 호환 `/v1/chat/completions` | 아래 [Quick Start](#quick-start) |
 | **SDK 한 줄 통합 예제** | [`examples/`](examples/) (`sdk_quickstart.py` · `sdk_block_and_audit.py` · `sdk_reversible_roundtrip.py` · `sdk_streaming.py`) |
-| **통합 CLI** — `nufi-egress` 한 진입점 | `python3 -m enforcement.cli {render,apply,disable,status,feedback,doctor,init}` |
+| **CLI 레퍼런스** — `nufi-egress` 전 서브커맨드(플래그·예시·종료코드) | [`docs/CLI.md`](docs/CLI.md) — `python3 -m enforcement.cli {render,apply,disable,status,feedback,doctor,init}` |
 | **배선 검증** — `doctor` 5체크(core-3 GREEN) | `python3 -m enforcement.cli doctor` |
 | **전체 문서 지도**(설계·명세·데모·영업) | [`docs/README.md`](docs/README.md) |
 
