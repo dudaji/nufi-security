@@ -10,6 +10,10 @@
   coverage  '내 트래픽 중 X% 게이트웨이 통과' 커버리지 보증 리포트(CMP-133).
   monitor   게이트웨이 우회 상시 모니터링/임계 알림(suppression 포함 · CMP-133).
   init      파이프라인 프리셋에서 운영 config 구체화(CMP-121, fail-closed).
+  audit     비동기 감사 봇(report/daemon/once) + §4 감사로그 조회(query · CMP-141).
+
+설치형 진입점(pyproject.toml console_scripts): ``pip install -e .`` 후 ``nufi-egress``
+(별칭 ``nufi``) 로 PATH 에서 직접 실행. 레거시 ``python3 -m enforcement.cli`` 동치 유지.
 
 예) 데모 승격: ``nufi-egress apply`` ↔ ``nufi-egress disable``.
 """
@@ -169,6 +173,71 @@ def cmd_init(args) -> int:
     return _init(args)
 
 
+def cmd_audit(args) -> int:
+    # 비동기 감사 봇(producer/consumer) + §4 감사로그 집계를 통합 CLI 로 편입(CMP-141).
+    # 기존 모듈 진입점(``python3 -m egress_audit.audit_bot``)은 하위호환으로 그대로 유지.
+    action = args.action
+    if action in ("report", "daemon", "once"):
+        from egress_audit.audit_bot import main as _audit_main
+        argv: List[str] = [f"--{action}"]
+        if getattr(args, "profiles", None):
+            argv += ["--profiles", args.profiles]
+        if getattr(args, "ner_backend", None):
+            argv += ["--ner-backend", args.ner_backend]
+        return _audit_main(argv)
+    if action == "query":
+        return _audit_query(args)
+    print("usage: nufi-egress audit {report|daemon|once|query} …", file=sys.stderr)
+    return 2
+
+
+def _audit_query(args) -> int:
+    # §4 감사로그 조회 — 기존 raw heredoc(INTEGRATION_GUIDE)을 1급 명령으로 대체.
+    # outcome 분포 + 차단 건의 엔티티별 집계, 옵션 해시 체인 무결성 검증(M5 §4.3).
+    import collections
+    from egress_audit.audit import AuditLogger, verify_chain_records
+
+    logger = AuditLogger(path=getattr(args, "log", None) or None)
+    records = logger.read_all()
+    blocked = [r for r in records if r.get("outcome") == "blocked"]
+    by_entity: "collections.Counter[str]" = collections.Counter()
+    for r in blocked:
+        for f in r.get("findings", []) or []:
+            et = f.get("entity_type") or f.get("type") or "UNKNOWN"
+            by_entity[et] += 1
+    by_outcome = collections.Counter(r.get("outcome", "unknown") for r in records)
+    result = {
+        "log": str(logger.path),
+        "total": len(records),
+        "by_outcome": dict(by_outcome),
+        "blocked": len(blocked),
+        "blocked_by_entity": dict(by_entity.most_common()),
+    }
+    if args.verify_chain:
+        result["chain"] = verify_chain_records(records)
+
+    if args.json:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
+        print(f"감사 로그: {result['log']}  (총 {result['total']}행)")
+        print(f"  outcome 분포: {result['by_outcome'] or '{}'}")
+        print(f"  차단 {result['blocked']}건 — 엔티티별:")
+        if by_entity:
+            for et, n in by_entity.most_common():
+                print(f"    {et:<20} {n}")
+        else:
+            print("    (없음)")
+        if "chain" in result:
+            ch = result["chain"]
+            ok = ch.get("ok")
+            tail = "" if ok else f" — {ch.get('error')} @seq {ch.get('broken_seq')}"
+            print(f"  해시 체인: {'OK' if ok else 'BROKEN'} ({ch.get('count')}행){tail}")
+    # 관측 명령 — 체인 검증을 요청했고 깨졌으면 비0(CI 변조탐지 게이트).
+    if args.verify_chain and not result["chain"]["ok"]:
+        return 1
+    return 0
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(prog="nufi-egress",
                                  description="NuFi Egress Enforcement CLI (CMP-94 트랙 B)")
@@ -210,7 +279,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.set_defaults(func=cmd_doctor)
 
     p = sub.add_parser("coverage",
-                       help="'내 트래픽 중 X% 게이트웨이 통과' 커버리지 보증 리포트(CMP-133)")
+                       help="'내 트래픽 중 X%% 게이트웨이 통과' 커버리지 보증 리포트(CMP-133)")
     p.add_argument("--simulate", metavar="REPLAY.jsonl",
                    help="flow 리플레이로 집계(에어갭/CI · 운영 로그 미오염)")
     p.add_argument("--targets", default=None, help="capture_targets.yaml 경로")
@@ -249,6 +318,23 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--force", action="store_true", help="기존 config 덮어쓰기")
     p.add_argument("--dry-run", action="store_true", help="구체화 결과만 출력")
     p.set_defaults(func=cmd_init)
+
+    p = sub.add_parser("audit",
+                       help="비동기 감사 봇 + §4 감사로그 조회(CMP-141 통합)")
+    p.add_argument("action", choices=["report", "daemon", "once", "query"],
+                   help="report=지연 p95 · daemon=상시 폴 · once=큐 1회 드레인 · "
+                        "query=감사로그 집계(outcome/엔티티/체인)")
+    p.add_argument("--profiles", default=None,
+                   help="audit_profiles.yaml 경로(report/daemon/once)")
+    p.add_argument("--ner-backend", default="gazetteer",
+                   help="탐지 NER 백엔드(report/daemon/once · 기본 gazetteer)")
+    p.add_argument("--log", default=None,
+                   help="query: 감사 JSONL 경로(기본 logs/egress_audit.jsonl)")
+    p.add_argument("--verify-chain", action="store_true",
+                   help="query: 추가전용 해시 체인 무결성 검증(M5 §4.3 변조탐지)")
+    p.add_argument("--json", action="store_true",
+                   help="query: 기계용 JSON 출력")
+    p.set_defaults(func=cmd_audit)
 
     args = ap.parse_args(argv)
     return args.func(args)
