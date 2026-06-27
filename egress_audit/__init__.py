@@ -17,6 +17,9 @@ from .surrogate import (SurrogateMinter, StreamingDeanonymizer,
 from .reversible import ReversibleEgress, RevResult
 from .detectors.confidential import ConfidentialKeywordDetector
 from .edm import EdmMatcher, EdmIndex
+from .reload import (ReloadableGuard, RuleSetPaths, RuleValidationError,
+                     ReloadResult, ReloadDiff, RuleSetReport, validate_ruleset,
+                     KNOWN_ACTIONS)
 
 __all__ = [
     "DetectionPipeline", "Finding", "CONF_SOURCES", "PolicyEngine", "Decision",
@@ -27,4 +30,6 @@ __all__ = [
     "MappingVault", "VaultEntry", "load_kek",
     "SurrogateMinter", "StreamingDeanonymizer", "REVERSIBLE_ENTITIES", "TAG_OF",
     "ReversibleEgress", "RevResult",
+    "ReloadableGuard", "RuleSetPaths", "RuleValidationError", "ReloadResult",
+    "ReloadDiff", "RuleSetReport", "validate_ruleset", "KNOWN_ACTIONS",
 ]
