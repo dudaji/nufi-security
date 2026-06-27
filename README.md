@@ -1,72 +1,77 @@
 # NuFi Egress-Audit Gateway
 
-하이브리드 LLM(private 우선 + public 폴백) 환경에서 **public LLM(Claude/OpenAI 등)으로 나가는 outbound 요청을 가로채(게이트웨이) PII·비밀을 인라인 탐지·차단·가명화**하는 PoC.
+하이브리드 LLM(private 우선 + public 폴백) 환경에서 **public LLM(Claude/OpenAI 등)으로 나가는 outbound 요청을 가로채(게이트웨이) PII·비밀을 인라인 탐지·차단·가명화**하는 게이트웨이.
 
-- 상위 이슈: CMP-71 (설계/제안, CPO) · 구현 이슈: CMP-72 (Engineer)
-- 구현 오너: **Engineer 에이전트** (보안 도메인 **상시 승인** — [CMP-96](/CMP/issues/CMP-96) 규칙3, 건별 보드승인 불필요. M1/M2 당시엔 CMP-58 건별 승인이었음)
-- 설계 근거: [`docs/PROPOSAL.md`](docs/PROPOSAL.md) · 구현 명세: [`docs/SPEC.md`](docs/SPEC.md)
-- 📖 **문서를 어디서부터 읽나? → [`docs/README.md`](docs/README.md)** (읽기 순서 + 최신/이력 상태표)
+> Internal status & board review: see [`docs/STATUS.md`](docs/STATUS.md).
 
-> ## 🧭 보드 리뷰 — 전체 진척 한눈에 (2026-06-27)
->
-> | 트랙 | 산출물 | 이슈 | 상태 | 핵심 증거 |
-> |---|---|---|---|---|
-> | **M1** 게이트웨이 PoC | private 기본 + public 폴백 + public 100% 감사로깅 | CMP-72 | ✅ **검수합격·종결** | `tests/run_acceptance.py` 10/10 |
-> | **M2** 탐지 파이프라인 | 한국 PII 정규식·체크섬 + NER + 비밀 + 정책 | CMP-72 | ✅ **검수합격·종결** | 동상(M1+M2 합산) |
-> | **CMP-85** 차등감사·패킷·봇 | P0 메시지스토어 / P1 패킷캡처·우회탐지 / P2 비동기 감사봇 / P3 통합데모 | CMP-85 | ✅ 완료 | P0 4/4·P1 5/5·P2 6/6·데모 6/6 |
-> | **Enforcement** 우회 차단 | 탐지→실제 차단(nftables 허용목록) | CMP-93→94 | ✅ 빌드·보드 approved | `docs/ENFORCEMENT_BUILD_CMP94.md` |
-> | **M3** 가역 가명화 | 가명화·원복 + 매핑 Vault | CMP-97 | ✅ 완료 | `egress_audit/pseudonymize.py` |
-> | **M4** 기밀 1차 탐지 | 키워드/표식 + EDM(구조화·비구조화) | CMP-98 | ✅ 완료 | `docs/IMPL_M4.md` |
-> | **M5** 벤치·하드닝 | 골드셋 확대·채점 하니스·fail-closed·감사 해시체인 | CMP-99 | ✅ 완료 | 하드닝 12/12 |
-> | **M5** 실측(KoELECTRA/INT8) | recall·지연 실측 + 잔여게이트 종결 | CMP-100/103/104 | ✅ 완료 | **PII recall 0.946 · INT8 p95 38ms** |
->
-> **M5 게이트 최종 판정(CPO CMP-101):** §1.3 7개 게이트 전항 점추정 PASS — PII recall(전체) **0.946**(≥0.90),
-> 강한PII/Secret **1.000**, precision **0.985**, KR_PERSON **0.897**(표본 48→126 확대, CI 절반 축소), benign-FP **0/90**(CMP-103).
-> 잔여 단 1건(INT8 Wilson CI 하한 0.832가 0.85를 ~1.8%p 하회 = 소표본 양자화 노이즈, FP32는 CI 하한까지 PASS)은
-> **Should 등급으로 종결**, base 모델 격상(option b)은 **M6 이연**. 상세: [`docs/M5_MEASUREMENT_REPORT.md`](docs/M5_MEASUREMENT_REPORT.md).
->
-> ➡️ **읽기 순서·문서 지도는 [`docs/README.md`](docs/README.md)** 참조. 아래는 M1+M2 기준 빠른 시작 + 아키텍처.
+회사·기관이 public LLM 을 쓰면서도 한국어 개인정보·비밀이 경계 밖으로 나가지 않도록, 모든 outbound 를 단일 게이트웨이로 통과시켜 **나가기 직전(TLS 적용 전)** 에 탐지·차단·가명화하고, 우회 트래픽을 패킷 레이어에서 잡아 실제로 막는다.
 
-본 README 본문의 빠른 시작·아키텍처는 **M1+M2(기반)** 중심으로 기술하며, 후속 트랙(CMP-85·Enforcement·M3·M4·M5)은 각 섹션과 위 표의 증거 문서로 연결한다.
+---
 
-## 핵심 결정 (CEO 정렬 완료, 2026-06-24)
+## Features
 
-| 항목 | 결정 |
+- **하이브리드 게이트웨이** — private(온프렘) 기본 라우팅 + public 폴백. private 가 가능하면 외부로 나가지 않으며, public 경로는 항상 게이트웨이를 통과한다(OpenAI 호환 `/v1/chat/completions`).
+- **한국어 PII·비밀 탐지·차단** — 한국 PII 정규식 + 체크섬(주민번호·외국인·사업자번호·전화·계좌·카드·여권·면허·이메일), 한국어 인명/지명 NER(KoELECTRA / gazetteer 폴백), 비밀정보(키 패턴 + Shannon 엔트로피). 민감정보가 public 으로 나가려 하면 `403` 으로 차단.
+- **가역 가명화 / 원복** — 세션 스코프 결정적 surrogate 로 가명화하고, AES-256-GCM 매핑 Vault 로 응답을 원복. 비스트리밍·스트리밍 모두 지원.
+- **기밀 탐지** — 분류 표식·키워드 + EDM(구조화·비구조화 지문)으로 사내 기밀 문서 유출을 1차 탐지.
+- **100% 감사 + 해시체인** — public 행 요청은 100% JSONL 로 감사 로깅하며, 감사 레코드는 변조 탐지용 해시체인으로 봉인된다(fail-closed).
+- **패킷 레이어 우회 차단** — 게이트웨이를 거치지 않고 public LLM 으로 직접 나가는 트래픽을 패킷 레이어에서 탐지하고, nftables 허용목록으로 실제 차단한다.
+- **비동기 감사 봇** — 무거운 감사(NER·기밀 분류·교차 상관·우회 탐지)를 producer/consumer 로 분리해 사용자 경로 지연을 늘리지 않으면서 준실시간으로 처리한다.
+- **에어갭 우선** — 코어(정규식+체크섬+비밀+gazetteer NER)는 순수 stdlib + PyYAML 로 외부 의존·네트워크 0. 무거운 백엔드(transformers/ONNX, presidio, detect-secrets)는 설치 시 자동 활성화.
+
+## Architecture
+
+```
+앱 ──> 게이트웨이 ──(라우팅)──> private(온프렘) ──> [외부 미전송]
+                  └─(폴백/명시)─> public 직전 ─[pre_call 탐지]─> block / redact / pseudonymize / warn
+                                                      └──> 100% 감사 로그(JSONL, 해시체인)
+```
+
+탐지·정책·감사 코어를 두 실행 경로가 공유한다. 컴포넌트/컨테이너 다이어그램과 4개 시퀀스(주 egress · 가역 가명화 · nftables 우회차단 · 비동기 감사봇)는 단일 권위 문서 **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** 를 참조한다.
+
+| 모듈 | 역할 |
 |---|---|
-| 인터셉션 방식 | **게이트웨이 먼저(LiteLLM/FastAPI), 네트워크 탭은 후속** |
-| 구현 리소스 | Engineer 에이전트, 본 `security/` 저장소 |
-| KR 목표 | 한국어 PII recall ≥ 0.9 / 인라인 지연 p95 ≤ 150ms(CPU) |
-| 라이선스 | 상업 사용 가능만 (NFR4) |
+| `egress_audit/detectors/korean_pii.py` | 한국 PII 정규식 **선필터 + 체크섬**(RRN·외국인·BRN·전화·계좌·카드·여권·면허·이메일) |
+| `egress_audit/checksums.py` | RRN·BRN·Luhn 체크섬(오탐 억제) |
+| `egress_audit/detectors/secrets.py` | 비밀정보(키 패턴 + Shannon 엔트로피, 선택적 detect-secrets) |
+| `egress_audit/detectors/ner.py` | 한국어 인명/지명 NER — **transformers(KoELECTRA)** 또는 **gazetteer 폴백** |
+| `egress_audit/detectors/confidential.py` · `egress_audit/edm.py` | 기밀 탐지(분류 표식·키워드 + EDM 구조화·비구조화 지문) |
+| `egress_audit/pipeline.py` | 탐지 오케스트레이션 + 스팬 병합 |
+| `egress_audit/policy.py` | block/redact/pseudonymize/warn 결정(+결정 로그), `config/policy.yaml` |
+| `egress_audit/pseudonymize.py` · `surrogate.py` · `vault.py` · `reversible.py` | 마스킹 + 결정적 가명화(HMAC) + 가역 원복 + AES-256-GCM 매핑 Vault |
+| `egress_audit/audit.py` | public 요청 100% JSONL 감사 로거(해시체인) |
+| `egress_audit/message_store.py` | private/public in·out 메시지 **분리 저장**, 본문 보존 정책(`config/audit_profiles.yaml`) |
+| `capture/targets.py` · `content_dump.py` · `flow_tap.py` | public 목적지 파생·BPF 빌드 · 출구 평문 dump · flow tap + 우회 판정 |
+| `egress_audit/file_queue.py` | 파일 기반 **무손실 큐**(byte 오프셋 원자 커밋, 부분 라인 안전) |
+| `egress_audit/audit_bot.py` | 비동기 감사 봇(producer/consumer): 차등 프로파일·기밀 키워드·flow tap 우회 상관·준실시간 지연 측정 |
+| `gateway/router.py` · `core.py` · `app.py` | private 기본 + public 폴백 라우팅(`config/routing.yaml`) + 게이트웨이 코어 + FastAPI |
+| `gateway/litellm_hook.py` | **LiteLLM Proxy 콜백**(프로덕션 경로, `config/litellm_config.yaml`) |
+| `enforcement/` | 탐지 → 실제 차단(nftables 허용목록 모델) |
 
-## 빠른 시작
+## Quick Start
 
 ```bash
 cd security
 python3 -m pip install -r requirements.txt    # 코어: PyYAML·fastapi·uvicorn·httpx
 
-# 0) 통합 데모 (CMP-85 P0~P2: 차등 감사 6개 시나리오 자동 PASS/FAIL · root 불필요)
-./scripts/demo_cmp85.sh          # 매뉴얼: docs/DEMO_CMP85.md
-
-# 1) 수용 기준 자동 검증 (M1/M2 binary 전부)
-python3 tests/run_acceptance.py
-
-# 2) 단위 테스트
-python3 tests/test_unit.py
-
-# 3) 벤치 (recall/precision + 지연 p95)
-python3 scripts/bench.py --ner gazetteer
-
-# 4) 게이트웨이 기동 (OpenAI 호환 /v1/chat/completions)
+# 1) 게이트웨이 기동 (OpenAI 호환 /v1/chat/completions)
 PORT=4000 ./scripts/run_gateway.sh
 #   민감정보 포함 + public 경로 → 403 차단, 감사 로그(logs/egress_audit.jsonl) 적재
 #   EGRESS_PRIVATE_DOWN=1 로 private→public 폴백을 강제 데모
+
+# 2) 통합 데모 (차등 감사 6개 시나리오 자동 PASS/FAIL · root 불필요)
+./scripts/demo_cmp85.sh          # 매뉴얼: docs/DEMO_CMP85.md
+
+# 3) 벤치 (recall/precision + 지연 p95)
+python3 scripts/bench.py --ner gazetteer
 ```
 
 호출 예시:
 
 ```bash
 # private 기본 라우팅 (외부 미전송)
-curl -s localhost:4000/v1/chat/completions -d '{"model":"nufi-default","messages":[{"role":"user","content":"안녕"}]}'
+curl -s localhost:4000/v1/chat/completions \
+  -d '{"model":"nufi-default","messages":[{"role":"user","content":"안녕"}]}'
 
 # public 폴백 + 민감정보 → 차단
 EGRESS_PRIVATE_DOWN=1 ./scripts/run_gateway.sh &
@@ -75,135 +80,77 @@ curl -s localhost:4000/v1/chat/completions \
 # => 403 {"error":{"type":"egress_blocked","entities":["KR_RRN"], ...}}
 ```
 
-## 아키텍처
+## Configuration
 
-```
-앱 ──> 게이트웨이 ──(라우팅)──> private(온프렘) ──> [외부 미전송]
-                  └─(폴백/명시)─> public 직전 ─[pre_call 탐지]─> block / redact / pseudonymize / warn
-                                                      └──> 100% 감사 로그(JSONL)
-```
+설정은 코드 변경 없이 운영자가 갱신한다(YAML 외부화):
 
-| 모듈 | 역할 |
+| 파일 | 무엇 |
 |---|---|
-| `egress_audit/detectors/korean_pii.py` | 한국 PII 정규식 **선필터 + 체크섬**(RRN·외국인·BRN·전화·계좌·카드·여권·면허·이메일) |
-| `egress_audit/checksums.py` | RRN·BRN·Luhn 체크섬(오탐 억제) |
-| `egress_audit/detectors/secrets.py` | 비밀정보(키 패턴 + Shannon 엔트로피, 선택적 detect-secrets) |
-| `egress_audit/detectors/ner.py` | 한국어 인명/지명 NER — **transformers(KoELECTRA)** 또는 **gazetteer 폴백** |
-| `egress_audit/pipeline.py` | 탐지 오케스트레이션 + 스팬 병합 |
-| `egress_audit/policy.py` | block/redact/pseudonymize/warn 결정(+결정 로그), `config/policy.yaml` |
-| `egress_audit/pseudonymize.py` | 마스킹 + 결정적 가명화(HMAC). 가역 원복은 M3 |
-| `egress_audit/audit.py` | public 요청 100% JSONL 감사 로거 |
-| `egress_audit/message_store.py` | **(CMP-85 P0)** private/public in·out 메시지 **분리 저장**, 본문 보존 정책(`config/audit_profiles.yaml`) |
-| `capture/targets.py` | **(CMP-85 P1)** public 목적지 파생(routing.yaml)·`capture_targets.yaml` 캐시·BPF 빌드·우회 판정 |
-| `capture/content_dump.py` | **(CMP-85 P1)** 게이트웨이 출구 평문(TLS 직전) content dump writer |
-| `capture/flow_tap.py` | **(CMP-85 P1)** public 목적지 flow tap(BPF) + `--simulate` 리플레이 + 우회 탐지 |
-| `egress_audit/file_queue.py` | **(CMP-85 P2)** 파일 기반 **무손실 큐**(byte 오프셋 원자 커밋, 부분 라인 안전 — NFR6) |
-| `egress_audit/audit_bot.py` | **(CMP-85 P2)** 비동기 감사 봇(producer/consumer): private/public 차등 프로파일·기밀 키워드·flow tap 우회 상관·준실시간 지연 측정 |
-| `gateway/router.py` | private 기본 + public 폴백 라우팅, public/private 분류(`config/routing.yaml`) |
-| `gateway/core.py` · `gateway/app.py` | 게이트웨이 코어 + FastAPI(standalone PoC) |
-| `gateway/litellm_hook.py` | **LiteLLM Proxy 콜백**(프로덕션 경로, `config/litellm_config.yaml`) |
+| `config/patterns.yaml` | 탐지 룰 |
+| `config/policy.yaml` | block/redact/pseudonymize/warn 동작 |
+| `config/routing.yaml` | private/public 라우팅·분류 |
+| `config/audit_profiles.yaml` | 메시지 스토어·본문 보존(`retain_raw`)·차등 감사 프로파일 |
+| `config/litellm_config.yaml` | LiteLLM Proxy 콜백 |
 
-설정(NFR3, 운영자 갱신): `config/patterns.yaml`(룰) · `config/policy.yaml`(동작) · `config/routing.yaml`(라우팅) · `config/audit_profiles.yaml`(메시지 스토어·본문 보존) · `config/litellm_config.yaml`.
+본문 보존 기본값은 **private = 원문 보존(`retain_raw: true`)**, **public = 가명화 통과본만(`retain_raw: false`)**.
 
-## 메시지 스토어 분리 (CMP-85 P0)
+> **⚠️ public `retain_raw: true` 운영 주의.** public 을 원문 보존으로 켜면 경계 밖으로 나간 egress 원문(PII 포함 가능)이 디스크에 남는다. 켤 경우 접근 제어(`logs/messages/public/` 0700, KMS/디스크 암호화), 보존기간(권고 ≤ 30일)·파기 절차를 정의한다.
 
-고객 요청/응답을 **private/public 으로 분리**하고 양쪽 **in(요청)·out(응답)** 을 모두 저장한다(요구사항 1·2).
+## Usage — 두 가지 실행 경로
 
-- 싱크: `logs/messages/private/YYYY-MM-DD.jsonl` · `logs/messages/public/YYYY-MM-DD.jsonl` (라우팅 `egress_class` 로 선택 — `routing.yaml` 분류와 100% 일치).
-- in/out 은 동일 `conversation_id` 로 묶인다(레코드 스키마: `id·conversation_id·turn·direction·egress_class·model·provider·ts·body·body_retained·inline_decision·source`).
-- 본문 보존 정책은 `config/audit_profiles.yaml` 의 `profiles.{private|public}.retain_raw` 로 외부화(NFR3).
-  - 기본값: **private = 원문 보존(`retain_raw: true`)**, **public = 가명화 통과본만(`retain_raw: false`)**.
+1. **standalone FastAPI 게이트웨이** (`gateway/app.py`) — LiteLLM 미설치/에어갭 환경에서 즉시 실행·검증.
+2. **LiteLLM Proxy + 콜백** (`gateway/litellm_hook.py` + `config/litellm_config.yaml`) — 권장 프로덕션 경로. `async_pre_call_hook` 에서 동일한 `EgressGuard` 를 호출하고 성공/실패 이벤트를 감사 로깅. `litellm` 설치 시 활성화.
 
-> **⚠️ public `retain_raw: true` 운영 주의(보존정책).** public 을 원문 보존으로 켜면 경계 밖으로 나간 egress **원문(PII 포함 가능)** 이 디스크에 남는다. 켤 경우:
-> - 접근 제어: `logs/messages/public/` 는 감사 담당자 한정(파일권한 0700, 운영시 KMS/디스크 암호화).
-> - 보존기간: 컴플라이언스 기준에 따라 보존기간·파기 절차를 정의(기본 권고 ≤ 30일).
-> - 변경 절차: 기본 off. 켤 경우 **CPO 리뷰 후 CEO 정렬** 필요(거버넌스).
+두 경로 모두 동일한 탐지·정책·감사 코어를 공유한다.
 
-검증: `python3 tests/test_cmp85_p0.py` → **4/4 PASS**.
-
-## 패킷 레이어 캡처 + 게이트웨이 우회 탐지 (CMP-85 P1)
-
-애플리케이션 인라인 감사는 **우회 가능**하다(클라이언트 오설정·사람 실수로 게이트웨이를 거치지 않고 public LLM 으로 직접 전송). 따라서 **특정 public LLM 목적지로 가는 패킷만** 패킷 레이어에서 본다. HTTPS 본문은 와이어에서 암호화되므로 두 갈래로 설계한다.
-
-- **(a) Content dump** (`capture/content_dump.py`) — 게이트웨이가 public 으로 내보내기 **직전(TLS 적용 전)** 의 직렬화된 HTTP 요청을 `logs/packets/public/dump-YYYY-MM-DD.jsonl` 로 기록(평문 본문 감사용, P2 봇 입력). 본문 보존 정책은 P0 와 동일하게 `audit_profiles.retain_raw` 를 따른다.
-- **(b) Flow tap** (`capture/flow_tap.py`) — public LLM 목적지에만 거는 연결 메타 캡처. 목적지 집합은 `routing.yaml` 의 `egress_class: public` 백엔드에서 파생해 `config/capture_targets.yaml` 로 캐시·갱신(NFR3). 기록: 5-튜플·SNI·시각·PID/프로세스·바이트수 → `logs/packets/public/flow-YYYY-MM-DD.jsonl`.
-  - **우회 판정:** flow 의 src 가 `capture_targets.yaml` 의 `gateway`(hosts/process)가 **아니면** = 게이트웨이 우회 → `bypass: true` + `severity: high` (P2 봇이 alert 로 승격).
-  - **목적지 필터:** public LLM 목적지로 가는 연결만 캡처(타 목적지 0건).
+**우회 탐지·차단.** 애플리케이션 인라인 감사는 우회 가능하므로(클라이언트 오설정·사람 실수), public LLM 목적지로 가는 트래픽을 패킷 레이어에서 본다. flow tap 은 게이트웨이를 거치지 않은 연결을 `bypass: high-severity` 로 승격하고, 감사 봇이 알림으로 올리며, nftables 허용목록이 실제로 차단한다. 라이브 캡처는 root/CAP_NET_RAW 가 필요하고, 에어갭·CI·데모는 `--simulate`(미리 만든 flow 로그 리플레이)로 동일 로직을 root 없이 재현한다.
 
 ```bash
 # 캡처 대상 갱신(routing.yaml → capture_targets.yaml) + BPF 확인
 python3 -m capture.targets --refresh --bpf
-#  => tcp and (dst host api.anthropic.com or dst host api.openai.com) and (dst port 443)
 
 # flow tap — root 없이(에어갭/CI) simulate 리플레이
 python3 -m capture.flow_tap --simulate samples/flow_replay.jsonl
-#  => seen=8 captured=4 dropped=4 (gateway=2 bypass=2)  ⚠ 우회 의심 2건
 
-# root/CAP_NET_RAW 가능 환경의 라이브 캡처(BPF=public 목적지)
-sudo python3 -m capture.flow_tap --live --iface any --duration 30
-```
-
-> **권한:** 라이브 `tcpdump` 캡처는 root/CAP_NET_RAW 가 필요하다. 에어갭·CI·데모는 `--simulate`(미리 만든 flow 로그 리플레이)로 동일 로직(목적지 필터·우회 판정)을 root 없이 재현한다.
-
-검증: `python3 tests/test_cmp85_p1.py` → **5/5 PASS**.
-
-## 비동기 감사 봇 — producer/consumer (CMP-85 P2)
-
-무거운 감사(NER·기밀 분류·교차 상관·우회 탐지)를 인라인에 넣으면 사용자가 느려진다. 따라서 **producer/consumer 비동기**로 분리한다(요구사항 3).
-
-- **Producer = 사용자 경로** — 게이트웨이(P0 메시지 스토어)와 캡처(P1 content dump·flow tap)는 jsonl 파일에 **append 만** 한다. 봇이 죽거나 느려도 사용자 경로 지연은 **증가하지 않는다**(NFR2: `gateway/core.py` 는 봇/큐를 일절 참조하지 않음 — 디커플링).
-- **Queue = 파일 기반 무손실 큐**(`egress_audit/file_queue.py`, NFR6) — 디렉터리를 tail 하며 처리 byte 오프셋을 `logs/audit_state/offsets.json` 에 **원자 커밋**(`os.replace`). 오프셋은 finding 이 디스크에 **fsync 된 뒤에만** 전진(무손실). 개행으로 끝나는 **완전한 라인만** 소비(producer 쓰는 중 부분 라인 안전). 재시작 시 **미처리분만 재개**, 중복은 finding 의 `source_id` 디둡으로 **0**.
-- **Consumer = 감사 봇**(`egress_audit/audit_bot.py`) — 레코드의 `egress_class` 로 **차등 프로파일** 선택(`config/audit_profiles.yaml` `detection`):
-  - **private(경량):** `secrets + strong_pii` 만, `sampling_rate`·`severity_threshold` 적용(컴플라이언스/내부자 오남용 로깅).
-  - **public(풀):** 강·약 PII + 비밀 + **기밀 키워드** + **flow tap 우회 상관**.
-  - **flow tap 우회**(P1 `bypass`/`via_gateway`)는 **high-severity** finding + `logs/alerts.jsonl` 알림(webhook/메일 훅 자리)으로 승격.
-- **출력:** `logs/audit_findings.jsonl`(마스킹 스팬만 — 원문 재유출 방지) + 준실시간 지연(`enqueue→finding` `latency_ms`) 측정(NFR5 p95 ≤ 5s).
-
-```bash
-# 배치/에어갭·CI: 미리 쌓인 dump 를 1회 드레인(root 불필요)
+# 비동기 감사 봇 — 배치(1회 드레인) / 데몬 / 지연 리포트
 python3 -m egress_audit.audit_bot --simulate
-
-# 데몬(준실시간): 워처 폴 루프 + 워커 N
 python3 -m egress_audit.audit_bot --daemon
-
-# 준실시간 지연 리포트(NFR5 검증)
-python3 -m egress_audit.audit_bot --report   # => enqueue→finding p95 = … ms (PASS vs NFR5 5000ms)
+python3 -m egress_audit.audit_bot --report
 ```
 
-검증: `python3 tests/test_cmp85_p2.py` → **6/6 PASS** (수용기준 5 + 부분라인 무손실 보강). P1 `FlowTap` 실출력 → 봇 소비 end-to-end 확인(우회 2건 → high-sev finding/alert 2건).
+## Performance & Accuracy
 
-## 두 가지 실행 경로 (설계 결정)
+확대 골드셋, **KoELECTRA ONNX-INT8**(프로덕션 목표 백엔드) 실측:
 
-1. **standalone FastAPI 게이트웨이** (`gateway/app.py`) — LiteLLM 미설치/에어갭 환경에서 PoC를 **즉시 실행·검증**. 본 저장소의 검증은 이 경로로 수행.
-2. **LiteLLM Proxy + 콜백** (`gateway/litellm_hook.py` + `config/litellm_config.yaml`) — SPEC 권장 **프로덕션 경로**. `async_pre_call_hook`에서 동일한 `EgressGuard`를 호출하고 성공/실패 이벤트를 감사 로깅. `litellm` 설치 시 활성화.
+| 지표 | 값 | 목표 |
+|---|---|---|
+| 한국어 PII recall (전체) | **0.946** [CI 0.906–0.970] | ≥ 0.90 ✅ |
+| 강한 PII / Secret recall | **1.000** | — |
+| precision | **0.985** | — |
+| benign false-positive | **0 / 90** | 낮을수록 ✅ |
+| 인라인 지연 p95 (512자) | **38 ms** (CPU) | ≤ 150 ms ✅ |
 
-두 경로 모두 동일한 탐지·정책·감사 코어를 공유한다.
+하드닝(fail-closed·감사 해시체인·원문 미저장) **12/12 PASS**. 코어(gazetteer) 백엔드는 에어갭 최소 보장 라인으로 샘플셋 기준 지연 p95 < 1ms 를 보인다.
 
-## 탐지 백엔드 정책 (중요)
+> 한국어 PII recall ≥ 0.9 목표는 **KoELECTRA 백엔드로 달성**한다. gazetteer 는 사전 과적합 한계(미수록 인명에서 인명 recall 붕괴)가 있어 에어갭 최소 보장용이며, 프로덕션 정확도는 NER 백엔드가 담당한다.
 
-- **코어(정규식+체크섬+비밀+gazetteer NER)는 순수 stdlib + PyYAML 로 외부 의존·네트워크 0**(NFR1). 에어갭에서 그대로 동작하며 본 PoC의 모든 수용 기준을 충족한다.
-- **무거운 백엔드는 선택**: `transformers`(KoELECTRA NER), `presidio`(가역 가명화·인식기), `detect-secrets`. 설치 시 자동 활성화, 미설치 시 코어 폴백.
-- 한국어 PII **recall ≥ 0.9** 프로덕션 목표는 KoELECTRA(transformers/ONNX) 백엔드로 달성한다. **gazetteer 백엔드는 최소 보장 라인**(경칭/직함/문맥 게이팅으로 오탐 억제)이며, 샘플셋 기준 recall 1.000·지연 p95 < 1ms를 보인다.
-- 라이선스 금지(NFR4, 인라인): Piiranha(CC-BY-NC-ND), gliner_ko(CC-BY-NC), TruffleHog(AGPL).
+라이선스 금지(상업 사용 가능만): Piiranha(CC-BY-NC-ND), gliner_ko(CC-BY-NC), TruffleHog(AGPL) 등 비상업 라이선스 모델·도구는 채택하지 않는다.
 
-## 검증 결과
+## Project Status / Roadmap
 
-**M1+M2 (현재 저장소, gazetteer 백엔드):** `python3 tests/run_acceptance.py` → **10/10 PASS** (M1 3 + M2 7). `python3 tests/test_cmp85_p0.py` → **4/4 PASS** (P0) · `tests/test_cmp85_p1.py` → **5/5 PASS** (P1) · `tests/test_cmp85_p2.py` → **6/6 PASS** (P2). `scripts/bench.py` → PII recall 1.000(샘플셋), 지연 p95 ≈ 0.06ms.
+**v0.0.1 (PoC).** 게이트웨이·탐지·가명화·기밀 탐지·우회 차단·비동기 감사봇·벤치/하드닝까지 동작하는 PoC 릴리스. 변경 이력은 [`CHANGELOG.md`](CHANGELOG.md), 내부 진척·마일스톤은 [`docs/STATUS.md`](docs/STATUS.md).
 
-**M5 실측 (확대 골드셋, KoELECTRA ONNX-INT8 = 프로덕션 목표 백엔드):** `scripts/bench_m5.py --backend onnx-int8 --split test` →
-PII recall(전체) **0.946** [CI 0.906–0.970] ≥ 0.90 ✅ · 강한PII/Secret **1.000** · precision **0.985** · KR_PERSON **0.897**(n=126) · benign-FP **0/90** · 512자 p95 **38ms** ≤ 150ms ✅. 하드닝 `tests/test_m5_hardening.py` → **12/12 PASS**(fail-closed·감사 해시체인·원문 미저장). 상세: [`docs/M5_MEASUREMENT_REPORT.md`](docs/M5_MEASUREMENT_REPORT.md).
+Known limitations:
+- INT8 양자화에서 KR_PERSON recall 의 신뢰구간 하한이 목표선을 소폭 하회(소표본 양자화 노이즈; FP32 는 충족). NER base 모델 격상은 후속(M6) 과제.
+- public `retain_raw: true` 를 켜면 egress 원문이 디스크에 남는다(기본 off; 위 Configuration 주의 참조).
+- 라이브 패킷 캡처는 root/CAP_NET_RAW 권한이 필요하다(에어갭·CI 는 `--simulate` 로 대체).
 
-> ⚠️ **M2 PoC 의 gazetteer recall 1.000 은 사전 과적합**으로 확증됨 — 누수 통제 확대 골드셋(미수록 인명 56%)에선 gazetteer 인명 recall이 0.375로 붕괴. 한국어 PII recall ≥ 0.9 목표는 **KoELECTRA 백엔드로만 달성**(0.809→0.946). gazetteer 는 에어갭 최소보장 라인.
+후속(M6): NER base 모델 격상(KR_PERSON CI 하한 여유 확보) · 프로덕션 온프렘 p95 재측정.
 
-## 단계 (전 트랙 ✅ — M6만 후속)
+## License
 
-- **M1** 게이트웨이 PoC (private 기본 + public 폴백 + public 100% 로깅) — ✅ 검수합격·종결 (CMP-72)
-- **M2** 탐지 파이프라인 (PII 체크섬 + KoELECTRA/gazetteer NER + 비밀정보 + 정책) — ✅ 검수합격·종결 (CMP-72)
-- **CMP-85 P0** 메시지 스토어 분리(private/public in·out) — ✅ / **P1** 패킷 레이어 캡처(content dump + flow tap)·게이트웨이 우회 탐지 — ✅ / **P2** 비동기 감사 봇(producer/consumer·차등 프로파일·우회 상관·준실시간) — ✅ / **P3** 통합 데모(`scripts/demo_cmp85.sh` + `docs/DEMO_CMP85.md`, 6/6 PASS) — ✅
-- **Enforcement** 우회 차단 — ✅ 설계(CMP-93) → nftables 허용목록 MVP 빌드(CMP-94, 보드 approved)
-- **M3** 가역 가명화/원복 + 매핑 Vault — ✅ (CMP-97)
-- **M4** 기밀 1차 탐지(키워드/표식 + EDM) — ✅ (CMP-98, [`docs/IMPL_M4.md`](docs/IMPL_M4.md))
-- **M5** 벤치·하드닝 + KoELECTRA/INT8 실측 — ✅ (CMP-99/100/103/104, 게이트 최종판정 CPO CMP-101)
-- **M6**(후속) — NER base 모델 격상(KR_PERSON CI 하한 여유 확보) · 프로덕션 온프렘 p95 재측정
+Dudaji 내부 PoC. 채택 모델·도구는 상업 사용 가능 라이선스만 사용한다(위 Performance & Accuracy 참조).
 
-상세 명세는 [`docs/SPEC.md`](docs/SPEC.md), 문서 지도는 [`docs/README.md`](docs/README.md).
+---
+
+문서 지도(설계·명세·데모·영업): [`docs/README.md`](docs/README.md).
