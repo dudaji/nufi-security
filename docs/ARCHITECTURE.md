@@ -365,16 +365,33 @@ sequenceDiagram
 - [ ] config 키 변경 (`policy.yaml`·`routing.yaml`·`audit_profiles.yaml`·`confidential.yaml`·`edm`).
 - [ ] 릴리스 시: `VERSION`·`CHANGELOG.md`·known-limitations 동시 갱신.
 
-### 7.3 경량 검증
-- **Mermaid 유효성**: 본 문서의 5개 Mermaid 블록(컴포넌트 1 + 시퀀스 4)은 GitHub/VS Code Mermaid 렌더로
-  검증. 코드펜스 ` ```mermaid ` 언어태그 유지 → 자동 렌더.
-- **식별자 대조(docs-owner 노트)**: §2 표와 시퀀스의 모듈/클래스/함수명은 실제 코드와 1:1 — 변경 시
-  grep 로 대조(예: `grep -rn "def process" gateway/core.py`). 본 v0.0.1 은 `Gateway.process`,
-  `Router.resolve`, `DetectionPipeline.analyze`, `PolicyEngine.apply`, `EgressGuard.inspect`,
-  `ReversibleEgress.pseudonymize/deanonymize`, `MappingVault.store/resolve`, `AuditLogger.log/verify_chain`,
-  `FlowTap.classify`, `AuditBot.run_once`, `Applier.apply`, `render_ruleset`, `EnforcedDecisionLog.promote` 대조 완료.
+### 7.3 자동 가드 (기계가 강제하는 정합 · CMP-117)
+§7.2 의 '사람이 기억하는 체크리스트' 를 **기계가 강제하는 가드**로 승격했다. `scripts/check_docs.py`
+가 CI(`.github/workflows/docs-guard.yml`)와 pre-commit(`.pre-commit-config.yaml`)에서 PR/커밋마다 실행 →
+흐름을 바꾸는 PR 이 문서 동시 갱신을 빠뜨리면 **실패**한다. 검사 대상은 **living 문서**(본
+`ARCHITECTURE.md`·`README.md`·`docs/README.md`·`docs/STATUS.md`·`CHANGELOG.md`·`VERSION`)만이며,
+마일스톤 SPEC*/IMPL/DEMO/측정 리포트는 **frozen(역사적 스냅샷)** 이라 제외한다.
+
+가드가 강제하는 4가지(로컬 실행: `python scripts/check_docs.py [--verbose]`):
+
+1. **Mermaid lint** — living `.md` 의 ` ```mermaid ` 코드펜스 밸런스·비어있음·다이어그램 타입 검사
+   (깨진 블록 0). 인라인 ` ```mermaid ` 언급은 펜스로 오인하지 않음.
+2. **식별자 교차검증** — 본 문서가 백틱으로 인용한 파일/클래스/메서드/함수(예: `gateway/core.py`,
+   `Gateway.process()`, `render_ruleset()`)가 AST 로 본 실제 코드에 존재하는지 대조. 인용 심볼을
+   rename 하면(코드와 어긋나면) 실패 → 드리프트 신호. v0.0.1 은 `Gateway.process`, `Router.resolve`,
+   `DetectionPipeline.analyze`, `PolicyEngine.apply`, `EgressGuard.inspect`,
+   `ReversibleEgress.pseudonymize/deanonymize`, `MappingVault.store/resolve`, `AuditLogger.log/verify_chain`,
+   `FlowTap.classify`, `AuditBot.run_once`, `Applier.apply`, `render_ruleset`, `EnforcedDecisionLog.promote`
+   포함 85개 인용 토큰 대조 통과.
+3. **버전 정합** — `VERSION` == `CHANGELOG.md` 최신 `[x.y.z]` 헤더.
+4. **내부 링크** — living 문서의 상대 링크가 실제로 resolve 되는지(깨진 링크 0).
+
+회귀 방지 단위 테스트는 `tests/test_docs_consistency.py` — (a) green-on-main, (b) 의도적 드리프트
+(심볼 rename·버전 불일치·깨진 mermaid·깨진 링크) 재현을 모두 검증한다.
+
 - **오너십**: 문서 오너 = Engineer(보안 도메인 상시승인 CMP-96). 설계 변경 명세는 CPO 산출 → Engineer 가
-  코드와 함께 본 문서 반영.
+  코드와 함께 본 문서 반영. 이 자동 가드는 'v0.0.2 일괄 리뷰' 를 대체하지 않고 **상시 정합을 보장**해
+  리뷰를 가벼운 확인으로 만드는 백스톱이다.
 
 ---
 

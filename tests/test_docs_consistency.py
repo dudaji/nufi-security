@@ -1,0 +1,117 @@
+"""docs 정합성 자동 가드 테스트 (CMP-117).
+
+두 가지를 검증:
+  1. green-on-main — 현재 저장소에서 모든 검사 통과(드리프트 0).
+  2. 의도적 드리프트 재현 — 인용 심볼 rename·버전 불일치·깨진 mermaid·깨진 링크 시 검사 실패.
+
+pytest 또는 `python3 tests/test_docs_consistency.py` 로 실행.
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+
+import check_docs as cd  # noqa: E402
+
+
+# --- 1. green-on-main -----------------------------------------------------------
+def test_repo_docs_are_consistent():
+    """현재 main 에서 docs 정합성 가드가 통과(green)해야 한다."""
+    checks, errors = cd.run_all(ROOT)
+    assert errors == [], "main 에서 docs 드리프트 발견:\n" + "\n".join(errors)
+    # 실제로 무언가를 검사했는지(빈 통과 방지) 확인.
+    names = " ".join(n for n, _ in checks)
+    assert "Mermaid" in names and "식별자" in names and "버전" in names and "링크" in names
+
+
+# --- 2. 의도적 드리프트 재현 ----------------------------------------------------
+def test_identifier_rename_drift_fails():
+    """ARCHITECTURE 가 인용한 심볼이 코드에서 rename 되면(코드에 없으면) 실패해야 한다."""
+    classes, all_defs = cd.build_symbol_index(ROOT)
+    text = "표면: `Gateway.processRENAMED()` 진입점."
+    errs, n = cd.crosscheck_identifiers(text, ROOT, ROOT / "docs", classes, all_defs, "x.md")
+    assert n == 1 and errs, "인용 심볼 rename 드리프트를 잡지 못함"
+    assert "processRENAMED" in errs[0]
+
+
+def test_missing_class_drift_fails():
+    classes, all_defs = cd.build_symbol_index(ROOT)
+    errs, _ = cd.crosscheck_identifiers("`GhostClass.method()`", ROOT, ROOT / "docs",
+                                        classes, all_defs, "x.md")
+    assert errs and "GhostClass" in errs[0]
+
+
+def test_missing_function_drift_fails():
+    classes, all_defs = cd.build_symbol_index(ROOT)
+    errs, _ = cd.crosscheck_identifiers("`totally_made_up_fn()`", ROOT, ROOT / "docs",
+                                        classes, all_defs, "x.md")
+    assert errs and "totally_made_up_fn" in errs[0]
+
+
+def test_missing_file_drift_fails():
+    classes, all_defs = cd.build_symbol_index(ROOT)
+    errs, _ = cd.crosscheck_identifiers("`gateway/does_not_exist.py`", ROOT, ROOT / "docs",
+                                        classes, all_defs, "x.md")
+    assert errs and "does_not_exist.py" in errs[0]
+
+
+def test_real_symbols_pass():
+    """실제 존재하는 심볼/파일은 통과(false positive 없음)."""
+    classes, all_defs = cd.build_symbol_index(ROOT)
+    text = ("`Gateway.process()` `Router.resolve()` `AuditLogger.log/verify_chain` "
+            "`render_ruleset()` `gateway/core.py` `config/policy.yaml`")
+    errs, n = cd.crosscheck_identifiers(text, ROOT, ROOT / "docs", classes, all_defs, "x.md")
+    assert errs == [], f"실제 심볼에서 오탐: {errs}"
+    assert n == 6
+
+
+def test_version_mismatch_fails():
+    assert cd.check_version_pair("0.0.1", "## [0.0.1] - x\n") == []
+    errs = cd.check_version_pair("0.0.2", "## [0.0.1] - x\n")
+    assert errs and "불일치" in errs[0]
+    assert cd.check_version_pair("0.0.1", "헤더 없음")  # 헤더 못 찾으면 실패
+
+
+def test_broken_mermaid_fails():
+    assert cd.lint_mermaid("```mermaid\nflowchart TB\n a-->b\n```\n", "x") == []
+    # 닫히지 않은 블록
+    assert cd.lint_mermaid("```mermaid\nflowchart TB\n a-->b\n", "x")
+    # 빈 블록
+    assert cd.lint_mermaid("```mermaid\n```\n", "x")
+    # 알 수 없는 다이어그램 타입
+    assert cd.lint_mermaid("```mermaid\nNOTADIAGRAM foo\n```\n", "x")
+    # 인라인 ` ```mermaid ` 언급은 펜스로 오인하지 않음
+    assert cd.lint_mermaid("코드펜스 ` ```mermaid ` 태그 유지.\n", "x") == []
+
+
+def test_broken_link_fails(tmp_path):
+    errs, n = cd.check_links_text("[x](./nope-missing.md)", tmp_path, "x.md")
+    assert errs and n == 1
+    # 외부/앵커 링크는 건너뜀
+    errs2, n2 = cd.check_links_text("[a](https://e.com) [b](#anchor)", tmp_path, "x.md")
+    assert errs2 == [] and n2 == 0
+
+
+if __name__ == "__main__":
+    import traceback
+    fns = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
+    failed = 0
+    for fn in fns:
+        try:
+            import inspect
+            if "tmp_path" in inspect.signature(fn).parameters:
+                import tempfile
+                with tempfile.TemporaryDirectory() as d:
+                    fn(Path(d))
+            else:
+                fn()
+            print(f"  PASS {fn.__name__}")
+        except Exception:
+            failed += 1
+            print(f"  FAIL {fn.__name__}")
+            traceback.print_exc()
+    print(f"\n{len(fns) - failed}/{len(fns)} passed")
+    sys.exit(1 if failed else 0)
