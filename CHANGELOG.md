@@ -4,6 +4,25 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.0.2] - 2026-06-28
+
+패키징·운영성(Day-1 도입) 릴리스. 코어 탐지/차단 엔진은 0.0.1 그대로 두고, 서빙 빌더가 실제로 깔고-띄우고-운영하는 데 필요한 CLI·SDK·배포·핫리로드·문서를 채웠다.
+
+### Added
+- **Thin client SDK** (CMP-119): OpenAI 호환 `base_url` 심 + 가역 가명화 라운드트립 — 기존 코드 한 줄 교체로 게이트웨이 경유.
+- **`nufi doctor` 진단 CLI** (CMP-120): 하이브리드(private+public) 배선 자가진단.
+- **파이프라인 프리셋 3종 + `nufi init` 템플릿** (CMP-121): 도입 즉시 쓰는 정책 프리셋.
+- **단일명령 배포 패키징** (CMP-122): Docker Compose + 에어갭 번들 + Helm 스텁.
+- **무재기동 룰 핫리로드** (CMP-124): 드라이런 + fail-closed + retain_raw/키회전 하드닝.
+- **통합 `nufi-egress` CLI** (CMP-125): `doctor`·`init` 을 단일 진입점으로 통합, 서빙빌더 통합 가이드·README 진입 섹션·`docs/CLI.md` 레퍼런스.
+
+### Changed
+- **동시성·부하 하니스 + NER base 격상 배선** (CMP-123): p95 부하 측정 + KR_PERSON CI-하한 판정. 상세 정확도·성능 리포트 동봉.
+- **NER 동시성 하드닝** (CMP-127): intra-op 스레드 캡 + bounded 워커풀 + INT8 로더 정합성 수정.
+
+### Notes
+- 탐지 정확도/지연 수치는 0.0.1 측정치 유지(엔진 무변경). 0.0.1 'Known limitations' 그대로 적용.
+
 ## [0.0.1] - 2026-06-27
 
 NuFi Egress-Audit Gateway 의 첫 릴리스 태그. 하이브리드 LLM(private 우선 + public 폴백)
@@ -42,4 +61,5 @@ NuFi Egress-Audit Gateway 의 첫 릴리스 태그. 하이브리드 LLM(private 
 - **root 캡처**: 패킷레이어 캡처(`capture/`)는 권한 있는 컨텍스트(root/CAP_NET_RAW 등)를 요구.
 - **M6 후속**: NER base 모델 격상, 프로덕션 온프렘 p95 재측정.
 
+[0.0.2]: https://example.invalid/CMP/releases/0.0.2
 [0.0.1]: https://example.invalid/CMP/releases/0.0.1
