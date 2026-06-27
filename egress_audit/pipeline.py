@@ -84,6 +84,11 @@ class DetectionPipeline:
     def ner_backend(self) -> str:
         return self.ner.backend_name if self.ner else "disabled"
 
+    @property
+    def ner_pool_config(self):
+        """모델 백엔드 동시성 풀 설정(CMP-127). gazetteer/disabled 는 None."""
+        return self.ner.pool_config if self.ner else None
+
     def analyze(self, text: str) -> List[Finding]:
         spans: List[RawSpan] = []
         # 1) 결정적 탐지 우선(체크섬·비밀정보) — 병합 시 우선권

@@ -1,0 +1,93 @@
+{
+  "backend": "onnx-int8",
+  "chars": 512,
+  "p95_target_ms": 150.0,
+  "ner_backend_active": "onnx-int8",
+  "ner_pool_config": {
+    "intra_op_threads": 2,
+    "infer_workers": 2,
+    "cpu_count": 4
+  },
+  "concurrency_sweep": {
+    "1": {
+      "concurrency": 1,
+      "requests": 80,
+      "lat_p50_ms": 53.222,
+      "lat_p95_ms": 115.407,
+      "lat_p99_ms": 210.179,
+      "lat_max_ms": 210.179,
+      "queue_delay_p95_ms": 4529.426,
+      "throughput_req_s": 17.1,
+      "wall_s": 4.685,
+      "p95_le_150ms": true
+    },
+    "2": {
+      "concurrency": 2,
+      "requests": 80,
+      "lat_p50_ms": 49.309,
+      "lat_p95_ms": 74.908,
+      "lat_p99_ms": 155.431,
+      "lat_max_ms": 155.431,
+      "queue_delay_p95_ms": 2039.621,
+      "throughput_req_s": 36.8,
+      "wall_s": 2.174,
+      "p95_le_150ms": true
+    },
+    "4": {
+      "concurrency": 4,
+      "requests": 80,
+      "lat_p50_ms": 461.846,
+      "lat_p95_ms": 906.288,
+      "lat_p99_ms": 1540.534,
+      "lat_max_ms": 1540.534,
+      "queue_delay_p95_ms": 9408.264,
+      "throughput_req_s": 7.7,
+      "wall_s": 10.403,
+      "p95_le_150ms": false
+    },
+    "8": {
+      "concurrency": 8,
+      "requests": 80,
+      "lat_p50_ms": 1143.011,
+      "lat_p95_ms": 2751.846,
+      "lat_p99_ms": 2992.437,
+      "lat_max_ms": 2992.437,
+      "queue_delay_p95_ms": 10910.771,
+      "throughput_req_s": 6.6,
+      "wall_s": 12.06,
+      "p95_le_150ms": false
+    },
+    "16": {
+      "concurrency": 16,
+      "requests": 80,
+      "lat_p50_ms": 2028.927,
+      "lat_p95_ms": 3847.326,
+      "lat_p99_ms": 3898.34,
+      "lat_max_ms": 3898.34,
+      "queue_delay_p95_ms": 7733.292,
+      "throughput_req_s": 7.7,
+      "wall_s": 10.352,
+      "p95_le_150ms": false
+    }
+  },
+  "sustained": {
+    "concurrency": 8,
+    "duration_s": 5.89,
+    "total_requests": 51,
+    "throughput_req_s": 8.7,
+    "lat_p50_ms": 857.377,
+    "lat_p95_ms": 1653.279,
+    "lat_p99_ms": 2402.736,
+    "interval_p95_min_ms": 923.773,
+    "interval_p95_max_ms": 2402.736,
+    "p95_le_150ms": false
+  },
+  "backpressure": {
+    "service_rate_mu_req_s": 8.0,
+    "mean_service_ms": 124.569,
+    "p95_service_ms": 308.965,
+    "lambda_safe_req_s": 8.0,
+    "note": "도착률 λ ≤ μ 이면 감사 큐 안정(유한 대기). λ>μ 면 큐 무한 증가→백프레셔."
+  },
+  "all_concurrency_p95_le_150ms": false
+}

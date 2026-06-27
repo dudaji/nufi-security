@@ -228,6 +228,7 @@ def main():
         return 0
 
     report["ner_backend_active"] = guard.ner_backend
+    report["ner_pool_config"] = guard.ner_pool_config  # CMP-127: K/W/cores
     body = make_body(args.chars)
     levels = [int(x) for x in args.concurrency.split(",") if x.strip()]
 

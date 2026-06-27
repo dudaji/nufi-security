@@ -36,6 +36,10 @@ class EgressGuard:
     def ner_backend(self) -> str:
         return self.pipeline.ner_backend
 
+    @property
+    def ner_pool_config(self):
+        return self.pipeline.ner_pool_config
+
     def inspect(self, text: str) -> GuardResult:
         findings = self.pipeline.analyze(text)
         decision = self.policy.apply(text, findings)

@@ -17,6 +17,7 @@ import re
 from typing import Iterator, List, Optional
 
 from .korean_pii import RawSpan
+from ._infer_pool import BoundedInference
 
 # 빈도 높은 한국 성씨(상위 ~60). gazetteer 백엔드용.
 _SURNAMES = (
@@ -114,9 +115,18 @@ class _PipelineBackend:
     name = "pipeline"
     source = "ner:koelectra"
     _LABEL_MAP = {"PS": "KR_PERSON", "PER": "KR_PERSON", "LC": "KR_LOCATION", "LOC": "KR_LOCATION"}
+    # CMP-127: 부하 하 코어 과구독 방지용 공유 bounded 추론 풀(백엔드별 1개).
+    # 모델 백엔드 __init__ 에서 주입. gazetteer 는 None(순수 stdlib, 풀 불필요).
+    _pool: Optional[BoundedInference] = None
 
     def detect(self, text: str) -> Iterator[RawSpan]:
-        for ent in self._pipe(text):
+        # 추론(self._pipe)만 W-bounded 풀에서 실행 → 동시 추론 수를 코어수에
+        # 수렴시켜 과구독을 제거(CMP-127). 결과를 풀 안에서 materialize 한 뒤 yield.
+        if self._pool is not None:
+            ents = self._pool.run(lambda: list(self._pipe(text)))
+        else:
+            ents = self._pipe(text)
+        for ent in ents:
             grp = str(ent.get("entity_group", "")).upper()
             mapped = next((v for k, v in self._LABEL_MAP.items() if grp.startswith(k)), None)
             if not mapped:
@@ -134,6 +144,14 @@ class _TransformersBackend(_PipelineBackend):
     def __init__(self, model_id: Optional[str] = None):
         import os
         from transformers import pipeline  # type: ignore
+        # CMP-127: 코어 전용화 — torch intra-op 스레드를 K 로 캡(프로세스 전역).
+        # 동시 추론은 BoundedInference(W) 가 제한 → W×K ≈ cores.
+        self._pool = BoundedInference()
+        try:
+            import torch  # type: ignore
+            torch.set_num_threads(self._pool.intra_op)
+        except Exception:
+            pass
         # CMP-123 격상: 명시 model_id > env M5_NER_MODEL_ID > 기본 small.
         model_id = model_id or os.environ.get(
             "M5_NER_MODEL_ID", "Leo97/KoELECTRA-small-v3-modu-ner")
@@ -152,21 +170,52 @@ class _OnnxInt8Backend(_PipelineBackend):
     source = "ner:koelectra-onnx-int8"
 
     def __init__(self, model_id: Optional[str] = None):
+        import glob
         import os
         from optimum.onnxruntime import ORTModelForTokenClassification  # type: ignore
-        from transformers import AutoTokenizer, pipeline  # type: ignore
+        from transformers import AutoConfig, AutoTokenizer, pipeline  # type: ignore
 
-        model_dir = model_id or os.environ.get("M5_ONNX_DIR")
-        if model_dir and not str(model_dir).rstrip("/").endswith("int8"):
+        model_dir = model_id or os.environ.get("M5_ONNX_DIR") \
+            or os.path.expanduser("~/.cache/m5_onnx_int8")
+        # config.json 유무로 견고하게 해석(디렉터리명 의존 금지). 부모를 줬는데
+        # int8/ 하위에 모델이 있으면 내려간다. (parent 명이 ...int8 로 끝나
+        # endswith 체크가 오판하던 버그 수정 — CMP-127.)
+        if not os.path.isfile(os.path.join(model_dir, "config.json")):
             cand = os.path.join(model_dir, "int8")
-            if os.path.isdir(cand):
+            if os.path.isfile(os.path.join(cand, "config.json")):
                 model_dir = cand
-        if not model_dir:
-            model_dir = os.path.join(os.path.expanduser("~/.cache/m5_onnx_int8"), "int8")
-        if not os.path.isdir(model_dir):
+        if not os.path.isfile(os.path.join(model_dir, "config.json")):
             raise FileNotFoundError(
-                f"INT8 ONNX 디렉터리 없음: {model_dir} — 먼저 `python3 scripts/export_onnx_int8.py`")
-        model = ORTModelForTokenClassification.from_pretrained(model_dir)
+                f"INT8 ONNX 모델 없음: {model_dir} — 먼저 `python3 scripts/export_onnx_int8.py`")
+        # 비표준 파일명(model_quantized.onnx) 자동 탐지. file_name 을 명시하지 않으면
+        # optimum 이 표준 model.onnx 를 못 찾아 베이스 모델을 즉석 재export(FP32) 하므로
+        # 측정 대상이 INT8 가 아니게 된다 — 반드시 양자화 파일을 지정한다(CMP-127).
+        onnx_files = [os.path.basename(p) for p in glob.glob(os.path.join(model_dir, "*.onnx"))]
+        file_name = next((f for f in ("model_quantized.onnx", "model.onnx") if f in onnx_files),
+                         onnx_files[0] if onnx_files else None)
+        # CMP-127: 코어 전용화 — onnxruntime intra-op 스레드를 K 로 캡.
+        # 동시 추론은 BoundedInference(W) 가 제한 → W×K ≈ cores(과구독 제거).
+        self._pool = BoundedInference()
+        sess_opts = None
+        try:
+            import onnxruntime as ort  # type: ignore
+            sess_opts = ort.SessionOptions()
+            sess_opts.intra_op_num_threads = self._pool.intra_op
+            sess_opts.inter_op_num_threads = 1
+        except Exception:
+            sess_opts = None
+        # config 명시 → optimum 의 library 자동추론 실패를 회피(optimum 4.5x).
+        from_kwargs = {"config": AutoConfig.from_pretrained(model_dir)}
+        if file_name:
+            from_kwargs["file_name"] = file_name
+        if sess_opts is not None:
+            from_kwargs["session_options"] = sess_opts
+        try:
+            model = ORTModelForTokenClassification.from_pretrained(model_dir, **from_kwargs)
+        except TypeError:
+            # 구버전 optimum: 일부 kwarg 미지원 → config/file_name 만으로 폴백.
+            model = ORTModelForTokenClassification.from_pretrained(
+                model_dir, config=from_kwargs["config"], **({"file_name": file_name} if file_name else {}))
         tok = AutoTokenizer.from_pretrained(model_dir)
         self._pipe = pipeline("token-classification", model=model, tokenizer=tok,
                               aggregation_strategy="simple")
@@ -194,6 +243,12 @@ class KoreanNerDetector:
     @property
     def backend_name(self) -> str:
         return getattr(self.backend, "name", "unknown")
+
+    @property
+    def pool_config(self) -> Optional[dict]:
+        """모델 백엔드의 동시성 풀 설정(K/W/cores). gazetteer 는 None."""
+        pool = getattr(self.backend, "_pool", None)
+        return pool.config if pool is not None else None
 
     def detect(self, text: str) -> Iterator[RawSpan]:
         yield from self.backend.detect(text)
