@@ -1,0 +1,81 @@
+{
+  "backend": "onnx-int8",
+  "chars": 512,
+  "p95_target_ms": 150.0,
+  "ner_backend_active": "onnx-int8",
+  "ner_pool_config": {
+    "intra_op_threads": 1,
+    "infer_workers": 4,
+    "cpu_count": 4
+  },
+  "concurrency_sweep": {
+    "1": {
+      "concurrency": 1,
+      "requests": 150,
+      "lat_p50_ms": 36.251,
+      "lat_p95_ms": 45.691,
+      "lat_p99_ms": 51.079,
+      "lat_max_ms": 54.685,
+      "queue_delay_p95_ms": 5283.674,
+      "throughput_req_s": 26.9,
+      "wall_s": 5.577,
+      "p95_le_150ms": true
+    },
+    "2": {
+      "concurrency": 2,
+      "requests": 150,
+      "lat_p50_ms": 44.926,
+      "lat_p95_ms": 59.027,
+      "lat_p99_ms": 68.493,
+      "lat_max_ms": 82.067,
+      "queue_delay_p95_ms": 3226.489,
+      "throughput_req_s": 43.6,
+      "wall_s": 3.443,
+      "p95_le_150ms": true
+    },
+    "4": {
+      "concurrency": 4,
+      "requests": 150,
+      "lat_p50_ms": 86.741,
+      "lat_p95_ms": 241.889,
+      "lat_p99_ms": 349.195,
+      "lat_max_ms": 366.913,
+      "queue_delay_p95_ms": 3975.687,
+      "throughput_req_s": 35.1,
+      "wall_s": 4.272,
+      "p95_le_150ms": false
+    },
+    "8": {
+      "concurrency": 8,
+      "requests": 150,
+      "lat_p50_ms": 89.227,
+      "lat_p95_ms": 1045.595,
+      "lat_p99_ms": 2527.214,
+      "lat_max_ms": 3866.992,
+      "queue_delay_p95_ms": 3695.331,
+      "throughput_req_s": 36.4,
+      "wall_s": 4.119,
+      "p95_le_150ms": false
+    }
+  },
+  "sustained": {
+    "concurrency": 2,
+    "duration_s": 8.04,
+    "total_requests": 350,
+    "throughput_req_s": 43.5,
+    "lat_p50_ms": 43.82,
+    "lat_p95_ms": 59.636,
+    "lat_p99_ms": 102.21,
+    "interval_p95_min_ms": 46.128,
+    "interval_p95_max_ms": 81.689,
+    "p95_le_150ms": true
+  },
+  "backpressure": {
+    "service_rate_mu_req_s": 26.2,
+    "mean_service_ms": 38.148,
+    "p95_service_ms": 45.753,
+    "lambda_safe_req_s": 26.2,
+    "note": "도착률 λ ≤ μ 이면 감사 큐 안정(유한 대기). λ>μ 면 큐 무한 증가→백프레셔."
+  },
+  "all_concurrency_p95_le_150ms": false
+}
