@@ -295,11 +295,15 @@ def main():
 
     # --- 합격 판정 (test 셋만 binary) ---
     if args.split == "test":
+        # CMP-123 수용기준: KR_PERSON 은 점추정이 아니라 Wilson CI '하한' ≥0.85.
+        person_ci_low = sc["per_class"].get("KR_PERSON", {}).get("ci95", [0.0, 0.0])[0]
+        sc["person_recall_ci_low"] = person_ci_low
         chk = {
             "pii_recall>=0.90": sc["pii_recall"] >= TARGETS["pii_recall"],
             "pii_precision>=0.85": sc["pii_precision"] >= TARGETS["pii_precision"],
             "strong_recall>=0.98": sc["strong_recall"] >= TARGETS["strong_recall"],
             "person_recall>=0.85": sc["person_recall"] >= TARGETS["person_recall"],
+            "person_recall_ci_low>=0.85": person_ci_low >= TARGETS["person_recall"],
             "location_recall>=0.85": sc["location_recall"] >= TARGETS["location_recall"],
             "secret_recall>=0.90": sc["secret_recall"] >= TARGETS["secret_recall"],
             "benign_false_block<=0.02": sc["benign_false_block"] <= TARGETS["benign_false_block"],

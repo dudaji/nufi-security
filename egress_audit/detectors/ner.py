@@ -131,8 +131,12 @@ class _TransformersBackend(_PipelineBackend):
     name = "transformers"
     source = "ner:koelectra"
 
-    def __init__(self, model_id: str = "Leo97/KoELECTRA-small-v3-modu-ner"):
+    def __init__(self, model_id: Optional[str] = None):
+        import os
         from transformers import pipeline  # type: ignore
+        # CMP-123 격상: 명시 model_id > env M5_NER_MODEL_ID > 기본 small.
+        model_id = model_id or os.environ.get(
+            "M5_NER_MODEL_ID", "Leo97/KoELECTRA-small-v3-modu-ner")
         self._pipe = pipeline("token-classification", model=model_id,
                               aggregation_strategy="simple")
 

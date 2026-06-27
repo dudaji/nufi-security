@@ -7,8 +7,15 @@
 동적 양자화(QInt8, 가중치 INT8)로 변환한다. 산출물 디렉터리는 기본적으로
 저장소 밖(`~/.cache/m5_onnx_int8`)에 둬 대용량 바이너리 커밋을 피한다.
 
-  python3 scripts/export_onnx_int8.py            # 기본 경로로 내보내기+양자화
+  python3 scripts/export_onnx_int8.py            # 기본(small) 내보내기+양자화
   M5_ONNX_DIR=/path python3 scripts/export_onnx_int8.py
+
+CMP-123 NER base 격상(KR_PERSON CI 하한 0.85↑)은 모델 ID 만 교체하면 된다 —
+코드 변경 불필요, 환경변수로 base 모델 지정:
+  M5_NER_MODEL_ID=Leo97/KoELECTRA-base-v3-modu-ner python3 scripts/export_onnx_int8.py
+산출 INT8 디렉터리를 `M5_ONNX_DIR` 로 가리키면 `egress_audit.detectors.ner`
+의 onnx-int8 백엔드가 동일 경로에서 로드한다. 재양자화 후 측정:
+  M5_ONNX_DIR=/path python3 scripts/bench_m5.py --backend onnx-int8 --split test
 
 런타임 의존: transformers, onnx, onnxruntime, optimum[onnxruntime]. 에어갭(NFR1)
 프로덕션에서는 사전 산출된 INT8 ONNX 를 반입해 동일 경로에 배치한다.
@@ -19,7 +26,8 @@ import os
 import sys
 from pathlib import Path
 
-MODEL_ID = "Leo97/KoELECTRA-small-v3-modu-ner"
+# 기본 small. CMP-123 격상은 M5_NER_MODEL_ID 로 base 지정(코드 변경 없음).
+MODEL_ID = os.environ.get("M5_NER_MODEL_ID", "Leo97/KoELECTRA-small-v3-modu-ner")
 DEFAULT_DIR = Path(os.environ.get("M5_ONNX_DIR", Path.home() / ".cache" / "m5_onnx_int8"))
 
 
