@@ -19,9 +19,12 @@
 | 3 | [`SPEC.md`](SPEC.md) → [`DEMO.md`](DEMO.md) | M1+M2 명세·데모 | 기반 — 게이트웨이 인터셉트 + PII/비밀 탐지·차단 |
 | 4 | [`SPEC_CMP85.md`](SPEC_CMP85.md) → [`DEMO_CMP85.md`](DEMO_CMP85.md) → [`DEMO_RESULT_CMP85.md`](DEMO_RESULT_CMP85.md) | **현행 핵심** (CMP-85) | Public/Private 차등감사 + 패킷레이어 우회탐지 + 비동기 감사봇 |
 | 5 | [`SPEC_EGRESS_ENFORCEMENT.md`](SPEC_EGRESS_ENFORCEMENT.md) → [`ENFORCEMENT_BUILD_CMP94.md`](ENFORCEMENT_BUILD_CMP94.md) | 우회 차단 (CMP-93/94) | 탐지에서 **실제 차단(nftables)**으로 |
-| 6 | [`SPEC_M4.md`](SPEC_M4.md) | 다음 설계 (CMP-77) | 🔜 아직 안 만든 다음 단계(기밀 1차 탐지) |
+| 6 | [`SPEC_M4.md`](SPEC_M4.md) → [`IMPL_M4.md`](IMPL_M4.md) | M4 기밀 1차 탐지 (CMP-77/98) | ✅ 키워드/표식 + EDM 구현완료 |
+| 7 | [`M5_MEASUREMENT_REPORT.md`](M5_MEASUREMENT_REPORT.md) | **M5 벤치·하드닝 실측** (CMP-99/100/103/104) | ✅ recall·지연 실측 + 게이트 최종판정 — **보드 리뷰 핵심 증거** |
 
 > **데모를 직접 돌려보고 싶다면** → [`DEMO_CMP85.md`](DEMO_CMP85.md)(재현 매뉴얼)가 현행 최신 데모입니다. (구버전 [`DEMO.md`](DEMO.md)는 M1+M2만 다룹니다.)
+>
+> **M3 가역 가명화/원복 + 매핑 Vault**(CMP-97)는 별도 설계문서 없이 `../egress_audit/pseudonymize.py` 로 구현완료. M5 리포트의 fail-closed·감사 해시체인과 함께 동작.
 
 ---
 
@@ -34,12 +37,14 @@
 | [`SPEC.md`](SPEC.md) | CMP-72 | M1 게이트웨이 + M2 탐지 | ✅ 구현완료 (PoC 검수합격) |
 | [`SPEC_CMP85.md`](SPEC_CMP85.md) | CMP-85 | P0~P3 차등감사·패킷·봇 | ✅ 구현완료 — **현행 핵심 명세** |
 | [`SPEC_EGRESS_ENFORCEMENT.md`](SPEC_EGRESS_ENFORCEMENT.md) | CMP-93 | 우회 차단(트랙 B) | 📐 설계확정 → CMP-94로 빌드됨 |
-| [`SPEC_M4.md`](SPEC_M4.md) | CMP-77 | M4 기밀 1차 탐지 | 🔜 설계만 (미구현) |
+| [`SPEC_M4.md`](SPEC_M4.md) | CMP-77 | M4 기밀 1차 탐지 | ✅ 설계확정 → CMP-98로 구현됨 |
 
 ### 빌드·데모·결과
 | 문서 | 출처 | 무엇 | 상태 |
 |---|---|---|---|
 | [`ENFORCEMENT_BUILD_CMP94.md`](ENFORCEMENT_BUILD_CMP94.md) | CMP-94 | nftables 우회차단 MVP 빌드 | ✅ 구현완료 (보드 approved) |
+| [`IMPL_M4.md`](IMPL_M4.md) | CMP-98 | M4 기밀 1차 탐지(키워드/표식 + EDM) 구현 | ✅ 구현완료 |
+| [`M5_MEASUREMENT_REPORT.md`](M5_MEASUREMENT_REPORT.md) | CMP-99/100/103/104 | M5 벤치·하드닝 **실측 리포트**(recall·지연·하드닝·게이트판정) | ✅ 최신 — **보드 리뷰 핵심** |
 | [`DEMO.md`](DEMO.md) | CMP-72 | M1+M2 데모 | ✅ 완료 (구버전 — CMP-85로 확장) |
 | [`DEMO_CMP85.md`](DEMO_CMP85.md) | CMP-85 | 통합 데모 **재현 매뉴얼** | ✅ **현행 데모 진입점** |
 | [`DEMO_RESULT_CMP85.md`](DEMO_RESULT_CMP85.md) · [`.html`](DEMO_RESULT_CMP85.html) | CMP-85 | 데모 **결과 보고서** + 스크린샷 | ✅ 최신 결과 |
@@ -62,9 +67,13 @@
 M1 게이트웨이 + M2 PII/비밀 탐지  ──✅ PoC 검수합격·종결 (SPEC.md / DEMO.md)
    └ CMP-85: Public/Private 차등감사 + 패킷레이어 + 비동기 감사봇 ──✅ (SPEC_CMP85 / DEMO_CMP85)
         └ Enforcement: 우회 차단(nftables) ──✅ 설계(CMP-93)→빌드(CMP-94)
-M4 기밀 1차 탐지(키워드/EDM) ──🔜 설계만 (SPEC_M4) — 다음 구현 후보
+M3 가역 가명화/원복 + 매핑 Vault ──✅ (CMP-97, egress_audit/pseudonymize.py)
+M4 기밀 1차 탐지(키워드/표식 + EDM) ──✅ (CMP-98, IMPL_M4.md)
+M5 벤치·하드닝 + KoELECTRA/INT8 실측 ──✅ (CMP-99/100/103/104, M5_MEASUREMENT_REPORT.md)
+   · PII recall 0.946 ≥ 0.90 · INT8 512자 p95 38ms · 하드닝 12/12 · 게이트 최종판정 CPO(CMP-101)
+M6(후속) ──🔜 NER base 모델 격상 · 프로덕션 온프렘 p95 재측정
 ```
 
 > 거버넌스: 본 저장소(보안 도메인) 구현은 **상시 승인** 적용 — Engineer가 건별 보드승인 없이 착수 가능([../../GOVERNANCE.md](../../GOVERNANCE.md) 규칙 3, CMP-96). 설계 문서는 CPO 산출, 코드는 Engineer 구현.
 
-*최종 갱신: 2026-06-25 (CMP-96, CEO).*
+*최종 갱신: 2026-06-27 (CMP-108, CEO) — M3/M4/M5 완료 반영(보드 리뷰 정렬). 이전: 2026-06-25 (CMP-96).*
