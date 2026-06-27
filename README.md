@@ -3,6 +3,7 @@
 하이브리드 LLM(private 우선 + public 폴백) 환경에서 **public LLM(Claude/OpenAI 등)으로 나가는 outbound 요청을 가로채(게이트웨이) PII·비밀을 인라인 탐지·차단·가명화**하는 게이트웨이.
 
 > Internal status & board review: see [`docs/STATUS.md`](docs/STATUS.md).
+> **서빙빌더라면 → [`docs/INTEGRATION_GUIDE.md`](docs/INTEGRATION_GUIDE.md)** (통합 경로·프리셋·`doctor` 검증·감사 로그·private/public 결정 트리).
 
 회사·기관이 public LLM 을 쓰면서도 한국어 개인정보·비밀이 경계 밖으로 나가지 않도록, 모든 outbound 를 단일 게이트웨이로 통과시켜 **나가기 직전(TLS 적용 전)** 에 탐지·차단·가명화하고, 우회 트래픽을 패킷 레이어에서 잡아 실제로 막는다.
 
