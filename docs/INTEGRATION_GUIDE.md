@@ -146,7 +146,8 @@ python3 -m egress_audit.init_cli strict-kr-pii --out ./config
 python3 -m egress_audit.init_cli audit-only --dry-run
 ```
 
-> enforcement CLI 경유로도 동일: `python3 -m enforcement.cli init --list`.
+> 프리셋 init 의 정식 진입점은 `egress_audit.init_cli` 입니다(위 명령). 단일 `nufi`
+> 통합 CLI(`enforcement.cli init`/`doctor`)는 후속 패키징에서 합쳐질 예정입니다.
 
 | 프리셋 | 언제 고르나 | 약한 PII | 강한 PII·비밀 | enforcement |
 |---|---|---|---|---|
@@ -166,8 +167,8 @@ python3 -m egress_audit.init_cli audit-only --dry-run
 배선이 맞았는지 한 번에 진단합니다. `doctor` 는 5개 체크를 PASS/WARN/FAIL 로 보고합니다.
 
 ```bash
-python3 -m enforcement.cli doctor          # 사람읽기 + JSON
-python3 -m enforcement.cli doctor --json   # 기계용 JSON 만
+python3 -m enforcement.doctor          # 사람읽기 + JSON
+python3 -m enforcement.doctor --json   # 기계용 JSON 만
 ```
 
 실제 출력(요지):
@@ -314,7 +315,7 @@ python3 -m egress_audit.init_cli audit-only --out ./config
 python3 examples/sdk_quickstart.py        # NuFi() 한 줄로 NuFi 경유 호출 확인
 
 # 3) 배선 검증 — 핵심 3체크(config·gateway·canary) PASS, FAIL 0
-python3 -m enforcement.cli doctor
+python3 -m enforcement.doctor
 
 # 4) 무엇이 나갔나 — 감사 로그 확인
 tail logs/egress_audit.jsonl
