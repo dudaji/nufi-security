@@ -23,7 +23,7 @@ NuFi 를 붙이는 데 필요한 결정은 5개뿐입니다. 순서대로 따라
 > python3 -m pip install -r requirements.txt   # 코어: PyYAML·fastapi·uvicorn·httpx
 > python3 -m pip install -e .                  # nufi-egress/nufi 콘솔 스크립트를 PATH 에 설치
 > ```
-> 설치하지 않고도 동일 명령을 `python3 -m enforcement.cli <서브커맨드>` 로 실행할 수 있습니다(§2 CLI 표기 규약).
+> 설치하지 않은 환경에서의 동치 실행법은 §2 CLI 표기 규약에 정리돼 있습니다.
 > 코어 탐지(정규식+체크섬+비밀+gazetteer NER)는 외부 의존·네트워크 0 으로 동작합니다.
 > 한국어 인명 NER 정확도를 프로덕션 수준으로 올리려면 transformers/ONNX 백엔드를 옵트인합니다(§3 참조).
 
@@ -174,9 +174,8 @@ nufi-egress init audit-only --dry-run
 > **CLI 표기 규약.** 본 가이드의 모든 운영 명령은 **통합 CLI** `nufi-egress <서브커맨드>`
 > (`render·apply·disable·status·feedback·doctor·coverage·monitor·init·audit·targets·flow-tap` 단일 진입점)로 통일합니다.
 > `pip install -e .` 후 `nufi-egress`(별칭 `nufi`)가 PATH 에 올라옵니다(`pyproject.toml` 의 console_scripts).
-> 설치하지 않는 환경에서는 동일 명령을 `python3 -m enforcement.cli <서브커맨드>` 로 그대로 실행할 수
-> 있습니다 — **비설치 동등 실행**. 레거시 모듈별 진입점(`python3 -m egress_audit.init_cli`·
-> `egress_audit.audit_bot`)도 하위호환으로 유지되나, 신규 사용은 통합 CLI 를 권장합니다.
+> 설치하지 않는 환경에서도 동일 명령을 그대로 쓸 수 있습니다 — 비설치 동등 실행법과 레거시 모듈
+> 진입점은 [`CLI.md`](CLI.md)(§표기 규약)에 정리돼 있고, 신규 사용은 통합 CLI 를 권장합니다.
 
 | 프리셋 | 언제 고르나 | 약한 PII | 강한 PII·비밀 | enforcement |
 |---|---|---|---|---|
@@ -199,7 +198,7 @@ nufi-egress init audit-only --dry-run
 ```bash
 nufi-egress doctor          # 사람읽기 + JSON  (통합 CLI)
 nufi-egress doctor --json   # 기계용 JSON 만
-#   비설치 동등 실행: python3 -m enforcement.cli doctor (레거시 단독 진입점 python3 -m enforcement.doctor 도 유지)
+#   (비설치 동등 실행법은 CLI.md §표기 규약 참조)
 ```
 
 실제 출력(요지):
@@ -297,7 +296,7 @@ print(AuditLogger("logs/egress_audit.jsonl").verify_chain())
 
 비동기 감사 봇은 무거운 감사(NER·기밀 분류·우회 상관)를 사용자 경로와 분리해 처리합니다:
 `nufi-egress audit report`(지연 리포트) / `nufi-egress audit daemon`(상시) / `nufi-egress audit once`(1회).
-(레거시 `python3 -m egress_audit.audit_bot --report/--daemon` 도 하위호환으로 유지.)
+(레거시 모듈 진입점도 하위호환으로 유지 — 자세히는 [`CLI.md`](CLI.md).)
 
 ---
 
@@ -366,4 +365,4 @@ nufi-egress audit query
 ---
 
 *최초 작성: 2026-06-28 — v0.0.2 기준. SDK·doctor·프리셋·배포 기능 위에 작성. 모든 명령/스니펫은 실제 실행·소스 대조로 확인.*
-*개정: 2026-06-28 — (1) 멀티-프로바이더(Claude/Anthropic·OpenAI·Google·Azure) 명시(routing.yaml·litellm_config.yaml 대조), (2) 운영 명령을 설치형 통합 CLI `nufi-egress <sub>` 리드로 전환(§4 `audit query` 포함) — 전 명령 실행 확인, 비설치 `python3 -m enforcement.cli` 동등.*
+*개정: 2026-06-28 — (1) 멀티-프로바이더(Claude/Anthropic·OpenAI·Google·Azure) 명시(routing.yaml·litellm_config.yaml 대조), (2) 운영 명령을 설치형 통합 CLI `nufi-egress <sub>` 리드로 전환(§4 `audit query` 포함) — 전 명령 실행 확인, 비설치 동등 실행법은 §2·CLI.md.*

@@ -14,7 +14,7 @@ nufi-egress init strict-kr-pii --out ./config
 # 적용 전 결정 미리보기(파일 미생성)
 nufi-egress init audit-only --dry-run
 ```
-> 비설치 동치: `python3 -m egress_audit.init_cli <인자>` (CLI 미설치 환경 폴백 — 동일 동작).
+> CLI 를 설치하지 않은 환경의 동치 실행법은 [`CLI.md`](CLI.md)(§표기 규약)를 참고하세요.
 
 raw YAML 직접 편집은 여전히 **파워유저 탈출구**로 유지된다 — 프리셋이 낸 config 를
 그대로 손봐도 되고, 프리셋 오버레이(`config/presets/<name>.yaml`)를 고쳐 재현해도 된다.
