@@ -44,7 +44,12 @@ from dashboards.adapter import (  # noqa: E402  read-only 어댑터 재사용
     panel_decisions,
 )
 from egress_audit.audit import verify_chain_records  # noqa: E402
-from enforcement.access import Session, scope_records  # noqa: E402  테넌트 읽기 경계(C2)
+from enforcement.access import (  # noqa: E402  테넌트 읽기 경계·역할(C2)
+    ROLE_OPERATOR,
+    Session,
+    scope_records,
+    tenant_of,
+)
 
 # --------------------------------------------------------------------------- #
 # 기본 임계 — 핵심 품질 약속(제안서 §1 C1). 고객별 임계는 CLI 설정으로 override.
@@ -238,6 +243,165 @@ def build_sla_report(*,
         "coverage_source": coverage_source,
         "overall": {"status": overall, "by_metric": overall_metric_status},
         "periods": periods,
+    }
+
+
+# --------------------------------------------------------------------------- #
+# 다테넌트(플릿) SLA 집계 — 여러 테넌트를 테넌트별 행으로 한 표에 (D1)
+# --------------------------------------------------------------------------- #
+FLEET_TENANT_NONE = "(무귀속)"   # 테넌트 미태깅 표본 묶음 표기
+
+
+def build_sla_fleet_report(*,
+                           metrics_path: Optional[str] = None,
+                           metrics: Optional[List[dict]] = None,
+                           thresholds: Optional[Dict[str, float]] = None,
+                           period: str = "week",
+                           flow_dir: Optional[str] = None,
+                           flow_paths: Optional[Iterable[str]] = None,
+                           title: Optional[str] = None,
+                           session: Optional[Session] = None) -> dict:
+    """여러 테넌트의 SLA 를 **테넌트별 행**(충족/위반)으로 집계한 플릿 뷰.
+
+    각 테넌트는 자기 표본만으로 :func:`build_sla_report` 를 거쳐 독립 판정되며,
+    그 종합 상태를 한 행으로 모은다. 테넌트 경계는 유지된다 — 한 테넌트의 표본이
+    다른 테넌트 행에 새지 않는다.
+
+    권한(v0.0.6 C2): 다테넌트 집계는 **operator** 만 가능하다. viewer 세션은
+    :meth:`Session.require_tenant_aggregation` 에서 거부된다(자기 테넌트만 조회).
+    ``session`` 이 특정 테넌트로 한정돼 있으면 그 테넌트 한 행만 집계한다.
+    """
+    if session is not None:
+        session.require_tenant_aggregation()
+
+    th = dict(DEFAULT_THRESHOLDS)
+    if thresholds:
+        th.update({k: float(v) for k, v in thresholds.items() if k in DEFAULT_THRESHOLDS})
+
+    raw = metrics if metrics is not None else load_metrics(metrics_path)
+
+    # 세션이 단일 테넌트로 한정돼 있으면 그 테넌트만, 아니면 발견된 전체 테넌트.
+    pinned = session.tenant if (session is not None and session.tenant) else None
+
+    # 테넌트 키별로 표본을 그룹핑(미태깅=None). 테넌트 경계가 곧 그룹 경계다.
+    groups: Dict[Optional[str], List[dict]] = {}
+    for rec in raw:
+        key = tenant_of(rec)
+        groups.setdefault(key, []).append(rec)
+
+    keys = [k for k in groups if (pinned is None or k == pinned)]
+    keys.sort(key=lambda k: (k is None, k or ""))
+
+    rows = []
+    fleet_status = NO_DATA
+    violation_tenants: List[str] = []
+    for key in keys:
+        # 이미 테넌트로 그룹핑된 부분집합 → 추가 격리 불필요(session=None).
+        sub = build_sla_report(metrics=groups[key], thresholds=th, period=period,
+                               flow_dir=(flow_dir if key is None else None),
+                               flow_paths=(flow_paths if key is None else None),
+                               session=None)
+        label = key if key is not None else FLEET_TENANT_NONE
+        st = sub["overall"]["status"]
+        rows.append({
+            "tenant": label,
+            "status": st,
+            "by_metric": sub["overall"]["by_metric"],
+            "sample_count": sub["sample_count"],
+        })
+        if st == VIOLATION:
+            violation_tenants.append(label)
+            fleet_status = VIOLATION
+        elif st == MEET and fleet_status != VIOLATION:
+            fleet_status = MEET
+
+    return {
+        "kind": "sla_fleet",
+        "title": title or "다테넌트 SLA 집계",
+        "period_grain": period,
+        "generated_note": "테넌트별 SLA 를 한 표로 집계 — 기존 측정 재사용(read-only).",
+        "thresholds": th,
+        "tenant_count": len(rows),
+        "overall": {"status": fleet_status, "violation_tenants": violation_tenants},
+        "rows": rows,
+    }
+
+
+# --------------------------------------------------------------------------- #
+# 선제 알림 — SLA 위반을 발생 시점에 신호하는 알림 산출물 (D1)
+# --------------------------------------------------------------------------- #
+def build_sla_alert(report: dict) -> dict:
+    """SLA(단일 또는 플릿) 리포트에서 위반을 추려 **알림 산출물**로 만든다.
+
+    cron/주기 점검에서 호출 → 위반 한 건 이상이면 ``status == "violation"``.
+    각 위반 항목은 어느 범위(기간 또는 테넌트)의 어느 지표가 목표를 어떻게
+    벗어났는지를 자체 완결적으로 담는다(웹훅/이메일/티켓에 그대로 실어보낼 수 있게).
+    """
+    kind = report.get("kind")
+    violations: List[dict] = []
+
+    if kind == "sla_fleet":
+        for row in report.get("rows", []):
+            for m, st in row.get("by_metric", {}).items():
+                if st == VIOLATION:
+                    meta = _METRIC_META[m]
+                    violations.append({
+                        "scope": f"tenant:{row['tenant']}",
+                        "metric": m, "label": meta["label"], "op": meta["op"],
+                        "threshold": report["thresholds"][m],
+                    })
+    else:  # 단일 SLA 리포트: 기간×지표 단위로 위반을 추린다.
+        for p in report.get("periods", []):
+            for m, j in p.get("metrics", {}).items():
+                if j.get("status") == VIOLATION:
+                    violations.append({
+                        "scope": f"period:{p['period']}",
+                        "metric": m, "label": _METRIC_META[m]["label"],
+                        "value": j.get("value"), "threshold": j.get("threshold"),
+                        "op": j.get("op"),
+                    })
+
+    status = VIOLATION if violations else MEET
+    summary = (f"SLA 위반 {len(violations)}건 — " +
+               ", ".join(f"{v['scope']}/{v['label']}" for v in violations)
+               ) if violations else "SLA 위반 없음 — 전 항목 충족."
+    return {
+        "kind": "sla_alert",
+        "title": report.get("title", "SLA 알림"),
+        "status": status,
+        "violation_count": len(violations),
+        "summary": summary,
+        "violations": violations,
+        "thresholds": report.get("thresholds"),
+    }
+
+
+def render_alert_text(alert: dict) -> str:
+    """알림을 사람이 읽는 한 줄짜리 요약 + 항목 목록(stdout/cron 로그용)."""
+    head = ("🚨 [SLA ALERT] " if alert["status"] == VIOLATION else "✅ [SLA OK] ")
+    L = [head + alert["summary"]]
+    for v in alert.get("violations", []):
+        if "value" in v:
+            L.append(f"  - {v['scope']} · {v['label']}: "
+                     f"{_fmt_val(v['metric'], v.get('value'))} "
+                     f"(목표 {v['op']} {_fmt_val(v['metric'], v['threshold'])})")
+        else:
+            L.append(f"  - {v['scope']} · {v['label']}: "
+                     f"목표 {v['op']} {_fmt_val(v['metric'], v['threshold'])} 위반")
+    return "\n".join(L)
+
+
+def webhook_stub_payload(alert: dict, url: str) -> dict:
+    """웹훅 전송 **스텁** — 실제 네트워크 호출 없이 보낼 페이로드만 구성한다.
+
+    실시간 콘솔/실전송은 범위 밖(→ v0.1.0). cron 친화 알림의 흔적만 남긴다.
+    """
+    return {
+        "delivery": "stub",        # 실제 전송 안 함(네트워크 호출 0)
+        "url": url,
+        "status": alert["status"],
+        "violation_count": alert["violation_count"],
+        "text": alert["summary"],
     }
 
 
@@ -483,6 +647,58 @@ def render_sla_html(rep: dict) -> str:
     return _html_doc(rep["title"], "".join(b))
 
 
+def render_sla_fleet_md(rep: dict) -> str:
+    L: List[str] = [f"# {rep['title']}"]
+    L.append(f"**테넌트 수:** {rep['tenant_count']}  ·  **집계 단위:** {rep['period_grain']}  "
+             f"·  **종합:** {_BADGE[rep['overall']['status']]}")
+    L.append("")
+    L.append("> " + rep["generated_note"])
+    L.append("")
+    th = rep["thresholds"]
+    L.append("## 임계(목표)")
+    L.append("| 지표 | 목표 |")
+    L.append("|---|---|")
+    for m, meta in _METRIC_META.items():
+        L.append(f"| {meta['label']} | {meta['op']} {_fmt_val(m, th[m])} |")
+    L.append("")
+    L.append("## 테넌트별 SLA")
+    header = ("| 테넌트 | " + " | ".join(_METRIC_META[m]["label"] for m in _METRIC_META)
+              + " | 표본 | 판정 |")
+    L.append(header)
+    L.append("|" + "---|" * (len(_METRIC_META) + 3))
+    for row in rep["rows"]:
+        cells = [_BADGE[row["by_metric"][m]] for m in _METRIC_META]
+        L.append(f"| {row['tenant']} | " + " | ".join(cells)
+                 + f" | {row['sample_count']} | {_BADGE[row['status']]} |")
+    L.append("")
+    vt = rep["overall"]["violation_tenants"]
+    if vt:
+        L.append(f"_위반 테넌트: {', '.join(vt)}._")
+        L.append("")
+    return "\n".join(L)
+
+
+def render_sla_fleet_html(rep: dict) -> str:
+    b: List[str] = [f"<h1>{_html.escape(rep['title'])}</h1>"]
+    b.append(f"<p><b>테넌트 수:</b> {rep['tenant_count']} · <b>집계 단위:</b> {rep['period_grain']} · "
+             f"<b>종합:</b> {_badge_html(rep['overall']['status'])}</p>")
+    b.append(f"<blockquote>{_html.escape(rep['generated_note'])}</blockquote>")
+    th = rep["thresholds"]
+    b.append("<h2>임계(목표)</h2><table><tr><th>지표</th><th>목표</th></tr>")
+    for m, meta in _METRIC_META.items():
+        b.append(f"<tr><td>{meta['label']}</td><td>{meta['op']} {_fmt_val(m, th[m])}</td></tr>")
+    b.append("</table>")
+    b.append("<h2>테넌트별 SLA</h2><table><tr><th>테넌트</th>"
+             + "".join(f"<th>{_METRIC_META[m]['label']}</th>" for m in _METRIC_META)
+             + "<th>표본</th><th>판정</th></tr>")
+    for row in rep["rows"]:
+        cells = "".join(f"<td>{_badge_html(row['by_metric'][m])}</td>" for m in _METRIC_META)
+        b.append(f"<tr><td>{_html.escape(row['tenant'])}</td>{cells}"
+                 f"<td>{row['sample_count']}</td><td>{_badge_html(row['status'])}</td></tr>")
+    b.append("</table>")
+    return _html_doc(rep["title"], "".join(b))
+
+
 def render_compliance_html(rep: dict) -> str:
     b: List[str] = [f"<h1>{_html.escape(rep['title'])}</h1>"]
     if rep.get("customer"):
@@ -530,6 +746,8 @@ def render(report: dict, fmt: str = "md") -> str:
     if fmt == "json":
         return json.dumps(report, ensure_ascii=False, indent=2)
     kind = report.get("kind")
+    if kind == "sla_fleet":
+        return render_sla_fleet_html(report) if fmt == "html" else render_sla_fleet_md(report)
     if fmt == "html":
         return render_sla_html(report) if kind == "sla" else render_compliance_html(report)
     return render_sla_md(report) if kind == "sla" else render_compliance_md(report)

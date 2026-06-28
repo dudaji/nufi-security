@@ -34,9 +34,12 @@ ROLE_OPERATOR = "operator"  # 조회 + 정책 변경
 
 ROLES = (ROLE_VIEWER, ROLE_OPERATOR)
 
-# 읽기는 두 역할 모두 허용. 정책 변경은 operator 만.
+# 읽기는 두 역할 모두 허용. 정책 변경·다테넌트 집계는 operator 만.
 _CAN_READ = {ROLE_VIEWER, ROLE_OPERATOR}
 _CAN_CHANGE_POLICY = {ROLE_OPERATOR}
+# 다테넌트(플릿) 집계: 여러 테넌트 경계를 한 표로 가로지르는 읽기 — viewer 는 자기
+# 테넌트만 보므로 금지하고 operator 에게만 허용한다(테넌트 경계 자체는 유지).
+_CAN_AGGREGATE_TENANTS = {ROLE_OPERATOR}
 
 
 class AccessDenied(PermissionError):
@@ -67,6 +70,9 @@ class Session:
     def can_change_policy(self) -> bool:
         return self.role in _CAN_CHANGE_POLICY
 
+    def can_aggregate_tenants(self) -> bool:
+        return self.role in _CAN_AGGREGATE_TENANTS
+
     # -- 가드(권한 없으면 AccessDenied) -------------------------------------- #
     def require_read(self) -> None:
         if not self.can_read():
@@ -77,6 +83,12 @@ class Session:
             raise AccessDenied(
                 f"역할 {self.role!r} 은 {action} 권한이 없습니다(읽기전용). "
                 f"operator 역할이 필요합니다.")
+
+    def require_tenant_aggregation(self) -> None:
+        if not self.can_aggregate_tenants():
+            raise AccessDenied(
+                f"역할 {self.role!r} 은 다테넌트 집계 권한이 없습니다"
+                f"(viewer 는 자기 테넌트만 조회). operator 역할이 필요합니다.")
 
 
 # 편의: 모듈 기본(경계·강제 없음). session 인자 기본값으로 쓴다.

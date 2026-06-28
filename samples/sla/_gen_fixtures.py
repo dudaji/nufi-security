@@ -4,6 +4,7 @@
 감사/변경/flow 로그를 모사한다. 산출:
 
   samples/sla/sla_metrics.jsonl      — 주별 측정 샘플(대부분 충족 + 의도된 위반 1주)
+  samples/sla/sla_metrics_multi.jsonl — 다테넌트 측정 샘플(테넌트별 충족/위반)
   samples/sla/policy_changes.jsonl   — 유효 해시체인 정책 변경 감사 로그
   samples/sla/audit_decisions.jsonl  — 차단/가명화 결정 감사(해시체인 부착)
   samples/sla/flow_bypass.jsonl      — flow tap(우회 1건 포함)
@@ -54,6 +55,29 @@ def gen_metrics() -> None:
     p.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n",
                  encoding="utf-8")
     print(f"  wrote {p} ({len(rows)} rows)")
+
+
+def gen_metrics_multi() -> None:
+    # 다테넌트 측정 샘플. acme=전 항목 충족, globex=recall 위반, initech=p95 위반.
+    # 플릿 집계 표에 테넌트별 충족/위반 행이 섞여 나오도록 의도적으로 구성.
+    rows = [
+        {"tenant": "acme", "epoch_ms": _W["w3"], "pii_recall": 0.94,
+         "latency_p95_ms": 120.0, "coverage_pct": 100.0, "backend": "int8",
+         "note": "acme 주간 벤치 — 충족"},
+        {"tenant": "acme", "epoch_ms": _W["w4"], "pii_recall": 0.93,
+         "latency_p95_ms": 128.0, "coverage_pct": 99.9, "backend": "int8",
+         "note": "acme 재측정 — 충족"},
+        {"tenant": "globex", "epoch_ms": _W["w3"], "pii_recall": 0.87,
+         "latency_p95_ms": 132.0, "coverage_pct": 99.5, "backend": "fp32",
+         "note": "globex recall 하락 — 위반"},
+        {"tenant": "initech", "epoch_ms": _W["w4"], "pii_recall": 0.92,
+         "latency_p95_ms": 172.0, "coverage_pct": 100.0, "backend": "int8",
+         "host_class": "dev", "note": "initech dev 호스트 p95 초과 — 위반"},
+    ]
+    p = _HERE / "sla_metrics_multi.jsonl"
+    p.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n",
+                 encoding="utf-8")
+    print(f"  wrote {p} ({len(rows)} rows, 3 tenants)")
 
 
 def gen_policy_changes() -> None:
@@ -141,6 +165,7 @@ def gen_flows() -> None:
 if __name__ == "__main__":
     print("SLA/compliance 데모 픽스처 생성:")
     gen_metrics()
+    gen_metrics_multi()
     gen_policy_changes()
     gen_audit_decisions()
     gen_flows()

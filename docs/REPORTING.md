@@ -20,6 +20,7 @@
 nufi-egress report sla [--metrics SAMPLES.jsonl] [--period {day,week,month}]
                        [--thresholds FILE.json] [--set KEY=VALUE ...]
                        [--flow FLOW.jsonl | --flow-dir DIR]
+                       [--all-tenants] [--alert FILE] [--webhook URL]
                        [--customer NAME] [--format {md,html,json}] [--out PATH]
 ```
 
@@ -89,6 +90,56 @@ nufi-egress report sla \
   --format html --out reports/acme_sla.html
 ```
 
+### 선제 알림 (`--alert` / `--webhook`)
+
+SLA 위반을 **발생 시점에 신호**합니다. 위반이면 비-0 종료코드(`1`)와 함께
+표준에러로 한 줄 요약 배너를 남기므로 cron/주기 점검에 그대로 붙일 수 있습니다.
+
+- `--alert FILE` — 위반 요약을 **알림 산출물(JSON)** 로 기록합니다. 각 위반 항목은
+  어느 범위(기간 또는 테넌트)의 어느 지표가 목표를 어떻게 벗어났는지를 자체 완결적으로
+  담아 이메일/티켓/웹훅에 그대로 실을 수 있습니다.
+- `--webhook URL` — 알림 웹훅 URL. 현재는 **스텁**입니다 — 실제 네트워크 전송 없이
+  보낼 페이로드(`delivery: "stub"`)만 알림 산출물에 함께 기록합니다.
+  (실시간 콘솔·실전송은 다음 단계.)
+
+```bash
+# cron 예: 매시 SLA 점검 — 위반이면 exit 1 + 알림 파일 기록
+nufi-egress report sla --metrics samples/sla/sla_metrics.jsonl --format json \
+  --alert reports/sla_alert.json --webhook https://hooks.example/sla
+```
+
+알림 산출물 예:
+
+```json
+{
+  "kind": "sla_alert", "status": "violation", "violation_count": 2,
+  "summary": "SLA 위반 2건 — period:2026-W25/PII recall, period:2026-W26/지연 p95",
+  "violations": [
+    {"scope": "period:2026-W25", "metric": "pii_recall", "value": 0.86,
+     "threshold": 0.9, "op": ">="}
+  ]
+}
+```
+
+### 다테넌트 SLA 집계 (`--all-tenants`)
+
+여러 테넌트의 SLA 를 **테넌트별 행(충족/위반)** 으로 한 표에 집계하는 플릿 뷰입니다.
+각 테넌트는 자기 표본만으로 독립 판정되며(테넌트 경계 유지), 한 테넌트라도 위반이면
+플릿 종합이 위반(비-0)이 됩니다. 측정 샘플의 `tenant` 필드로 테넌트를 구분합니다.
+
+**권한(RBAC):** 다테넌트 집계는 `operator` 만 가능합니다. `--role viewer` 세션은
+거부(`exit 3`)되며, viewer 는 `--tenant` 로 **자기 테넌트만** 조회할 수 있습니다.
+
+```bash
+# operator(기본): 모든 테넌트 집계표 + 위반 시 알림
+nufi-egress report sla --metrics samples/sla/sla_metrics_multi.jsonl \
+  --all-tenants --format md --alert reports/fleet_alert.json
+
+# viewer: 자기 테넌트만 (집계는 거부)
+nufi-egress --role viewer --tenant acme \
+  report sla --metrics samples/sla/sla_metrics_multi.jsonl --format json
+```
+
 ---
 
 ## 2. `report compliance`
@@ -131,10 +182,14 @@ nufi-egress report compliance \
 
 ```bash
 ./scripts/demo_report.sh        # 6/6 PASS, 산출물: demo_outputs/report/
+./scripts/demo_sla_alert.sh     # 6/6 PASS — 선제 알림 + 다테넌트 집계, 산출물: demo_outputs/sla_alert/
 ```
 
-샘플 픽스처는 `samples/sla/` 에 있으며 `samples/sla/_gen_fixtures.py` 로 재생성할 수 있습니다.
+샘플 픽스처는 `samples/sla/` 에 있으며 `samples/sla/_gen_fixtures.py` 로 재생성할 수 있습니다
+(다테넌트 샘플은 `samples/sla/sla_metrics_multi.jsonl`).
 
 ## 4. 범위 밖(다음 단계)
 
-실시간 SLA 알림·콘솔, 다고객 SLA 집계(테넌트 격리 위에 올림)는 이 명령의 범위가 아닙니다.
+**실시간 SLA 콘솔**과 **실제 웹훅 전송**(현재 스텁), 완전 테넌트 격리(런타임·자격증명
+분리)는 이 명령의 범위가 아닙니다 — 다음 버전에서 다룹니다. 선제 알림(비-0 + 알림
+산출물 + 웹훅 스텁)과 다테넌트 SLA 집계(읽기 경계 위의 플릿 뷰)는 이번 버전에 포함됩니다.

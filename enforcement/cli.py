@@ -13,6 +13,7 @@
   audit     비동기 감사 봇(report/daemon/once) + §4 감사로그 조회(query · CMP-141).
   targets   capture_targets.yaml 파생/조회 + BPF 필터 출력(CMP-87 캡처 레이어 · CMP-143).
   flow-tap  public 목적지 flow tap(우회 탐지) — --simulate 리플레이/--live 캡처(CMP-143).
+  dashboard 감사 가시성 대시보드 기동(read-only 데이터소스 HTTP 서버 · CMP-158).
   policy    정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사(CMP-144 B1).
   report    기간별 SLA·규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음 · CMP-150 C1).
 
@@ -441,6 +442,19 @@ def cmd_flow_tap(args) -> int:
     return _flow_tap_main(argv)
 
 
+def cmd_dashboard(args) -> int:
+    # 감사 가시성 대시보드(read-only 데이터소스 HTTP 서버)를 통합 CLI 로 기동(CMP-158 D7).
+    # 기존 모듈 진입점(``python3 -m dashboards.server``)은 비설치 동치로 그대로 유지.
+    from dashboards.server import main as _dash_main
+    argv: List[str] = ["--host", args.host, "--port", str(args.port)]
+    if getattr(args, "audit", None):
+        argv += ["--audit", args.audit]
+    if getattr(args, "flow_dir", None):
+        argv += ["--flow-dir", args.flow_dir]
+    _dash_main(argv)
+    return 0
+
+
 # --- SLA·규정준수 리포팅 (v0.0.6 C1 · CMP-150) ----------------------------- #
 def _report_thresholds(args) -> Optional[dict]:
     """--thresholds JSON 파일 + --set key=value override 병합(둘 다 선택)."""
@@ -465,6 +479,31 @@ def _report_write(text: str, out: Optional[str]) -> None:
         print(text)
 
 
+def _emit_sla_alert(args, rep: dict, violated: bool) -> None:
+    """선제 알림 산출: 위반을 발생 시점에 신호(stdout 요약 + 파일 + 웹훅 스텁).
+
+    cron/주기 점검 친화 — 위반이면 항상 stderr 에 한 줄 요약을 남기고, ``--alert``
+    가 주어지면 알림 산출물(JSON)을 기록한다(없으면 비0 종료코드만으로 신호).
+    """
+    from enforcement import report as _rpt
+    alert = _rpt.build_sla_alert(rep)
+    if violated:
+        print(_rpt.render_alert_text(alert), file=sys.stderr)
+    out = getattr(args, "alert", None)
+    if out:
+        payload = dict(alert)
+        if getattr(args, "webhook", None):
+            payload["webhook"] = _rpt.webhook_stub_payload(alert, args.webhook)
+        Path(out).parent.mkdir(parents=True, exist_ok=True)
+        Path(out).write_text(json.dumps(payload, ensure_ascii=False, indent=2),
+                             encoding="utf-8")
+        print(f"[report] 알림 산출물 기록: {out} (status={alert['status']})",
+              file=sys.stderr)
+    elif getattr(args, "webhook", None) and violated:
+        print(f"[report] 웹훅(스텁) 대상 {args.webhook} — 실제 전송 없음(범위 밖)",
+              file=sys.stderr)
+
+
 def cmd_report(args) -> int:
     # 기존 측정 산출물·감사 로그를 기간별 제출용 리포트로 묶는다(새 측정 없음).
     from enforcement import report as _rpt
@@ -483,13 +522,26 @@ def cmd_report(args) -> int:
         th = _report_thresholds(args)
         if th is None and (getattr(args, "thresholds", None) or getattr(args, "set", None)):
             return 2
-        rep = _rpt.build_sla_report(
-            metrics_path=args.metrics, thresholds=th, period=args.period,
-            flow_dir=getattr(args, "flow_dir", None), flow_paths=flow_paths,
-            customer=args.customer, title=args.title, session=session)
+        try:
+            if getattr(args, "all_tenants", False):
+                # 다테넌트 집계(플릿 뷰) — operator 전용(viewer 는 자기 테넌트만).
+                rep = _rpt.build_sla_fleet_report(
+                    metrics_path=args.metrics, thresholds=th, period=args.period,
+                    flow_dir=getattr(args, "flow_dir", None), flow_paths=flow_paths,
+                    title=args.title, session=session)
+            else:
+                rep = _rpt.build_sla_report(
+                    metrics_path=args.metrics, thresholds=th, period=args.period,
+                    flow_dir=getattr(args, "flow_dir", None), flow_paths=flow_paths,
+                    customer=args.customer, title=args.title, session=session)
+        except AccessDenied as e:
+            print(f"[report] 권한 거부(RBAC): {e}", file=sys.stderr)
+            return 3
         _report_write(_rpt.render(rep, fmt), args.out)
-        # 위반이 하나라도 있으면 비0(CI/제출 게이트).
-        return 1 if rep["overall"]["status"] == _rpt.VIOLATION else 0
+        violated = rep["overall"]["status"] == _rpt.VIOLATION
+        _emit_sla_alert(args, rep, violated)
+        # 위반이 하나라도 있으면 비0(CI/제출/cron 게이트).
+        return 1 if violated else 0
 
     if args.report_kind == "compliance":
         rep = _rpt.build_compliance_report(
@@ -631,6 +683,15 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--out", default=None, help="flow 로그 출력 base_dir(기본 logs/packets)")
     p.set_defaults(func=cmd_flow_tap)
 
+    p = sub.add_parser("dashboard",
+                       help="감사 가시성 대시보드 기동(read-only 데이터소스 HTTP 서버)")
+    p.add_argument("--host", default="127.0.0.1", help="바인드 호스트(기본 127.0.0.1)")
+    p.add_argument("--port", type=int, default=8099, help="포트(기본 8099)")
+    p.add_argument("--audit", default=None,
+                   help="감사 JSONL 경로(기본 logs/egress_audit.jsonl)")
+    p.add_argument("--flow-dir", default=None, help="flow tap 로그 디렉터리/파일")
+    p.set_defaults(func=cmd_dashboard)
+
     p = sub.add_parser("policy",
                        help="정책 운영 자동화: 다중 프로파일·묶기·버전/되돌리기·변경 감사")
     psub = p.add_subparsers(dest="policy_action", required=True)
@@ -691,6 +752,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     rp.add_argument("--flow", default=None,
                     help="flow tap JSONL — 커버리지 표본 1건 파생(커버리지 집계기 재사용)")
     rp.add_argument("--flow-dir", default=None, help="flow tap 로그 디렉터리")
+    rp.add_argument("--all-tenants", action="store_true",
+                    help="다테넌트 집계: 테넌트별 행(충족/위반)으로 플릿 SLA 표 산출"
+                         "(operator 전용 — viewer 는 자기 테넌트만)")
+    rp.add_argument("--alert", metavar="FILE", default=None,
+                    help="선제 알림 산출물(JSON) 경로 — SLA 위반 요약을 파일로 기록"
+                         "(cron/주기 점검 친화)")
+    rp.add_argument("--webhook", metavar="URL", default=None,
+                    help="알림 웹훅 URL(스텁 — 실제 전송 없음, 페이로드만 기록)")
     rp.add_argument("--customer", default=None, help="고객명(리포트 헤더)")
     rp.add_argument("--title", default=None, help="리포트 제목 override")
     rp.add_argument("--format", choices=["md", "html", "json"], default="md",
