@@ -13,6 +13,7 @@
   audit     비동기 감사 봇(report/daemon/once) + §4 감사로그 조회(query · CMP-141).
   targets   capture_targets.yaml 파생/조회 + BPF 필터 출력(CMP-87 캡처 레이어 · CMP-143).
   flow-tap  public 목적지 flow tap(우회 탐지) — --simulate 리플레이/--live 캡처(CMP-143).
+  policy    정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사(CMP-144 B1).
 
 설치형 진입점(pyproject.toml console_scripts): ``pip install -e .`` 후 ``nufi-egress``
 (별칭 ``nufi``) 로 PATH 에서 직접 실행. 레거시 ``python3 -m enforcement.cli`` 동치 유지.
@@ -256,6 +257,142 @@ def cmd_targets(args) -> int:
     return _targets_main(argv)
 
 
+# --- 정책 운영 자동화 (v0.0.5 B1 · CMP-144) -------------------------------- #
+def _actor(args) -> str:
+    import getpass
+    a = getattr(args, "actor", None)
+    if a:
+        return a
+    import os
+    try:
+        return os.environ.get("NUFI_ACTOR") or getpass.getuser()
+    except Exception:
+        return "operator"
+
+
+def _policy_manager(args):
+    from enforcement.policy_ops import ProfileRegistry, PolicyOpsManager
+    reg = ProfileRegistry(routing_path=getattr(args, "routing", None))
+    return PolicyOpsManager(registry=reg)
+
+
+def cmd_policy_list(args) -> int:
+    mgr = _policy_manager(args)
+    st = mgr.status()
+    if args.json:
+        print(json.dumps(st, ensure_ascii=False, indent=2))
+        return 0
+    print(f"기본 프로파일: {st['default_profile']}")
+    print("프로파일:")
+    for p in st["profiles"]:
+        av = p["active_version"]
+        print(f"  - {p['name']:<10} 활성버전={'v'+str(av) if av else '—'} "
+              f"버전수={p['version_count']}  {p['description']}")
+    print("묶기(경로/테넌트 → 프로파일):")
+    if st["bindings"]:
+        for route, prof in sorted(st["bindings"].items()):
+            print(f"  {route:<20} → {prof}")
+    else:
+        print("  (없음 — 전부 기본 프로파일)")
+    return 0
+
+
+def cmd_policy_bind(args) -> int:
+    mgr = _policy_manager(args)
+    try:
+        rec = mgr.bind(args.route, args.profile, actor=_actor(args))
+    except KeyError as e:
+        print(f"[policy bind] 거부: {e}", file=sys.stderr)
+        return 2
+    print(f"[policy bind] {args.route} → {args.profile} (by {rec['actor']})")
+    return 0
+
+
+def cmd_policy_snapshot(args) -> int:
+    mgr = _policy_manager(args)
+    try:
+        pv = mgr.snapshot(args.profile, actor=_actor(args), note=args.note or "")
+    except KeyError as e:
+        print(f"[policy snapshot] 거부: {e}", file=sys.stderr)
+        return 2
+    print(f"[policy snapshot] {args.profile} v{pv.version} 적재 "
+          f"(fingerprint={pv.fingerprint}, by {pv.actor})")
+    return 0
+
+
+def cmd_policy_versions(args) -> int:
+    mgr = _policy_manager(args)
+    vers = mgr.versions.versions(args.profile)
+    if args.json:
+        print(json.dumps([v.__dict__ for v in vers], ensure_ascii=False, indent=2))
+        return 0
+    if not vers:
+        print(f"(프로파일 {args.profile} 에 적재된 버전 없음 — policy snapshot 먼저)")
+        return 0
+    print(f"프로파일 {args.profile} 버전 이력:")
+    for v in vers:
+        mark = " *활성" if v.active else ""
+        print(f"  v{v.version:<3} {v.created_at}  by {v.actor:<16} "
+              f"fp={v.fingerprint}  {v.note}{mark}")
+    return 0
+
+
+def cmd_policy_rollback(args) -> int:
+    mgr = _policy_manager(args)
+    try:
+        out = mgr.rollback(args.profile, actor=_actor(args), to_version=args.to)
+    except (KeyError, ValueError) as e:
+        print(f"[policy rollback] 거부: {e}", file=sys.stderr)
+        return 2
+    if not out.applied:
+        print(f"[policy rollback] 거부(fail-closed): {out.error} "
+              f"— 직전 룰셋 유지(generation {out.generation_before})", file=sys.stderr)
+        return 1
+    print(f"[policy rollback] {args.profile} v{out.from_version}→v{out.to_version} "
+          f"무재기동 적용 (generation {out.generation_before}→{out.generation_after}, "
+          f"fingerprint={out.fingerprint})")
+    return 0
+
+
+def cmd_policy_audit(args) -> int:
+    mgr = _policy_manager(args)
+    records = mgr.audit.read_all()
+    chain = mgr.audit.verify_chain() if args.verify_chain else None
+    if args.json:
+        out = {"log": str(mgr.audit.path), "total": len(records), "records": records}
+        if chain is not None:
+            out["chain"] = chain
+        print(json.dumps(out, ensure_ascii=False, indent=2))
+    else:
+        print(f"변경 감사 로그: {mgr.audit.path}  (총 {len(records)}건)")
+        for r in records:
+            fv, tv = r.get("from_version"), r.get("to_version")
+            ver = (f" v{fv}→v{tv}" if fv is not None else (f" v{tv}" if tv is not None else ""))
+            print(f"  [{r['ts']}] {r['actor']:<16} {r['action']:<13} "
+                  f"{r['profile']}{ver}  {r.get('note','')}")
+        if chain is not None:
+            tail = "" if chain["ok"] else f" — {chain.get('error')} @seq {chain.get('broken_seq')}"
+            print(f"해시 체인: {'OK' if chain['ok'] else 'BROKEN'} ({chain['count']}건){tail}")
+    return 1 if chain is not None and not chain["ok"] else 0
+
+
+def cmd_policy_inspect(args) -> int:
+    mgr = _policy_manager(args)
+    profile = mgr.registry.profile_for_route(args.route)
+    res = mgr.inspect(args.route, args.text)
+    s = res.summary
+    out = {"route": args.route, "profile": profile, "blocked": bool(s.get("blocked")),
+           "action_counts": dict(s.get("action_counts", {})),
+           "finding_count": int(s.get("finding_count", 0))}
+    if args.json:
+        print(json.dumps(out, ensure_ascii=False, indent=2))
+    else:
+        verdict = "차단(blocked)" if out["blocked"] else "통과(allow/transform)"
+        print(f"경로 {args.route} → 프로파일 {profile}: {verdict} "
+              f"(findings={out['finding_count']}, actions={out['action_counts']})")
+    return 1 if out["blocked"] else 0
+
+
 def cmd_flow_tap(args) -> int:
     # 캡처 레이어 운영 명령(public 목적지 flow tap·우회 탐지)을 통합 CLI 로 편입(CMP-143).
     # 기존 모듈 진입점(``python3 -m capture.flow_tap``)은 하위호환으로 그대로 유지.
@@ -395,6 +532,48 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--targets", default=None, help="capture_targets.yaml 경로")
     p.add_argument("--out", default=None, help="flow 로그 출력 base_dir(기본 logs/packets)")
     p.set_defaults(func=cmd_flow_tap)
+
+    p = sub.add_parser("policy",
+                       help="정책 운영 자동화: 다중 프로파일·묶기·버전/되돌리기·변경 감사(CMP-144)")
+    psub = p.add_subparsers(dest="policy_action", required=True)
+
+    pp = psub.add_parser("list", help="프로파일·묶기·활성 버전 요약")
+    pp.add_argument("--json", action="store_true")
+    pp.set_defaults(func=cmd_policy_list)
+
+    pp = psub.add_parser("bind", help="경로/테넌트 → 프로파일 묶기(런타임 오버레이)")
+    pp.add_argument("route", help="경로/테넌트 키")
+    pp.add_argument("profile", help="프로파일 이름")
+    pp.add_argument("--actor", default=None, help="변경 주체(기본 $NUFI_ACTOR/현재 사용자)")
+    pp.set_defaults(func=cmd_policy_bind)
+
+    pp = psub.add_parser("snapshot", help="현재 프로파일 정책을 새 불변 버전으로 적재")
+    pp.add_argument("profile", help="프로파일 이름")
+    pp.add_argument("--note", default=None, help="버전 메모")
+    pp.add_argument("--actor", default=None)
+    pp.set_defaults(func=cmd_policy_snapshot)
+
+    pp = psub.add_parser("versions", help="프로파일 버전 이력")
+    pp.add_argument("profile", help="프로파일 이름")
+    pp.add_argument("--json", action="store_true")
+    pp.set_defaults(func=cmd_policy_versions)
+
+    pp = psub.add_parser("rollback", help="이전(또는 --to) 버전으로 무재기동 되돌리기")
+    pp.add_argument("profile", help="프로파일 이름")
+    pp.add_argument("--to", type=int, default=None, help="되돌릴 버전(기본: 활성 직전)")
+    pp.add_argument("--actor", default=None)
+    pp.set_defaults(func=cmd_policy_rollback)
+
+    pp = psub.add_parser("audit", help="변경 감사 로그(누가·언제·무엇을) 조회")
+    pp.add_argument("--verify-chain", action="store_true", help="추가전용 해시 체인 무결성 검증")
+    pp.add_argument("--json", action="store_true")
+    pp.set_defaults(func=cmd_policy_audit)
+
+    pp = psub.add_parser("inspect", help="경로가 어느 프로파일로 묶이고 어떻게 결정되는지 확인")
+    pp.add_argument("route", help="경로/테넌트 키")
+    pp.add_argument("text", help="검사할 텍스트")
+    pp.add_argument("--json", action="store_true")
+    pp.set_defaults(func=cmd_policy_inspect)
 
     args = ap.parse_args(argv)
     return args.func(args)

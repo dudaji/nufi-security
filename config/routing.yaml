@@ -34,3 +34,19 @@ provider_egress:
   openai: public
   google: public
   azure: public
+
+# --- 정책 운영 자동화 (v0.0.5 B1 · CMP-144) ---------------------------------
+# 다중 프로파일 동시 운영 + 경로/테넌트별 묶기(binding). 프로파일 = 이름이 붙은
+# 룰셋. 미선언 키(patterns/confidential/edm)는 base config(config/*)를 공유하고,
+# policy(엔티티 동작)만 override 하는 것이 일반적이다.
+# 운영: ``nufi-egress policy list|bind|snapshot|rollback|audit`` (무재기동·CMP-124).
+policy_default_profile: default     # 묶이지 않은 경로의 기본 프로파일
+policy_profiles:
+  # default 는 선언 생략 가능 — base config(config/policy.yaml)를 그대로 쓴다.
+  strict:
+    description: 한국어 PII·비밀·기밀을 최대 차단(strict-kr-pii 프리셋 구체화).
+    policy: config/profiles/strict/policy.yaml
+
+# 선언 기본 묶기(경로/테넌트 키 → 프로파일). 런타임 변경은 policy bind 가
+# config/policy_bindings.yaml(오버레이)에 기록하며 이 선언 위에 덮어쓴다.
+policy_bindings: {}

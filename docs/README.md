@@ -37,6 +37,8 @@
 >
 > **'내 트래픽 중 몇 %가 게이트웨이를 통과'(커버리지 보증·상시)를 보려면** → [`CLI.md#coverage`](CLI.md#coverage)(v0.0.3 O2 / CMP-133 — `coverage`/`monitor` 상시 리포트 + 우회 알림). 1-명령 데모: [`scripts/demo_coverage.sh`](../scripts/demo_coverage.sh).
 >
+> **여러 정책을 한 게이트웨이에서 동시 운영(다중 프로파일·경로별 묶기·무재기동 되돌리기·변경 감사)하려면** → [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md)(v0.0.5 B1 / CMP-144 — `nufi-egress policy …`). 1-명령 데모: [`scripts/demo_policy_ops.sh`](../scripts/demo_policy_ops.sh).
+>
 > **v0.0.3 데모를 직접 돌려보려면** → [`DEMO_v0.0.3.md`](DEMO_v0.0.3.md)(O1·O2 재현 매뉴얼) — `./scripts/demo_coverage.sh` · `./scripts/demo_dashboards.sh`(둘 다 root 불필요·1-명령 PASS/FAIL).
 >
 > **버전별 릴리스 기준(데모·매뉴얼·README 링크 DoD)을 보려면** → [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md)(보드 상시 지시 CMP-132).
@@ -74,6 +76,7 @@
 | [`DEMO_CMP85.md`](DEMO_CMP85.md) | CMP-85 | 통합 데모 **재현 매뉴얼** | ✅ **현행 데모 진입점** |
 | [`DEMO_RESULT_CMP85.md`](DEMO_RESULT_CMP85.md) · [`.html`](DEMO_RESULT_CMP85.html) | CMP-85 | 데모 **결과 보고서** + 스크린샷 | ✅ 최신 결과 |
 | [`DEMO_v0.0.3.md`](DEMO_v0.0.3.md) | CMP-138 | v0.0.3 O1·O2 **1-명령 데모** 재현 매뉴얼 — [`scripts/demo_coverage.sh`](../scripts/demo_coverage.sh)·[`scripts/demo_dashboards.sh`](../scripts/demo_dashboards.sh) | ✅ **v0.0.3 데모 진입점** |
+| [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) | CMP-144 | **정책 운영 자동화 매뉴얼**(v0.0.5 B1) — 다중 프로파일·경로별 묶기·무재기동 되돌리기·변경 감사(`nufi-egress policy …`). 1-명령 데모: [`scripts/demo_policy_ops.sh`](../scripts/demo_policy_ops.sh) | ✅ **v0.0.5 운영 진입점** |
 | [`CMP-84_CPO_verification_transcript.txt`](CMP-84_CPO_verification_transcript.txt) | CMP-84 | M1+M2 독립검수 트랜스크립트 | 📄 증거 |
 | [`CMP-82_NuFi_Egress-Audit_다음단계.md`](CMP-82_NuFi_Egress-Audit_다음단계.md) | CMP-82 | 데모 이후 다음단계 정리 | 📄 참조 |
 

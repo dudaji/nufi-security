@@ -6,6 +6,20 @@
 
 ## [Unreleased]
 
+### Added
+- **정책 운영 자동화 (v0.0.5 B1 · CMP-144)** — CMP-124(단일 프로파일·단건 무재기동
+  핫리로드)를 운영 규모로 확장. 한 게이트웨이에서 **여러 정책 프로파일 동시 운영** +
+  **경로/테넌트별 묶기(binding)**, 정책 **버전 관리·무재기동 되돌리기(rollback)**,
+  **변경 감사 로그**(누가·언제·무엇을 + 추가전용 해시 체인 변조탐지).
+  - `nufi-egress policy {list,bind,snapshot,versions,rollback,audit,inspect}` 서브커맨드.
+  - `config/routing.yaml` 확장: `policy_profiles`(프로파일 레지스트리) + `policy_bindings`
+    (묶기). 런타임 묶기 변경은 `config/policy_bindings.yaml` 오버레이에 기록(routing.yaml
+    주석 비파괴). 예시 프로파일 `config/profiles/strict/`(strict-kr-pii 구체화).
+  - 구현 `enforcement/policy_ops.py` · 매뉴얼 [`docs/OPS_POLICY_AT_SCALE.md`](docs/OPS_POLICY_AT_SCALE.md)
+    · 1-명령 데모 [`scripts/demo_policy_ops.sh`](scripts/demo_policy_ops.sh)(4/4 PASS, root 불필요)
+    · 검증 `tests/test_cmp144_policy_ops.py`(4 케이스).
+  - 범위 밖(Won't → v0.1.0): 멀티테넌시·권한관리(RBAC)·테넌트 격리.
+
 ## [0.0.4] - 2026-06-28
 
 도입성(adoption) 패치 — **새 기능 없음**. v0.0.3(관측 O1·보증 O2) 위에 설치형 패키징,

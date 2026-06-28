@@ -17,7 +17,7 @@ python3 -m enforcement.cli --help            # 전체 서브커맨드
 
 ```
 usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
-                   {render,apply,disable,status,feedback,doctor,coverage,monitor,init,audit,targets,flow-tap} ...
+                   {render,apply,disable,status,feedback,doctor,coverage,monitor,init,audit,targets,flow-tap,policy} ...
 ```
 
 | 전역 옵션 | 무엇 | 기본 |
@@ -39,6 +39,7 @@ usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
 | [`audit`](#audit) | 비동기 감사 봇(report/daemon/once) + §4 감사로그 조회(query) | 불필요 |
 | [`targets`](#targets) | 캡처 대상(`capture_targets.yaml`) 파생/조회 + BPF 필터 | 불필요 |
 | [`flow-tap`](#flow-tap) | public 목적지 flow tap — 우회 탐지(`--simulate` 리플레이/`--live`) | 라이브는 root/CAP_NET_RAW |
+| [`policy`](#policy) | 정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사 | 불필요 |
 
 > **신규 도입 5분 경로:** `init audit-only` → SDK/게이트웨이 배선 → `doctor`(core-3 GREEN 확인) → `status`/감사 로그 관찰 → 준비되면 `apply`. 자세한 결정 트리는 [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md).
 
@@ -356,6 +357,46 @@ nufi-egress flow-tap --simulate samples/flow_replay.jsonl
 ```
 
 > 종료코드: 성공 시 0(우회를 탐지해도 0 — 판정은 `coverage`/`monitor`/감사 봇이 게이트). `--simulate`·`--live` 둘 다 없으면 2(인자 오류).
+
+---
+
+## `policy`
+
+정책 운영 자동화(CMP-144 · v0.0.5 B1) — 한 게이트웨이에서 **여러 정책 프로파일을 동시
+운영**하고, **경로/테넌트별로 묶고**, 정책을 **버전 관리·무재기동 되돌리기**하며, **변경을
+감사**합니다. 엔진은 `enforcement/policy_ops.py`, 전체 매뉴얼은
+[`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md), 1-명령 데모는
+[`scripts/demo_policy_ops.sh`](../scripts/demo_policy_ops.sh)(4/4 PASS).
+
+```
+usage: nufi-egress policy {list,bind,snapshot,versions,rollback,audit,inspect} ...
+```
+
+| 액션 | 무엇 |
+|---|---|
+| `list` | 프로파일·묶기·활성 버전 요약 |
+| `bind <route> <profile>` | 경로/테넌트 → 프로파일 묶기(런타임 오버레이에 영속) |
+| `snapshot <profile> [--note N]` | 현재 정책을 새 불변 버전으로 적재(active 갱신) |
+| `versions <profile>` | 버전 이력(작성자·시각·지문·메모·활성) |
+| `rollback <profile> [--to N]` | 이전(또는 지정) 버전으로 **무재기동** 되돌리기 |
+| `audit [--verify-chain]` | 변경 감사 로그(누가·언제·무엇을) + 해시 체인 검증 |
+| `inspect <route> <text>` | 경로가 어느 프로파일로 묶이고 어떻게 결정되는지 확인 |
+
+- 프로파일/묶기는 `config/routing.yaml`(`policy_profiles`·`policy_bindings`)에서 선언하고,
+  런타임 묶기 변경은 `config/policy_bindings.yaml` 오버레이에 기록됩니다.
+- 변경 주체는 `--actor`, 없으면 `$NUFI_ACTOR`/현재 사용자. 상태 경로는
+  `POLICY_BINDINGS_OVERLAY`·`POLICY_VERSIONS_DIR`·`POLICY_CHANGE_LOG` 로 격리 가능.
+
+```bash
+nufi-egress policy bind tenant-acme strict          # 경로 묶기
+nufi-egress policy snapshot strict --note "기준선"   # 롤백 지점 박제
+nufi-egress policy rollback strict                  # 직전 버전으로 무재기동 복귀
+nufi-egress policy audit --verify-chain             # 변경 감사 + 변조탐지(체인 BROKEN→exit 1)
+```
+
+> 종료코드: 일반 0. `inspect` 는 차단 결정 시 1(게이트 신호), `audit --verify-chain` 은 체인
+> 변조 시 1. 미선언 프로파일 묶기/존재하지 않는 버전 되돌리기는 2(거부), 깨진 버전 되돌리기는
+> fail-closed 거부로 1.
 
 ---
 
