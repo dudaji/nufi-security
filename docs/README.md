@@ -62,12 +62,12 @@
 | 🏛 [`ARCHITECTURE.md`](ARCHITECTURE.md) | 통합 아키텍처 + 4개 시퀀스 (Mermaid) | ✅ **단일 권위 — 현행 흐름 정합의 기준** |
 
 ### 설계·명세 (🕮 역사적 — `docs/history/`, 왜·당시 결정)
-| 문서 | 단계 | 상태 |
+| 문서 | 내용 | 상태 |
 |---|---|---|
-| [`history/SPEC.md`](history/SPEC.md) | 기반 게이트웨이 + 탐지 | 🕮 역사적 (현행 흐름은 ARCHITECTURE.md) |
-| [`history/SPEC_EGRESS_ENFORCEMENT.md`](history/SPEC_EGRESS_ENFORCEMENT.md) | 우회 차단 | 🕮 역사적 → 빌드됨 |
-| [`history/SPEC_M4.md`](history/SPEC_M4.md) | 기밀 1차 탐지 | 🕮 역사적 → 구현됨 |
-| [`history/IMPL_M4.md`](history/IMPL_M4.md) | 기밀 1차 탐지(키워드/표식 + EDM) 구현 노트 | 🕮 역사적 → 구현됨 |
+| 🕮 [기반 게이트웨이·탐지 명세](history/SPEC.md) | 기반 게이트웨이 + 개인정보·비밀 탐지 설계 | 🕮 역사적 (현행 흐름은 ARCHITECTURE.md) |
+| 🕮 [우회 차단 명세](history/SPEC_EGRESS_ENFORCEMENT.md) | nftables 우회 차단·패킷레이어 설계 | 🕮 역사적 → 빌드됨 |
+| 🕮 [기밀 탐지 명세](history/SPEC_M4.md) | 기밀 1차 탐지(키워드·표식·EDM) 설계 | 🕮 역사적 → 구현됨 |
+| 🕮 [기밀 탐지 구현 노트](history/IMPL_M4.md) | 기밀 1차 탐지 구현 상세·결정 사유 | 🕮 역사적 → 구현됨 |
 
 ### 빌드·데모·결과 (현행)
 | 문서 | 무엇 | 상태 |
@@ -83,11 +83,11 @@
 ## 진척 한눈에
 
 ```
-게이트웨이 + 개인정보/비밀 탐지  ──✅ (history/SPEC.md / DEMO.md)
+게이트웨이 + 개인정보/비밀 탐지  ──✅ (기반 게이트웨이·탐지 명세 / DEMO.md)
    └ 사내/외부 차등감사 + 패킷레이어 + 비동기 감사봇 ──✅
         └ 우회 차단(nftables) ──✅ 설계 → 빌드
 가역 가명화/원복 + 매핑 Vault ──✅ (egress_audit/pseudonymize.py)
-기밀 1차 탐지(키워드/표식 + EDM) ──✅ (history/IMPL_M4.md)
+기밀 1차 탐지(키워드/표식 + EDM) ──✅ (기밀 탐지 구현 노트)
 벤치·하드닝 + KoELECTRA/INT8 실측 ──✅
    · 한국어 개인정보 재현율 0.946 ≥ 0.90 · INT8 512자 지연 p95 38ms · 하드닝 12/12
 후속 ──🔜 NER 베이스 모델 격상 · 프로덕션 온프렘 지연 재측정
