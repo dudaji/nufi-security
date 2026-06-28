@@ -91,7 +91,7 @@
 
 운영(Operate)을 **기능으로 완성**한 버전. v0.0.4(도입 표면)가 설치·통합 CLI·입문을 닦은 위에,
 정책을 **규모 있게 운영**하고 그동안 미뤄온 **정확도 과제를 마무리**한다. 게이트(gate) 결정
-로직·신규 차단 규칙은 무변경(범위: 운영/설정/측정). 재현 데모·매뉴얼: [`docs/DEMO_v0.0.5.md`](docs/DEMO_v0.0.5.md).
+로직·신규 차단 규칙은 무변경(범위: 운영/설정/측정). 재현 데모·매뉴얼: [`docs/history/DEMO_v0.0.5.md`](docs/history/DEMO_v0.0.5.md).
 
 ### Added
 - **정책 운영 자동화** — v0.0.2 의 단일 프로파일·단건 무재기동 핫리로드(hot reload)를
@@ -167,7 +167,7 @@ Operate(운영) 호라이즌 첫 릴리스 — *이미 100% 적재되는* 감사
 - **O1·O2 1-명령 데모 + 재현 매뉴얼**: `scripts/demo_coverage.sh`
   (coverage PASS/누수탐지 + monitor 우회 알림) · `scripts/demo_dashboards.sh`(4 엔드포인트
   200 + viewer 렌더 + read-only 405, 헤드리스 curl). 둘 다 root 불필요 1-명령 PASS/FAIL.
-  재현 매뉴얼 `docs/DEMO_v0.0.3.md`, PASS 경로용 샘플 `samples/flow_clean.jsonl`.
+  재현 매뉴얼 `docs/history/DEMO_v0.0.3.md`, PASS 경로용 샘플 `samples/flow_clean.jsonl`.
 
 ### Fixed
 - 대시보드 샘플 flow 픽스처가 어댑터 디렉터리 글롭 `flow-*.jsonl` 과 불일치하여

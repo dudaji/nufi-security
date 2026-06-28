@@ -6,7 +6,7 @@
 > 실습 가이드입니다. 레퍼런스가 아니라 **따라 하며 감을 잡는** 문서예요.
 >
 > - **레퍼런스(무엇을 어떤 플래그로):** [`CLI.md`](CLI.md) · [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md)
-> - **재현 가능한 데모(검증 결과):** [`DEMO.md`](DEMO.md) · [`DEMO_v0.0.3.md`](DEMO_v0.0.3.md)
+> - **재현 가능한 데모(검증 결과):** [`DEMO.md`](DEMO.md) · [`history/DEMO_v0.0.3.md`](history/DEMO_v0.0.3.md)
 > - **이 문서:** 그 둘을 **이야기(시나리오) 한 줄기**로 엮어 처음 쓰는 사람이 손으로 돌려 보게 함.
 >
 > ⏱ 소요: 약 20~30분 · 🔌 **네트워크/ root 불필요**(에어갭·CI 에서 그대로 동작 — 외부 LLM 은 stub, 패킷 캡처는 `--simulate` 리플레이로 재현).

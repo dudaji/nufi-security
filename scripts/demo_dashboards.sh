@@ -16,7 +16,7 @@
 # 멱등: 빈 포트를 자동 선택하고, 본 스크립트가 띄운 서버만 정리한다(EXIT trap).
 # root 불필요 · 외부 네트워크 호출 0 (stdlib HTTP + 동봉 샘플 픽스처).
 # 사용: ./scripts/demo_dashboards.sh   (PORT 로 시작 포트 지정 가능)
-# 매뉴얼: docs/DEMO_v0.0.3.md · dashboards/README.md
+# 매뉴얼: docs/history/DEMO_v0.0.3.md · dashboards/README.md
 # =============================================================================
 set -uo pipefail
 cd "$(dirname "$0")/.."

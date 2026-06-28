@@ -27,9 +27,9 @@ python3 -m pip install -r requirements.txt   # PyYAML·fastapi·uvicorn·httpx
 | [`demo_report.sh`](../scripts/demo_report.sh) | SLA·규정준수 리포트 — 기간별 충족/위반 판정 + 해시체인 무결성 게이트 | 6 | `./scripts/demo_report.sh` | [`REPORTING.md`](REPORTING.md) |
 | [`demo_policy_ops.sh`](../scripts/demo_policy_ops.sh) | 정책 운영 — 다중 프로파일 · 경로별 바인딩 · 무재기동 롤백 · 변경 감사 | 4 | `./scripts/demo_policy_ops.sh` | [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) |
 | [`demo_multitenancy.sh`](../scripts/demo_multitenancy.sh) | 멀티테넌시·RBAC — 테넌트 읽기 경계 + viewer/operator 읽기전용 역할 | 6 | `./scripts/demo_multitenancy.sh` | [`MULTITENANCY.md`](MULTITENANCY.md) |
-| [`demo_audit_separation.sh`](../scripts/demo_audit_separation.sh) | 차등 감사 — public/private 분리 저장 + 패킷 레이어 우회 탭 + 비동기 감사봇 | 6 | `./scripts/demo_audit_separation.sh` | [`DEMO_v0.0.5.md`](DEMO_v0.0.5.md) |
-| [`demo_accuracy.sh`](../scripts/demo_accuracy.sh) | 정확도 재현 — KR_PERSON INT8 Wilson CI 하한 ≥ 0.85 + 온프렘 p95 표 *(측정 산출물 필요)* | 2 | `./scripts/demo_accuracy.sh` | [`DEMO_v0.0.5.md`](DEMO_v0.0.5.md) |
-| [`demo_bypass_enforcement.sh`](../scripts/demo_bypass_enforcement.sh) | 우회 차단(ENFORCED) — 격리 netns 에서 실제 egress drop *(root/nft 필요)* | 3 | `sudo bash scripts/demo_bypass_enforcement.sh` | [`DEMO_v0.0.5.md`](DEMO_v0.0.5.md) |
+| [`demo_audit_separation.sh`](../scripts/demo_audit_separation.sh) | 차등 감사 — public/private 분리 저장 + 패킷 레이어 우회 탭 + 비동기 감사봇 | 6 | `./scripts/demo_audit_separation.sh` | [`history/DEMO_v0.0.5.md`](history/DEMO_v0.0.5.md) |
+| [`demo_accuracy.sh`](../scripts/demo_accuracy.sh) | 정확도 재현 — KR_PERSON INT8 Wilson CI 하한 ≥ 0.85 + 온프렘 p95 표 *(측정 산출물 필요)* | 2 | `./scripts/demo_accuracy.sh` | [`history/DEMO_v0.0.5.md`](history/DEMO_v0.0.5.md) |
+| [`demo_bypass_enforcement.sh`](../scripts/demo_bypass_enforcement.sh) | 우회 차단(ENFORCED) — 격리 netns 에서 실제 egress drop *(root/nft 필요)* | 3 | `sudo bash scripts/demo_bypass_enforcement.sh` | [`history/DEMO_v0.0.5.md`](history/DEMO_v0.0.5.md) |
 | [`demo_all.sh`](../scripts/demo_all.sh) | 전체 데모 러너 — 위 데모를 차례로 실행하고 집계 PASS/FAIL 출력 | — | `./scripts/demo_all.sh` | 본 문서 |
 
 > `demo_bypass_enforcement.sh` 는 `demo_audit_separation.sh --enforce` 경로가 root/nft 가

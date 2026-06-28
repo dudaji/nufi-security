@@ -16,7 +16,7 @@
 # --simulate(기본): root 없이(에어갭/CI) flow 리플레이로 집계. 외부 네트워크 호출 0.
 #                   라이브 캡처(--live)는 root/CAP_NET_RAW 필요 — 데모 범위 밖.
 # 사용: ./scripts/demo_coverage.sh
-# 매뉴얼: docs/DEMO_v0.0.3.md · docs/CLI.md#coverage / #monitor
+# 매뉴얼: docs/history/DEMO_v0.0.3.md · docs/CLI.md#coverage / #monitor
 # =============================================================================
 set -uo pipefail
 cd "$(dirname "$0")/.."

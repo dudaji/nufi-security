@@ -18,15 +18,19 @@
 
 ## 👉 여기서부터 읽으세요 (추천 순서)
 
-보안 게이트웨이의 **전체 그림 → 현행 핵심 → 후속**을 따라가는 순서입니다.
+처음 보는 사람이 **전체 그림 → 손으로 실습 → 통합 → 데모 재현**을 따라가는 순서입니다.
+모두 **현행(living) 문서**라 항상 최신입니다. (설계 배경·당시 결정이 궁금하면 아래 🕮 역사 문서 참조.)
 
 | 순서 | 문서 | 무엇 | 읽는 이유 |
 |---|---|---|---|
 | 1 | [`../README.md`](../README.md) | 제품 개요 + 빠른 시작 | 한 화면으로 "무엇/어떻게 돌리나" |
 | 2 | 🏛 [`ARCHITECTURE.md`](ARCHITECTURE.md) | **단일 권위 아키텍처** (컴포넌트 + 4개 시퀀스 Mermaid) | **전체 그림** — 흐름·컴포넌트의 현행 정합 |
-| 3 | [`SPEC.md`](SPEC.md) → [`DEMO.md`](DEMO.md) | 기반 명세·데모 | 게이트웨이 인터셉트 + 개인정보/비밀 탐지·차단 |
-| 4 | [`SPEC_EGRESS_ENFORCEMENT.md`](SPEC_EGRESS_ENFORCEMENT.md) | 우회 차단 | 탐지에서 **실제 차단(nftables)**으로 |
-| 5 | [`SPEC_M4.md`](SPEC_M4.md) → [`IMPL_M4.md`](IMPL_M4.md) | 기밀 1차 탐지 | ✅ 키워드/표식 + EDM 구현완료 |
+| 3 | [`HANDS_ON.md`](HANDS_ON.md) | **입문 실습** (20~30분·관리자 권한 불필요) | 토이 프로젝트 1개를 SDK 한 줄 전환 → `nufi-egress` CLI 운영까지 손으로 |
+| 4 | [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md) + [`CLI.md`](CLI.md) | 통합 가이드 + CLI 레퍼런스 | 사내 서빙(챗봇·RAG·에이전트) 앞단에 NuFi 끼우기 · 전 서브커맨드 |
+| 5 | [`DEMO.md`](DEMO.md) | **전체 데모 카탈로그** | 1-명령 PASS/FAIL 재현 데모 모음 (어떤 데모를 어떻게 돌리나) |
+
+> 🕮 **설계 배경·마일스톤 명세(역사적 스냅샷)** 는 [`history/`](history/) 폴더로 분리했습니다 — 처음엔
+> 읽지 않아도 됩니다. 현행 흐름은 위 living 문서가 권위이며, history 는 "왜·당시 결정"의 근거 보관용입니다.
 
 > **처음이라 손으로 따라하며 감을 잡으려면** → [`HANDS_ON.md`](HANDS_ON.md)(토이 프로젝트 하나를
 > SDK 한 줄 전환부터 `nufi-egress` CLI 운영까지 끝까지 실습 — 20~30분·관리자 권한 불필요).
@@ -44,8 +48,9 @@
 > 감사)하려면 → [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md)(`nufi-egress policy …`).
 > 1-명령 데모: [`../scripts/demo_policy_ops.sh`](../scripts/demo_policy_ops.sh).
 >
-> **버전별 데모를 직접 돌려보려면** → [`DEMO_v0.0.5.md`](DEMO_v0.0.5.md) · [`DEMO_v0.0.3.md`](DEMO_v0.0.3.md)
-> (각 1-명령 PASS/FAIL 재현 매뉴얼·관리자 권한 불필요).
+> **버전별 데모를 직접 돌려보려면** → 현행 카탈로그는 [`DEMO.md`](DEMO.md), 과거 버전 재현 매뉴얼은
+> [`history/DEMO_v0.0.5.md`](history/DEMO_v0.0.5.md) · [`history/DEMO_v0.0.3.md`](history/DEMO_v0.0.3.md)
+> (각 1-명령 PASS/FAIL·관리자 권한 불필요).
 
 ---
 
@@ -56,33 +61,33 @@
 |---|---|---|
 | 🏛 [`ARCHITECTURE.md`](ARCHITECTURE.md) | 통합 아키텍처 + 4개 시퀀스 (Mermaid) | ✅ **단일 권위 — 현행 흐름 정합의 기준** |
 
-### 설계·명세 (역사적 — 왜·당시 결정)
+### 설계·명세 (🕮 역사적 — `docs/history/`, 왜·당시 결정)
 | 문서 | 단계 | 상태 |
 |---|---|---|
-| [`SPEC.md`](SPEC.md) | 기반 게이트웨이 + 탐지 | 🕮 역사적 (현행 흐름은 ARCHITECTURE.md) |
-| [`SPEC_EGRESS_ENFORCEMENT.md`](SPEC_EGRESS_ENFORCEMENT.md) | 우회 차단 | 🕮 역사적 → 빌드됨 |
-| [`SPEC_M4.md`](SPEC_M4.md) | 기밀 1차 탐지 | 🕮 역사적 → 구현됨 |
+| [`history/SPEC.md`](history/SPEC.md) | 기반 게이트웨이 + 탐지 | 🕮 역사적 (현행 흐름은 ARCHITECTURE.md) |
+| [`history/SPEC_EGRESS_ENFORCEMENT.md`](history/SPEC_EGRESS_ENFORCEMENT.md) | 우회 차단 | 🕮 역사적 → 빌드됨 |
+| [`history/SPEC_M4.md`](history/SPEC_M4.md) | 기밀 1차 탐지 | 🕮 역사적 → 구현됨 |
+| [`history/IMPL_M4.md`](history/IMPL_M4.md) | 기밀 1차 탐지(키워드/표식 + EDM) 구현 노트 | 🕮 역사적 → 구현됨 |
 
-### 빌드·데모·결과
+### 빌드·데모·결과 (현행)
 | 문서 | 무엇 | 상태 |
 |---|---|---|
-| [`IMPL_M4.md`](IMPL_M4.md) | 기밀 1차 탐지(키워드/표식 + EDM) 구현 | ✅ 구현완료 |
 | [`HANDS_ON.md`](HANDS_ON.md) | **입문 튜토리얼** — 토이 프로젝트 1개를 SDK 전환 + CLI 운영으로 끝까지 실습 | ✅ **입문 진입점** |
-| [`DEMO.md`](DEMO.md) | 기반 데모 | ✅ 완료 (구버전) |
-| [`DEMO_v0.0.3.md`](DEMO_v0.0.3.md) | v0.0.3 **1-명령 데모** 재현 매뉴얼 | ✅ v0.0.3 데모 진입점 |
-| [`DEMO_v0.0.5.md`](DEMO_v0.0.5.md) | v0.0.5 **1-명령 데모/재현** 매뉴얼 | ✅ v0.0.5 데모 진입점 |
+| [`DEMO.md`](DEMO.md) | **전체 데모 카탈로그** — 기능별 1-명령 `demo_*.sh` PASS/FAIL 모음 | ✅ **데모 진입점 (living)** |
 | [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) | **정책 운영 자동화 매뉴얼** (`nufi-egress policy …`) | ✅ v0.0.5 운영 진입점 |
+| [`history/DEMO_v0.0.3.md`](history/DEMO_v0.0.3.md) | v0.0.3 1-명령 데모 재현 매뉴얼 | 🕮 역사적 — 버전별 스냅샷 |
+| [`history/DEMO_v0.0.5.md`](history/DEMO_v0.0.5.md) | v0.0.5 1-명령 데모/재현 매뉴얼 | 🕮 역사적 — 버전별 스냅샷 |
 
 ---
 
 ## 진척 한눈에
 
 ```
-게이트웨이 + 개인정보/비밀 탐지  ──✅ (SPEC.md / DEMO.md)
+게이트웨이 + 개인정보/비밀 탐지  ──✅ (history/SPEC.md / DEMO.md)
    └ 사내/외부 차등감사 + 패킷레이어 + 비동기 감사봇 ──✅
         └ 우회 차단(nftables) ──✅ 설계 → 빌드
 가역 가명화/원복 + 매핑 Vault ──✅ (egress_audit/pseudonymize.py)
-기밀 1차 탐지(키워드/표식 + EDM) ──✅ (IMPL_M4.md)
+기밀 1차 탐지(키워드/표식 + EDM) ──✅ (history/IMPL_M4.md)
 벤치·하드닝 + KoELECTRA/INT8 실측 ──✅
    · 한국어 개인정보 재현율 0.946 ≥ 0.90 · INT8 512자 지연 p95 38ms · 하드닝 12/12
 후속 ──🔜 NER 베이스 모델 격상 · 프로덕션 온프렘 지연 재측정

@@ -1,6 +1,6 @@
 """NuFi Egress Enforcement (트랙 B · CMP-94) — 모델 (a) nftables egress 허용목록.
 
-설계 스펙: ``docs/SPEC_EGRESS_ENFORCEMENT.md`` (CMP-93). 거버넌스: 신규 CMP-58 승인
+설계 스펙: ``docs/history/SPEC_EGRESS_ENFORCEMENT.md`` (CMP-93). 거버넌스: 신규 CMP-58 승인
 ``43dd134b`` (트랙 A 감사 승인 ``3053e076`` 과 별개) — 보드 approved.
 
 구성:

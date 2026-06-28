@@ -12,7 +12,7 @@
 # root 불필요 · 외부 네트워크 호출 0 · 결정론적(stdlib + 커밋 JSON).
 #
 # 사용: ./scripts/demo_accuracy.sh
-# 매뉴얼: docs/DEMO_v0.0.5.md · 측정 스택: docs/M5_MEASUREMENT_REPORT.md
+# 매뉴얼: docs/history/DEMO_v0.0.5.md · 측정 스택: docs/M5_MEASUREMENT_REPORT.md
 # 재측정: PYTHONPATH=~/.cache/m5_libs python3 scripts/export_onnx_int8.py   # per-channel INT8 산출
 #         PYTHONPATH=~/.cache/m5_libs python3 scripts/bench_m5.py --recall ...  # recall 재측정
 # =============================================================================

@@ -1,7 +1,7 @@
 # NuFi Egress-Audit Gateway — Architecture (단일 권위 문서)
 
-> **이 문서가 아키텍처의 단일 권위(single source of truth)** 입니다. 마일스톤별 SPEC(`SPEC*.md`)·구현
-> 노트(`IMPL_M4.md`)는 **역사적/세부** 자료로 남기며, 흐름·컴포넌트의 현행 정합은 이 파일을 따릅니다.
+> **이 문서가 아키텍처의 단일 권위(single source of truth)** 입니다. 마일스톤별 SPEC(`history/SPEC*.md`)·구현
+> 노트(`history/IMPL_M4.md`)는 **역사적/세부** 자료로 `docs/history/` 에 보관하며, 흐름·컴포넌트의 현행 정합은 이 파일을 따릅니다.
 >
 > 다이어그램은 외부 이미지가 아니라 **in-repo Mermaid** 입니다. 코드와 같은 PR 에서 갱신되어 드리프트에
 > 강합니다(아래 [§7 드리프트 방지](#7-드리프트-방지-drift-resistance) 참조).
@@ -351,8 +351,8 @@ sequenceDiagram
 
 ### 7.1 단일 권위 + 이력 강등
 - 본 `ARCHITECTURE.md` 가 **아키텍처 진입점**(단일 권위). `docs/README.md` 인덱스가 이를 최상단으로 링크.
-- 마일스톤 SPEC(`SPEC.md`·`SPEC_EGRESS_ENFORCEMENT.md`·`SPEC_M4.md`)과 IMPL 노트는
-  **역사적/세부**로 강등 — "왜·당시 결정"의 근거로만 참조하고, 현행 흐름은 본 문서가 권위.
+- 마일스톤 SPEC(`history/SPEC.md`·`history/SPEC_EGRESS_ENFORCEMENT.md`·`history/SPEC_M4.md`)과 IMPL 노트는
+  **역사적/세부**로 강등 — `docs/history/` 에 보관하고 "왜·당시 결정"의 근거로만 참조하며, 현행 흐름은 본 문서가 권위.
 
 ### 7.2 문서 정합성 체크리스트 (흐름 바꾸는 PR/마일스톤 필수)
 아래 중 하나라도 바꾸는 PR 은 **같은 PR 에서 ARCHITECTURE.md 를 갱신**한다(미갱신 시 리뷰에서 되돌림):
@@ -414,10 +414,10 @@ sequenceDiagram
 ## 8. 관련 문서
 
 - 읽기 순서·상태표: [`docs/README.md`](README.md)
-- 운영(정책 운영 자동화) v0.0.5 B1: [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) · 데모 [`DEMO_v0.0.5.md`](DEMO_v0.0.5.md)
-- 기반 명세: [`SPEC.md`](SPEC.md)
-- Enforcement(우회 차단): [`SPEC_EGRESS_ENFORCEMENT.md`](SPEC_EGRESS_ENFORCEMENT.md)
-- 기밀 1차 탐지: [`SPEC_M4.md`](SPEC_M4.md) · [`IMPL_M4.md`](IMPL_M4.md)
+- 운영(정책 운영 자동화) v0.0.5 B1: [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) · 데모 [`DEMO_v0.0.5.md`](history/DEMO_v0.0.5.md)
+- 기반 명세: [`SPEC.md`](history/SPEC.md)
+- Enforcement(우회 차단): [`SPEC_EGRESS_ENFORCEMENT.md`](history/SPEC_EGRESS_ENFORCEMENT.md)
+- 기밀 1차 탐지: [`SPEC_M4.md`](history/SPEC_M4.md) · [`IMPL_M4.md`](history/IMPL_M4.md)
 - 릴리스: [`../CHANGELOG.md`](../CHANGELOG.md) · [`../VERSION`](../VERSION)
 
 *최초 작성: 2026-06-27 — v0.0.1 단일 권위 아키텍처 + 4개 시퀀스 Mermaid. 코드 대조 완료.*
