@@ -6,3 +6,8 @@ logs/
 models/
 *.onnx
 dist/
+
+# 내부 영업/GTM 자산은 공개 저장소에 두지 않는다 (CMP-82, board 2026-06-28)
+docs/gtm/
+*_GTM_*.zip
+*GTM_package*
