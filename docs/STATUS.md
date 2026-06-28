@@ -5,6 +5,22 @@
 
 ---
 
+## v0.0.5 트랙 — Operate 완성 · 보드 블랭킷 승인 (2026-06-28, CMP-142)
+
+테마 **운영(Operate)을 기능으로 완성**. 보드가 **모든 v0.0.5 구현을 블랭킷 승인**(CMP-142, 2026-06-28 — *"v0.0.5도 모든 구현을 허락할게. 다 구현하고, demo, document, hands-on 잘 준비해서 리뷰 요청해. 그전에는 CEO에게 위임한다."*) → CPO 가 B1/B2 자식 분해 + 캡스톤 DoD 게이트. 제안서: [`PROPOSAL_v0.0.5.md`](PROPOSAL_v0.0.5.md).
+
+| 마일스톤 | 자식 | 트랙 | 오너 | 상태 |
+|---|---|---|---|---|
+| **B1 Operate-at-Scale** | CMP-144 | 정책 운영 자동화(멀티프로파일·경로별 묶기·무재기동 되돌리기·변경 감사) | Engineer (CMP-96) | ✅ done — 데모 4/4 PASS, 테스트 4건(`b0a8a63`) |
+| **B2 정확도 숙제 종결** | CMP-145 | M6 — per-channel INT8 KR_PERSON CI 하한 0.832→0.850(≥0.85) + 온프렘 p95 표 | Engineer (CMP-96) | ✅ done — 재현 2/2 PASS(`9a9092f`), 승인 `6e02b6aa` |
+| **캡스톤 DoD** | CMP-146 | demo·document·hands-on·릴리스 준비 게이트 → 보드 리뷰 요청 | Engineer (CMP-96) | 🔎 in_review — DoD 충족, 보드 리뷰 요청 |
+| **릴리스** | (사람) | `VERSION` 갱신 + `git tag v0.0.5` + origin push | **사람 릴리스 오너(미지정)** | ⏳ 준비완료 — 태그 컷 대기 |
+
+> 거버넌스: v0.0.5 구현=보드 블랭킷 승인(CMP-142) + 구현 중 권한 **CEO 위임**(리뷰 요청 전까지). 릴리스 태그 컷=사람 게이트(GOVERNANCE 규칙4 / CMP-60·137). 게이트 결정 로직·신규 차단 규칙 무변경(범위: 운영/설정/측정). DoD 증거: [`DEMO_v0.0.5.md`](DEMO_v0.0.5.md)·[`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md).
+> 조건부 미생성: B3 문서지문 DLP(디자인파트너 수요 신호 시 당김). Won't(이번): 멀티테넌시·RBAC·TLS MITM → v0.1.0.
+
+---
+
 ## v0.0.3 트랙 — Operate 호라이즌 · 보드 승인·분해 (2026-06-27, CMP-132)
 
 테마 **Operate(관측·보증·운영)**. 보드가 **모든 v0.0.3 개발 작업을 블랭킷 승인**(CMP-132, 2026-06-27) → CPO 가 권장 Must+Should 세트를 자식 이슈로 분해. 제안서: [`PROPOSAL_v0.0.3.md`](PROPOSAL_v0.0.3.md).

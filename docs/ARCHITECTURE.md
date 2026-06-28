@@ -395,9 +395,28 @@ sequenceDiagram
 
 ---
 
+## 7.4 운영 레이어 — 정책 운영 자동화 (v0.0.5 B1 · CMP-144)
+
+본 문서의 주 흐름(§3 탐지→판정→감사)은 **단일 라이브 룰셋** 기준이다. v0.0.5 는 그 위에
+**운영 레이어**(`enforcement/policy_ops.py`)를 더한다 — *결정 로직은 그대로 두고* 어느 룰셋이
+어느 경로/테넌트에 적용되는지를 운영한다:
+
+- **다중 프로파일**: 이름 붙은 룰셋 N개를 동시 보유(`ProfileRegistry`). 경로/테넌트 키를
+  프로파일에 **묶어**(binding) 한 게이트웨이가 부서별 다른 강도를 운영. 각 프로파일 가드는
+  §3 와 동일한 `EgressGuard` 파이프라인이다(결정 경로 불변).
+- **무재기동 되돌리기**: 정책 버전 스냅샷(`PolicyVersionStore`) + CMP-124 핫리로드(원자 스왑,
+  `ReloadableGuard.reload`)로 잘못된 정책 배포를 프로세스 재기동 없이 직전 버전으로 복원
+  (검증 실패 시 fail-closed — 직전 룰셋 유지).
+- **변경 감사**: 누가·언제·무엇을(bind/snapshot/rollback)을 §6 감사봇과 동일한 추가전용
+  해시 체인(`PolicyChangeAudit`)으로 기록·변조탐지.
+
+→ 즉 §3~§6 의 결정/감사 시퀀스는 변하지 않고, 그 **앞단의 룰셋 선택·버전 운영**만 자동화된다.
+범위 밖(→v0.1.0): 멀티테넌시·RBAC·테넌트 격리. 매뉴얼 [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md).
+
 ## 8. 관련 문서
 
 - 읽기 순서·상태표: [`docs/README.md`](README.md)
+- 운영(정책 운영 자동화) v0.0.5 B1: [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) · 데모 [`DEMO_v0.0.5.md`](DEMO_v0.0.5.md)
 - 제안/배경: [`PROPOSAL.md`](PROPOSAL.md) · 기반 명세: [`SPEC.md`](SPEC.md)
 - CMP-85(차등감사·패킷·봇): [`SPEC_CMP85.md`](SPEC_CMP85.md) · [`DEMO_CMP85.md`](DEMO_CMP85.md)
 - Enforcement: [`SPEC_EGRESS_ENFORCEMENT.md`](SPEC_EGRESS_ENFORCEMENT.md) · [`ENFORCEMENT_BUILD_CMP94.md`](ENFORCEMENT_BUILD_CMP94.md)

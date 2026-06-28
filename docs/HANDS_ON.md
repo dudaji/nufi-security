@@ -456,6 +456,49 @@ nufi-egress monitor --simulate samples/flow_bypass_burst.jsonl --threshold 1
 
 ---
 
+### 6.9 여러 정책을 한 게이트웨이에서 — `policy` *(v0.0.5 신규 · CMP-144)*
+
+부서·테넌트마다 다른 강도의 정책을 **하나의 게이트웨이**에서 동시에 운영하고, 위험한 정책
+변경을 **프로세스 재기동 없이 되돌리는**(rollback) 운영자 작업을 실습합니다. 토이로 격리해서
+돌려 보겠습니다(저장소 무오염 — `POLICY_*` 환경변수로 상태 경로를 임시 디렉터리에 둡니다).
+
+```bash
+# 격리된 운영 상태(실습용 — 저장소 config 를 안 건드림)
+export POLICY_BINDINGS_OVERLAY=/tmp/ho_binds.yaml
+export POLICY_VERSIONS_DIR=/tmp/ho_versions
+export POLICY_CHANGE_LOG=/tmp/ho_changes.jsonl
+SAMPLE="연락처 010-1234-5678 로 회신 바랍니다."   # 단일 KR_PHONE
+
+# ① 프로파일·묶기 현황 보기 (default = base 완화, strict = 차단 프리셋)
+nufi-egress policy list
+
+# ② 같은 입력, 두 프로파일의 다른 결정 — 한 게이트웨이 다중 정책
+nufi-egress policy inspect nufi-default "$SAMPLE"   # default → 통과(가명화)  exit 0
+nufi-egress policy bind  tenant-acme strict          # 경로 묶기(영속)
+nufi-egress policy inspect tenant-acme "$SAMPLE"     # strict  → 차단        exit 1
+
+# ③ 되돌리기 지점 박제 → (정책을 바꿨다고 치고) → 무재기동 되돌리기
+nufi-egress policy snapshot strict --note "기준선 v1"
+#   … config/profiles/strict/policy.yaml 을 수정하고 다시 snapshot 하면 v2 …
+nufi-egress policy rollback strict                   # 직전 버전으로 generation++ 원자 스왑
+
+# ④ 누가·언제·무엇을 바꿨나 + 변조탐지
+nufi-egress policy audit --verify-chain              # 체인 BROKEN 이면 exit 1
+```
+
+**무슨 일이 일어났나요?**
+- `inspect` 의 `exit 1`(strict 차단)은 게이트가 PII 를 **정확히 막은** 정상 신호입니다.
+- `rollback` 의 `generation 0→1` 은 **프로세스 재기동 없이** 라이브 룰셋이 원자적으로 교체된
+  것 — 운영 중 잘못된 정책 배포를 즉시 되돌리는 안전장치입니다(CMP-124 핫리로드 계승).
+- 모든 변경(bind/snapshot/rollback)은 추가전용 **해시 체인** 감사 로그에 남아, 임의 수정·
+  삭제가 `--verify-chain` 으로 탐지됩니다.
+
+> ✅ **체크포인트:** `policy list` 에 `tenant-acme → strict` 묶기가 보이고, rollback 후 같은
+> 입력이 다시 차단되면 성공. 1-명령 자동 채점은 `./scripts/demo_policy_ops.sh`(4/4 PASS),
+> 운영 개념·설계 불변식은 [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md).
+
+---
+
 ## 7. Part F — 한 번에 끝까지: end-to-end 데모
 
 지금까지 조각조각 만져 본 걸 **실제 HTTP 게이트웨이**에 대해 한 번에 돌려 봅니다. 6개 시나리오를
@@ -515,6 +558,7 @@ nufi-egress flow-tap --simulate FLOW.jsonl       # 우회 탐지(리플레이)  
 nufi-egress coverage --simulate FLOW.jsonl       # '내 트래픽 X% 통과' 보증
 nufi-egress monitor  --simulate FLOW.jsonl       # 우회 실시간 알림
 nufi-egress audit query --verify-chain           # 감사 집계 + 무결성 검증
+nufi-egress policy list / bind / rollback / audit # 다중 프로파일·묶기·무재기동 되돌리기 (CMP-144)
 nufi-egress apply / disable                       # 실제 정적 차단 적용 / 킬스위치(root)
 
 tail -f logs/egress_audit.jsonl logs/alerts.jsonl # 요청 흐름 + 경보 실시간 관찰(6.8)

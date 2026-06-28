@@ -6,11 +6,21 @@
 
 ## [Unreleased]
 
+### v0.0.5 (다음 릴리스 · 초안 — 태그 컷 시 `[0.0.5]` 로 승격)
+
+> 릴리스 오너가 `VERSION` 을 0.0.5 로 올리고 이 소제목을 `## [0.0.5] - <날짜>` 헤더로
+> 승격한다(GOVERNANCE 규칙4 / CMP-60·137). 그 전까지는 `[Unreleased]` 아래 초안으로 둔다
+> — 버전 정합 가드(VERSION==최신 `## [x.y.z]`)를 녹색으로 유지하기 위함.
+
+운영(Operate)을 **기능으로 완성**한 버전. v0.0.4(도입 표면)가 설치·통합 CLI·입문을 닦은 위에,
+정책을 **규모 있게 운영**(B1)하고 세 버전째 미룬 **정확도 숙제를 종결**(B2)한다. 게이트 결정
+로직·신규 차단 규칙은 무변경(범위: 운영/설정/측정). 재현 데모·매뉴얼: [`docs/DEMO_v0.0.5.md`](docs/DEMO_v0.0.5.md).
+
 ### Added
-- **정책 운영 자동화 (v0.0.5 B1 · CMP-144)** — CMP-124(단일 프로파일·단건 무재기동
-  핫리로드)를 운영 규모로 확장. 한 게이트웨이에서 **여러 정책 프로파일 동시 운영** +
-  **경로/테넌트별 묶기(binding)**, 정책 **버전 관리·무재기동 되돌리기(rollback)**,
-  **변경 감사 로그**(누가·언제·무엇을 + 추가전용 해시 체인 변조탐지).
+- **정책 운영 자동화 (B1 · CMP-144)** — CMP-124(단일 프로파일·단건 무재기동 핫리로드)를
+  운영 규모로 확장. 한 게이트웨이에서 **여러 정책 프로파일 동시 운영** + **경로/테넌트별
+  묶기(binding)**, 정책 **버전 관리·무재기동 되돌리기(rollback)**, **변경 감사 로그**(누가·
+  언제·무엇을 + 추가전용 해시 체인 변조탐지).
   - `nufi-egress policy {list,bind,snapshot,versions,rollback,audit,inspect}` 서브커맨드.
   - `config/routing.yaml` 확장: `policy_profiles`(프로파일 레지스트리) + `policy_bindings`
     (묶기). 런타임 묶기 변경은 `config/policy_bindings.yaml` 오버레이에 기록(routing.yaml
@@ -19,6 +29,17 @@
     · 1-명령 데모 [`scripts/demo_policy_ops.sh`](scripts/demo_policy_ops.sh)(4/4 PASS, root 불필요)
     · 검증 `tests/test_cmp144_policy_ops.py`(4 케이스).
   - 범위 밖(Won't → v0.1.0): 멀티테넌시·권한관리(RBAC)·테넌트 격리.
+
+### Changed
+- **정확도 숙제 종결 (B2 · CMP-145)** — INT8 한국어 인명(KR_PERSON) 신뢰구간 종결. per-tensor
+  INT8 양자화가 인명 3건을 노이즈로 잃어 Wilson CI 하한을 0.860→**0.832**(<0.85)로 떨군 회귀를,
+  **채널별(per-channel) 동적 양자화**로 복원: `scripts/export_onnx_int8.py` 의 `M5_QUANT_PER_CHANNEL`
+  기본 ON(가중치 출력채널별 스케일).
+  - 결과(`docs/reports/CMP-145-recall-int8.json`): KR_PERSON recall **0.9127**(115/126),
+    Wilson **CI95 [0.8504, 0.9506]** → 하한 **0.850 ≥ 0.85** 충족. pii_recall 0.9433.
+  - 온프렘 p95 표: INT8 부하 p95 — c=1 41ms / c=2 67ms(목표 150ms 이내), FP32 대비 ~3×.
+  - 정합성 가드 `tests/test_cmp145_int8_consistency.py`(INT8↔FP32 무손실 · 모델 미설치 시
+    침묵 금지 skip) · 재현 데모 [`scripts/demo_accuracy_v005.sh`](scripts/demo_accuracy_v005.sh)(2/2 PASS).
 
 ## [0.0.4] - 2026-06-28
 

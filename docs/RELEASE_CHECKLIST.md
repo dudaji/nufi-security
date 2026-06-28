@@ -24,5 +24,10 @@
 | v0.0.3 | O2 커버리지 보증 | `scripts/demo_coverage.sh`(1-명령 PASS/FAIL · CMP-138) | `CLI.md#coverage`·`DEMO_v0.0.3.md` | ✅ | ✅ tag `v0.0.3` (보드 `release하자!` CMP-138) |
 | v0.0.3 | O1 감사 대시보드(read-only) | `scripts/demo_dashboards.sh`(1-명령 PASS/FAIL · CMP-138) | `dashboards/README.md`·`DEMO_v0.0.3.md` | ✅ | ✅ tag `v0.0.3` |
 | v0.0.3 | O3 정책 운영 규모화 | (M2 backlog — 이번 릴리스 범위 밖) | — | — | ⏭ M2 이연 |
+| v0.0.4 | Adopt 패치(설치형 패키징·통합 CLI·입문) | `demo.sh`(13/13)·`HANDS_ON.md` | `CLI.md`·`HANDS_ON.md` | ✅ | ✅ tag `v0.0.4` origin(`c4e822e`) |
+| v0.0.5 | B1 정책 운영 자동화 | `scripts/demo_policy_ops.sh`(4/4 PASS · CMP-144) | `OPS_POLICY_AT_SCALE.md`·`CLI.md#policy`·`DEMO_v0.0.5.md` | ✅ | ⏳ 준비완료 — 사람 릴리스 오너 태그 컷 대기 |
+| v0.0.5 | B2 정확도 숙제 종결(M6) | `scripts/demo_accuracy_v005.sh`(2/2 PASS · CMP-145) | `DEMO_v0.0.5.md`·`M5_MEASUREMENT_REPORT.md` | ✅ | ⏳ 준비완료 — 사람 릴리스 오너 태그 컷 대기 |
 
 > **v0.0.3 릴리스 게이트:** ✅ ① O1/O2 전용 1-명령 `demo_*.sh` + DEMO 재현 문서(CMP-138). ✅ ② O3/CMP-136 = M2 백로그로 이연(보드 `release하자!` = O1+O2 릴리스, O3 out). ✅ ③ 릴리스 메커닉: VERSION 0.0.3 · CHANGELOG `[0.0.3]` · tag `v0.0.3` + origin push(보드 지시 권한 GOVERNANCE 규칙4-1/4-4, 감사: CMP-138 보드 코멘트 `717e03be`).
+
+> **v0.0.5 릴리스 게이트(CMP-146 캡스톤):** ✅ ① B1·B2 각 1-명령 `demo_*.sh`(4/4·2/2 PASS, root 불필요) + 재현 문서 `DEMO_v0.0.5.md`. ✅ ② 매뉴얼: `OPS_POLICY_AT_SCALE.md`·`CLI.md#policy`(B1) / `M5_MEASUREMENT_REPORT.md`·측정 리포트(B2). ✅ ③ README §매뉴얼·데모 표 + 문서지도 링크. ✅ ④ hands-on §6.9 정책 운영 실습. ✅ ⑤ CHANGELOG `[0.0.5]` 초안. ⏳ **남은 한 가지 = `VERSION` 갱신 + `git tag v0.0.5` + origin push** — 사람 릴리스 오너(GOVERNANCE 규칙4 / CMP-60·137). 거버넌스: v0.0.5 구현 보드 블랭킷 승인(CMP-142 보드 2026-06-28) + 구현 중 권한 CEO 위임.
