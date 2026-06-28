@@ -1,4 +1,4 @@
-# 감사 가시성 대시보드 (read-only) — v0.0.3 O1 / CMP-134
+# 감사 가시성 대시보드 (read-only) — v0.0.3 O1
 
 온프렘에 **이미 100% 적재되는** 감사를 보안팀이 *읽는* 화면. 프로덕션 무변경·쓰기 권한 없음.
 설계 근거: [`../docs/PROPOSAL_v0.0.3.md`](../docs/PROPOSAL_v0.0.3.md) §1 O1 / §3.
@@ -41,18 +41,18 @@ python3 -m dashboards.server --port 8099    # 기본 logs/egress_audit.jsonl, lo
 3. **Dashboards → Import → Upload JSON** 으로 `grafana_dashboard.json` 업로드.
 4. 대시보드 변수 `$base` 를 데이터소스 URL(예: `http://127.0.0.1:8099`)로 설정.
 
-## 스택 결정 — Grafana(구상물) vs Langfuse(대안)
-제안서 §5 #3 의 CPO 기본값은 **Langfuse**(LLM 친화)이며 §1 O1 은 Grafana 를 동등 대안으로 명시한다.
+## 스택 결정 — Grafana(채택) vs Langfuse(대안)
+기본 권장값은 **Langfuse**(LLM 친화)이며, Grafana 도 동등한 대안이다.
 본 구현은 **read-only 화면**의 데이터 원천이 *게이트웨이가 이미 적재한 추가전용 JSONL 감사 로그*라는
-점을 근거로 **Grafana(+ 파일/JSON 데이터소스)** 를 구상물로 채택했다:
+점을 근거로 **Grafana(+ 파일/JSON 데이터소스)** 를 채택했다:
 - Langfuse 는 *trace 를 푸시*해 적재하는 모델 — 게이트웨이 재계측(쓰기 경로)이 필요해
   "프로덕션 무변경·쓰기 권한 없음" 제약과 마찰. 기존 JSONL 을 *읽기만* 하는 데는 부적합.
 - Grafana(Infinity) 는 기존 파일을 **읽기 전용**으로 패널화 — 제약과 정합.
 - 어댑터(`adapter.py`)는 **백엔드 중립** — Langfuse 채택이 필요하면 이 read-only 모델을
   Langfuse ingestion(별도 사이드카, 별도 이슈+범위)으로 흘리는 어댑터를 추가하면 된다.
 
-→ CPO 기본값을 무시한 것이 아니라, **O1 의 무변경 제약에 부합하는 구상물을 먼저 인도**하고
-Langfuse 경로는 후속(수요 시)으로 연다. 이견 시 CPO/보드 코멘트로 조정.
+→ 기본 권장값을 배제한 것이 아니라, **O1 의 무변경 제약에 부합하는 구현을 먼저 제공**하고
+Langfuse 경로는 후속(수요 시)으로 연다. 다른 선택이 필요하면 이슈로 논의한다.
 
 ## 보안 — 재유출 방지
 감사 레코드의 `request_body`·finding `text` 에는 PII 평문이 있을 수 있다. 관측 패널은 기본값

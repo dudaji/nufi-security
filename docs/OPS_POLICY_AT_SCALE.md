@@ -1,12 +1,11 @@
-# 정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사 (CMP-144 · v0.0.5 B1)
+# 정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사 (v0.0.5)
 
-> **상위 제안:** [`PROPOSAL_v0.0.5.md`](PROPOSAL_v0.0.5.md) B1(Must·중심). **스코프:**
-> 운영/설정·문서·검증. 신규 차단 규칙이나 게이트웨이 결정 로직 변경 없음(CMP-124 계승).
+> **스코프:** 운영/설정·문서·테스트. 신규 차단 규칙이나 게이트웨이 결정 로직 변경은 없다.
 > **구현:** `enforcement/policy_ops.py` · **CLI:** `nufi-egress policy …` ·
 > **데모:** [`scripts/demo_policy_ops.sh`](../scripts/demo_policy_ops.sh) ·
-> **검증:** `tests/test_cmp144_policy_ops.py`
+> **테스트:** `tests/test_cmp144_policy_ops.py`
 
-[`OPS_RULE_RELOAD.md`](OPS_RULE_RELOAD.md)(CMP-124)가 **단일 프로파일·단건** 무재기동
+[`OPS_RULE_RELOAD.md`](OPS_RULE_RELOAD.md)가 **단일 프로파일·단건** 무재기동
 반영을 제공했다면, 본 기능은 그것을 **운영 규모**로 끌어올린다 — 한 게이트웨이에서
 **여러 정책 프로파일을 동시 운영**하고, **경로/테넌트별로 다른 프로파일을 묶고**,
 정책을 **버전 관리·되돌리기(rollback)** 하며, **누가·언제·무엇을 바꿨는지** 감사한다.
@@ -20,7 +19,7 @@
 | **버전(version)** | 프로파일 정책 내용의 **불변 스냅샷**(v1, v2, …) + 활성 포인터 | `logs/policy_versions/<profile>/` |
 | **변경 감사** | register/bind/snapshot/rollback 의 추가전용 **해시 체인** 로그 | `logs/policy_changes.jsonl` |
 
-> **무재기동 불변식(CMP-124 계승):** 되돌리기는 프로파일 가드를 **원자적으로 스왑**
+> **무재기동 불변식:** 되돌리기는 프로파일 가드를 **원자적으로 스왑**
 > (`generation`++)할 뿐 프로세스를 재기동하지 않는다. 깨진 후보는 **fail-closed** 로
 > 거부되어 직전(검증된) 룰셋·정책 파일이 그대로 유지된다. 무거운 NER 모델은 재로드하지
 > 않는다.

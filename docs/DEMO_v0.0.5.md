@@ -1,15 +1,15 @@
-# DEMO — v0.0.5 (Operate 완성) · B1 정책 운영 자동화 + B2 정확도 숙제 종결
+# DEMO — v0.0.5 (Operate 완성) · B1 정책 운영 자동화 + B2 정확도 마무리
 
 v0.0.5 의 두 트랙을 각각 **1-명령 데모/재현 스크립트**로 시연·자동검증한다. 두 스크립트 모두
 `root 불필요`(에어갭/CI) · `외부 네트워크 호출 0` · 끝에 **PASS/FAIL** 판정과 종료코드를 낸다.
 
-| 데모 | 스크립트 | 무엇을 증명하나 | 상위 이슈 |
-|---|---|---|---|
-| B1 정책 운영 자동화 | [`scripts/demo_policy_ops.sh`](../scripts/demo_policy_ops.sh) | 다중 프로파일·경로별 묶기·무재기동 되돌리기·변경 감사 | CMP-144 |
-| B2 정확도 숙제 종결 | [`scripts/demo_accuracy_v005.sh`](../scripts/demo_accuracy_v005.sh) | INT8 KR_PERSON Wilson CI 하한 ≥ 0.85 재현 + 온프렘 p95 표 | CMP-145 |
+| 데모 | 스크립트 | 무엇을 증명하나 |
+|---|---|---|
+| B1 정책 운영 자동화 | [`scripts/demo_policy_ops.sh`](../scripts/demo_policy_ops.sh) | 다중 프로파일·경로별 묶기·무재기동 되돌리기·변경 감사 |
+| B2 정확도 마무리 | [`scripts/demo_accuracy_v005.sh`](../scripts/demo_accuracy_v005.sh) | INT8 KR_PERSON Wilson CI 하한 ≥ 0.85 재현 + 온프렘 p95 표 |
 
 - 기능 매뉴얼: [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) · [`CLI.md#policy`](CLI.md#policy) · 측정 스택 [`M5_MEASUREMENT_REPORT.md`](M5_MEASUREMENT_REPORT.md).
-- 릴리스 DoD: [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) (보드 상시 지시 CMP-132).
+- 릴리스 DoD: [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md).
 - 이전 버전 데모: [`DEMO_v0.0.3.md`](DEMO_v0.0.3.md)(O1·O2) · [`DEMO_CMP85.md`](DEMO_CMP85.md)(차등 감사).
 
 > **사전 요건:** Python 3.10+, `pip install -r requirements.txt`. **B1 데모는 stdlib + PyYAML +
@@ -40,7 +40,7 @@ cd security
 
 > **데모 PASS 의 의미:** `inspect` 의 차단 시 `exit 1` 은 게이트가 PII 를 **정확히 차단**한
 > 정상 신호다(데모상 PASS). P3 의 `generation 0→1` 은 프로세스 재기동 없이 라이브 룰셋이
-> 원자적으로 교체됐음을 뜻한다(무재기동 되돌리기 = CMP-124 핫리로드 계승).
+> 원자적으로 교체됐음을 뜻한다(무재기동 되돌리기 — 핫리로드 메커니즘 재사용).
 
 ### 기대 콘솔 출력 (요약)
 
@@ -66,20 +66,20 @@ P3 — 버전 되돌리기(무재기동): strict v1(차단)→v2(완화) 후 v1 
 
 ---
 
-## 2) 정확도 숙제 종결 재현 — `scripts/demo_accuracy_v005.sh`
+## 2) 정확도 마무리 재현 — `scripts/demo_accuracy_v005.sh`
 
 ```bash
 cd security
 ./scripts/demo_accuracy_v005.sh     # root 불필요, 커밋된 측정 산출물 대조(모델 스택 불필요)
 ```
 
-세 버전(v0.0.1→v0.0.3) 연속 이연된 유일한 품질 미달 지표(INT8 한국어 인명 신뢰구간)를
-**종결**했음을 재현·검증한다. 두 산출물을 목표선에 대조한다.
+세 버전(v0.0.1→v0.0.3)에 걸쳐 남아 있던 유일한 품질 미달 지표(INT8 한국어 인명 신뢰구간)를
+이번 버전에서 해결했음을 재현·검증한다. 두 산출물을 목표선에 대조한다.
 
 | # | 항목 | 산출물 | 기대 |
 |---|---|---|---|
-| A1 | KR_PERSON Wilson CI 하한 | [`docs/reports/CMP-145-recall-int8.json`](reports/CMP-145-recall-int8.json) | 하한 ≥ 0.85 |
-| A2 | 온프렘 p95 표 | [`docs/reports/CMP-123-load-p95.json`](reports/CMP-123-load-p95.json) | INT8 c≤2 p95 ≤ 목표(150ms) |
+| A1 | KR_PERSON Wilson CI 하한 | per-channel INT8 recall 리포트 ([`docs/reports/`](reports/)) | 하한 ≥ 0.85 |
+| A2 | 온프렘 p95 표 | INT8 부하 p95 리포트 ([`docs/reports/`](reports/)) | INT8 c≤2 p95 ≤ 목표(150ms) |
 
 **A1 — 근본 원인과 해결:** per-tensor INT8 동적 양자화가 양자화 노이즈로 KR_PERSON 인명
 3건을 잃어 Wilson CI 하한을 0.860→**0.832**(<0.85)로 떨군 회귀를, **채널별(per-channel)
@@ -87,12 +87,12 @@ cd security
 출력채널별 스케일)로 복원했다. 결과: KR_PERSON recall **0.9127**(115/126), Wilson
 **CI95 [0.8504, 0.9506]** → 하한 **0.850 ≥ 0.85** 충족. 정합성 가드:
 [`tests/test_cmp145_int8_consistency.py`](../tests/test_cmp145_int8_consistency.py)
-(INT8↔FP32 KR_PERSON 무손실, 모델 스택 미설치 시 침묵 금지 skip).
+(INT8↔FP32 KR_PERSON 무손실 검증, 모델 스택 미설치 시 침묵 금지 skip).
 
 **A2 — 온프렘 p95 표:** INT8 백엔드 부하 측정(512자 입력, 동시성 sweep)을 운영 기준 p95
 표로 인용. 단일~중간 동시성(c≤2)에서 p95 가 목표(150ms) 이내 — c=1 **41ms**, c=2 **67ms**.
-고동시성(c≥4)은 워커 풀 스케일아웃으로 흡수(추론 풀 CMP-127/130). FP32 대비 약 3× 빠름
-([`docs/reports/CMP-123-load-p95-fp32.json`](reports/CMP-123-load-p95-fp32.json)).
+고동시성(c≥4)은 워커 풀 스케일아웃(추론 풀)으로 흡수한다. FP32 대비 약 3× 빠름
+(FP32 부하 p95 리포트는 [`docs/reports/`](reports/) 참조).
 
 ### 기대 콘솔 출력 (요약)
 

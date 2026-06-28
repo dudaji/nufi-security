@@ -365,5 +365,5 @@ nufi-egress audit query
 
 ---
 
-*최초 작성: 2026-06-28 (CMP-125, Engineer) — v0.0.2 M1·D1 capstone. 선행 의존 CMP-119(SDK)·CMP-120(doctor)·CMP-121(프리셋)·CMP-122(배포) done 기반. 모든 명령/스니펫은 실제 실행·소스 대조 검증.*
-*개정: 2026-06-28 (CMP-140) — (1) 멀티-프로바이더(Claude/Anthropic·OpenAI·Google·Azure) 명시 [routing.yaml·litellm_config.yaml 대조], (2) 운영 명령을 설치형 통합 CLI `nufi-egress <sub>` 리드로 전환(§4 `audit query` 포함, CMP-141 머지 3190dd3 기반) — 전 명령 실행 검증, 비설치 `python3 -m enforcement.cli` 동등.*
+*최초 작성: 2026-06-28 — v0.0.2 기준. SDK·doctor·프리셋·배포 기능 위에 작성. 모든 명령/스니펫은 실제 실행·소스 대조로 확인.*
+*개정: 2026-06-28 — (1) 멀티-프로바이더(Claude/Anthropic·OpenAI·Google·Azure) 명시(routing.yaml·litellm_config.yaml 대조), (2) 운영 명령을 설치형 통합 CLI `nufi-egress <sub>` 리드로 전환(§4 `audit query` 포함) — 전 명령 실행 확인, 비설치 `python3 -m enforcement.cli` 동등.*

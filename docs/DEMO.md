@@ -1,6 +1,6 @@
 # NuFi Egress-Audit Gateway — 데모 (M1 + M2)
 
-실행 일자: 2026-06-24 · 검증: CPO (NuFi) · 구현: Engineer (CMP-72) · 저장소: `security/`
+실행 일자: 2026-06-24 · 저장소: `security/`
 
 하이브리드 LLM 환경에서 **public LLM으로 나가는 요청을 게이트웨이가 가로채 PII/비밀을 인라인 탐지·차단·가명화**하고 **public 전송을 100% 감사 로깅**하는 동작을 시연한다.
 
@@ -11,7 +11,7 @@
 ```bash
 cd security
 python3 -m pip install -r requirements.txt
-./scripts/demo.sh            # ① private ② RRN 차단 ③ 비밀 차단 ④ 약한 PII 가명화 ⑤ 감사로그 ⑥ 자동검증
+./scripts/demo.sh            # ① private ② RRN 차단 ③ 비밀 차단 ④ 약한 PII 가명화 ⑤ 감사로그 ⑥ 자동 테스트
 ```
 
 수동 단계별 재현:
@@ -26,7 +26,7 @@ python3 scripts/bench.py --ner gazetteer     # recall/지연
 PORT=4000 ./scripts/run_gateway.sh           # 게이트웨이 기동 (OpenAI 호환 /v1/chat/completions)
 ```
 
-## 1. 자동 검증 결과
+## 1. 자동 테스트 결과
 
 | 항목 | 결과 |
 |---|---|

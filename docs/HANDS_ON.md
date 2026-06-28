@@ -266,7 +266,7 @@ FAIL 로 떴어요 — 다음 단계에서 그걸 직접 파고듭니다. (WARN 
 
 > *비설치 동치:* `python3 -m enforcement.cli doctor --no-json` · 단독 진입점 `python3 -m enforcement.doctor` 도 동치.
 
-### 6.3 캡처 대상 만들기 — `targets` *(CMP-143 신규)*
+### 6.3 캡처 대상 만들기 — `targets`
 
 게이트웨이를 우회하는 트래픽을 보려면, 먼저 **"어떤 목적지를 감시할지"** 를 `routing.yaml`(여러분이
 정의한 public LLM 목적지)에서 파생합니다. 그리고 패킷 캡처에 쓸 **BPF 필터** 문자열도 뽑아 줍니다.
@@ -288,7 +288,7 @@ BPF: tcp and (dst host api.anthropic.com or dst host api.openai.com) and (dst po
 
 > *비설치 동치:* `python3 -m capture.targets --refresh --bpf` (레거시 진입점 — 하위호환 유지)
 
-### 6.4 우회 탐지 — `flow-tap` *(CMP-143 신규)*
+### 6.4 우회 탐지 — `flow-tap`
 
 라이브 캡처는 root/CAP_NET_RAW 가 필요하니, 여기선 **미리 만든 flow 로그를 리플레이**(`--simulate`)해서
 root 없이 동일 로직을 재현합니다. 샘플 `samples/flow_replay.jsonl` 은 게이트웨이 경유 2건 + **우회 2건** 이 섞인 트래픽입니다.
@@ -456,7 +456,7 @@ nufi-egress monitor --simulate samples/flow_bypass_burst.jsonl --threshold 1
 
 ---
 
-### 6.9 여러 정책을 한 게이트웨이에서 — `policy` *(v0.0.5 신규 · CMP-144)*
+### 6.9 여러 정책을 한 게이트웨이에서 — `policy` *(v0.0.5 신규)*
 
 부서·테넌트마다 다른 강도의 정책을 **하나의 게이트웨이**에서 동시에 운영하고, 위험한 정책
 변경을 **프로세스 재기동 없이 되돌리는**(rollback) 운영자 작업을 실습합니다. 토이로 격리해서
@@ -489,7 +489,7 @@ nufi-egress policy audit --verify-chain              # 체인 BROKEN 이면 exit
 **무슨 일이 일어났나요?**
 - `inspect` 의 `exit 1`(strict 차단)은 게이트가 PII 를 **정확히 막은** 정상 신호입니다.
 - `rollback` 의 `generation 0→1` 은 **프로세스 재기동 없이** 라이브 룰셋이 원자적으로 교체된
-  것 — 운영 중 잘못된 정책 배포를 즉시 되돌리는 안전장치입니다(CMP-124 핫리로드 계승).
+  것 — 운영 중 잘못된 정책 배포를 즉시 되돌리는 안전장치입니다(무재기동 핫리로드).
 - 모든 변경(bind/snapshot/rollback)은 추가전용 **해시 체인** 감사 로그에 남아, 임의 수정·
   삭제가 `--verify-chain` 으로 탐지됩니다.
 
@@ -515,7 +515,7 @@ nufi-egress policy audit --verify-chain              # 체인 BROKEN 이면 exit
 3. **public 폴백 + API 키(비밀)** → 403 차단, `entities=[SECRET]`
 4. **public 폴백 + 약한 PII(전화/이메일)** → 가명화 후 전송(200)
 5. **감사 로그** — public 전송 100% 기록, private 0건
-6. **자동 검증** — acceptance(10/10) · unit · bench(recall·p95)
+6. **자동 테스트** — acceptance(10/10) · unit · bench(recall·p95)
 
 > 이건 Part A~E 에서 본 SDK 동작(차단/가명화/감사)을 **서버 경유**로 재확인하는 셈입니다.
 > 더 좁은 데모도 있습니다: `./scripts/demo_coverage.sh`(커버리지), `./scripts/demo_dashboards.sh`(감사 대시보드).
@@ -553,12 +553,12 @@ with client.pseudonymize(text) as rt:             # 약한 PII 가역 가명화
 ```bash
 nufi-egress init audit-only --out ./config      # 정책 프리셋 적용
 nufi-egress doctor --no-json                     # 배선 5체크 진단
-nufi-egress targets --refresh --bpf              # 캡처 대상 + BPF 필터        (CMP-143)
-nufi-egress flow-tap --simulate FLOW.jsonl       # 우회 탐지(리플레이)          (CMP-143)
+nufi-egress targets --refresh --bpf              # 캡처 대상 + BPF 필터
+nufi-egress flow-tap --simulate FLOW.jsonl       # 우회 탐지(리플레이)
 nufi-egress coverage --simulate FLOW.jsonl       # '내 트래픽 X% 통과' 보증
 nufi-egress monitor  --simulate FLOW.jsonl       # 우회 실시간 알림
 nufi-egress audit query --verify-chain           # 감사 집계 + 무결성 검증
-nufi-egress policy list / bind / rollback / audit # 다중 프로파일·묶기·무재기동 되돌리기 (CMP-144)
+nufi-egress policy list / bind / rollback / audit # 다중 프로파일·묶기·무재기동 되돌리기
 nufi-egress apply / disable                       # 실제 정적 차단 적용 / 킬스위치(root)
 
 tail -f logs/egress_audit.jsonl logs/alerts.jsonl # 요청 흐름 + 경보 실시간 관찰(6.8)

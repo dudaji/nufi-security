@@ -7,7 +7,7 @@
 > 다이어그램은 외부 이미지가 아니라 **in-repo Mermaid** 입니다. 코드와 같은 PR 에서 갱신되어 드리프트에
 > 강합니다(아래 [§7 드리프트 방지](#7-드리프트-방지-drift-resistance) 참조).
 >
-> 버전: **v0.0.1** ([`../VERSION`](../VERSION)·[`../CHANGELOG.md`](../CHANGELOG.md)) · 출처: CMP-113 (보드 CMP-112)
+> 버전: **v0.0.1** ([`../VERSION`](../VERSION)·[`../CHANGELOG.md`](../CHANGELOG.md))
 
 ---
 
@@ -244,7 +244,7 @@ sequenceDiagram
 
 ---
 
-## 5. 시퀀스 3 — 우회 탐지 + 차단 (nftables MVP, CMP-94)
+## 5. 시퀀스 3 — 우회 탐지 + 차단 (nftables MVP)
 
 게이트웨이를 우회한 public LLM 직결 패킷을 패킷레이어에서 탐지(시퀀스 4)하고, `enforcement/` 가 nftables
 허용목록으로 **실제 L3/L4 drop** 한다. 정책 단일 출처: `config/policy.yaml` 의 `enforcement:` + `routing.yaml`.
@@ -291,7 +291,7 @@ sequenceDiagram
 
 ---
 
-## 6. 시퀀스 4 — 비동기 감사봇 · 차등감사 · 패킷레이어 우회탐지 (CMP-85)
+## 6. 시퀀스 4 — 비동기 감사봇 · 차등감사 · 패킷레이어 우회탐지
 
 사용자 경로(시퀀스 1)는 producer 가 로그를 append 만 하고 **즉시 반환**(지연 0). 별도 비동기 `AuditBot` 이
 오프셋 큐로 소비해 **차등감사**(private 경량 / public 전수)와 **우회상관**을 수행한다. 봇 사망이 사용자 경로에 영향 없음.
@@ -347,7 +347,7 @@ sequenceDiagram
 
 ## 7. 드리프트 방지 (Drift-Resistance)
 
-> **핵심 통증(CMP-112): 작업이 진행될수록 docs 가 out-of-date 가 됨.** 아래 장치로 ARCHITECTURE.md 를 코드와
+> **핵심 통증: 작업이 진행될수록 docs 가 out-of-date 가 됨.** 아래 장치로 ARCHITECTURE.md 를 코드와
 > 같은 PR 에서 강제 동기화한다.
 
 ### 7.1 단일 권위 + 이력 강등
@@ -356,7 +356,7 @@ sequenceDiagram
   **역사적/세부**로 강등 — "왜·당시 결정"의 근거로만 참조하고, 현행 흐름은 본 문서가 권위.
 
 ### 7.2 문서 정합성 체크리스트 (흐름 바꾸는 PR/마일스톤 필수)
-아래 중 하나라도 바꾸는 PR 은 **같은 PR 에서 ARCHITECTURE.md 를 갱신**한다(미갱신 시 리뷰 reject):
+아래 중 하나라도 바꾸는 PR 은 **같은 PR 에서 ARCHITECTURE.md 를 갱신**한다(미갱신 시 리뷰에서 되돌림):
 
 - [ ] 컴포넌트 추가/삭제/이름 변경 (`gateway/`·`egress_audit/`·`capture/`·`enforcement/` 모듈·클래스).
 - [ ] 시퀀스 흐름 변경 (라우팅 판정, 탐지/정책 순서, M3 라운드트립, enforcement 규칙, 감사봇 차등감사).
@@ -365,7 +365,7 @@ sequenceDiagram
 - [ ] config 키 변경 (`policy.yaml`·`routing.yaml`·`audit_profiles.yaml`·`confidential.yaml`·`edm`).
 - [ ] 릴리스 시: `VERSION`·`CHANGELOG.md`·known-limitations 동시 갱신.
 
-### 7.3 자동 가드 (기계가 강제하는 정합 · CMP-117)
+### 7.3 자동 가드 (기계가 강제하는 정합)
 §7.2 의 '사람이 기억하는 체크리스트' 를 **기계가 강제하는 가드**로 승격했다. `scripts/check_docs.py`
 가 CI(`.github/workflows/docs-guard.yml`)와 pre-commit(`.pre-commit-config.yaml`)에서 PR/커밋마다 실행 →
 흐름을 바꾸는 PR 이 문서 동시 갱신을 빠뜨리면 **실패**한다. 검사 대상은 **living 문서**(본
@@ -389,13 +389,12 @@ sequenceDiagram
 회귀 방지 단위 테스트는 `tests/test_docs_consistency.py` — (a) green-on-main, (b) 의도적 드리프트
 (심볼 rename·버전 불일치·깨진 mermaid·깨진 링크) 재현을 모두 검증한다.
 
-- **오너십**: 문서 오너 = Engineer(보안 도메인 상시승인 CMP-96). 설계 변경 명세는 CPO 산출 → Engineer 가
-  코드와 함께 본 문서 반영. 이 자동 가드는 'v0.0.2 일괄 리뷰' 를 대체하지 않고 **상시 정합을 보장**해
-  리뷰를 가벼운 확인으로 만드는 백스톱이다.
+- **오너십**: 설계 변경 명세가 나오면 코드와 함께 본 문서에 반영한다. 이 자동 가드는 'v0.0.2 일괄 리뷰' 를
+  대체하지 않고 **상시 정합을 보장**해 리뷰를 가벼운 확인으로 만드는 백스톱이다.
 
 ---
 
-## 7.4 운영 레이어 — 정책 운영 자동화 (v0.0.5 B1 · CMP-144)
+## 7.4 운영 레이어 — 정책 운영 자동화 (v0.0.5)
 
 본 문서의 주 흐름(§3 탐지→판정→감사)은 **단일 라이브 룰셋** 기준이다. v0.0.5 는 그 위에
 **운영 레이어**(`enforcement/policy_ops.py`)를 더한다 — *결정 로직은 그대로 두고* 어느 룰셋이
@@ -404,7 +403,7 @@ sequenceDiagram
 - **다중 프로파일**: 이름 붙은 룰셋 N개를 동시 보유(`ProfileRegistry`). 경로/테넌트 키를
   프로파일에 **묶어**(binding) 한 게이트웨이가 부서별 다른 강도를 운영. 각 프로파일 가드는
   §3 와 동일한 `EgressGuard` 파이프라인이다(결정 경로 불변).
-- **무재기동 되돌리기**: 정책 버전 스냅샷(`PolicyVersionStore`) + CMP-124 핫리로드(원자 스왑,
+- **무재기동 되돌리기**: 정책 버전 스냅샷(`PolicyVersionStore`) + 핫리로드(원자 스왑,
   `ReloadableGuard.reload`)로 잘못된 정책 배포를 프로세스 재기동 없이 직전 버전으로 복원
   (검증 실패 시 fail-closed — 직전 룰셋 유지).
 - **변경 감사**: 누가·언제·무엇을(bind/snapshot/rollback)을 §6 감사봇과 동일한 추가전용
@@ -418,10 +417,10 @@ sequenceDiagram
 - 읽기 순서·상태표: [`docs/README.md`](README.md)
 - 운영(정책 운영 자동화) v0.0.5 B1: [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) · 데모 [`DEMO_v0.0.5.md`](DEMO_v0.0.5.md)
 - 제안/배경: [`PROPOSAL.md`](PROPOSAL.md) · 기반 명세: [`SPEC.md`](SPEC.md)
-- CMP-85(차등감사·패킷·봇): [`SPEC_CMP85.md`](SPEC_CMP85.md) · [`DEMO_CMP85.md`](DEMO_CMP85.md)
+- 차등감사·패킷·봇: [`SPEC_CMP85.md`](SPEC_CMP85.md) · [`DEMO_CMP85.md`](DEMO_CMP85.md)
 - Enforcement: [`SPEC_EGRESS_ENFORCEMENT.md`](SPEC_EGRESS_ENFORCEMENT.md) · [`ENFORCEMENT_BUILD_CMP94.md`](ENFORCEMENT_BUILD_CMP94.md)
 - M4 기밀: [`SPEC_M4.md`](SPEC_M4.md) · [`IMPL_M4.md`](IMPL_M4.md)
 - M5 실측: [`M5_MEASUREMENT_REPORT.md`](M5_MEASUREMENT_REPORT.md)
 - 릴리스: [`../CHANGELOG.md`](../CHANGELOG.md) · [`../VERSION`](../VERSION)
 
-*최초 작성: 2026-06-27 (CMP-113, Engineer) — v0.0.1 단일 권위 아키텍처 + 4개 시퀀스 Mermaid. 코드 대조 완료.*
+*최초 작성: 2026-06-27 — v0.0.1 단일 권위 아키텍처 + 4개 시퀀스 Mermaid. 코드 대조 완료.*

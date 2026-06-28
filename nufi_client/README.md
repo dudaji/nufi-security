@@ -1,6 +1,6 @@
-# `nufi_client` — NuFi 얇은 Python 클라이언트 (CMP-119)
+# `nufi_client` — NuFi 얇은 Python 클라이언트
 
-서빙빌더가 **한 줄** 바꿔 기존 OpenAI 호출을 NuFi Egress-Audit 게이트웨이 경유로
+**한 줄**만 바꿔 기존 OpenAI 호출을 NuFi Egress-Audit 게이트웨이 경유로
 전환하는 얇은 SDK. 게이트웨이 `/v1/chat/completions` 를 재사용한다(OpenAI 호환).
 
 ## 빠른 시작 (서버 불필요)
@@ -81,4 +81,4 @@ for chunk in client.chat.completions.create(
 - `examples/sdk_streaming.py` — 스트리밍/비스트리밍
 - `tests/test_cmp119_sdk.py` — 수용기준 테스트
 
-> 통합 가이드(SDK + doctor + presets + deploy 묶음)는 capstone 이슈에서 작성한다.
+> 통합 가이드(SDK + doctor + presets + deploy 묶음)는 후속 문서에서 다룬다.

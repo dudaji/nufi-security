@@ -3,14 +3,14 @@
 v0.0.3 M1 의 두 기능을 각각 **1-명령 데모**로 시연·자동검증한다. 두 스크립트 모두
 `root 불필요`(에어갭/CI) · `외부 네트워크 호출 0` · 끝에 **PASS/FAIL** 판정과 종료코드를 낸다.
 
-| 데모 | 스크립트 | 무엇을 증명하나 | 상위 이슈 |
-|---|---|---|---|
-| O2 커버리지 보증 | [`scripts/demo_coverage.sh`](../scripts/demo_coverage.sh) | '내 트래픽 중 X% 가 게이트웨이를 통과'(coverage) + 우회 상시 알림(monitor) | CMP-133 |
-| O1 감사 대시보드 | [`scripts/demo_dashboards.sh`](../scripts/demo_dashboards.sh) | read-only 데이터소스 4 패널 200 + viewer 렌더 + read-only 보증 | CMP-134 |
+| 데모 | 스크립트 | 무엇을 증명하나 |
+|---|---|---|
+| O2 커버리지 보증 | [`scripts/demo_coverage.sh`](../scripts/demo_coverage.sh) | '내 트래픽 중 X% 가 게이트웨이를 통과'(coverage) + 우회 상시 알림(monitor) |
+| O1 감사 대시보드 | [`scripts/demo_dashboards.sh`](../scripts/demo_dashboards.sh) | read-only 데이터소스 4 패널 200 + viewer 렌더 + read-only 보증 |
 
-- 선례 데모(현행 통합 데모): [`DEMO_CMP85.md`](DEMO_CMP85.md) (P0~P2 차등 감사).
+- 관련 데모(통합 데모): [`DEMO_CMP85.md`](DEMO_CMP85.md) (P0~P2 차등 감사).
 - 기능 매뉴얼: [`CLI.md#coverage`](CLI.md#coverage) · [`CLI.md#monitor`](CLI.md#monitor) · [`../dashboards/README.md`](../dashboards/README.md).
-- 릴리스 DoD: [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md) (보드 상시 지시 CMP-132).
+- 릴리스 DoD: [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md).
 
 > **사전 요건:** Python 3.10+, `pip install -r requirements.txt`(coverage/monitor·dashboards 는
 > stdlib + PyYAML 만으로 동작). 데모는 합성·비-PII 픽스처만 사용한다.

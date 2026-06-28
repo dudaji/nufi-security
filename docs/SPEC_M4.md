@@ -1,8 +1,6 @@
 # 구현 명세 (SPEC) — Egress-Audit M4: 기밀 1차 탐지 (키워드 / EDM)
 
-대상: **Engineer(구현 트랙)**. 본 명세는 CPO 설계 산출물(CMP-77)이며, 코드 구현은 **Engineer**가 [CMP-98](/CMP/issues/CMP-98)로 수행한다. 보안 도메인 상시 승인([CMP-96](/CMP/issues/CMP-96))으로 **건별 보드승인 불필요**.
-
-상위 PoC 명세: [`SPEC.md`](SPEC.md) (M1 게이트웨이 + M2 PII/비밀 탐지, CMP-72 DONE 10/10 PASS).
+상위 PoC 명세: [`SPEC.md`](SPEC.md) (M1 게이트웨이 + M2 PII/비밀 탐지, 수용 기준 10/10 PASS).
 설계 배경/리서치: [`PROPOSAL.md`](PROPOSAL.md).
 
 ---
@@ -183,9 +181,9 @@ entities:
 
 ---
 
-## 5. 수용 기준 (binary) — 구현 인계용
+## 5. 수용 기준 (binary)
 
-> 아래는 Engineer 구현 트랙([CMP-98](/CMP/issues/CMP-98))의 완료 정의. 본 설계 이슈(CMP-77)의 완료 정의는 §7.
+> 아래는 구현의 완료 정의. 설계의 완료 정의는 §7.
 
 - [ ] `config/confidential.yaml` 사전 외부화 — markings/keywords/allowlist 로드, 운영자 갱신·리로드(NFR3).
 - [ ] 키워드·표식 탐지 + 한국어 정규화(조사/자모/공백 변형) — 샘플셋 recall/precision 측정.
@@ -219,10 +217,9 @@ entities:
 
 ---
 
-## 7. 본 설계 이슈(CMP-77) 완료 정의 · 다음 단계
+## 7. 설계 완료 정의 · 다음 단계
 
-- **CMP-77(설계, CPO) Done 조건**: §1–§6 명세 확정 + 구현 수용기준(§5) 작성 + 라이선스 판정 + 결정 로그 스키마 확정. → 본 문서로 충족.
-- **다음(구현 트랙)**: **Engineer**가 [CMP-98](/CMP/issues/CMP-98)로 구현. 보안 상시 승인([CMP-96](/CMP/issues/CMP-96)) → 건별 보드승인 불필요.
+- **설계 완료 조건**: §1–§6 명세 확정 + 구현 수용기준(§5) 작성 + 라이선스 판정 + 결정 로그 스키마 확정. → 본 문서로 충족.
 - **연계**: M3(가역 가명화 원복) 결정 로그와 스키마 정합 유지. M5(임베딩/의미 분류기·recall·precision 측정 스크립트)는 본 EDM 임계 튜닝 데이터를 입력으로 사용.
 
-> 모호하면 [CMP-77](/CMP/issues/CMP-77) 코멘트로 CPO에 질문(스펙 변경은 본 문서 갱신으로 추적).
+> 스펙 변경은 본 문서 갱신으로 추적한다.
