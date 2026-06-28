@@ -10,7 +10,7 @@
 #   3. public 폴백 + API 키(비밀)            → 403 차단 + entities=[SECRET]
 #   4. public 폴백 + 약한 PII(전화/이메일)   → 가명화 후 전송(200, transformed)
 #   5. 감사 로그(logs/egress_audit.jsonl)    → public 전송 100% 기록(private 0건)
-#   6. 자동 검증: tests/run_acceptance.py(10/10) · tests/test_unit.py · scripts/bench.py
+#   6. 자동 검증: tests/run_acceptance.py(20/20) · tests/test_unit.py · scripts/bench.py
 #
 # 멱등: 매 실행마다 감사 로그를 초기화하고, 빈 포트를 자동 선택하며, 본 스크립트가
 #       띄운 서버만 정리한다(EXIT trap). 외부 의존 0(gazetteer NER, stub 백엔드).
@@ -179,13 +179,14 @@ printf '  %s→ 총 %s건 · public %s건 · private(비public) %s건%s\n' "$c_d
 [[ "$nonpub" -eq 0 ]] && ok "private 경로는 감사 로그에 미기록(외부 미전송)" || bad "private가 로그에 기록됨"
 
 # ───────────────────────── 시나리오 6: 자동 검증 ─────────────────────────
-sect "⑥ 자동 검증 — acceptance(10/10) · unit · bench(recall·p95)"
+sect "⑥ 자동 검증 — acceptance(20/20) · unit · bench(recall·p95)"
 
 echo "  \$ python3 tests/run_acceptance.py"
 acc_out="$("$PY" tests/run_acceptance.py 2>&1)"; acc_rc=$?
 echo "$acc_out" | grep -E '기준 PASS|FAIL' | tail -3 | sed 's/^/    /'
-{ [[ $acc_rc -eq 0 ]] && echo "$acc_out" | grep -q "10/10 기준 PASS"; } \
-  && ok "수용기준 10/10 PASS" || bad "수용기준 미통과 (rc=$acc_rc)"
+acc_pass="$(echo "$acc_out" | grep -oE '[0-9]+/[0-9]+ 기준 PASS' | tail -1)"
+{ [[ $acc_rc -eq 0 ]] && [[ -n "$acc_pass" ]]; } \
+  && ok "수용기준 ${acc_pass:-PASS}" || bad "수용기준 미통과 (rc=$acc_rc)"
 
 echo "  \$ python3 tests/test_unit.py"
 unit_out="$("$PY" tests/test_unit.py 2>&1)"; unit_rc=$?

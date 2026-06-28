@@ -6,6 +6,30 @@
 
 ## [Unreleased]
 
+## [0.0.4] - 2026-06-28
+
+도입성(adoption) 패치 — **새 기능 없음**. v0.0.3(관측 O1·보증 O2) 위에 설치형 패키징,
+통합 CLI(`nufi-egress`) 마감, 입문 문서를 더한 릴리스. 운영 동작·정책·탐지 코어는 무변경,
+레거시 진입점은 전부 하위호환으로 유지(`python3 -m …` 그대로 동작).
+
+### Added
+- **설치형 콘솔 스크립트 (CMP-141)**: `pip install -e .` 후 `nufi-egress`(별칭 `nufi`)를
+  PATH 에서 직접 실행(`pyproject.toml` console_scripts). 레거시 `python3 -m enforcement.cli` 동치 유지.
+- **`nufi-egress audit {report,daemon,once,query}` (CMP-141)**: 비동기 감사 봇 + §4 감사로그
+  조회(outcome/엔티티 집계 + 해시 체인 무결성 검증)를 통합 서브커맨드로 편입.
+- **`nufi-egress targets` · `flow-tap` (CMP-143)**: 캡처 레이어 운영 명령(`capture.targets`/
+  `capture.flow_tap`)을 통합 CLI 서브커맨드로 흡수 — 마지막 CLI 통합 스트래글러 마감.
+- **Hands-on 입문 튜토리얼 `docs/HANDS_ON.md` (CMP-143)**: 토이 프로젝트("환불 도우미")로
+  SDK 한 줄 전환 + `nufi-egress` CLI 운영을 끝까지 실습(root/네트워크 불필요). 로그 위치 표 +
+  실시간 `tail -f` 관찰 절 포함.
+
+### Changed
+- **문서 운영 명령 표기 정정 (CMP-140/143)**: README·CLI·INTEGRATION_GUIDE 의 raw
+  `python3 -m capture.*`/`egress_audit.audit_bot` 리드를 통합 CLI(`nufi-egress {targets,
+  flow-tap,audit}`) 리드로 교체, 레거시 진입점은 하위호환 각주로 강등.
+- **멀티-프로바이더 지원 명시 (CMP-140)**: INTEGRATION_GUIDE 에 Anthropic/Google/Azure
+  경로 명시.
+
 ## [0.0.3] - 2026-06-28
 
 Operate(운영) 호라이즌 M1 릴리스 — *이미 100% 적재되는* 감사를 **읽고(O1)** 게이트웨이
