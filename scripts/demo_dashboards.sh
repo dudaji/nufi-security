@@ -49,8 +49,9 @@ echo " read-only · root 불필요 · 외부 호출 0 · 샘플 픽스처"
 echo " base=$BASE"
 echo "============================================================"
 
-# 서버 기동(read-only 데이터소스).
-$PY -m dashboards.server --host "$HOST" --port "$PORT" \
+# 서버 기동(read-only 데이터소스) — 통합 CLI 서브커맨드 `nufi-egress dashboard` 경유.
+# (비설치/에어갭 CI 안전을 위해 다른 데모와 동일하게 모듈 형태로 호출.)
+$PY -m enforcement.cli dashboard --host "$HOST" --port "$PORT" \
     --audit "$AUDIT" --flow-dir "$FLOWDIR" >/dev/null 2>&1 &
 SRV=$!
 

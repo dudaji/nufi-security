@@ -30,5 +30,7 @@ jobs:
       # stdlib 만 사용 → 의존성 설치 불필요.
       - name: docs 정합성 가드 (Mermaid · 식별자 · 버전 · 링크)
         run: python scripts/check_docs.py --verbose
+      - name: 문서 스타일 가드 (내부 식별자 · 명령 표기 규약)
+        run: python scripts/check_doc_style.py --verbose
       - name: 드리프트 단위 테스트 (green-on-main + 의도적 드리프트 재현)
-        run: python -m pytest tests/test_docs_consistency.py -q
+        run: python -m pytest tests/test_docs_consistency.py tests/test_doc_style_guard.py -q

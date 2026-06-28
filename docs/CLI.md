@@ -16,16 +16,16 @@ python3 -m pip install -e .                   # nufi-egress 진입점 설치(선
 nufi-egress --help            # 전체 서브커맨드
 ```
 
-> **표기 규약.** 모든 서브커맨드는 단일 진입점 `nufi-egress <서브커맨드>` 로 실행합니다. 설치하지
-> 않은 환경에서는 동일 명령을 `python3 -m enforcement.cli <서브커맨드>` 로 그대로 실행할 수 있습니다
-> (완전 동치). 아래 예시는 비권한 명령을 `nufi-egress` 로 적습니다. **root 권한이 필요한 `apply`/
-> `disable` 의 실제 적용**은 설치 위치에 의존하지 않도록 `sudo python3 -m enforcement.cli …` 형태를
-> 그대로 둡니다.
+> **표기 규약.** 모든 서브커맨드는 단일 진입점 `nufi-egress <서브커맨드>` 로 실행합니다(주 명령).
+> 설치하지 않은 환경에서는 동일 명령을 `python3 -m enforcement.cli <서브커맨드>` 로 그대로 실행할 수
+> 있습니다(완전 동치 — **비설치 동치 폴백**). **root 권한이 필요한 `apply`/`disable` 의 실제 적용**도
+> `sudo nufi-egress …` 가 주 명령이며, 설치형 진입점이 root 의 `PATH`(secure_path)에 없으면 동치인
+> `sudo python3 -m enforcement.cli …` 로 실행합니다.
 
 ```
 usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
                    [--tenant TENANT] [--role {viewer,operator}]
-                   {render,apply,disable,status,feedback,doctor,coverage,monitor,init,audit,targets,flow-tap,policy,report} ...
+                   {render,apply,disable,status,feedback,doctor,coverage,monitor,init,audit,targets,flow-tap,dashboard,policy,report} ...
 ```
 
 | 전역 옵션 | 무엇 | 기본 |
@@ -52,6 +52,7 @@ usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
 | [`audit`](#audit) | 비동기 감사 봇(report/daemon/once) + §4 감사로그 조회(query) | 불필요 |
 | [`targets`](#targets) | 캡처 대상(`capture_targets.yaml`) 파생/조회 + BPF 필터 | 불필요 |
 | [`flow-tap`](#flow-tap) | public 목적지 flow tap — 우회 탐지(`--simulate` 리플레이/`--live`) | 라이브는 root/CAP_NET_RAW |
+| [`dashboard`](#dashboard) | 감사 가시성 대시보드 기동(read-only 데이터소스 HTTP 서버) | 불필요 |
 | [`policy`](#policy) | 정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사 | 불필요 |
 | [`report`](#report) | 기간별 SLA·규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음) | 불필요 |
 
@@ -168,7 +169,7 @@ usage: nufi-egress apply [-h] [--fail-mode {open,closed}] [--dry-run] [--show-ru
 
 ```bash
 nufi-egress apply --dry-run --show-rules   # 비권한 미리보기
-sudo python3 -m enforcement.cli apply --fail-mode closed  # 실제 적용(root)
+sudo nufi-egress apply --fail-mode closed  # 실제 적용(root). PATH 미설치 시: sudo python3 -m enforcement.cli apply …
 ```
 
 > 데모 승격: `apply` ↔ `disable` 로 토글.
@@ -181,7 +182,7 @@ sudo python3 -m enforcement.cli apply --fail-mode closed  # 실제 적용(root)
 
 ```bash
 nufi-egress disable            # 미리보기/비권한
-sudo python3 -m enforcement.cli disable       # 실제 제거(root)
+sudo nufi-egress disable       # 실제 제거(root). PATH 미설치 시: sudo python3 -m enforcement.cli disable
 ```
 
 `--dry-run` 으로 commit 없이 확인 가능.
@@ -230,7 +231,8 @@ usage: nufi-egress feedback [-h] [--log LOG] [--counter COUNTER]
 | `--no-reinject` | 카운터만, flow 미기록 | off |
 
 ```bash
-journalctl -k | grep nufi-egress-block | python3 -m enforcement.cli feedback --counter logs/blocked.json
+journalctl -k | grep nufi-egress-block | nufi-egress feedback --counter logs/blocked.json
+# 비설치 동치: … | python3 -m enforcement.cli feedback --counter logs/blocked.json
 ```
 
 ---
@@ -374,6 +376,32 @@ nufi-egress flow-tap --simulate samples/flow_replay.jsonl
 
 ---
 
+## `dashboard`
+
+감사 가시성 **대시보드**(결정/무결성/우회/추이 4개 패널)를 **read-only 데이터소스 HTTP 서버**로 기동합니다. 게이트웨이가 이미 적재한 추가전용 감사 JSONL·flow tap 로그를 `'r'` 로만 읽어 패널 모델로 노출하므로 프로덕션 무변경·쓰기 권한 없음(GET/HEAD 외 405). 엔진은 `dashboards/server.py`, 자세한 패널·Grafana 연결은 [`../dashboards/README.md`](../dashboards/README.md).
+
+```
+usage: nufi-egress dashboard [-h] [--host HOST] [--port PORT]
+                             [--audit AUDIT] [--flow-dir FLOW_DIR]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--host HOST` | 바인드 호스트 | `127.0.0.1` |
+| `--port PORT` | 포트 | `8099` |
+| `--audit PATH` | 감사 JSONL 경로 | `logs/egress_audit.jsonl` |
+| `--flow-dir PATH` | flow tap 로그 디렉터리/파일 | `logs/packets/public/` |
+
+```bash
+nufi-egress dashboard --port 8099 \
+  --audit dashboards/sample/audit_chain.jsonl --flow-dir dashboards/sample
+# → http://127.0.0.1:8099/viewer (read-only 뷰어) · /api/{model,decisions,chain,bypass,trend}
+```
+
+> 비설치 동치: `python3 -m dashboards.server --port 8099 …`. 환경변수 `EGRESS_AUDIT_LOG`·`EGRESS_FLOW_DIR` 로도 데이터소스 지정 가능.
+
+---
+
 ## `policy`
 
 정책 운영 자동화(v0.0.5 도입) — 한 게이트웨이에서 **여러 정책 프로파일을 동시
@@ -453,7 +481,8 @@ nufi-egress report compliance --audit samples/sla/audit_decisions.jsonl \
 | 명령 | 무엇 | 문서 |
 |---|---|---|
 | `python3 scripts/bench.py --ner gazetteer` | recall/precision + 지연 p95 벤치 | — |
-| `./scripts/demo_cmp85.sh` | 차등 감사 통합 데모(6시나리오, root 불필요) | [`DEMO_v0.0.5.md`](DEMO_v0.0.5.md) |
+| `./scripts/demo_audit_separation.sh` | 차등 감사 통합 데모(6시나리오, root 불필요) | [`DEMO.md`](DEMO.md) |
+| `./scripts/demo_all.sh` | 전체 기능 데모 러너 — 집계 PASS/FAIL | [`DEMO.md`](DEMO.md) |
 
 > 레거시 모듈 진입점(`python3 -m capture.targets`·`python3 -m capture.flow_tap`·`python3 -m egress_audit.audit_bot`)은 하위호환으로 유지되나, 신규 사용은 위 통합 CLI 서브커맨드(`targets`·`flow-tap`·`audit`)를 권장합니다.
 

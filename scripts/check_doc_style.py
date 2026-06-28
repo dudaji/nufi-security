@@ -80,6 +80,53 @@ def scan() -> list[tuple[str, int, str]]:
 
 
 # ============================================================================
+# 명령 표기 가드 — 문서가 우리 모듈을 raw ``python -m`` 으로 *주 명령* 표기 차단
+# ============================================================================
+# 단일 진입점 규약(docs/CLI.md 표기 규약): 운영 명령의 *주 명령*은 설치형 통합 CLI
+# ``nufi-egress <서브커맨드>`` 다. raw 모듈 실행(``python3 -m enforcement.cli`` 등)은
+# **비설치 동치/레거시 폴백**으로만 잔존해야 하며, 주 명령으로 노출되면 안 된다(보드 지적
+# — README 의 ``python3 -m dashboards.server``). 이 가드는 그 회귀를 기계로 막는다.
+#
+# 판정: 추적 *.md 의 한 줄이 우리 모듈을 raw ``python -m`` 으로 부르면 위반이다 —
+#   단, (a) 같은 줄에 ``nufi-egress``/``nufi `` 리드가 함께 있거나(주 명령은 CLI, 모듈은
+#   부가 표기), (b) 그 줄 또는 직전 2줄에 폴백 표지(아래 _FALLBACK_MARKERS)가 있으면 허용.
+# pip/pytest 등 표준 도구는 우리 모듈이 아니므로 대상이 아니다(모듈명으로 한정).
+_OUR_MODULES = ("enforcement", "egress_audit", "capture", "dashboards")
+_RAW_MODULE = re.compile(
+    r"python3?\s+-m\s+(?:" + "|".join(_OUR_MODULES) + r")(?:\.[\w.]+)?\b"
+)
+# 폴백/레거시/비설치-동치로 명시되었음을 알리는 표지(주 명령 아님을 보장).
+_FALLBACK_MARKERS = (
+    "동치", "동등", "레거시", "legacy", "하위호환", "폴백", "fallback",
+    "비설치", "설치하지 않", "단독 진입점", "equivalent", "PATH 미설치",
+)
+# CLI 리드가 같은 줄에 있으면 모듈 표기는 보조다(예: `… | nufi-egress feedback …`).
+_CLI_LEAD = ("nufi-egress", "nufi ")
+
+
+def scan_raw_module_commands() -> list[tuple[str, int, str]]:
+    """우리 모듈을 raw ``python -m`` 으로 *주 명령* 표기한 *.md 줄 위반 목록."""
+    violations: list[tuple[str, int, str]] = []
+    for rel in tracked_md_files():
+        if rel in EXCLUDE:
+            continue
+        path = REPO / rel
+        if not path.exists():
+            continue
+        lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+        for i, line in enumerate(lines):
+            if not _RAW_MODULE.search(line):
+                continue
+            if any(lead in line for lead in _CLI_LEAD):
+                continue  # 같은 줄 CLI 리드 — 모듈은 보조 표기.
+            window = "\n".join(lines[max(0, i - 2): i + 1])
+            if any(m in window for m in _FALLBACK_MARKERS):
+                continue  # 명시적 폴백/레거시/비설치 동치 — 허용.
+            violations.append((rel, i + 1, line.strip()))
+    return violations
+
+
+# ============================================================================
 # 코드 표면 가드 — 사용자에게 보이는 코드 문자열의 내부 식별자(이슈 번호) 차단
 # ============================================================================
 # DOC_STYLE 가드는 *.md 만 강제한다. 그러나 CLI ``--help``/usage/description,
@@ -178,6 +225,7 @@ def main() -> int:
     args = ap.parse_args()
 
     md_violations = scan()
+    raw_module_violations = scan_raw_module_commands()
     code_violations = scan_code()
     failed = False
 
@@ -189,6 +237,16 @@ def main() -> int:
             print(f"  {rel}:{ln}: {content}", file=sys.stderr)
         print("\n→ 내부 식별자(CMP-xxx)·역할(CEO/CPO/CMO/Engineer)·승인/검수 어투를 "
               "사용자 관점 표현으로 바꾸거나 삭제하세요. 규칙: docs/DOC_STYLE.md", file=sys.stderr)
+
+    if raw_module_violations:
+        failed = True
+        print("\n✗ 문서가 우리 모듈을 raw `python -m` 으로 주 명령 표기: "
+              f"{len(raw_module_violations)}건\n", file=sys.stderr)
+        for rel, ln, content in raw_module_violations:
+            print(f"  {rel}:{ln}: {content}", file=sys.stderr)
+        print("\n→ 주 명령은 단일 진입점 `nufi-egress <서브커맨드>` 로 적으세요. raw 모듈 실행은 "
+              "같은 줄 CLI 리드와 함께 두거나 '비설치 동치/레거시 폴백' 으로 명시할 때만 허용됩니다 "
+              "(docs/CLI.md 표기 규약).", file=sys.stderr)
 
     if code_violations:
         failed = True

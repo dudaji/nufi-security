@@ -21,7 +21,7 @@
 ## 빠른 시작 (오프라인 검증)
 ```bash
 # 1) 데모 픽스처로 데이터소스 기동(또는 --audit/--flow-dir 로 실제 로그 지정)
-python3 -m dashboards.server --port 8099 \
+nufi-egress dashboard --port 8099 \
   --audit dashboards/sample/audit_chain.jsonl \
   --flow-dir dashboards/sample
 
@@ -30,8 +30,9 @@ python3 -m dashboards.server --port 8099 \
 #    → 결정 1건 + "해시체인 무결성 OK" 가 보이면 수용 기준(binary) 충족.
 
 # 실제 운영 로그로:
-python3 -m dashboards.server --port 8099    # 기본 logs/egress_audit.jsonl, logs/packets/public/
+nufi-egress dashboard --port 8099    # 기본 logs/egress_audit.jsonl, logs/packets/public/
 ```
+> 비설치 동치: `python3 -m dashboards.server --port 8099 …` (CLI 미설치 환경 폴백).
 모델만 미리 보려면: `python3 dashboards/adapter.py --audit dashboards/sample/audit_chain.jsonl`.
 
 ## Grafana 연결 (프로덕션)
