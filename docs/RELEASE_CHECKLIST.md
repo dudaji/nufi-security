@@ -15,7 +15,16 @@
 그리고 버전 전체에 대해:
 
 4. **릴리스 위생** — `VERSION` 갱신 · `CHANGELOG.md` 해당 버전 섹션 작성 · `git tag vX.Y.Z` + origin 푸시.
-5. **테스트 통과** — 데모·테스트가 실제로 통과(상태 표시가 아니라 산출물/커밋으로 증거).
+5. **GitHub Release 발행 (태그 푸시 직후 필수)** — git 태그만으로는 GitHub 의 Releases 페이지에 노트 본문이 보이지 않습니다. 태그를 origin 에 올린 **직후**, 그 태그에 GitHub Release 객체를 발행합니다.
+   - 본문(notes) = [`docs/RELEASE_NOTES.md`](RELEASE_NOTES.md) 의 해당 버전 섹션(사람 친화 6-섹션 내러티브). 제목 = 해당 태그의 annotation.
+   - 한 명령:
+     ```bash
+     ./scripts/publish_github_release.sh vX.Y.Z          # gh CLI 또는 GH_TOKEN/GITHUB_TOKEN 사용
+     ./scripts/publish_github_release.sh vX.Y.Z --dry-run # 발행 전 본문 미리보기
+     ```
+   - 인증(gh 로그인 또는 repo-scope 토큰)이 없으면 본문만 추출하고 종료코드 2 로 안내합니다 → 토큰 확보 후 재실행.
+   - 검증: 공개 API `https://api.github.com/repos/dudaji/nufi-security/releases/tags/vX.Y.Z` 가 200 을 반환하면 발행 완료.
+6. **테스트 통과** — 데모·테스트가 실제로 통과(상태 표시가 아니라 산출물/커밋으로 증거).
 
 ## 적용 현황
 
@@ -30,5 +39,7 @@
 | v0.0.5 | B2 정확도 숙제 종결 | `scripts/demo_accuracy_v005.sh`(2/2 PASS) | `DEMO_v0.0.5.md` | ✅ | ⏳ 준비완료 — 태그 컷 대기 |
 
 > **v0.0.3 릴리스 범위:** ✅ ① O1/O2 전용 1-명령 `demo_*.sh` + DEMO 재현 문서. ✅ ② O3 = 이후 릴리스로 이연. ✅ ③ 릴리스 메커닉: VERSION 0.0.3 · CHANGELOG `[0.0.3]` · tag `v0.0.3` + origin push.
+
+> **GitHub Release 발행 현황:** git 태그 `v0.0.1`~`v0.0.6` 은 모두 origin 에 있으나, 과거 메커닉이 5번 단계(GitHub Release 발행)를 누락해 Releases 페이지에 노트 본문이 없습니다. `./scripts/publish_github_release.sh vX.Y.Z` 로 백필합니다(인증 필요). `v0.0.6` 는 [`RELEASE_NOTES.md`](RELEASE_NOTES.md) 본문으로 우선 백필 대상이며, 이후 버전은 위 5번 단계로 상시 발행합니다.
 
 > **v0.0.5 릴리스 범위:** ✅ ① B1·B2 각 1-명령 `demo_*.sh`(4/4·2/2 PASS, root 불필요) + 재현 문서 `DEMO_v0.0.5.md`. ✅ ② 매뉴얼: `OPS_POLICY_AT_SCALE.md`·`CLI.md#policy`(B1) / 측정 리포트(B2). ✅ ③ README §매뉴얼·데모 표 + 문서지도 링크. ✅ ④ hands-on §6.9 정책 운영 실습. ✅ ⑤ CHANGELOG `[0.0.5]` 초안. ⏳ **남은 한 가지 = `VERSION` 갱신 + `git tag v0.0.5` + origin push**.
