@@ -29,6 +29,8 @@
 | 7 | [`SPEC_M4.md`](SPEC_M4.md) → [`IMPL_M4.md`](IMPL_M4.md) | M4 기밀 1차 탐지 (CMP-77/98, 역사적) | ✅ 키워드/표식 + EDM 구현완료 |
 | 8 | [`M5_MEASUREMENT_REPORT.md`](M5_MEASUREMENT_REPORT.md) | **M5 벤치·하드닝 실측** (CMP-99/100/103/104) | ✅ recall·지연 실측 + 게이트 최종판정 — **보드 리뷰 핵심 증거** |
 
+> **처음이라 손으로 따라하며 감을 잡으려면** → [`HANDS_ON.md`](HANDS_ON.md)(토이 프로젝트 "환불 도우미" 하나를 SDK 한 줄 전환부터 `nufi-egress` CLI 운영까지 끝까지 실습 — 20~30분·root/네트워크 불필요). 레퍼런스([`CLI.md`](CLI.md))와 데모([`DEMO.md`](DEMO.md))를 시나리오 한 줄기로 엮은 입문 진입점.
+>
 > **서빙빌더 통합·CLI 를 보려면** → [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md)(통합/사용 가이드) + [`CLI.md`](CLI.md)(`nufi-egress` 전 서브커맨드 레퍼런스).
 >
 > **감사를 *읽는 화면*(read-only 대시보드)을 보려면** → [`../dashboards/README.md`](../dashboards/README.md)(v0.0.3 O1 / CMP-134 — 결정 뷰어·해시체인 무결성·우회 타임라인·카테고리 추이). 1-명령 데모: [`scripts/demo_dashboards.sh`](../scripts/demo_dashboards.sh).
@@ -67,6 +69,7 @@
 | [`ENFORCEMENT_BUILD_CMP94.md`](ENFORCEMENT_BUILD_CMP94.md) | CMP-94 | nftables 우회차단 MVP 빌드 | ✅ 구현완료 (보드 approved) |
 | [`IMPL_M4.md`](IMPL_M4.md) | CMP-98 | M4 기밀 1차 탐지(키워드/표식 + EDM) 구현 | ✅ 구현완료 |
 | [`M5_MEASUREMENT_REPORT.md`](M5_MEASUREMENT_REPORT.md) | CMP-99/100/103/104 | M5 벤치·하드닝 **실측 리포트**(recall·지연·하드닝·게이트판정) | ✅ 최신 — **보드 리뷰 핵심** |
+| [`HANDS_ON.md`](HANDS_ON.md) | CMP-143 | **Hands-on 입문 튜토리얼** — 토이 프로젝트 1개를 SDK 전환 + `nufi-egress` CLI 운영으로 끝까지 실습(root 불필요) | ✅ **입문 진입점** |
 | [`DEMO.md`](DEMO.md) | CMP-72 | M1+M2 데모 | ✅ 완료 (구버전 — CMP-85로 확장) |
 | [`DEMO_CMP85.md`](DEMO_CMP85.md) | CMP-85 | 통합 데모 **재현 매뉴얼** | ✅ **현행 데모 진입점** |
 | [`DEMO_RESULT_CMP85.md`](DEMO_RESULT_CMP85.md) · [`.html`](DEMO_RESULT_CMP85.html) | CMP-85 | 데모 **결과 보고서** + 스크린샷 | ✅ 최신 결과 |
