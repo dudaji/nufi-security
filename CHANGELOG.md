@@ -6,6 +6,23 @@
 
 ## [Unreleased]
 
+### Added
+- **SLA 선제 알림 + 다테넌트 집계** — v0.0.6 의 제출용 SLA 리포트를 **사후 보고에서
+  선제 보증**으로 확장. `report sla` 에 위반을 운영자에게 즉시 신호하는 알림 경로와,
+  여러 고객(테넌트)의 SLA 를 한 번에 보는 플릿 집계를 더한다(게이트 결정·차단 규칙 무변경).
+  - `report sla --alert FILE` — SLA 위반 발생 시 **0이 아닌 종료코드**로 신호하고 위반
+    내역을 구조화된 알림 JSON(`FILE`)으로 적재. 충족 시에는 알림을 만들지 않는다.
+  - `report sla --all-tenants` — **operator 전용** 테넌트별 SLA 행 집계(한 표에 고객별
+    충족/위반). `viewer` 역할은 거부(exit 3, RBAC 일관).
+  - `report sla --webhook URL` — 알림을 외부로 보내는 발송 경로(스텁; 본 릴리스는 페이로드
+    형식 고정까지).
+  - 검증 `tests/test_cmp157_sla_alert_fleet.py`(13 케이스) · 1-명령 데모
+    [`scripts/demo_sla_alert.sh`](scripts/demo_sla_alert.sh)(6/6 PASS, 권한 불필요).
+- **대시보드 운영 CLI** — read-only 감사 대시보드 데이터소스(`dashboards/server.py`)를
+  통합 진입점 서브커맨드로 흡수: `nufi-egress dashboard [--host --port --audit
+  --flow-dir]`. 마지막까지 모듈 직접 실행으로만 띄우던 운영 표면을 설치형 CLI 로
+  정렬(레거시 모듈 실행은 비설치 동치로 유지).
+
 ### Changed
 - **공개 표면 표기 정리** — CLI `--help`/usage/description, 명령 stdout 헤더, 생성물
   파일 헤더(`nufi init` config·생성 nftables 룰셋), 대시보드 JSON 응답에서 내부 추적용
@@ -14,6 +31,24 @@
   ([`scripts/check_doc_style.py`](scripts/check_doc_style.py))를 코드 사용자 표면
   (argparse help/description·명령 출력·생성물 헤더·JSON 값)까지 확장했다 — 순수 내부
   docstring/주석은 그대로 허용한다.
+- **데모 가독성·카탈로그 정비** — 데모 파일 이름을 **이름만 보고 무엇을 시연하는지** 알 수
+  있는 기능 이름으로 통일(`demo_<feature>.sh`): 차등 감사 분리 데모 →
+  [`demo_audit_separation.sh`](scripts/demo_audit_separation.sh), 우회 차단(ENFORCED) 데모
+  → [`demo_bypass_enforcement.sh`](scripts/demo_bypass_enforcement.sh), 정확도 재현 데모 →
+  [`demo_accuracy.sh`](scripts/demo_accuracy.sh), 전체 기능 러너 →
+  [`demo_all.sh`](scripts/demo_all.sh)(모든 데모를 차례로 실행하고 PASS/FAIL/SKIP 집계).
+  전 데모를 한곳에 모은 카탈로그 [`docs/DEMO.md`](docs/DEMO.md) 신설(README 링크).
+- **문서 raw `python -m` 주 명령 일소** — README·매뉴얼에서 운영 명령을 raw `python -m …`
+  로 리드하던 표기를 통합 CLI(`nufi-egress …`) 리드로 교체하고, 모듈형 실행은 명시적
+  "비설치 동치(equivalent)" 각주로만 강등. 재발 방지를 위해 doc-style 가드
+  ([`scripts/check_doc_style.py`](scripts/check_doc_style.py))에 raw-module-as-main 규칙을
+  추가(검증 `tests/test_doc_style_guard.py`).
+
+### Release
+- **GitHub Release 발행 메커닉 편입** — 태그 컷에서 끝나던 릴리스 흐름에 **공개 Release
+  객체 발행** 단계를 정식 편입. 발행 스크립트 [`scripts/publish_github_release.sh`](scripts/publish_github_release.sh)
+  (RELEASE_NOTES 해당 섹션 → Release 본문, 태그 주석 → 제목; `gh` 우선, 토큰+`curl` 폴백)
+  + [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md) step 5.
 
 ## [0.0.6] - 2026-06-28
 
