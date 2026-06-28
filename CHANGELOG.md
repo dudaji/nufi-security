@@ -81,7 +81,7 @@
     Wilson **CI95 [0.8504, 0.9506]** → 하한 **0.850 ≥ 0.85** 충족. pii_recall 0.9433.
   - 온프렘(on-prem) p95 표: INT8 부하 p95 — c=1 41ms / c=2 67ms(목표 150ms 이내), FP32 대비 ~3×.
   - 정합성 가드 `tests/test_cmp145_int8_consistency.py`(INT8↔FP32 무손실 · 모델 미설치 시
-    침묵 금지 skip) · 재현 데모 [`scripts/demo_accuracy_v005.sh`](scripts/demo_accuracy_v005.sh)(2/2 PASS).
+    침묵 금지 skip) · 재현 데모 [`scripts/demo_accuracy.sh`](scripts/demo_accuracy.sh)(2/2 PASS).
 
 ## [0.0.4] - 2026-06-28
 

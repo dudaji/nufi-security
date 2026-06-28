@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # =============================================================================
-# S4 ENFORCED 증강 — 격리 netns 실제 egress drop  [CMP-95, CMP-94 후속]
+# NuFi 우회 차단(ENFORCED) 데모 — 격리 netns 에서 실제 egress drop
 #
-# CMP-89 의 S4(SIMULATED, flow tap 관찰 전용)를 CMP-94 트랙 B 빌드로 승격한다:
+# 차등 감사 데모의 우회 시나리오(관찰 전용)를 실제 차단으로 승격한다:
 # 비-게이트웨이 프로세스가 `api.anthropic.com` 으로 직결하는 우회를 **격리 network
 # namespace 안에서 실제로 drop** 하고, 그 결정을 mode=ENFORCED 로 기록한다.
 #
@@ -21,8 +21,8 @@
 # 재사용: enforcement/{rule_builder,applier,decision,feedback}.py +
 #         scripts/enforcement_integration.sh(netns 하니스 패턴).
 #
-# 사용:   sudo bash scripts/demo_s4_enforced.sh           (단독 실행, 임시 ws)
-#         S4_WS=<dir> sudo bash scripts/demo_s4_enforced.sh  (demo_cmp85.sh --enforce 가 공유 ws 주입)
+# 사용:   sudo bash scripts/demo_bypass_enforcement.sh           (단독 실행, 임시 ws)
+#         S4_WS=<dir> sudo bash scripts/demo_bypass_enforcement.sh  (demo_audit_separation.sh --enforce 가 공유 ws 주입)
 # =============================================================================
 set -uo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -51,11 +51,11 @@ no(){ FAIL=$((FAIL+1)); printf '  %s[FAIL]%s %s\n' "$c_r" "$c_0" "$1"; }
 
 # ── 프리플라이트: root + nft (없으면 비0 → 호출자 폴백) ───────────────────────
 if [[ "$(id -u)" != "0" ]]; then
-  echo "demo_s4_enforced: root/CAP_NET_ADMIN 필요 — 'sudo' 로 실행하십시오." >&2
+  echo "demo_bypass_enforcement: root/CAP_NET_ADMIN 필요 — 'sudo' 로 실행하십시오." >&2
   exit 2
 fi
 if ! command -v nft >/dev/null 2>&1; then
-  echo "demo_s4_enforced: nft 미설치 — ENFORCED netns drop 불가." >&2
+  echo "demo_bypass_enforcement: nft 미설치 — ENFORCED netns drop 불가." >&2
   exit 3
 fi
 
@@ -173,7 +173,7 @@ PY
   && ok "A3 blocked_attempts=${BLOCKED} 증가(증적 출처=${DROP_SRC}, flow 재유입)" \
   || no "A3 blocked_attempts 미증가($BA_STATS)"
 
-# ── 5) 머신 판독 요약(demo_cmp85.sh 검증기 소비) ─────────────────────────────
+# ── 5) 머신 판독 요약(demo_audit_separation.sh 검증기 소비) ──────────────────
 python3 - "$SUMMARY" "$HOST_LABEL" "$IP_BYPASS" "$A1_PASS" "$A2_DROP" \
   "$RULE_ID" "$MODE" "$APPLIED" "${BLOCKED:-0}" "$ROGUE_TOK" "$GW_TOK" "$DROP_SRC" <<'PY'
 import json, sys

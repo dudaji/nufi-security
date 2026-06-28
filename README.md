@@ -93,6 +93,7 @@ curl -s localhost:4000/v1/chat/completions \
 | **손으로 따라하며 익히기** (토이 프로젝트 하나를 끝까지, 20~30분, 관리자 권한 불필요) | [`docs/HANDS_ON.md`](docs/HANDS_ON.md) |
 | **내 LLM 서비스 앞단에 붙이기** (통합 경로·프리셋·점검·결정 트리) | [`docs/INTEGRATION_GUIDE.md`](docs/INTEGRATION_GUIDE.md) |
 | **명령어 전체 레퍼런스** (`nufi-egress` 모든 서브커맨드) | [`docs/CLI.md`](docs/CLI.md) |
+| **데모 전체 목록** (이름·목적·시나리오 수·실행법 카탈로그) | [`docs/DEMO.md`](docs/DEMO.md) |
 | **SLA·규정준수 리포트 내기** (감사관·구매자 제출용, 기간별 충족/위반) | [`docs/REPORTING.md`](docs/REPORTING.md) |
 | **여러 테넌트를 한 게이트웨이에서** (테넌트 읽기 격리 + 읽기전용 역할) | [`docs/MULTITENANCY.md`](docs/MULTITENANCY.md) |
 | **내부 구조·다이어그램** 보기 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
@@ -104,7 +105,7 @@ curl -s localhost:4000/v1/chat/completions \
 
 ```bash
 # 1) 차등 감사 통합 데모 — 여러 시나리오를 자동으로 PASS/FAIL (관리자 권한 불필요)
-./scripts/demo_cmp85.sh                       # 재현 매뉴얼: docs/DEMO_v0.0.5.md
+./scripts/demo_audit_separation.sh            # 재현 매뉴얼: docs/DEMO.md
 
 # 2) 정책 운영 자동화 데모 — 여러 정책 프로파일·무중단 되돌리기·변경 감사
 ./scripts/demo_policy_ops.sh                  # 매뉴얼: docs/OPS_POLICY_AT_SCALE.md
@@ -119,11 +120,11 @@ nufi-egress monitor  --simulate samples/flow_bypass_burst.jsonl --threshold 1
 # 3c) 멀티테넌시·읽기전용 역할 — 테넌트 조회 격리 + viewer/operator RBAC
 ./scripts/demo_multitenancy.sh               # 매뉴얼: docs/MULTITENANCY.md
 
-# 3d) v0.0.6 통합 데모 — 위 3b(리포트)+3c(테넌트·역할)를 한 명령으로 재현
-./scripts/demo_v0.0.6.sh                      # 사람 친화 요약: docs/RELEASE_NOTES.md
+# 3d) 전체 데모 러너 — 모든 기능 데모를 차례로 실행하고 집계 PASS/FAIL 출력
+./scripts/demo_all.sh                         # 데모 카탈로그: docs/DEMO.md · 요약: docs/RELEASE_NOTES.md
 
 # 4) 감사 대시보드 — 결정/무결성/우회/추이 4개 패널 (읽기 전용)
-python3 -m dashboards.server --port 8099 \
+nufi-egress dashboard --port 8099 \
   --audit dashboards/sample/audit_chain.jsonl --flow-dir dashboards/sample
 #   → 브라우저에서 http://127.0.0.1:8099/viewer
 
@@ -134,10 +135,10 @@ nufi-egress doctor
 python3 scripts/bench.py --ner gazetteer
 ```
 
-> `coverage`·`monitor`·`doctor` 는 단일 진입점 CLI `nufi-egress` 의 서브커맨드입니다(전체 목록은
+> `coverage`·`monitor`·`doctor`·`dashboard` 는 단일 진입점 CLI `nufi-egress` 의 서브커맨드입니다(전체 목록은
 > [`docs/CLI.md`](docs/CLI.md)). 설치하지 않은 환경에서는 동일 명령을
 > `python3 -m enforcement.cli <서브커맨드>` 로 그대로 실행할 수 있습니다.
-> (`dashboards.server`·`scripts/bench.py` 는 CLI 와 별개인 보조 실행 진입점입니다.)
+> (`scripts/bench.py` 는 CLI 와 별개인 보조 실행 진입점입니다.)
 
 ---
 

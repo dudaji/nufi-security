@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# NuFi 정확도 숙제 종결 재현 데모 (v0.0.5 B2 / CMP-145)
+# NuFi 정확도 재현 데모 — KR_PERSON INT8 정확도 + 온프렘 p95
 #
 # M6 정확도 부채(세 버전 이연)의 두 산출물을 **재현·검증**한다:
 #   A1  KR_PERSON 신뢰구간   → per-channel INT8 양자화로 Wilson CI 하한 ≥ 0.85
@@ -11,7 +11,7 @@
 # 목표선에 대조해 PASS/FAIL 을 낸다. 실제 재측정(모델 재실행) 경로는 아래 안내.
 # root 불필요 · 외부 네트워크 호출 0 · 결정론적(stdlib + 커밋 JSON).
 #
-# 사용: ./scripts/demo_accuracy_v005.sh
+# 사용: ./scripts/demo_accuracy.sh
 # 매뉴얼: docs/DEMO_v0.0.5.md · 측정 스택: docs/M5_MEASUREMENT_REPORT.md
 # 재측정: PYTHONPATH=~/.cache/m5_libs python3 scripts/export_onnx_int8.py   # per-channel INT8 산출
 #         PYTHONPATH=~/.cache/m5_libs python3 scripts/bench_m5.py --recall ...  # recall 재측정

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# NuFi 차등 감사 데모 (CMP-85 P0~P2 통합)  [CMP-89]
+# NuFi 차등 감사 데모 — public/private 분리 저장 + 패킷 우회 탭 + 비동기 감사봇
 #
 # public/private 분리 저장(P0) + 패킷 레이어 캡처·게이트웨이 우회 탭(P1) +
 # 비동기 감사 봇(P2, producer/consumer)을 한 번에 띄워 6개 시나리오를 실행·
@@ -18,10 +18,10 @@
 # --simulate(기본): root 없이(에어갭/CI) flow tap 을 미리 만든 flow 로그로 리플레이.
 #                   외부 네트워크 호출 0(gazetteer NER + stub 백엔드, NFR1).
 # --enforce: S4 차단을 mode=ENFORCED 로 승격 — 격리 netns 에서 실제 egress drop
-#            (scripts/demo_s4_enforced.sh, CMP-94 트랙 B). **root/nft 필요**. 없으면
+#            (scripts/demo_bypass_enforcement.sh). **root/nft 필요**. 없으면
 #            정직하게 SIMULATED 로 폴백(기본 경로 보존). 기본(미지정)=SIMULATED.
-# 사용: ./scripts/demo_cmp85.sh            (PORT 로 시작 포트 지정 가능, 기본 4500)
-#       sudo ./scripts/demo_cmp85.sh --enforce   (S4 실제 drop 시연; root 필요)
+# 사용: ./scripts/demo_audit_separation.sh            (PORT 로 시작 포트 지정 가능, 기본 4500)
+#       sudo ./scripts/demo_audit_separation.sh --enforce   (S4 실제 drop 시연; root 필요)
 # =============================================================================
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -42,7 +42,7 @@ for arg in "$@"; do
 done
 
 # 격리 워크스페이스(멱등): 매 실행 초기화. 모든 산출물이 여기에만 쌓인다.
-WS="$ROOT/logs/demo_cmp85"
+WS="$ROOT/logs/demo_audit_separation"
 rm -rf "$WS"
 mkdir -p "$WS/messages" "$WS/packets" "$WS/audit_state"
 
@@ -271,21 +271,21 @@ cleanup
 # ── S4 강화: 우회 high-sev 알림 → 차단 결정 ───────────────────────────────────
 #   기본(SIMULATED): flow tap 은 관찰 전용이라 실제 drop 없음 → mode=SIMULATED 로 정직히.
 #   --enforce(ENFORCED): CMP-94 트랙 B 빌드로 승격 — 격리 netns 에서 실제 egress drop
-#     (scripts/demo_s4_enforced.sh). root/nft 필요. 없으면 정직하게 SIMULATED 로 폴백.
+#     (scripts/demo_bypass_enforcement.sh). root/nft 필요. 없으면 정직하게 SIMULATED 로 폴백.
 S4_MODE="SIMULATED"
 if [[ $ENFORCE -eq 1 ]]; then
   if [[ "$(id -u)" == "0" ]] && command -v nft >/dev/null 2>&1; then
     printf '%s우회 알림 → ENFORCED 승격: 격리 netns 실제 egress drop(CMP-94 트랙 B):%s\n' "$c_d" "$c_0"
     # 공유 워크스페이스($WS)에 enforcement.jsonl(ENFORCED)·blocked_attempts.json·
     # s4_enforced.json 을 적재. 자체 PASS/FAIL 도 출력(증강 하니스).
-    if S4_WS="$WS" bash "$ROOT/scripts/demo_s4_enforced.sh" 2>&1 | sed 's/^/  /'; then
+    if S4_WS="$WS" bash "$ROOT/scripts/demo_bypass_enforcement.sh" 2>&1 | sed 's/^/  /'; then
       S4_MODE="ENFORCED"
     else
       printf '%s  ⚠ ENFORCED 증강 실패 — SIMULATED 결정으로 폴백.%s\n' "$c_y" "$c_0"
     fi
   else
     printf '%s  ⚠ --enforce 는 root/nft(격리 netns) 필요 — 이번 실행은 SIMULATED 로 폴백.%s\n' "$c_y" "$c_0"
-    printf '%s    실제 drop 시연:  sudo PORT=%s ./scripts/demo_cmp85.sh --enforce%s\n' "$c_d" "$START_PORT" "$c_0"
+    printf '%s    실제 drop 시연:  sudo PORT=%s ./scripts/demo_audit_separation.sh --enforce%s\n' "$c_d" "$START_PORT" "$c_0"
   fi
 fi
 if [[ "$S4_MODE" == "SIMULATED" ]]; then
@@ -415,7 +415,7 @@ src_not_gw = all(not f.get("via_gateway") for f in flow_bypass) and bool(flow_by
 enf_block = [e for e in enforce if e.get("action") == "BLOCK"]
 if S4_MODE == "ENFORCED":
     # ENFORCED(--enforce+root): 격리 netns 에서 실제 drop. 결정=ENFORCED·applied·rule_id +
-    # blocked_attempts 증가 + A2 실제 drop·A1 정상 통과(scripts/demo_s4_enforced.sh 증강).
+    # blocked_attempts 증가 + A2 실제 drop·A1 정상 통과(scripts/demo_bypass_enforcement.sh 증강).
     enf_ok = (
         bool(enf_block)
         and all(e.get("mode") == "ENFORCED" for e in enf_block)    # 실제 집행 라벨
@@ -474,9 +474,9 @@ s6_ok = (
     prior_all
     and (WS / "audit_findings.jsonl").exists()
     and (WS / "alerts.jsonl").exists()
-    and str(WS).endswith("logs/demo_cmp85")           # 격리 워크스페이스(멱등)
+    and str(WS).endswith("logs/demo_audit_separation")  # 격리 워크스페이스(멱등)
 )
-check("S6 자동 검증 — S1~S5 PASS/FAIL 집계 + 멱등(격리 워크스페이스 logs/demo_cmp85)",
+check("S6 자동 검증 — S1~S5 PASS/FAIL 집계 + 멱등(격리 워크스페이스 logs/demo_audit_separation)",
       s6_ok, f"S1~S5 통과={prior_all}, findings/alerts 산출물 소비={(WS/'audit_findings.jsonl').exists()}")
 
 passed = sum(1 for _, ok in rows if ok)

@@ -137,8 +137,8 @@ def test_decision_promotion_schema(tmp_path):
 
 
 def test_s4_enforced_demo_contract(tmp_path):
-    """S4 ENFORCED 데모 계약(CMP-95): scripts/demo_s4_enforced.sh 가 적재하는 산출물 ↔
-    scripts/demo_cmp85.sh --enforce 검증기의 enf_ok 술어가 일치하는지 root 불요로 보장.
+    """S4 ENFORCED 데모 계약(CMP-95): scripts/demo_bypass_enforcement.sh 가 적재하는 산출물 ↔
+    scripts/demo_audit_separation.sh --enforce 검증기의 enf_ok 술어가 일치하는지 root 불요로 보장.
 
     하니스와 동일 경로(EnforcementPoint.decide → EnforcedDecisionLog.process →
     DropFeedback)로 enforcement.jsonl·blocked_attempts·s4_enforced.json 을 만들고,
@@ -168,7 +168,7 @@ def test_s4_enforced_demo_contract(tmp_path):
              "rule_id": enf_block[0]["rule_id"], "a1_pass": True, "a2_drop": True,
              "blocked_attempts": blocked["blocked_attempts"]}
 
-    # 4) demo_cmp85.sh --enforce 검증기의 enf_ok 술어(ENFORCED 분기)를 그대로 재현.
+    # 4) demo_audit_separation.sh --enforce 검증기의 enf_ok 술어(ENFORCED 분기)를 그대로 재현.
     enf_ok = (
         bool(enf_block)
         and all(e.get("mode") == "ENFORCED" for e in enf_block)
