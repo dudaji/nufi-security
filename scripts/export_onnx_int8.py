@@ -30,6 +30,12 @@ from pathlib import Path
 MODEL_ID = os.environ.get("M5_NER_MODEL_ID", "Leo97/KoELECTRA-small-v3-modu-ner")
 DEFAULT_DIR = Path(os.environ.get("M5_ONNX_DIR", Path.home() / ".cache" / "m5_onnx_int8"))
 
+# CMP-145: 채널별(per-channel) 동적 양자화 기본 ON. per-tensor 양자화가 KR_PERSON
+# 인명 3건을 노이즈로 잃어 Wilson CI 하한을 0.860→0.832(<0.85)로 떨군 회귀를
+# per-channel 이 복원(115/126, CI 하한 0.850 ≥ 0.85). 정합성: tests/test_cmp145_int8_consistency.py.
+# 호환 검증용으로 per-tensor 회귀가 필요하면 M5_QUANT_PER_CHANNEL=0.
+PER_CHANNEL = os.environ.get("M5_QUANT_PER_CHANNEL", "1") not in ("0", "false", "False")
+
 
 def main():
     out = DEFAULT_DIR
@@ -47,10 +53,12 @@ def main():
     model.save_pretrained(fp32_dir)
     AutoTokenizer.from_pretrained(MODEL_ID).save_pretrained(fp32_dir)
 
-    print(f"[2/3] 동적 INT8 양자화(avx512_vnni, QInt8) → {int8_dir}", flush=True)
+    print(f"[2/3] 동적 INT8 양자화(avx512_vnni, QInt8, per_channel={PER_CHANNEL}) → {int8_dir}",
+          flush=True)
     quantizer = ORTQuantizer.from_pretrained(fp32_dir)
     # CPU 동적 양자화: 가중치 INT8. AVX512-VNNI 미지원 CPU 도 동적 경로는 동작.
-    qconfig = AutoQuantizationConfig.avx512_vnni(is_static=False, per_channel=False)
+    # per_channel=True(CMP-145 기본): 가중치 출력채널별 스케일 → 양자화 정밀도 손실 최소화.
+    qconfig = AutoQuantizationConfig.avx512_vnni(is_static=False, per_channel=PER_CHANNEL)
     quantizer.quantize(save_dir=int8_dir, quantization_config=qconfig)
     AutoTokenizer.from_pretrained(MODEL_ID).save_pretrained(int8_dir)
 
