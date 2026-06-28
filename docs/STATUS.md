@@ -59,7 +59,7 @@
 
 ---
 
-## 마일스톤 트래킹 (전 트랙 ✅ — M6만 후속)
+## 마일스톤 트래킹 (전 트랙 ✅ — M6 ① 종결, ② 온프렘 p95만 분리추적)
 
 - **M1** 게이트웨이 PoC (private 기본 + public 폴백 + public 100% 로깅) — ✅ 검수합격·종결 (CMP-72)
 - **M2** 탐지 파이프라인 (PII 체크섬 + KoELECTRA/gazetteer NER + 비밀정보 + 정책) — ✅ 검수합격·종결 (CMP-72)
@@ -68,7 +68,7 @@
 - **M3** 가역 가명화/원복 + 매핑 Vault — ✅ (CMP-97)
 - **M4** 기밀 1차 탐지(키워드/표식 + EDM) — ✅ (CMP-98, [`IMPL_M4.md`](IMPL_M4.md))
 - **M5** 벤치·하드닝 + KoELECTRA/INT8 실측 — ✅ (CMP-99/100/103/104, 게이트 최종판정 CPO CMP-101)
-- **M6**(후속) — NER base 모델 격상(KR_PERSON CI 하한 여유 확보) · 프로덕션 온프렘 p95 재측정
+- **M6** 정확도 숙제 — ① **종결** (CMP-145, [`CMP-145-accuracy-debt.md`](reports/CMP-145-accuracy-debt.md)): per-channel 재양자화로 INT8 KR_PERSON CI 하한 **0.832→0.850 (≥0.85)** + 재양자화 정합성 테스트. ② 프로덕션 온프렘 p95 — **분리추적**(온프렘 하드웨어 의존, 보드/CEO 환경 제공 필요)
 
 ```
 M1 게이트웨이 + M2 PII/비밀 탐지  ──✅ PoC 검수합격·종결 (SPEC.md / DEMO.md)
@@ -78,7 +78,7 @@ M3 가역 가명화/원복 + 매핑 Vault ──✅ (CMP-97, egress_audit/pseudo
 M4 기밀 1차 탐지(키워드/표식 + EDM) ──✅ (CMP-98, IMPL_M4.md)
 M5 벤치·하드닝 + KoELECTRA/INT8 실측 ──✅ (CMP-99/100/103/104, M5_MEASUREMENT_REPORT.md)
    · PII recall 0.946 ≥ 0.90 · INT8 512자 p95 38ms · 하드닝 12/12 · 게이트 최종판정 CPO(CMP-101)
-M6(후속) ──🔜 NER base 모델 격상 · 프로덕션 온프렘 p95 재측정
+M6 정확도 숙제 ──① ✅ per-channel INT8 KR_PERSON CI 하한 0.832→0.850 (CMP-145) · ② 🔜 온프렘 p95(분리추적)
 ```
 
 ---
