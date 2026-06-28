@@ -11,3 +11,9 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+      - id: doc-style-guard
+        name: 공개 문서 스타일 가드 (DOC_STYLE.md §4)
+        entry: python scripts/check_doc_style.py
+        language: system
+        pass_filenames: false
+        always_run: true

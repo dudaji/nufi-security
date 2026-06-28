@@ -7,12 +7,14 @@ on:
   pull_request:
     paths:
       - "docs/**"
+      - "**/*.md"
       - "**/*.py"
       - "config/**"
       - "VERSION"
       - "CHANGELOG.md"
       - "README.md"
       - "scripts/check_docs.py"
+      - "scripts/check_doc_style.py"
       - ".github/workflows/docs-guard.yml"
   push:
     branches: [main]
