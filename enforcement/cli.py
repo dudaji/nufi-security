@@ -506,7 +506,7 @@ def cmd_report(args) -> int:
 
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(prog="nufi-egress",
-                                 description="NuFi Egress Enforcement CLI (CMP-94 트랙 B)")
+                                 description="NuFi Egress Enforcement CLI")
     ap.add_argument("--routing", default=None, help="routing.yaml 경로")
     ap.add_argument("--policy", default=None, help="policy.yaml 경로")
     # 멀티테넌시·RBAC 첫 슬라이스(v0.0.6 C2 · CMP-151) — 조회 격리 + 읽기전용 역할.
@@ -541,7 +541,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--no-reinject", action="store_true", help="카운터만, flow 미기록")
     p.set_defaults(func=cmd_feedback)
 
-    p = sub.add_parser("doctor", help="하이브리드 배선 1회 진단(5체크 PASS/WARN/FAIL · CMP-120)")
+    p = sub.add_parser("doctor", help="하이브리드 배선 1회 진단(5체크 PASS/WARN/FAIL)")
     p.add_argument("--ner-backend", default="gazetteer",
                    help="탐지 NER 백엔드(기본 gazetteer — 결정론적·경량)")
     p.add_argument("--connect-timeout", type=float, default=2.0,
@@ -552,7 +552,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.set_defaults(func=cmd_doctor)
 
     p = sub.add_parser("coverage",
-                       help="'내 트래픽 중 X%% 게이트웨이 통과' 커버리지 보증 리포트(CMP-133)")
+                       help="'내 트래픽 중 X%% 게이트웨이 통과' 커버리지 보증 리포트")
     p.add_argument("--simulate", metavar="REPLAY.jsonl",
                    help="flow 리플레이로 집계(에어갭/CI · 운영 로그 미오염)")
     p.add_argument("--targets", default=None, help="capture_targets.yaml 경로")
@@ -568,7 +568,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.set_defaults(func=cmd_coverage)
 
     p = sub.add_parser("monitor",
-                       help="게이트웨이 우회 상시 모니터링/임계 알림(suppression · CMP-133)")
+                       help="게이트웨이 우회 상시 모니터링/임계 알림(suppression)")
     p.add_argument("--simulate", metavar="REPLAY.jsonl",
                    help="flow 리플레이로 우회 모니터 1회 실행(에어갭/CI)")
     p.add_argument("--threshold", type=int, default=1,
@@ -582,7 +582,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--json", action="store_true", help="기계용 JSON 만 출력")
     p.set_defaults(func=cmd_monitor)
 
-    p = sub.add_parser("init", help="프리셋에서 운영 config 구체화(CMP-121)")
+    p = sub.add_parser("init", help="프리셋에서 운영 config 구체화")
     p.add_argument("preset", nargs="?", help="프리셋 이름(생략 시 --list)")
     p.add_argument("--list", action="store_true", help="사용 가능한 프리셋 목록")
     p.add_argument("--out", default="config", help="config 출력 디렉터리(기본 ./config)")
@@ -593,7 +593,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.set_defaults(func=cmd_init)
 
     p = sub.add_parser("audit",
-                       help="비동기 감사 봇 + §4 감사로그 조회(CMP-141 통합)")
+                       help="비동기 감사 봇 + §4 감사로그 조회")
     p.add_argument("action", choices=["report", "daemon", "once", "query"],
                    help="report=지연 p95 · daemon=상시 폴 · once=큐 1회 드레인 · "
                         "query=감사로그 집계(outcome/엔티티/체인)")
@@ -610,7 +610,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.set_defaults(func=cmd_audit)
 
     p = sub.add_parser("targets",
-                       help="capture_targets.yaml 파생/조회 + BPF 필터(CMP-87 캡처 레이어)")
+                       help="capture_targets.yaml 파생/조회 + BPF 필터(캡처 레이어)")
     p.add_argument("--refresh", action="store_true",
                    help="routing.yaml 에서 목적지를 재파생해 capture_targets.yaml 기록")
     # 최상위 --routing(집행용)과 충돌 없이 서브커맨드 전용으로 보존(dest=targets_routing).
@@ -632,7 +632,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.set_defaults(func=cmd_flow_tap)
 
     p = sub.add_parser("policy",
-                       help="정책 운영 자동화: 다중 프로파일·묶기·버전/되돌리기·변경 감사(CMP-144)")
+                       help="정책 운영 자동화: 다중 프로파일·묶기·버전/되돌리기·변경 감사")
     psub = p.add_subparsers(dest="policy_action", required=True)
 
     pp = psub.add_parser("list", help="프로파일·묶기·활성 버전 요약")

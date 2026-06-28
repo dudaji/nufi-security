@@ -243,7 +243,7 @@ def _parse_tcpdump_line(line: str) -> Optional[Dict[str, Any]]:  # pragma: no co
 
 
 def _main(argv: Optional[List[str]] = None) -> int:
-    ap = argparse.ArgumentParser(description="public 목적지 flow tap + 우회 탐지 (CMP-87 P1)")
+    ap = argparse.ArgumentParser(description="public 목적지 flow tap + 우회 탐지")
     ap.add_argument("--simulate", metavar="REPLAY.jsonl",
                     help="미리 만든 flow 로그 리플레이(root 없이 재현 — 에어갭/CI)")
     ap.add_argument("--live", action="store_true", help="tcpdump 라이브 캡처(root 필요)")

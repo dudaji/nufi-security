@@ -403,7 +403,7 @@ def p95_latency_ms(findings_path: Path) -> Optional[float]:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
-    ap = argparse.ArgumentParser(description="NuFi 비동기 감사 봇 (CMP-88 P2)")
+    ap = argparse.ArgumentParser(description="NuFi 비동기 감사 봇")
     ap.add_argument("--profiles", default=None, help="audit_profiles.yaml 경로")
     ap.add_argument("--once", action="store_true", help="큐 1회 드레인 후 종료(배치)")
     ap.add_argument("--simulate", action="store_true",

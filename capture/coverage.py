@@ -207,7 +207,7 @@ def render_coverage_human(snap: CoverageSnapshot) -> str:
     """커버리지 스냅샷을 사람읽기 리포트로(‘X% 게이트웨이 통과’)."""
     glyph = {PASS: "🟢", WARN: "🟡", FAIL: "🔴"}.get(snap.status, "·")
     lines: List[str] = []
-    lines.append("nufi-egress coverage — 게이트웨이 커버리지 보증 (CMP-133)")
+    lines.append("nufi-egress coverage — 게이트웨이 커버리지 보증")
     lines.append("=" * 60)
     if snap.total == 0:
         lines.append("관측된 public-LLM 행 flow 없음 — 커버리지 단언 불가(WARN/강등).")

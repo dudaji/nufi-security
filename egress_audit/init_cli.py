@@ -73,7 +73,7 @@ def cmd_init(args: argparse.Namespace) -> int:
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
         prog="nufi init",
-        description="파이프라인 프리셋에서 운영 config 를 구체화(CMP-121).")
+        description="파이프라인 프리셋에서 운영 config 를 구체화.")
     ap.add_argument("preset", nargs="?", help="프리셋 이름(생략 시 --list)")
     ap.add_argument("--list", action="store_true", help="사용 가능한 프리셋 목록")
     ap.add_argument("--out", default="config", help="config 출력 디렉터리(기본 ./config)")

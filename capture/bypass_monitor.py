@@ -225,7 +225,7 @@ def render_monitor_human(report: Dict[str, Any], events: List[AlertEvent]) -> st
     glyph = {PASS: "🟢", WARN: "🟡", FAIL: "🔴"}.get(report["status"], "·")
     s = report["stats"]
     lines: List[str] = []
-    lines.append("nufi-egress monitor — 우회 상시 모니터링/알림 (CMP-133)")
+    lines.append("nufi-egress monitor — 우회 상시 모니터링/알림")
     lines.append("=" * 60)
     lines.append(f"관측 {s['observed']} · 우회 {s['bypass']} · 알림 {s['alerts']} · "
                  f"억제(suppressed) {s['suppressed']}  "
@@ -242,7 +242,7 @@ def render_monitor_human(report: Dict[str, Any], events: List[AlertEvent]) -> st
 
 def main(argv: Optional[List[str]] = None) -> int:  # pragma: no cover - CLI 경유는 cli.py
     ap = argparse.ArgumentParser(
-        description="게이트웨이 우회 상시 모니터링/알림 (CMP-133 · v0.0.3 O2)")
+        description="게이트웨이 우회 상시 모니터링/알림")
     ap.add_argument("--simulate", metavar="REPLAY.jsonl",
                     help="flow 리플레이로 우회 모니터 1회 실행(에어갭/CI)")
     ap.add_argument("--threshold", type=int, default=DEFAULT_THRESHOLD)

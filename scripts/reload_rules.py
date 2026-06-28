@@ -79,7 +79,7 @@ def cmd_apply(a) -> int:
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description="NuFi 룰 핫리로드 CLI (CMP-124)")
+    ap = argparse.ArgumentParser(description="NuFi 룰 핫리로드 CLI")
     ap.add_argument("--patterns", default=None, help="patterns.yaml 경로(미지정 시 기본)")
     ap.add_argument("--policy", default=None, help="policy.yaml 경로")
     ap.add_argument("--confidential", default=None, help="confidential.yaml 경로")

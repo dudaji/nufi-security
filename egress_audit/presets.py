@@ -244,7 +244,7 @@ def write_config(merged: Dict[str, Dict[str, Any]], out_dir: Path,
             raise PresetError(f"대상 파일이 이미 존재({names}). 덮어쓰려면 --force.")
     out_dir.mkdir(parents=True, exist_ok=True)
     written: List[Path] = []
-    header = (f"# 생성: nufi init {preset_name} (CMP-121 프리셋)\n"
+    header = (f"# 생성: nufi init {preset_name} (프리셋)\n"
               f"# 이 파일은 프리셋에서 구체화됨. 재현: nufi init {preset_name} --force\n"
               f"# 세부 조정은 raw 편집(파워유저 탈출구) 또는 프리셋 오버레이 수정.\n")
     for fname, data in targets.items():

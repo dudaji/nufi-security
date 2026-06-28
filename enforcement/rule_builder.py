@@ -163,7 +163,7 @@ def _whitelist_rules(cfg: EnforcementConfig, daddr: str, setref: str) -> List[st
 def _header(cfg: EnforcementConfig, kind: str) -> List[str]:
     return [
         "#!/usr/sbin/nft -f",
-        "# NuFi Egress Enforcement — 생성물, 직접 편집 금지 (CMP-94 트랙 B).",
+        "# NuFi Egress Enforcement — 생성물, 직접 편집 금지.",
         "# policy_src=routing.yaml+policy.yaml  source=enforcement.rule_builder",
         f"# kind={kind} fail_mode={cfg.fail_mode} table=inet/{cfg.table}",
     ]

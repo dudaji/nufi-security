@@ -91,7 +91,7 @@ class Handler(BaseHTTPRequestHandler):
         qs = parse_qs(parsed.query)
         if path == "/":
             self._json(200, {"service": "nufi-audit-dashboard", "read_only": True,
-                             "issue": "CMP-134", "endpoints": [
+                             "endpoints": [
                                  "/api/model", "/api/decisions", "/api/chain",
                                  "/api/bypass", "/api/trend", "/viewer"]})
             return

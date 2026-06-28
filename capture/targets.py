@@ -148,7 +148,7 @@ class CaptureTargets:
         }
         self.path.parent.mkdir(parents=True, exist_ok=True)
         header = (
-            "# 캡처 대상(public LLM 목적지) — CMP-87 P1.\n"
+            "# 캡처 대상(public LLM 목적지).\n"
             "# routing.yaml 의 egress_class: public 백엔드에서 파생(NFR3).\n"
             "# 갱신: python3 -m capture.targets --refresh\n"
             "# gateway 섹션 = 우회 판정 기준(이 출처가 아니면 우회로 본다).\n"
@@ -190,7 +190,7 @@ class CaptureTargets:
 
 
 def _main(argv: Optional[List[str]] = None) -> int:
-    ap = argparse.ArgumentParser(description="capture_targets.yaml 파생/조회 (CMP-87 P1)")
+    ap = argparse.ArgumentParser(description="capture_targets.yaml 파생/조회")
     ap.add_argument("--refresh", action="store_true",
                     help="routing.yaml 에서 목적지를 재파생해 capture_targets.yaml 기록")
     ap.add_argument("--routing", default=None, help="routing.yaml 경로")

@@ -29,7 +29,7 @@ SIMULATED = "SIMULATED"
 ENFORCED = "ENFORCED"
 
 # 차단 제어점(트랙 B 에서 실제 구현). 권고 우선순위는 SPEC §P3.
-CONTROL_POINT = "egress_firewall(nftables allowlist) [stub — CMP-93/track-B]"
+CONTROL_POINT = "egress_firewall(nftables allowlist) [stub — track-B]"
 
 
 class EnforcementPoint:
@@ -76,7 +76,7 @@ class EnforcementPoint:
             "mode": self.mode,                   # SIMULATED(데모) | ENFORCED(트랙 B)
             "control_point": CONTROL_POINT,      # 어디서 drop 되는지(제어점)
             "applied": False,                    # decide 단계 = 미적용
-            "followup": "CMP-93 (track B: mode=ENFORCED, nftables MVP, 신규 CMP-58 승인)",
+            "followup": "track B: mode=ENFORCED, nftables MVP (미구현)",
         }
 
     # ---- 적용: 차단 제어점 스텁 ------------------------------------------
@@ -88,7 +88,7 @@ class EnforcementPoint:
         if self.mode == ENFORCED:
             # 트랙 B(CMP-93) 연결 seam: nftables/proxy/eBPF egress drop.
             raise NotImplementedError(
-                "ENFORCED egress drop 은 트랙 B(CMP-93, nftables MVP) — 신규 CMP-58 승인 필요")
+                "ENFORCED egress drop 은 트랙 B(nftables MVP) — 미구현")
         decision["applied"] = False              # 관찰 전용: 실제 drop 안 함
         return False
 
@@ -129,7 +129,7 @@ def _load_jsonl(path: str) -> List[Dict[str, Any]]:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
-    ap = argparse.ArgumentParser(description="우회 차단 제어점 (CMP-85 S4 / CMP-89 트랙 A)")
+    ap = argparse.ArgumentParser(description="우회 차단 제어점")
     ap.add_argument("--alerts", required=True, help="우회 알림 jsonl(봇 alerts.jsonl)")
     ap.add_argument("--out", default=None, help="enforcement 결정 출력 jsonl")
     ap.add_argument("--mode", default=SIMULATED, choices=[SIMULATED, ENFORCED])

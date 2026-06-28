@@ -6,6 +6,15 @@
 
 ## [Unreleased]
 
+### Changed
+- **공개 표면 표기 정리** — CLI `--help`/usage/description, 명령 stdout 헤더, 생성물
+  파일 헤더(`nufi init` config·생성 nftables 룰셋), 대시보드 JSON 응답에서 내부 추적용
+  식별자 표기를 제거해 사용자에게 보이는 문구를 정돈했다. 기존 동작·옵션·종료 코드·JSON
+  키 구조는 무변경(표기/문구만). 재발 방지를 위해 공개 스타일 가드
+  ([`scripts/check_doc_style.py`](scripts/check_doc_style.py))를 코드 사용자 표면
+  (argparse help/description·명령 출력·생성물 헤더·JSON 값)까지 확장했다 — 순수 내부
+  docstring/주석은 그대로 허용한다.
+
 ## [0.0.6] - 2026-06-28
 
 확장·차별화의 첫 슬라이스. 운영(Operate) 완성 위에 **제출용 리포팅(SLA·규정준수)** 과

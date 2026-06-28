@@ -270,7 +270,7 @@ def build_model(*, audit_path: Optional[str] = None,
     flows = load_flows(flow_dir, flow_paths)
     return {
         "meta": {
-            "issue": "CMP-134",
+            "feature": "audit-visibility-dashboard",
             "read_only": True,
             "audit_count": len(records),
             "flow_count": len(flows),

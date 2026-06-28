@@ -1,5 +1,5 @@
 #!/usr/sbin/nft -f
-# NuFi Egress Enforcement — 생성물, 직접 편집 금지 (CMP-94 트랙 B).
+# NuFi Egress Enforcement — 생성물, 직접 편집 금지.
 # policy_src=routing.yaml+policy.yaml  source=enforcement.rule_builder
 # kind=panic-fail-closed fail_mode=open table=inet/nufi_egress
 add table inet nufi_egress

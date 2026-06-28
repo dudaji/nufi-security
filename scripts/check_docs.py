@@ -275,13 +275,13 @@ def run_all(root: Path, verbose: bool = False) -> tuple[list[tuple[str, int]], l
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="docs 정합성 자동 가드 (CMP-117)")
+    ap = argparse.ArgumentParser(description="docs 정합성 자동 가드")
     ap.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args()
 
     checks, errors = run_all(REPO, verbose=args.verbose)
 
-    print("\n=== docs 정합성 가드 (CMP-117) ===")
+    print("\n=== docs 정합성 가드 ===")
     for name, n_err in checks:
         print(f"  [{'FAIL' if n_err else ' OK '}] {name}" + (f" — {n_err} 오류" if n_err else ""))
     if errors:

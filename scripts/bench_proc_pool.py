@@ -184,7 +184,7 @@ def main():
     body = make_body(args.chars)
     levels = [int(x) for x in args.workers.split(",") if x.strip()]
     report = {
-        "issue": "CMP-130", "backend": args.backend, "chars": args.chars,
+        "backend": args.backend, "chars": args.chars,
         "p95_target_ms": P95_TARGET_MS, "env": _env_snapshot(),
         "requests_per_config": args.requests,
     }
