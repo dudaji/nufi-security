@@ -110,8 +110,8 @@ curl -s localhost:4000/v1/chat/completions \
 ./scripts/demo_policy_ops.sh                  # 매뉴얼: docs/OPS_POLICY_AT_SCALE.md
 
 # 3) 커버리지 점검 — "내 트래픽 중 몇 %가 게이트웨이를 통과했나" + 우회 알림
-python3 -m enforcement.cli coverage --simulate samples/flow_replay.jsonl
-python3 -m enforcement.cli monitor  --simulate samples/flow_bypass_burst.jsonl --threshold 1
+nufi-egress coverage --simulate samples/flow_replay.jsonl
+nufi-egress monitor  --simulate samples/flow_bypass_burst.jsonl --threshold 1
 
 # 3b) SLA·규정준수 리포트 — 기간별 충족/위반 판정 + 변경 감사/무결성(제출용)
 ./scripts/demo_report.sh                      # 매뉴얼: docs/REPORTING.md
@@ -128,11 +128,16 @@ python3 -m dashboards.server --port 8099 \
 #   → 브라우저에서 http://127.0.0.1:8099/viewer
 
 # 5) 배선 점검 — 5개 항목 자가진단
-python3 -m enforcement.cli doctor
+nufi-egress doctor
 
 # 6) 벤치마크 — 재현율(recall)·정밀도(precision)·지연(latency)
 python3 scripts/bench.py --ner gazetteer
 ```
+
+> `coverage`·`monitor`·`doctor` 는 단일 진입점 CLI `nufi-egress` 의 서브커맨드입니다(전체 목록은
+> [`docs/CLI.md`](docs/CLI.md)). 설치하지 않은 환경에서는 동일 명령을
+> `python3 -m enforcement.cli <서브커맨드>` 로 그대로 실행할 수 있습니다.
+> (`dashboards.server`·`scripts/bench.py` 는 CLI 와 별개인 보조 실행 진입점입니다.)
 
 ---
 
