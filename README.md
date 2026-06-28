@@ -89,6 +89,7 @@ curl -s localhost:4000/v1/chat/completions \
 
 | 하고 싶은 것 | 가이드 |
 |---|---|
+| **이번 버전이 우리에게 뭘 해주나** (사람 친화 릴리스 노트, 비개발자 친화) | [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md) |
 | **손으로 따라하며 익히기** (토이 프로젝트 하나를 끝까지, 20~30분, 관리자 권한 불필요) | [`docs/HANDS_ON.md`](docs/HANDS_ON.md) |
 | **내 LLM 서비스 앞단에 붙이기** (통합 경로·프리셋·점검·결정 트리) | [`docs/INTEGRATION_GUIDE.md`](docs/INTEGRATION_GUIDE.md) |
 | **명령어 전체 레퍼런스** (`nufi-egress` 모든 서브커맨드) | [`docs/CLI.md`](docs/CLI.md) |
@@ -117,6 +118,9 @@ python3 -m enforcement.cli monitor  --simulate samples/flow_bypass_burst.jsonl -
 
 # 3c) 멀티테넌시·읽기전용 역할 — 테넌트 조회 격리 + viewer/operator RBAC
 ./scripts/demo_multitenancy.sh               # 매뉴얼: docs/MULTITENANCY.md
+
+# 3d) v0.0.6 통합 데모 — 위 3b(리포트)+3c(테넌트·역할)를 한 명령으로 재현
+./scripts/demo_v0.0.6.sh                      # 사람 친화 요약: docs/RELEASE_NOTES.md
 
 # 4) 감사 대시보드 — 결정/무결성/우회/추이 4개 패널 (읽기 전용)
 python3 -m dashboards.server --port 8099 \
