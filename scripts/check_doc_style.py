@@ -38,32 +38,10 @@ ALWAYS_EXCLUDE = {
     "docs/DOC_STYLE.md",
 }
 
-# --- 예외 2: CEO 정렬 대기 중인 내부 전용 문서 (CMP-149 part 2/3) ----------------
-# 아래 문서들은 본질적으로 내부용(내부 status·제안서·엔지니어링 리포트·CMP-태깅 스냅샷)으로,
-# 스크럽이 아니라 "공개 저장소에서 제거"가 적절할 수 있다. 제거 범위는 CEO 정렬 후 확정한다.
-# 정렬이 끝나 제거되면 파일이 사라지므로 이 목록 항목도 함께 비워야 한다(가드가 전 범위로 강제됨).
-#   ── 이 목록은 임시다. 비워지는 것이 최종 상태다. ──
-PENDING_CEO_REMOVAL = {
-    "docs/STATUS.md",
-    "docs/PROPOSAL.md",
-    "docs/PROPOSAL_v0.0.2.md",
-    "docs/PROPOSAL_v0.0.3.md",
-    "docs/PROPOSAL_v0.0.4.md",
-    "docs/PROPOSAL_v0.0.5.md",
-    "docs/PROPOSAL_v0.0.6.md",
-    "docs/M5_MEASUREMENT_REPORT.md",
-    "docs/GOVERNANCE_CMP-137_release-mechanics-clause.md",
-    "docs/SPEC_CMP85.md",
-    "docs/DEMO_CMP85.md",
-    "docs/DEMO_RESULT_CMP85.md",
-    "docs/ENFORCEMENT_BUILD_CMP94.md",
-    "docs/reports/CMP-123-d3-accuracy-perf.md",
-    "docs/reports/CMP-127-concurrency-hardening.md",
-    "docs/reports/CMP-130-followup-procpool.md",
-    "docs/reports/CMP-145-accuracy-debt.md",
-    "docs/reports/CMP-147-onprem-p95.md",
-    "docs/reports/CMP-147-onprem-p95-RUNBOOK.md",
-}
+# 내부 전용 문서(내부 status·제안서·엔지니어링 리포트·CMP-태깅 스냅샷)는 스크럽 대신
+# 공개 저장소에서 제거하기로 정렬됐다(완료). 따라서 임시 제외 목록은 비어 있고, 가드는
+# DOC_STYLE.md 한 건만 빼고 전 범위(추적 *.md 전체)를 강제한다.
+PENDING_CEO_REMOVAL: set[str] = set()
 
 EXCLUDE = ALWAYS_EXCLUDE | PENDING_CEO_REMOVAL
 

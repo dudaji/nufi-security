@@ -1,7 +1,5 @@
 # 구현 명세 (SPEC) — NuFi Egress-Audit Gateway
 
-설계 배경/리서치 전문: [`PROPOSAL.md`](PROPOSAL.md).
-
 ---
 
 ## 범위 (M1 + M2)

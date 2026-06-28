@@ -101,7 +101,7 @@ curl -s localhost:4000/v1/chat/completions \
 
 ```bash
 # 1) 차등 감사 통합 데모 — 여러 시나리오를 자동으로 PASS/FAIL (관리자 권한 불필요)
-./scripts/demo_cmp85.sh                       # 재현 매뉴얼: docs/DEMO_CMP85.md
+./scripts/demo_cmp85.sh                       # 재현 매뉴얼: docs/DEMO_v0.0.5.md
 
 # 2) 정책 운영 자동화 데모 — 여러 정책 프로파일·무중단 되돌리기·변경 감사
 ./scripts/demo_policy_ops.sh                  # 매뉴얼: docs/OPS_POLICY_AT_SCALE.md

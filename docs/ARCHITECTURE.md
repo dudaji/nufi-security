@@ -1,8 +1,7 @@
 # NuFi Egress-Audit Gateway — Architecture (단일 권위 문서)
 
 > **이 문서가 아키텍처의 단일 권위(single source of truth)** 입니다. 마일스톤별 SPEC(`SPEC*.md`)·구현
-> 노트(`IMPL_M4.md`, `ENFORCEMENT_BUILD_CMP94.md`)·측정 리포트(`M5_MEASUREMENT_REPORT.md`)는 **역사적/세부**
-> 자료로 남기며, 흐름·컴포넌트의 현행 정합은 이 파일을 따릅니다.
+> 노트(`IMPL_M4.md`)는 **역사적/세부** 자료로 남기며, 흐름·컴포넌트의 현행 정합은 이 파일을 따릅니다.
 >
 > 다이어그램은 외부 이미지가 아니라 **in-repo Mermaid** 입니다. 코드와 같은 PR 에서 갱신되어 드리프트에
 > 강합니다(아래 [§7 드리프트 방지](#7-드리프트-방지-drift-resistance) 참조).
@@ -352,7 +351,7 @@ sequenceDiagram
 
 ### 7.1 단일 권위 + 이력 강등
 - 본 `ARCHITECTURE.md` 가 **아키텍처 진입점**(단일 권위). `docs/README.md` 인덱스가 이를 최상단으로 링크.
-- 마일스톤 SPEC(`SPEC.md`·`SPEC_CMP85.md`·`SPEC_EGRESS_ENFORCEMENT.md`·`SPEC_M4.md`)과 IMPL/측정 노트는
+- 마일스톤 SPEC(`SPEC.md`·`SPEC_EGRESS_ENFORCEMENT.md`·`SPEC_M4.md`)과 IMPL 노트는
   **역사적/세부**로 강등 — "왜·당시 결정"의 근거로만 참조하고, 현행 흐름은 본 문서가 권위.
 
 ### 7.2 문서 정합성 체크리스트 (흐름 바꾸는 PR/마일스톤 필수)
@@ -369,8 +368,8 @@ sequenceDiagram
 §7.2 의 '사람이 기억하는 체크리스트' 를 **기계가 강제하는 가드**로 승격했다. `scripts/check_docs.py`
 가 CI(`.github/workflows/docs-guard.yml`)와 pre-commit(`.pre-commit-config.yaml`)에서 PR/커밋마다 실행 →
 흐름을 바꾸는 PR 이 문서 동시 갱신을 빠뜨리면 **실패**한다. 검사 대상은 **living 문서**(본
-`ARCHITECTURE.md`·`README.md`·`docs/README.md`·`docs/STATUS.md`·`CHANGELOG.md`·`VERSION`)만이며,
-마일스톤 SPEC*/IMPL/DEMO/측정 리포트는 **frozen(역사적 스냅샷)** 이라 제외한다.
+`ARCHITECTURE.md`·`README.md`·`docs/README.md`·`CHANGELOG.md`·`VERSION`)만이며,
+마일스톤 SPEC*/IMPL/DEMO 는 **frozen(역사적 스냅샷)** 이라 제외한다.
 
 가드가 강제하는 4가지(로컬 실행: `python scripts/check_docs.py [--verbose]`):
 
@@ -416,11 +415,9 @@ sequenceDiagram
 
 - 읽기 순서·상태표: [`docs/README.md`](README.md)
 - 운영(정책 운영 자동화) v0.0.5 B1: [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) · 데모 [`DEMO_v0.0.5.md`](DEMO_v0.0.5.md)
-- 제안/배경: [`PROPOSAL.md`](PROPOSAL.md) · 기반 명세: [`SPEC.md`](SPEC.md)
-- 차등감사·패킷·봇: [`SPEC_CMP85.md`](SPEC_CMP85.md) · [`DEMO_CMP85.md`](DEMO_CMP85.md)
-- Enforcement: [`SPEC_EGRESS_ENFORCEMENT.md`](SPEC_EGRESS_ENFORCEMENT.md) · [`ENFORCEMENT_BUILD_CMP94.md`](ENFORCEMENT_BUILD_CMP94.md)
-- M4 기밀: [`SPEC_M4.md`](SPEC_M4.md) · [`IMPL_M4.md`](IMPL_M4.md)
-- M5 실측: [`M5_MEASUREMENT_REPORT.md`](M5_MEASUREMENT_REPORT.md)
+- 기반 명세: [`SPEC.md`](SPEC.md)
+- Enforcement(우회 차단): [`SPEC_EGRESS_ENFORCEMENT.md`](SPEC_EGRESS_ENFORCEMENT.md)
+- 기밀 1차 탐지: [`SPEC_M4.md`](SPEC_M4.md) · [`IMPL_M4.md`](IMPL_M4.md)
 - 릴리스: [`../CHANGELOG.md`](../CHANGELOG.md) · [`../VERSION`](../VERSION)
 
 *최초 작성: 2026-06-27 — v0.0.1 단일 권위 아키텍처 + 4개 시퀀스 Mermaid. 코드 대조 완료.*

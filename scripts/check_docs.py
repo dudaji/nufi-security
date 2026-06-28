@@ -34,7 +34,6 @@ LIVING_MD = [
     ARCHITECTURE,
     "README.md",
     "docs/README.md",
-    "docs/STATUS.md",
     "CHANGELOG.md",
 ]
 VERSION_FILE = "VERSION"

@@ -131,7 +131,7 @@ NuFi Egress-Audit Gateway 의 첫 릴리스 태그. 하이브리드 LLM(private 
 - **기밀 1차 탐지**: 분류 표식·키워드 + EDM(구조화·비구조화 지문)
   — `egress_audit/detectors/confidential.py`, `egress_audit/edm.py`.
 - **벤치·하드닝**: 골드셋 확대·채점 하니스, fail-closed(탐지 실패→차단),
-  감사 해시체인(변조탐지), KoELECTRA/ONNX-INT8 백엔드 실측. 상세: `docs/M5_MEASUREMENT_REPORT.md`.
+  감사 해시체인(변조탐지), KoELECTRA/ONNX-INT8 백엔드 실측.
 - **문서**: 단일 권위 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)(컴포넌트 + 4개 시퀀스
   Mermaid), 드리프트 방지 체크리스트.
 

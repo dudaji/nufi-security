@@ -1,7 +1,6 @@
 # 구현 명세 (SPEC) — Egress-Audit M4: 기밀 1차 탐지 (키워드 / EDM)
 
 상위 PoC 명세: [`SPEC.md`](SPEC.md) (M1 게이트웨이 + M2 PII/비밀 탐지, 수용 기준 10/10 PASS).
-설계 배경/리서치: [`PROPOSAL.md`](PROPOSAL.md).
 
 ---
 

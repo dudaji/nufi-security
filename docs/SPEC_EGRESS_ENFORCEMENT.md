@@ -1,6 +1,6 @@
 # SPEC — NuFi Egress Enforcement (우회 차단) · 트랙 B
 
-> 상위 배경: `security/docs/SPEC_CMP85.md` §P3 "우회 차단(Enforcement) — S4 강화"
+> 상위 배경: 우회 차단(Enforcement) — S4 강화
 > 상태: **설계 확정 → 빌드 완료 (nftables MVP)**
 
 ---

@@ -24,12 +24,9 @@
 |---|---|---|---|
 | 1 | [`../README.md`](../README.md) | 제품 개요 + 빠른 시작 | 한 화면으로 "무엇/어떻게 돌리나" |
 | 2 | 🏛 [`ARCHITECTURE.md`](ARCHITECTURE.md) | **단일 권위 아키텍처** (컴포넌트 + 4개 시퀀스 Mermaid) | **전체 그림** — 흐름·컴포넌트의 현행 정합 |
-| 3 | [`PROPOSAL.md`](PROPOSAL.md) | 제안·배경 | **왜** 만드는가 — 배경·리서치·차별점(한국어 개인정보) |
-| 4 | [`SPEC.md`](SPEC.md) → [`DEMO.md`](DEMO.md) | 기반 명세·데모 (역사적) | 게이트웨이 인터셉트 + 개인정보/비밀 탐지·차단 |
-| 5 | [`SPEC_CMP85.md`](SPEC_CMP85.md) → [`DEMO_CMP85.md`](DEMO_CMP85.md) → [`DEMO_RESULT_CMP85.md`](DEMO_RESULT_CMP85.md) | 차등감사 세부 (역사적) | 사내/외부 차등감사 + 패킷레이어 우회탐지 + 비동기 감사봇 |
-| 6 | [`SPEC_EGRESS_ENFORCEMENT.md`](SPEC_EGRESS_ENFORCEMENT.md) → [`ENFORCEMENT_BUILD_CMP94.md`](ENFORCEMENT_BUILD_CMP94.md) | 우회 차단 (역사적) | 탐지에서 **실제 차단(nftables)**으로 |
-| 7 | [`SPEC_M4.md`](SPEC_M4.md) → [`IMPL_M4.md`](IMPL_M4.md) | 기밀 1차 탐지 (역사적) | ✅ 키워드/표식 + EDM 구현완료 |
-| 8 | [`M5_MEASUREMENT_REPORT.md`](M5_MEASUREMENT_REPORT.md) | **벤치·하드닝 실측** | ✅ 재현율·지연 실측 결과 |
+| 3 | [`SPEC.md`](SPEC.md) → [`DEMO.md`](DEMO.md) | 기반 명세·데모 | 게이트웨이 인터셉트 + 개인정보/비밀 탐지·차단 |
+| 4 | [`SPEC_EGRESS_ENFORCEMENT.md`](SPEC_EGRESS_ENFORCEMENT.md) | 우회 차단 | 탐지에서 **실제 차단(nftables)**으로 |
+| 5 | [`SPEC_M4.md`](SPEC_M4.md) → [`IMPL_M4.md`](IMPL_M4.md) | 기밀 1차 탐지 | ✅ 키워드/표식 + EDM 구현완료 |
 
 > **처음이라 손으로 따라하며 감을 잡으려면** → [`HANDS_ON.md`](HANDS_ON.md)(토이 프로젝트 하나를
 > SDK 한 줄 전환부터 `nufi-egress` CLI 운영까지 끝까지 실습 — 20~30분·관리자 권한 불필요).
@@ -62,22 +59,16 @@
 ### 설계·명세 (역사적 — 왜·당시 결정)
 | 문서 | 단계 | 상태 |
 |---|---|---|
-| [`PROPOSAL.md`](PROPOSAL.md) | 배경·제안 | ✅ 현행 (왜) |
 | [`SPEC.md`](SPEC.md) | 기반 게이트웨이 + 탐지 | 🕮 역사적 (현행 흐름은 ARCHITECTURE.md) |
-| [`SPEC_CMP85.md`](SPEC_CMP85.md) | 차등감사·패킷·봇 | 🕮 역사적 세부 |
 | [`SPEC_EGRESS_ENFORCEMENT.md`](SPEC_EGRESS_ENFORCEMENT.md) | 우회 차단 | 🕮 역사적 → 빌드됨 |
 | [`SPEC_M4.md`](SPEC_M4.md) | 기밀 1차 탐지 | 🕮 역사적 → 구현됨 |
 
 ### 빌드·데모·결과
 | 문서 | 무엇 | 상태 |
 |---|---|---|
-| [`ENFORCEMENT_BUILD_CMP94.md`](ENFORCEMENT_BUILD_CMP94.md) | nftables 우회차단 MVP 빌드 | ✅ 구현완료 |
 | [`IMPL_M4.md`](IMPL_M4.md) | 기밀 1차 탐지(키워드/표식 + EDM) 구현 | ✅ 구현완료 |
-| [`M5_MEASUREMENT_REPORT.md`](M5_MEASUREMENT_REPORT.md) | 벤치·하드닝 **실측 리포트**(재현율·지연·하드닝) | ✅ 최신 |
 | [`HANDS_ON.md`](HANDS_ON.md) | **입문 튜토리얼** — 토이 프로젝트 1개를 SDK 전환 + CLI 운영으로 끝까지 실습 | ✅ **입문 진입점** |
 | [`DEMO.md`](DEMO.md) | 기반 데모 | ✅ 완료 (구버전) |
-| [`DEMO_CMP85.md`](DEMO_CMP85.md) | 통합 데모 **재현 매뉴얼** | ✅ **현행 데모 진입점** |
-| [`DEMO_RESULT_CMP85.md`](DEMO_RESULT_CMP85.md) | 데모 **결과 보고서** + 스크린샷 | ✅ 최신 결과 |
 | [`DEMO_v0.0.3.md`](DEMO_v0.0.3.md) | v0.0.3 **1-명령 데모** 재현 매뉴얼 | ✅ v0.0.3 데모 진입점 |
 | [`DEMO_v0.0.5.md`](DEMO_v0.0.5.md) | v0.0.5 **1-명령 데모/재현** 매뉴얼 | ✅ v0.0.5 데모 진입점 |
 | [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) | **정책 운영 자동화 매뉴얼** (`nufi-egress policy …`) | ✅ v0.0.5 운영 진입점 |
@@ -88,11 +79,11 @@
 
 ```
 게이트웨이 + 개인정보/비밀 탐지  ──✅ (SPEC.md / DEMO.md)
-   └ 사내/외부 차등감사 + 패킷레이어 + 비동기 감사봇 ──✅ (SPEC_CMP85 / DEMO_CMP85)
+   └ 사내/외부 차등감사 + 패킷레이어 + 비동기 감사봇 ──✅
         └ 우회 차단(nftables) ──✅ 설계 → 빌드
 가역 가명화/원복 + 매핑 Vault ──✅ (egress_audit/pseudonymize.py)
 기밀 1차 탐지(키워드/표식 + EDM) ──✅ (IMPL_M4.md)
-벤치·하드닝 + KoELECTRA/INT8 실측 ──✅ (M5_MEASUREMENT_REPORT.md)
+벤치·하드닝 + KoELECTRA/INT8 실측 ──✅
    · 한국어 개인정보 재현율 0.946 ≥ 0.90 · INT8 512자 지연 p95 38ms · 하드닝 12/12
 후속 ──🔜 NER 베이스 모델 격상 · 프로덕션 온프렘 지연 재측정
 ```

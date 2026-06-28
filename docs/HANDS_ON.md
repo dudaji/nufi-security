@@ -573,6 +573,6 @@ findings=`logs/audit_findings.jsonl` · flow 캡처=`logs/packets/…` · enforc
 - **실서비스 배선** — LiteLLM Proxy + 콜백 경로, 게이트웨이 배포: [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md)
 - **프리셋 깊이 보기** — 차단/가명화 동작 diff, fail-closed 보증: [`PRESETS.md`](PRESETS.md)
 - **명령 레퍼런스** — 모든 서브커맨드 플래그·종료코드: [`CLI.md`](CLI.md)
-- **아키텍처/스펙** — public/private 분리 감사, 패킷 캡처: [`ARCHITECTURE.md`](ARCHITECTURE.md) · [`SPEC_CMP85.md`](SPEC_CMP85.md)
+- **아키텍처/스펙** — public/private 분리 감사, 패킷 캡처: [`ARCHITECTURE.md`](ARCHITECTURE.md)
 
 > 막히면 `nufi-egress doctor` 부터. 5체크가 무엇이 안 물렸는지(config/도달성/게이트웨이/우회/카나리) 짚어 줍니다.
