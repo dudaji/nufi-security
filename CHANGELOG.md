@@ -21,6 +21,21 @@
     [`scripts/demo_report.sh`](scripts/demo_report.sh)(6/6 PASS, 권한 불필요)
     · 검증 `tests/test_cmp150_report.py`(13 케이스) · 샘플 픽스처 `samples/sla/`.
   - 범위 밖(다음 단계): 실시간 SLA 알림·콘솔, 다고객 SLA 집계.
+- **멀티테넌시·읽기전용 역할(RBAC) 첫 슬라이스** — 다수 테넌트를 한 게이트웨이에서
+  운영할 때의 **안전한 첫 칸**. 두 가지를 더한다(기존 동작·차단 규칙 무변경).
+  - **테넌트 읽기 경계** — 전역 `--tenant <키>` 로 리포트 조회를 한 테넌트로 **격리**한다.
+    한 테넌트의 조회 세션은 다른 테넌트의 감사 결정·정책 변경·flow 레코드를 **보지 못한다**
+    (미귀속 레코드도 격리 시 비노출 = fail-closed). 정책 묶기(binding)의 테넌트 키
+    (`tenant:acme` 등)를 격리 경계로 승격. 해시체인 무결성은 전체 체인 기준으로 검증한다.
+  - **읽기전용 역할(RBAC)** — 전역 `--role {viewer|operator}`. `viewer` 는 **조회만**
+    가능하고 정책 변경(`policy bind/snapshot/rollback`)은 **거부**된다(exit 3). `operator`
+    는 조회+변경. 기본값 `operator`(역호환). `NUFI_TENANT`/`NUFI_ROLE` env 폴백.
+  - 구현 `enforcement/access.py`(테넌트 키 추출·격리 필터 + 역할 세션·권한 가드) ·
+    매뉴얼 [`docs/MULTITENANCY.md`](docs/MULTITENANCY.md) · 1-명령 데모
+    [`scripts/demo_multitenancy.sh`](scripts/demo_multitenancy.sh) · 검증
+    `tests/test_cmp151_access.py`.
+  - 범위 밖(→ 다음 단계): 완전 테넌트 격리(런타임/자격증명 분리), 쓰기 RBAC(역할별 세분
+    변경 권한), 권한 위임.
 
 ## [0.0.5] - 2026-06-28
 

@@ -277,6 +277,19 @@ def _policy_manager(args):
     return PolicyOpsManager(registry=reg)
 
 
+def _session(args):
+    """전역 ``--tenant``/``--role`` 로 RBAC·테넌트 읽기 경계 세션 구성(v0.0.6 C2).
+
+    기본 역할은 ``operator`` (역호환: 플래그 없으면 변경·조회 모두 가능). 테넌트
+    미지정이면 경계 없음(전체 조회). ``NUFI_ROLE``/``NUFI_TENANT`` env 폴백.
+    """
+    from enforcement.access import Session, ROLE_OPERATOR
+    import os
+    tenant = getattr(args, "tenant", None) or os.environ.get("NUFI_TENANT") or None
+    role = getattr(args, "role", None) or os.environ.get("NUFI_ROLE") or ROLE_OPERATOR
+    return Session(tenant=tenant, role=role)
+
+
 def cmd_policy_list(args) -> int:
     mgr = _policy_manager(args)
     st = mgr.status()
@@ -299,9 +312,13 @@ def cmd_policy_list(args) -> int:
 
 
 def cmd_policy_bind(args) -> int:
+    from enforcement.access import AccessDenied
     mgr = _policy_manager(args)
     try:
-        rec = mgr.bind(args.route, args.profile, actor=_actor(args))
+        rec = mgr.bind(args.route, args.profile, actor=_actor(args), session=_session(args))
+    except AccessDenied as e:
+        print(f"[policy bind] 권한 거부(RBAC): {e}", file=sys.stderr)
+        return 3
     except KeyError as e:
         print(f"[policy bind] 거부: {e}", file=sys.stderr)
         return 2
@@ -310,9 +327,14 @@ def cmd_policy_bind(args) -> int:
 
 
 def cmd_policy_snapshot(args) -> int:
+    from enforcement.access import AccessDenied
     mgr = _policy_manager(args)
     try:
-        pv = mgr.snapshot(args.profile, actor=_actor(args), note=args.note or "")
+        pv = mgr.snapshot(args.profile, actor=_actor(args), note=args.note or "",
+                          session=_session(args))
+    except AccessDenied as e:
+        print(f"[policy snapshot] 권한 거부(RBAC): {e}", file=sys.stderr)
+        return 3
     except KeyError as e:
         print(f"[policy snapshot] 거부: {e}", file=sys.stderr)
         return 2
@@ -339,9 +361,14 @@ def cmd_policy_versions(args) -> int:
 
 
 def cmd_policy_rollback(args) -> int:
+    from enforcement.access import AccessDenied
     mgr = _policy_manager(args)
     try:
-        out = mgr.rollback(args.profile, actor=_actor(args), to_version=args.to)
+        out = mgr.rollback(args.profile, actor=_actor(args), to_version=args.to,
+                           session=_session(args))
+    except AccessDenied as e:
+        print(f"[policy rollback] 권한 거부(RBAC): {e}", file=sys.stderr)
+        return 3
     except (KeyError, ValueError) as e:
         print(f"[policy rollback] 거부: {e}", file=sys.stderr)
         return 2
@@ -441,8 +468,16 @@ def _report_write(text: str, out: Optional[str]) -> None:
 def cmd_report(args) -> int:
     # 기존 측정 산출물·감사 로그를 기간별 제출용 리포트로 묶는다(새 측정 없음).
     from enforcement import report as _rpt
+    from enforcement.access import AccessDenied
     fmt = args.format
     flow_paths = [args.flow] if getattr(args, "flow", None) else None
+    # 테넌트 읽기 경계 + 읽기전용 역할(v0.0.6 C2): viewer/operator 모두 조회 허용.
+    try:
+        session = _session(args)
+        session.require_read()
+    except AccessDenied as e:
+        print(f"[report] 권한 거부(RBAC): {e}", file=sys.stderr)
+        return 3
 
     if args.report_kind == "sla":
         th = _report_thresholds(args)
@@ -451,7 +486,7 @@ def cmd_report(args) -> int:
         rep = _rpt.build_sla_report(
             metrics_path=args.metrics, thresholds=th, period=args.period,
             flow_dir=getattr(args, "flow_dir", None), flow_paths=flow_paths,
-            customer=args.customer, title=args.title)
+            customer=args.customer, title=args.title, session=session)
         _report_write(_rpt.render(rep, fmt), args.out)
         # 위반이 하나라도 있으면 비0(CI/제출 게이트).
         return 1 if rep["overall"]["status"] == _rpt.VIOLATION else 0
@@ -460,7 +495,7 @@ def cmd_report(args) -> int:
         rep = _rpt.build_compliance_report(
             audit_path=args.audit, change_log_path=args.change_log,
             flow_dir=getattr(args, "flow_dir", None), flow_paths=flow_paths,
-            customer=args.customer, title=args.title)
+            customer=args.customer, title=args.title, session=session)
         _report_write(_rpt.render(rep, fmt), args.out)
         # 해시체인 변조가 탐지되면 비0(무결성 게이트).
         return 0 if rep["integrity_ok"] else 1
@@ -474,6 +509,13 @@ def main(argv: Optional[List[str]] = None) -> int:
                                  description="NuFi Egress Enforcement CLI (CMP-94 트랙 B)")
     ap.add_argument("--routing", default=None, help="routing.yaml 경로")
     ap.add_argument("--policy", default=None, help="policy.yaml 경로")
+    # 멀티테넌시·RBAC 첫 슬라이스(v0.0.6 C2 · CMP-151) — 조회 격리 + 읽기전용 역할.
+    ap.add_argument("--tenant", default=None,
+                    help="테넌트 읽기 경계: 조회를 이 테넌트로 격리(report; 예: acme). "
+                         "미지정=전체. env NUFI_TENANT 폴백.")
+    ap.add_argument("--role", default=None, choices=["viewer", "operator"],
+                    help="역할(RBAC): viewer=조회만, operator=조회+정책변경. "
+                         "기본 operator. env NUFI_ROLE 폴백.")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p = sub.add_parser("render", help="집행 규칙 셋 출력(적용 안 함)")

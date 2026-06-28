@@ -93,6 +93,7 @@ curl -s localhost:4000/v1/chat/completions \
 | **내 LLM 서비스 앞단에 붙이기** (통합 경로·프리셋·점검·결정 트리) | [`docs/INTEGRATION_GUIDE.md`](docs/INTEGRATION_GUIDE.md) |
 | **명령어 전체 레퍼런스** (`nufi-egress` 모든 서브커맨드) | [`docs/CLI.md`](docs/CLI.md) |
 | **SLA·규정준수 리포트 내기** (감사관·구매자 제출용, 기간별 충족/위반) | [`docs/REPORTING.md`](docs/REPORTING.md) |
+| **여러 테넌트를 한 게이트웨이에서** (테넌트 읽기 격리 + 읽기전용 역할) | [`docs/MULTITENANCY.md`](docs/MULTITENANCY.md) |
 | **내부 구조·다이어그램** 보기 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
 | **감사 로그를 화면으로** 보기 (읽기 전용 대시보드) | [`dashboards/README.md`](dashboards/README.md) |
 | **온프렘/에어갭 설치** | [`deploy/README.md`](deploy/README.md) · [`deploy/airgap/INSTALL.md`](deploy/airgap/INSTALL.md) |
@@ -113,6 +114,9 @@ python3 -m enforcement.cli monitor  --simulate samples/flow_bypass_burst.jsonl -
 
 # 3b) SLA·규정준수 리포트 — 기간별 충족/위반 판정 + 변경 감사/무결성(제출용)
 ./scripts/demo_report.sh                      # 매뉴얼: docs/REPORTING.md
+
+# 3c) 멀티테넌시·읽기전용 역할 — 테넌트 조회 격리 + viewer/operator RBAC
+./scripts/demo_multitenancy.sh               # 매뉴얼: docs/MULTITENANCY.md
 
 # 4) 감사 대시보드 — 결정/무결성/우회/추이 4개 패널 (읽기 전용)
 python3 -m dashboards.server --port 8099 \

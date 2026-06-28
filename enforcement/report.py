@@ -44,6 +44,7 @@ from dashboards.adapter import (  # noqa: E402  read-only 어댑터 재사용
     panel_decisions,
 )
 from egress_audit.audit import verify_chain_records  # noqa: E402
+from enforcement.access import Session, scope_records  # noqa: E402  테넌트 읽기 경계(C2)
 
 # --------------------------------------------------------------------------- #
 # 기본 임계 — 핵심 품질 약속(제안서 §1 C1). 고객별 임계는 CLI 설정으로 override.
@@ -159,24 +160,29 @@ def build_sla_report(*,
                      flow_dir: Optional[str] = None,
                      flow_paths: Optional[Iterable[str]] = None,
                      customer: Optional[str] = None,
-                     title: Optional[str] = None) -> dict:
+                     title: Optional[str] = None,
+                     session: Optional[Session] = None) -> dict:
     """기간별 SLA 리포트 모델 구성.
 
     입력 측정 샘플(metrics)에서 recall/p95/coverage 를 기간 버킷별로 집계하고,
     옵션으로 flow tap 로그에서 **커버리지 표본 1건**을 파생해(최신 기간에 가산)
     :class:`capture.coverage.CoverageAggregator` 재사용을 함께 보인다.
+
+    ``session`` 이 테넌트를 지정하면(v0.0.6 C2) 측정·flow 표본을 그 테넌트로
+    **격리**해 집계한다(다른 테넌트 표본은 보이지 않음).
     """
     th = dict(DEFAULT_THRESHOLDS)
     if thresholds:
         th.update({k: float(v) for k, v in thresholds.items() if k in DEFAULT_THRESHOLDS})
 
-    samples = list(metrics if metrics is not None else load_metrics(metrics_path))
+    samples = scope_records(
+        metrics if metrics is not None else load_metrics(metrics_path), session)
 
     # 옵션: flow 로그 → 커버리지 표본 1건 파생(기존 커버리지 집계기 재사용).
     coverage_source = None
     if flow_dir or flow_paths:
         from capture.coverage import CoverageAggregator
-        flows = load_flows(flow_dir, flow_paths)
+        flows = scope_records(load_flows(flow_dir, flow_paths), session)
         snap = CoverageAggregator.from_flows(flows).snapshot()
         if snap.coverage_pct is not None:
             em = max((_epoch_ms_of(r) or 0 for r in flows), default=0) or None
@@ -224,6 +230,7 @@ def build_sla_report(*,
         "kind": "sla",
         "title": title or "SLA 준수 리포트",
         "customer": customer,
+        "tenant": session.tenant if session is not None else None,
         "period_grain": period,
         "generated_note": "기존 측정 산출물 재사용 — 새 측정 없음(read-only).",
         "thresholds": th,
@@ -243,18 +250,29 @@ def build_compliance_report(*,
                             flow_dir: Optional[str] = None,
                             flow_paths: Optional[Iterable[str]] = None,
                             customer: Optional[str] = None,
-                            title: Optional[str] = None) -> dict:
-    """정책 변경 감사 + 차단/가명화/우회 요약 리포트 모델 구성(전부 read-only 재사용)."""
+                            title: Optional[str] = None,
+                            session: Optional[Session] = None) -> dict:
+    """정책 변경 감사 + 차단/가명화/우회 요약 리포트 모델 구성(전부 read-only 재사용).
+
+    ``session`` 이 테넌트를 지정하면(v0.0.6 C2) 변경 감사·결정·flow 레코드를 그
+    테넌트로 **격리**한다 — 한 테넌트 조회 세션은 다른 테넌트 감사로그를 못 본다.
+    해시체인 무결성은 격리된 부분집합 기준으로 재검증한다.
+    """
     from enforcement.policy_ops import PolicyChangeAudit
 
     # 1) 정책 변경 감사(누가·언제·무엇) + 변경로그 해시체인 무결성.
+    #    무결성은 **전체 체인** 기준(전역 운영 무결성 속성 — 테넌트 부분집합으로
+    #    자르면 prev_hash 링크가 끊긴다). 표시 레코드만 테넌트로 격리한다.
     pca = PolicyChangeAudit(path=change_log_path)
-    change_records = pca.read_all()
     change_chain = pca.verify_chain()
+    change_records = scope_records(pca.read_all(), session)
     by_action = Counter(r.get("action", "unknown") for r in change_records)
 
     # 2) 감사 결정 집계 — 차단/가명화 건수(대시보드 어댑터 재사용).
-    audit_records = load_audit(audit_path)
+    #    무결성은 전체 체인 기준, 집계/표시는 테넌트 격리 부분집합 기준.
+    all_audit = load_audit(audit_path)
+    audit_chain = verify_chain_records(all_audit)
+    audit_records = scope_records(all_audit, session)
     dec = panel_decisions(audit_records, redact=True)
     by_outcome: Counter = Counter()
     action_counts: Counter = Counter()
@@ -265,10 +283,10 @@ def build_compliance_report(*,
             action_counts[act] += int(n)
         for et in row.get("entity_types", []):
             by_entity[et] += 1
-    audit_chain = verify_chain_records(audit_records)
 
     # 3) 우회 탐지 요약(flow tap → 어댑터 타임라인 재사용).
-    flows = load_flows(flow_dir, flow_paths) if (flow_dir or flow_paths) else []
+    flows = (scope_records(load_flows(flow_dir, flow_paths), session)
+             if (flow_dir or flow_paths) else [])
     bypass = panel_bypass_timeline(flows)
 
     # 무결성 종합: 두 해시체인이 모두 정상(또는 체인 미부착)이면 ok.
@@ -278,6 +296,7 @@ def build_compliance_report(*,
         "kind": "compliance",
         "title": title or "규정준수 리포트",
         "customer": customer,
+        "tenant": session.tenant if session is not None else None,
         "generated_note": "기존 감사 로그·변경 감사·flow tap 재사용 — 새 측정 없음(read-only).",
         "integrity_ok": chains_ok,
         "policy_change_audit": {

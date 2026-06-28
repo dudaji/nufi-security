@@ -35,6 +35,7 @@ from egress_audit.reload import (
     ReloadableGuard, ReloadResult, RuleSetPaths, RuleValidationError,
     validate_ruleset,
 )
+from enforcement.access import Session  # RBAC 세션(v0.0.6 C2 · CMP-151)
 
 _ROOT = Path(__file__).resolve().parent.parent
 _CONFIG_DIR = _ROOT / "config"
@@ -406,14 +407,22 @@ class PolicyOpsManager:
         return self.guard_for_route(route).inspect(text)
 
     # --- 묶기 -------------------------------------------------------------- #
-    def bind(self, route: str, profile: str, *, actor: str) -> dict:
+    def bind(self, route: str, profile: str, *, actor: str,
+             session: "Optional[Session]" = None) -> dict:
+        # RBAC(v0.0.6 C2): 세션이 주어지면 정책 변경 권한 확인(viewer 거부). 역호환:
+        # session=None 이면 강제 없음(기존 호출 경로 그대로).
+        if session is not None:
+            session.require_policy_change("정책 묶기(bind)")
         prev = self.registry.bindings().get(route)
         self.registry.set_binding(route, profile)
         return self.audit.record(action="bind", profile=profile, actor=actor,
                                  route=route, note=f"{route} → {profile} (이전: {prev})")
 
     # --- 버전 -------------------------------------------------------------- #
-    def snapshot(self, profile: str, *, actor: str, note: str = "") -> PolicyVersion:
+    def snapshot(self, profile: str, *, actor: str, note: str = "",
+                 session: "Optional[Session]" = None) -> PolicyVersion:
+        if session is not None:
+            session.require_policy_change("정책 스냅샷(snapshot)")
         prof = self.registry.get(profile)
         pv = self.versions.snapshot(profile, prof.paths.policy_path, actor=actor, note=note)
         self.audit.record(action="snapshot", profile=profile, actor=actor,
@@ -422,13 +431,16 @@ class PolicyOpsManager:
 
     # --- 되돌리기(무재기동) ------------------------------------------------- #
     def rollback(self, profile: str, *, actor: str,
-                 to_version: Optional[int] = None) -> RollbackOutcome:
+                 to_version: Optional[int] = None,
+                 session: "Optional[Session]" = None) -> RollbackOutcome:
         """이전(또는 지정) 버전으로 무재기동 되돌리기.
 
         절차: 활성 버전 확인 → 대상 버전 스냅샷 내용 복원 → 후보 검증 →
         통과 시 가드 원자 스왑(generation++), 실패 시 fail-closed(직전 룰셋 유지·
         파일 원복). 변경 감사 기록.
         """
+        if session is not None:
+            session.require_policy_change("정책 되돌리기(rollback)")
         prof = self.registry.get(profile)
         active = self.versions.active_version(profile)
         existing = [v.version for v in self.versions.versions(profile)]

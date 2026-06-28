@@ -17,6 +17,7 @@ python3 -m enforcement.cli --help            # 전체 서브커맨드
 
 ```
 usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
+                   [--tenant TENANT] [--role {viewer,operator}]
                    {render,apply,disable,status,feedback,doctor,coverage,monitor,init,audit,targets,flow-tap,policy,report} ...
 ```
 
@@ -24,6 +25,11 @@ usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
 |---|---|---|
 | `--routing PATH` | `routing.yaml` 경로 | `config/routing.yaml` |
 | `--policy PATH` | `policy.yaml` 경로 | `config/policy.yaml` |
+| `--tenant KEY` | 테넌트 읽기 경계 — 조회를 이 테넌트로 격리(`report`) | 전체(env `NUFI_TENANT`) |
+| `--role {viewer,operator}` | RBAC — `viewer`=조회만, `operator`=조회+정책변경 | `operator`(env `NUFI_ROLE`) |
+
+> 테넌트 읽기 격리 + 읽기전용 역할의 동작·범위는 [`MULTITENANCY.md`](MULTITENANCY.md). `viewer` 가
+> `policy bind/snapshot/rollback` 을 시도하면 권한 거부로 `exit 3`.
 
 | 서브커맨드 | 한 줄 | 권한 |
 |---|---|---|

@@ -524,6 +524,30 @@ nufi-egress report compliance --audit samples/sla/audit_decisions.jsonl \
 > ✅ **체크포인트:** 1-명령 자동 채점은 `./scripts/demo_report.sh`(6/6 PASS, 권한 불필요),
 > 명령 전체 옵션·입력 스키마는 [`REPORTING.md`](REPORTING.md).
 
+### 6.11 여러 테넌트를 한 게이트웨이에서 — `--tenant` · `--role`
+
+다수 테넌트를 한 게이트웨이에서 운영할 때, 조회를 **테넌트별로 격리**하고 **읽기전용 역할**을
+분리합니다(기존 동작·차단 규칙은 그대로).
+
+```bash
+# 테넌트 읽기 경계: acme 조회는 acme 레코드만 — 다른 테넌트는 보이지 않는다
+nufi-egress --tenant acme report compliance --audit samples/sla/audit_decisions.jsonl --format json
+
+# 읽기전용 역할(viewer): 조회는 되지만…
+nufi-egress --role viewer report sla --metrics samples/sla/sla_metrics.jsonl   # ✅ 동작
+# …정책 변경은 거부된다(부수효과 없음, exit 3)
+nufi-egress --role viewer policy bind tenant-acme strict                       # ❌ 권한 거부
+```
+
+**무슨 일이 일어났나요?**
+- `--tenant` 는 조회를 그 테넌트로 **격리**합니다. 미귀속 레코드도 격리 시 비노출(fail-closed)이며,
+  해시체인 무결성은 **전체 체인** 기준으로 검증하므로 한 테넌트만 봐도 변조 탐지는 그대로입니다.
+- `--role viewer` 는 **조회만** 허용하고 `policy bind/snapshot/rollback` 을 막습니다(`operator` 는 둘 다).
+  기본 역할은 `operator`(역호환). `NUFI_TENANT`/`NUFI_ROLE` env 로도 줄 수 있습니다.
+
+> ✅ **체크포인트:** 1-명령 자동 채점은 `./scripts/demo_multitenancy.sh`(6/6 PASS, 권한 불필요),
+> 자세한 동작·범위는 [`MULTITENANCY.md`](MULTITENANCY.md).
+
 ---
 
 ## 7. Part F — 한 번에 끝까지: end-to-end 데모
