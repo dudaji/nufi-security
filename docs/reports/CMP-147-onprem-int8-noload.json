@@ -1,0 +1,205 @@
+{
+  "backend": "onnx-int8",
+  "split": "test",
+  "targets": {
+    "pii_recall": 0.9,
+    "pii_precision": 0.85,
+    "strong_recall": 0.98,
+    "person_recall": 0.85,
+    "location_recall": 0.85,
+    "secret_recall": 0.9,
+    "benign_false_block": 0.02
+  },
+  "ner_backend_active": "onnx-int8",
+  "scores": {
+    "n_rows": 372,
+    "pii_recall": 0.9433,
+    "pii_recall_ci95": [
+      0.9098,
+      0.9648
+    ],
+    "pii_precision": 1.0,
+    "strong_recall": 1.0,
+    "strong_recall_ci95": [
+      0.9493,
+      1.0
+    ],
+    "person_recall": 0.9127,
+    "person_unlisted_recall": 0.875,
+    "person_unlisted_n": 72,
+    "location_recall": 0.7917,
+    "secret_recall": 1.0,
+    "benign_false_block": 0.0,
+    "benign_false_block_n": "0/90",
+    "span_exact_recall": 0.9007,
+    "span_recall_incl_partial": 0.9433,
+    "span_precision": 0.9925,
+    "span_partial": 12,
+    "per_class": {
+      "CREDIT_CARD": {
+        "recall": 1.0,
+        "hit": 12,
+        "exp": 12,
+        "ci95": [
+          0.7575,
+          1.0
+        ],
+        "fp": 0
+      },
+      "EMAIL": {
+        "recall": 1.0,
+        "hit": 9,
+        "exp": 9,
+        "ci95": [
+          0.7008,
+          1.0
+        ],
+        "fp": 0
+      },
+      "KR_ACCOUNT": {
+        "recall": 1.0,
+        "hit": 12,
+        "exp": 12,
+        "ci95": [
+          0.7575,
+          1.0
+        ],
+        "fp": 0
+      },
+      "KR_BRN": {
+        "recall": 1.0,
+        "hit": 12,
+        "exp": 12,
+        "ci95": [
+          0.7575,
+          1.0
+        ],
+        "fp": 0
+      },
+      "KR_DRIVER_LICENSE": {
+        "recall": 1.0,
+        "hit": 9,
+        "exp": 9,
+        "ci95": [
+          0.7008,
+          1.0
+        ],
+        "fp": 0
+      },
+      "KR_FOREIGNER_REG": {
+        "recall": 1.0,
+        "hit": 12,
+        "exp": 12,
+        "ci95": [
+          0.7575,
+          1.0
+        ],
+        "fp": 0
+      },
+      "KR_LOCATION": {
+        "recall": 0.7917,
+        "hit": 19,
+        "exp": 24,
+        "ci95": [
+          0.5953,
+          0.9076
+        ],
+        "fp": 0
+      },
+      "KR_PASSPORT": {
+        "recall": 1.0,
+        "hit": 9,
+        "exp": 9,
+        "ci95": [
+          0.7008,
+          1.0
+        ],
+        "fp": 0
+      },
+      "KR_PERSON": {
+        "recall": 0.9127,
+        "hit": 115,
+        "exp": 126,
+        "ci95": [
+          0.8504,
+          0.9506
+        ],
+        "fp": 0
+      },
+      "KR_PHONE": {
+        "recall": 1.0,
+        "hit": 15,
+        "exp": 15,
+        "ci95": [
+          0.7961,
+          1.0
+        ],
+        "fp": 0
+      },
+      "KR_RRN": {
+        "recall": 1.0,
+        "hit": 18,
+        "exp": 18,
+        "ci95": [
+          0.8241,
+          1.0
+        ],
+        "fp": 0
+      },
+      "SECRET": {
+        "recall": 1.0,
+        "hit": 24,
+        "exp": 24,
+        "ci95": [
+          0.862,
+          1.0
+        ],
+        "fp": 0
+      }
+    },
+    "person_recall_ci_low": 0.8504
+  },
+  "latency": {
+    "backend": "onnx-int8",
+    "buckets": {
+      "<=128": {
+        "p50": 11.69,
+        "p95": 13.15,
+        "p99": 14.59,
+        "req_per_s": 84.6,
+        "len_chars": 128
+      },
+      "512": {
+        "p50": 44.72,
+        "p95": 53.99,
+        "p99": 72.3,
+        "req_per_s": 22.1,
+        "len_chars": 512
+      },
+      "2048": {
+        "p50": 148.89,
+        "p95": 220.65,
+        "p99": 263.24,
+        "req_per_s": 6.5,
+        "len_chars": 2048
+      }
+    },
+    "p95_512_target_150ms": "PASS"
+  },
+  "prefilter": {
+    "regex_only(ner_off)": 3.779,
+    "always_ner(gazetteer)": 4.632,
+    "prefilter_faster": true
+  },
+  "acceptance": {
+    "pii_recall>=0.90": true,
+    "pii_precision>=0.85": true,
+    "strong_recall>=0.98": true,
+    "person_recall>=0.85": true,
+    "person_recall_ci_low>=0.85": true,
+    "location_recall>=0.85": false,
+    "secret_recall>=0.90": true,
+    "benign_false_block<=0.02": true
+  },
+  "acceptance_pass": false
+}
