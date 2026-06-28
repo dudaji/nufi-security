@@ -135,9 +135,8 @@ nufi-egress doctor
 python3 scripts/bench.py --ner gazetteer
 ```
 
-> `coverage`·`monitor`·`doctor`·`dashboard` 는 단일 진입점 CLI `nufi-egress` 의 서브커맨드입니다(전체 목록은
-> [`docs/CLI.md`](docs/CLI.md)). 설치하지 않은 환경에서는 동일 명령을
-> `python3 -m enforcement.cli <서브커맨드>` 로 그대로 실행할 수 있습니다.
+> `coverage`·`monitor`·`doctor`·`dashboard` 는 단일 진입점 CLI `nufi-egress` 의 서브커맨드입니다.
+> 전체 목록과 **설치하지 않은 환경에서의 실행법**은 [`docs/CLI.md`](docs/CLI.md) 를 참고하세요.
 > (`scripts/bench.py` 는 CLI 와 별개인 보조 실행 진입점입니다.)
 
 ---

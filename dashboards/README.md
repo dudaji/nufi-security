@@ -32,7 +32,7 @@ nufi-egress dashboard --port 8099 \
 # 실제 운영 로그로:
 nufi-egress dashboard --port 8099    # 기본 logs/egress_audit.jsonl, logs/packets/public/
 ```
-> 비설치 동치: `python3 -m dashboards.server --port 8099 …` (CLI 미설치 환경 폴백).
+> CLI 를 설치하지 않은 환경의 실행법은 [`docs/CLI.md`](../docs/CLI.md) 를 참고하세요.
 모델만 미리 보려면: `python3 dashboards/adapter.py --audit dashboards/sample/audit_chain.jsonl`.
 
 ## Grafana 연결 (프로덕션)
