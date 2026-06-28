@@ -124,16 +124,18 @@ curl -s localhost:4000/v1/chat/completions \
 
 ```bash
 # 캡처 대상 갱신(routing.yaml → capture_targets.yaml) + BPF 확인
-python3 -m capture.targets --refresh --bpf
+nufi-egress targets --refresh --bpf
 
 # flow tap — root 없이(에어갭/CI) simulate 리플레이
-python3 -m capture.flow_tap --simulate samples/flow_replay.jsonl
+nufi-egress flow-tap --simulate samples/flow_replay.jsonl
 
 # 비동기 감사 봇 — 배치(1회 드레인) / 데몬 / 지연 리포트
-python3 -m egress_audit.audit_bot --simulate
-python3 -m egress_audit.audit_bot --daemon
-python3 -m egress_audit.audit_bot --report
+nufi-egress audit once
+nufi-egress audit daemon
+nufi-egress audit report
 ```
+
+> 레거시 모듈 진입점(`python3 -m capture.targets`·`python3 -m capture.flow_tap`·`python3 -m egress_audit.audit_bot --once/--daemon/--report`)도 하위호환으로 유지되나, 신규 사용은 통합 CLI(`nufi-egress`)를 권장합니다. (`--simulate`↔`audit once`)
 
 ## Performance & Accuracy
 

@@ -11,6 +11,8 @@
   monitor   게이트웨이 우회 상시 모니터링/임계 알림(suppression 포함 · CMP-133).
   init      파이프라인 프리셋에서 운영 config 구체화(CMP-121, fail-closed).
   audit     비동기 감사 봇(report/daemon/once) + §4 감사로그 조회(query · CMP-141).
+  targets   capture_targets.yaml 파생/조회 + BPF 필터 출력(CMP-87 캡처 레이어 · CMP-143).
+  flow-tap  public 목적지 flow tap(우회 탐지) — --simulate 리플레이/--live 캡처(CMP-143).
 
 설치형 진입점(pyproject.toml console_scripts): ``pip install -e .`` 후 ``nufi-egress``
 (별칭 ``nufi``) 로 PATH 에서 직접 실행. 레거시 ``python3 -m enforcement.cli`` 동치 유지.
@@ -238,6 +240,42 @@ def _audit_query(args) -> int:
     return 0
 
 
+def cmd_targets(args) -> int:
+    # 캡처 레이어 운영 명령(capture_targets.yaml 파생/조회)을 통합 CLI 로 편입(CMP-143).
+    # 기존 모듈 진입점(``python3 -m capture.targets``)은 하위호환으로 그대로 유지.
+    from capture.targets import _main as _targets_main
+    argv: List[str] = []
+    if getattr(args, "refresh", False):
+        argv.append("--refresh")
+    if getattr(args, "targets_routing", None):
+        argv += ["--routing", args.targets_routing]
+    if getattr(args, "out", None):
+        argv += ["--out", args.out]
+    if getattr(args, "bpf", False):
+        argv.append("--bpf")
+    return _targets_main(argv)
+
+
+def cmd_flow_tap(args) -> int:
+    # 캡처 레이어 운영 명령(public 목적지 flow tap·우회 탐지)을 통합 CLI 로 편입(CMP-143).
+    # 기존 모듈 진입점(``python3 -m capture.flow_tap``)은 하위호환으로 그대로 유지.
+    from capture.flow_tap import _main as _flow_tap_main
+    argv: List[str] = []
+    if getattr(args, "simulate", None):
+        argv += ["--simulate", args.simulate]
+    if getattr(args, "live", False):
+        argv.append("--live")
+    if getattr(args, "iface", None):
+        argv += ["--iface", args.iface]
+    if getattr(args, "duration", None) is not None:
+        argv += ["--duration", str(args.duration)]
+    if getattr(args, "targets", None):
+        argv += ["--targets", args.targets]
+    if getattr(args, "out", None):
+        argv += ["--out", args.out]
+    return _flow_tap_main(argv)
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(prog="nufi-egress",
                                  description="NuFi Egress Enforcement CLI (CMP-94 트랙 B)")
@@ -335,6 +373,28 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--json", action="store_true",
                    help="query: 기계용 JSON 출력")
     p.set_defaults(func=cmd_audit)
+
+    p = sub.add_parser("targets",
+                       help="capture_targets.yaml 파생/조회 + BPF 필터(CMP-87 캡처 레이어)")
+    p.add_argument("--refresh", action="store_true",
+                   help="routing.yaml 에서 목적지를 재파생해 capture_targets.yaml 기록")
+    # 최상위 --routing(집행용)과 충돌 없이 서브커맨드 전용으로 보존(dest=targets_routing).
+    p.add_argument("--routing", dest="targets_routing", default=None,
+                   metavar="ROUTING", help="routing.yaml 경로")
+    p.add_argument("--out", default=None, help="capture_targets.yaml 출력 경로")
+    p.add_argument("--bpf", action="store_true", help="BPF 필터 문자열 출력")
+    p.set_defaults(func=cmd_targets)
+
+    p = sub.add_parser("flow-tap",
+                       help="public 목적지 flow tap + 우회 탐지(--simulate 리플레이/--live)")
+    p.add_argument("--simulate", metavar="REPLAY.jsonl",
+                   help="미리 만든 flow 로그 리플레이(root 없이 재현 — 에어갭/CI)")
+    p.add_argument("--live", action="store_true", help="tcpdump 라이브 캡처(root 필요)")
+    p.add_argument("--iface", default="any", help="라이브 캡처 인터페이스")
+    p.add_argument("--duration", type=int, default=None, help="라이브 캡처 지속(초)")
+    p.add_argument("--targets", default=None, help="capture_targets.yaml 경로")
+    p.add_argument("--out", default=None, help="flow 로그 출력 base_dir(기본 logs/packets)")
+    p.set_defaults(func=cmd_flow_tap)
 
     args = ap.parse_args(argv)
     return args.func(args)

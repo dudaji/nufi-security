@@ -17,7 +17,7 @@ python3 -m enforcement.cli --help            # 전체 서브커맨드
 
 ```
 usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
-                   {render,apply,disable,status,feedback,doctor,coverage,monitor,init} ...
+                   {render,apply,disable,status,feedback,doctor,coverage,monitor,init,audit,targets,flow-tap} ...
 ```
 
 | 전역 옵션 | 무엇 | 기본 |
@@ -36,6 +36,9 @@ usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
 | [`disable`](#disable) | 킬스위치 — 전 규칙 즉시 제거 | nftables 적용 시 root |
 | [`status`](#status) | 현재 집행 상태(JSON) | 불필요 |
 | [`feedback`](#feedback) | drop 로그 → `blocked_attempts` 카운터 + flow 재유입 | 불필요 |
+| [`audit`](#audit) | 비동기 감사 봇(report/daemon/once) + §4 감사로그 조회(query) | 불필요 |
+| [`targets`](#targets) | 캡처 대상(`capture_targets.yaml`) 파생/조회 + BPF 필터 | 불필요 |
+| [`flow-tap`](#flow-tap) | public 목적지 flow tap — 우회 탐지(`--simulate` 리플레이/`--live`) | 라이브는 root/CAP_NET_RAW |
 
 > **신규 도입 5분 경로:** `init audit-only` → SDK/게이트웨이 배선 → `doctor`(core-3 GREEN 확인) → `status`/감사 로그 관찰 → 준비되면 `apply`. 자세한 결정 트리는 [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md).
 
@@ -275,17 +278,97 @@ python3 -m enforcement.cli monitor --simulate samples/flow_bypass_burst.jsonl --
 
 ---
 
-## 관련 모듈 CLI (집행 외)
+## `audit`
 
-`nufi-egress` 밖의 운영/관측 명령입니다. 라이브 패킷 캡처는 root/CAP_NET_RAW 가 필요하고, 에어갭·CI·데모는 `--simulate` 로 root 없이 재현합니다.
+비동기 감사 봇(producer/consumer·지연 리포트)과 §4 감사로그 조회를 한 서브커맨드로 묶습니다(CMP-141). 봇 엔진은 `egress_audit/audit_bot.py`, 조회는 `egress_audit/audit.py` 의 `AuditLogger` 입니다.
+
+```
+usage: nufi-egress audit {report,daemon,once,query} [--profiles P]
+                         [--ner-backend B] [--log L] [--verify-chain] [--json]
+```
+
+| 액션 | 무엇 | 비고 |
+|---|---|---|
+| `report` | findings p95 지연 출력 | `--profiles`/`--ner-backend` |
+| `daemon` | 폴 루프 데몬(준실시간) | `--profiles`/`--ner-backend` |
+| `once` | 큐 1회 드레인 후 종료(배치) | 레거시 `--simulate`/`--once` 동치 |
+| `query` | 감사로그 집계(outcome·엔티티·해시 체인) | `--log`/`--verify-chain`/`--json` |
+
+```bash
+nufi-egress audit once                       # 큐 1회 드레인(배치)
+nufi-egress audit query --verify-chain --json # §4 감사로그 집계 + 체인 무결성
+```
+
+> 종료코드: `query --verify-chain` 으로 해시 체인이 깨지면 1(변조탐지 게이트), 아니면 0.
+
+---
+
+## `targets`
+
+캡처 대상 정의(`config/capture_targets.yaml`)를 `routing.yaml` 의 public LLM 목적지에서 파생/조회하고, flow tap 이 쓰는 **BPF 필터** 문자열을 출력합니다. 파생 엔진은 `capture/targets.py` 의 `CaptureTargets` 입니다.
+
+```
+usage: nufi-egress targets [-h] [--refresh] [--routing ROUTING]
+                           [--out OUT] [--bpf]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--refresh` | `routing.yaml` 에서 목적지 재파생 후 `capture_targets.yaml` 기록 | 미지정 시 기존 파일 조회 |
+| `--routing PATH` | `routing.yaml` 경로 | `config/routing.yaml` |
+| `--out PATH` | `capture_targets.yaml` 출력 경로 | `config/capture_targets.yaml` |
+| `--bpf` | BPF 필터 문자열 출력 | — |
+
+```bash
+nufi-egress targets --refresh --bpf
+# → 갱신: …/capture_targets.yaml — 목적지 2건
+#   public 목적지: api.anthropic.com:443 (claude-3-5-sonnet/anthropic)
+#   BPF: tcp and (dst host api.anthropic.com or dst host api.openai.com) and (dst port 443)
+```
+
+> 종료코드: 항상 0(조회/파생 성공). 라이브 캡처 권한은 불필요(파일·BPF 산출만).
+
+---
+
+## `flow-tap`
+
+public 목적지로 가는 outbound 연결을 **패킷 레이어**에서 관측해 게이트웨이 경유 대 우회(`bypass`)를 판정합니다. 라이브 캡처(`--live`)는 root/CAP_NET_RAW 가 필요하고, 에어갭·CI·데모는 `--simulate`(미리 만든 flow 로그 리플레이)로 root 없이 동일 로직을 재현합니다. 엔진은 `capture/flow_tap.py` 의 `FlowTap` 입니다.
+
+```
+usage: nufi-egress flow-tap [-h] [--simulate REPLAY.jsonl] [--live]
+                            [--iface IFACE] [--duration SEC]
+                            [--targets TARGETS] [--out OUT]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--simulate REPLAY.jsonl` | flow 로그 리플레이(root 없이 재현 — 에어갭/CI) | — |
+| `--live` | tcpdump 라이브 캡처(root/CAP_NET_RAW 필요) | — |
+| `--iface IFACE` | 라이브 캡처 인터페이스 | `any` |
+| `--duration SEC` | 라이브 캡처 지속(초) | 무제한 |
+| `--targets PATH` | `capture_targets.yaml` 경로 | `config/capture_targets.yaml` |
+| `--out DIR` | flow 로그 출력 base_dir | `logs/packets` |
+
+```bash
+nufi-egress flow-tap --simulate samples/flow_replay.jsonl
+# → flow tap: seen=8 captured=4 dropped=4 (gateway=2 bypass=2)
+#   ⚠ 게이트웨이 우회 의심 연결 2건 — P2 봇이 high-severity alert 로 승격
+```
+
+> 종료코드: 성공 시 0(우회를 탐지해도 0 — 판정은 `coverage`/`monitor`/감사 봇이 게이트). `--simulate`·`--live` 둘 다 없으면 2(인자 오류).
+
+---
+
+## 관련 스크립트 (CLI 외)
+
+`nufi-egress` 서브커맨드가 아닌 별도 스크립트입니다.
 
 | 명령 | 무엇 | 문서 |
 |---|---|---|
-| `python3 -m capture.targets --refresh --bpf` | 캡처 대상 갱신(routing→capture_targets) + BPF 확인 | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
-| `python3 -m capture.flow_tap --simulate samples/flow_replay.jsonl` | flow tap — 우회 판정(root 없이 리플레이) | [`SPEC_CMP85.md`](SPEC_CMP85.md) |
-| `python3 -m egress_audit.audit_bot --simulate / --daemon / --report` | 비동기 감사 봇(producer/consumer·지연 리포트) | [`SPEC_CMP85.md`](SPEC_CMP85.md) |
 | `python3 scripts/bench.py --ner gazetteer` | recall/precision + 지연 p95 벤치 | [`M5_MEASUREMENT_REPORT.md`](M5_MEASUREMENT_REPORT.md) |
 | `./scripts/demo_cmp85.sh` | 차등 감사 통합 데모(6시나리오, root 불필요) | [`DEMO_CMP85.md`](DEMO_CMP85.md) |
+
+> 레거시 모듈 진입점(`python3 -m capture.targets`·`python3 -m capture.flow_tap`·`python3 -m egress_audit.audit_bot`)은 하위호환으로 유지되나, 신규 사용은 위 통합 CLI 서브커맨드(`targets`·`flow-tap`·`audit`)를 권장합니다.
 
 ---
 

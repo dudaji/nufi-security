@@ -172,7 +172,7 @@ nufi-egress init audit-only --dry-run
 ```
 
 > **CLI 표기 규약.** 본 가이드의 모든 운영 명령은 **통합 CLI** `nufi-egress <서브커맨드>`
-> (`render·apply·disable·status·feedback·doctor·coverage·monitor·init·audit` 단일 진입점)로 통일합니다.
+> (`render·apply·disable·status·feedback·doctor·coverage·monitor·init·audit·targets·flow-tap` 단일 진입점)로 통일합니다.
 > `pip install -e .` 후 `nufi-egress`(별칭 `nufi`)가 PATH 에 올라옵니다(`pyproject.toml` 의 console_scripts).
 > 설치하지 않는 환경에서는 동일 명령을 `python3 -m enforcement.cli <서브커맨드>` 로 그대로 실행할 수
 > 있습니다 — **비설치 동등 실행**. 레거시 모듈별 진입점(`python3 -m egress_audit.init_cli`·
