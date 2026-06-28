@@ -92,6 +92,7 @@ curl -s localhost:4000/v1/chat/completions \
 | **손으로 따라하며 익히기** (토이 프로젝트 하나를 끝까지, 20~30분, 관리자 권한 불필요) | [`docs/HANDS_ON.md`](docs/HANDS_ON.md) |
 | **내 LLM 서비스 앞단에 붙이기** (통합 경로·프리셋·점검·결정 트리) | [`docs/INTEGRATION_GUIDE.md`](docs/INTEGRATION_GUIDE.md) |
 | **명령어 전체 레퍼런스** (`nufi-egress` 모든 서브커맨드) | [`docs/CLI.md`](docs/CLI.md) |
+| **SLA·규정준수 리포트 내기** (감사관·구매자 제출용, 기간별 충족/위반) | [`docs/REPORTING.md`](docs/REPORTING.md) |
 | **내부 구조·다이어그램** 보기 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
 | **감사 로그를 화면으로** 보기 (읽기 전용 대시보드) | [`dashboards/README.md`](dashboards/README.md) |
 | **온프렘/에어갭 설치** | [`deploy/README.md`](deploy/README.md) · [`deploy/airgap/INSTALL.md`](deploy/airgap/INSTALL.md) |
@@ -109,6 +110,9 @@ curl -s localhost:4000/v1/chat/completions \
 # 3) 커버리지 점검 — "내 트래픽 중 몇 %가 게이트웨이를 통과했나" + 우회 알림
 python3 -m enforcement.cli coverage --simulate samples/flow_replay.jsonl
 python3 -m enforcement.cli monitor  --simulate samples/flow_bypass_burst.jsonl --threshold 1
+
+# 3b) SLA·규정준수 리포트 — 기간별 충족/위반 판정 + 변경 감사/무결성(제출용)
+./scripts/demo_report.sh                      # 매뉴얼: docs/REPORTING.md
 
 # 4) 감사 대시보드 — 결정/무결성/우회/추이 4개 패널 (읽기 전용)
 python3 -m dashboards.server --port 8099 \

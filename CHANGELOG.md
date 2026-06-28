@@ -6,6 +6,22 @@
 
 ## [Unreleased]
 
+### Added
+- **SLA·규정준수 리포팅** — 이미 측정·적재 중인 지표를 **기간별(일/주/월) 제출용
+  리포트**로 묶는 `nufi-egress report {sla,compliance}` 서브커맨드. 감사관·구매자에게
+  낼 수 있는 Markdown/HTML/JSON 산출물을 만들며, **새 측정·새 벤치 없이** 기존 산출물만
+  읽기 전용으로 재사용한다.
+  - `report sla` — PII recall·지연 p95·게이트웨이 커버리지를 기간별로 집계하고 목표 대비
+    **충족/위반**을 판정. 기본 임계 = 핵심 품질 약속(recall ≥ 0.9 / p95 ≤ 150ms /
+    커버리지 ≥ 99%), 고객별 임계는 `--thresholds`/`--set` 으로 노출. 위반 시 exit 1.
+  - `report compliance` — 정책 변경 감사(누가·언제·무엇 + 해시체인 무결성), 차단/가명화
+    건수, 우회 탐지 요약을 한 장으로. 해시체인 변조 탐지 시 exit 1(제출 차단).
+  - 구현 `enforcement/report.py`(대시보드 어댑터·감사 해시체인·커버리지 집계기 재사용)
+    · 매뉴얼 [`docs/REPORTING.md`](docs/REPORTING.md) · 1-명령 데모
+    [`scripts/demo_report.sh`](scripts/demo_report.sh)(6/6 PASS, 권한 불필요)
+    · 검증 `tests/test_cmp150_report.py`(13 케이스) · 샘플 픽스처 `samples/sla/`.
+  - 범위 밖(다음 단계): 실시간 SLA 알림·콘솔, 다고객 SLA 집계.
+
 ## [0.0.5] - 2026-06-28
 
 운영(Operate)을 **기능으로 완성**한 버전. v0.0.4(도입 표면)가 설치·통합 CLI·입문을 닦은 위에,

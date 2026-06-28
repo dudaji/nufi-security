@@ -14,6 +14,7 @@
   targets   capture_targets.yaml 파생/조회 + BPF 필터 출력(CMP-87 캡처 레이어 · CMP-143).
   flow-tap  public 목적지 flow tap(우회 탐지) — --simulate 리플레이/--live 캡처(CMP-143).
   policy    정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사(CMP-144 B1).
+  report    기간별 SLA·규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음 · CMP-150 C1).
 
 설치형 진입점(pyproject.toml console_scripts): ``pip install -e .`` 후 ``nufi-egress``
 (별칭 ``nufi``) 로 PATH 에서 직접 실행. 레거시 ``python3 -m enforcement.cli`` 동치 유지.
@@ -413,6 +414,61 @@ def cmd_flow_tap(args) -> int:
     return _flow_tap_main(argv)
 
 
+# --- SLA·규정준수 리포팅 (v0.0.6 C1 · CMP-150) ----------------------------- #
+def _report_thresholds(args) -> Optional[dict]:
+    """--thresholds JSON 파일 + --set key=value override 병합(둘 다 선택)."""
+    th: dict = {}
+    if getattr(args, "thresholds", None):
+        th.update(json.loads(Path(args.thresholds).read_text(encoding="utf-8")))
+    for kv in getattr(args, "set", None) or []:
+        if "=" not in kv:
+            print(f"[report] --set 형식 오류(KEY=VALUE): {kv}", file=sys.stderr)
+            return None
+        k, v = kv.split("=", 1)
+        th[k.strip()] = float(v.strip())
+    return th or None
+
+
+def _report_write(text: str, out: Optional[str]) -> None:
+    if out:
+        Path(out).parent.mkdir(parents=True, exist_ok=True)
+        Path(out).write_text(text, encoding="utf-8")
+        print(f"[report] 기록: {out}")
+    else:
+        print(text)
+
+
+def cmd_report(args) -> int:
+    # 기존 측정 산출물·감사 로그를 기간별 제출용 리포트로 묶는다(새 측정 없음).
+    from enforcement import report as _rpt
+    fmt = args.format
+    flow_paths = [args.flow] if getattr(args, "flow", None) else None
+
+    if args.report_kind == "sla":
+        th = _report_thresholds(args)
+        if th is None and (getattr(args, "thresholds", None) or getattr(args, "set", None)):
+            return 2
+        rep = _rpt.build_sla_report(
+            metrics_path=args.metrics, thresholds=th, period=args.period,
+            flow_dir=getattr(args, "flow_dir", None), flow_paths=flow_paths,
+            customer=args.customer, title=args.title)
+        _report_write(_rpt.render(rep, fmt), args.out)
+        # 위반이 하나라도 있으면 비0(CI/제출 게이트).
+        return 1 if rep["overall"]["status"] == _rpt.VIOLATION else 0
+
+    if args.report_kind == "compliance":
+        rep = _rpt.build_compliance_report(
+            audit_path=args.audit, change_log_path=args.change_log,
+            flow_dir=getattr(args, "flow_dir", None), flow_paths=flow_paths,
+            customer=args.customer, title=args.title)
+        _report_write(_rpt.render(rep, fmt), args.out)
+        # 해시체인 변조가 탐지되면 비0(무결성 게이트).
+        return 0 if rep["integrity_ok"] else 1
+
+    print("usage: nufi-egress report {sla|compliance} …", file=sys.stderr)
+    return 2
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(prog="nufi-egress",
                                  description="NuFi Egress Enforcement CLI (CMP-94 트랙 B)")
@@ -574,6 +630,46 @@ def main(argv: Optional[List[str]] = None) -> int:
     pp.add_argument("text", help="검사할 텍스트")
     pp.add_argument("--json", action="store_true")
     pp.set_defaults(func=cmd_policy_inspect)
+
+    # --- SLA·규정준수 리포팅 (v0.0.6 C1 · CMP-150) ------------------------- #
+    p = sub.add_parser("report",
+                       help="기간별 SLA·규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음)")
+    rsub = p.add_subparsers(dest="report_kind", required=True)
+
+    rp = rsub.add_parser("sla",
+                         help="PII recall·지연 p95·커버리지 기간별 집계 + 충족/위반 판정")
+    rp.add_argument("--metrics", default=None,
+                    help="SLA 측정 샘플 JSONL(이미 산출된 벤치/커버리지 결과)")
+    rp.add_argument("--period", choices=["day", "week", "month"], default="week",
+                    help="집계 단위(기본 week)")
+    rp.add_argument("--thresholds", default=None,
+                    help="고객별 임계 JSON 파일(pii_recall/latency_p95_ms/coverage_pct)")
+    rp.add_argument("--set", action="append", metavar="KEY=VALUE",
+                    help="임계 override(예: --set pii_recall=0.95)")
+    rp.add_argument("--flow", default=None,
+                    help="flow tap JSONL — 커버리지 표본 1건 파생(커버리지 집계기 재사용)")
+    rp.add_argument("--flow-dir", default=None, help="flow tap 로그 디렉터리")
+    rp.add_argument("--customer", default=None, help="고객명(리포트 헤더)")
+    rp.add_argument("--title", default=None, help="리포트 제목 override")
+    rp.add_argument("--format", choices=["md", "html", "json"], default="md",
+                    help="출력 형식(기본 md)")
+    rp.add_argument("--out", default=None, help="출력 파일 경로(생략 시 stdout)")
+    rp.set_defaults(func=cmd_report)
+
+    rp = rsub.add_parser("compliance",
+                         help="정책 변경 감사(+해시체인) · 차단/가명화 · 우회 요약")
+    rp.add_argument("--audit", default=None,
+                    help="감사 JSONL 경로(기본 logs/egress_audit.jsonl)")
+    rp.add_argument("--change-log", default=None,
+                    help="정책 변경 감사 JSONL(기본 logs/policy_changes.jsonl)")
+    rp.add_argument("--flow", default=None, help="flow tap JSONL(우회 요약)")
+    rp.add_argument("--flow-dir", default=None, help="flow tap 로그 디렉터리")
+    rp.add_argument("--customer", default=None, help="고객명(리포트 헤더)")
+    rp.add_argument("--title", default=None, help="리포트 제목 override")
+    rp.add_argument("--format", choices=["md", "html", "json"], default="md",
+                    help="출력 형식(기본 md)")
+    rp.add_argument("--out", default=None, help="출력 파일 경로(생략 시 stdout)")
+    rp.set_defaults(func=cmd_report)
 
     args = ap.parse_args(argv)
     return args.func(args)

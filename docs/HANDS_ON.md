@@ -497,6 +497,33 @@ nufi-egress policy audit --verify-chain              # 체인 BROKEN 이면 exit
 > 입력이 다시 차단되면 성공. 1-명령 자동 채점은 `./scripts/demo_policy_ops.sh`(4/4 PASS),
 > 운영 개념·설계 불변식은 [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md).
 
+### 6.10 제출용 리포트로 묶기 — `report`
+
+지금까지 쌓인 측정·감사 로그를 감사관·구매자에게 낼 수 있는 **기간별 리포트**로 묶습니다.
+새 측정을 돌리지 않고 이미 있는 산출물만 읽어 Markdown/HTML/JSON 을 만듭니다.
+
+```bash
+# SLA: recall·지연 p95·커버리지를 주별로 집계 + 목표 대비 충족/위반 판정
+nufi-egress report sla --metrics samples/sla/sla_metrics.jsonl \
+  --flow samples/sla/flow_bypass.jsonl --period week --customer "Acme Corp" --format md
+
+# 고객별 임계는 설정으로 노출 — 완화/강화 모두 가능
+nufi-egress report sla --metrics samples/sla/sla_metrics.jsonl --set pii_recall=0.95
+
+# 규정준수: 정책 변경 감사(+해시체인) · 차단/가명화 · 우회 요약을 한 장으로
+nufi-egress report compliance --audit samples/sla/audit_decisions.jsonl \
+  --change-log samples/sla/policy_changes.jsonl --flow samples/sla/flow_bypass.jsonl --format md
+```
+
+**무슨 일이 일어났나요?**
+- `report sla` 는 기본 품질약속(PII recall ≥ 0.9 / p95 ≤ 150ms / 커버리지 ≥ 99%) 대비
+  각 항목에 **충족/위반**을 찍고, 위반이 하나라도 있으면 `exit 1`(CI/제출 게이트).
+- `report compliance` 는 변경 감사·감사 로그 두 **해시체인**을 검증해, 변조가 탐지되면
+  `exit 1` 로 제출을 막습니다.
+
+> ✅ **체크포인트:** 1-명령 자동 채점은 `./scripts/demo_report.sh`(6/6 PASS, 권한 불필요),
+> 명령 전체 옵션·입력 스키마는 [`REPORTING.md`](REPORTING.md).
+
 ---
 
 ## 7. Part F — 한 번에 끝까지: end-to-end 데모
