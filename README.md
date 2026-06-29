@@ -94,13 +94,21 @@ curl -s localhost:4000/v1/chat/completions \
 | **내 LLM 서비스 앞단에 붙이기** (통합 경로·프리셋·점검·결정 트리) | [`docs/INTEGRATION_GUIDE.md`](docs/INTEGRATION_GUIDE.md) |
 | **명령어 전체 레퍼런스** (`nufi-egress` 모든 서브커맨드) | [`docs/CLI.md`](docs/CLI.md) |
 | **데모 전체 목록** (이름·목적·시나리오 수·실행법 카탈로그) | [`docs/DEMO.md`](docs/DEMO.md) |
-| **SLA·규정준수 리포트 내기** (감사관·구매자 제출용, 기간별 충족/위반) | [`docs/REPORTING.md`](docs/REPORTING.md) |
 | **컴플라이언스 매핑 리포트** (안내서·망분리 점검항목 대비 통제 커버리지 — 증빙 자동판정) | [`docs/REPORTING.md`](docs/REPORTING.md) · [`docs/MANUAL.md`](docs/MANUAL.md) |
-| **여러 테넌트를 한 게이트웨이에서** (테넌트 읽기 격리 + 읽기전용 역할) | [`docs/MULTITENANCY.md`](docs/MULTITENANCY.md) |
 | **내부 구조·다이어그램** 보기 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
-| **감사 로그를 화면으로** 보기 (읽기 전용 대시보드) | [`dashboards/README.md`](dashboards/README.md) |
 | **온프렘/에어갭 설치** | [`deploy/README.md`](deploy/README.md) · [`deploy/airgap/INSTALL.md`](deploy/airgap/INSTALL.md) |
 | **SDK 한 줄 통합 예제** | [`examples/`](examples/) |
+
+> **⚠️ 운영(ops) 레이어 제외 안내** — 방향 재설정([`docs/ROADMAP.md`](docs/ROADMAP.md) §3)에 따라
+> 아래 운영 기능은 **유지보수 없이 제외**되었습니다(코드는 당분간 남아 있으나 신규 기능·지원 없음,
+> 필요 시 별도 결정으로 부활). NuFi 는 **게이트웨이 코어(경량 파이썬 enforcement) + 한국어 PII/증빙**
+> 에 집중합니다. 코어와 컴플라이언스 매핑(증빙)은 그대로 유지됩니다.
+>
+> | ~~제외된 운영 기능~~ | 비고 |
+> |---|---|
+> | ~~SLA 리포트·알림~~ (운영 모니터링) | `report sla`, `--alert`/`--webhook` — 제외 |
+> | ~~멀티테넌시·RBAC~~ (테넌트 격리 + 역할) | `--tenant`/`--all-tenants`/`--role` — 제외 |
+> | ~~감사 대시보드·프론트엔드~~ (UI 표면) | `dashboard` 서브커맨드 — 제외 |
 
 ### 데모 1분 실행
 
@@ -115,31 +123,22 @@ curl -s localhost:4000/v1/chat/completions \
 nufi-egress coverage --simulate samples/flow_replay.jsonl
 nufi-egress monitor  --simulate samples/flow_bypass_burst.jsonl --threshold 1
 
-# 3b) SLA·규정준수 리포트 — 기간별 충족/위반 판정 + 변경 감사/무결성(제출용)
-./scripts/demo_report.sh                      # 매뉴얼: docs/REPORTING.md
-
 # 3b') 컴플라이언스 매핑 — 안내서·망분리 점검항목 대비 통제 커버리지(증빙 자동판정)
 ./scripts/demo_compliance_mapping.sh          # 매뉴얼: docs/REPORTING.md §3 · docs/MANUAL.md §5.4
-
-# 3c) 멀티테넌시·읽기전용 역할 — 테넌트 조회 격리 + viewer/operator RBAC
-./scripts/demo_multitenancy.sh               # 매뉴얼: docs/MULTITENANCY.md
 
 # 3d) 전체 데모 러너 — 모든 기능 데모를 차례로 실행하고 집계 PASS/FAIL 출력
 ./scripts/demo_all.sh                         # 데모 카탈로그: docs/DEMO.md · 요약: docs/RELEASE_NOTES.md
 
-# 4) 감사 대시보드 — 결정/무결성/우회/추이 4개 패널 (읽기 전용)
-nufi-egress dashboard --port 8099 \
-  --audit dashboards/sample/audit_chain.jsonl --flow-dir dashboards/sample
-#   → 브라우저에서 http://127.0.0.1:8099/viewer
-
-# 5) 배선 점검 — 5개 항목 자가진단
+# 4) 배선 점검 — 5개 항목 자가진단
 nufi-egress doctor
 
-# 6) 벤치마크 — 재현율(recall)·정밀도(precision)·지연(latency)
+# 5) 벤치마크 — 재현율(recall)·정밀도(precision)·지연(latency)
 python3 scripts/bench.py --ner gazetteer
 ```
 
-> `coverage`·`monitor`·`doctor`·`dashboard` 는 단일 진입점 CLI `nufi-egress` 의 서브커맨드입니다.
+> 운영(ops) 데모(`demo_report`·`demo_multitenancy`·`demo_dashboards`)와
+> `dashboard`/`report sla`/멀티테넌시 플래그는 **제외**되었습니다(위 운영 레이어 제외 안내 참조).
+> `coverage`·`monitor`·`doctor` 는 단일 진입점 CLI `nufi-egress` 의 서브커맨드입니다.
 > 전체 목록과 **설치하지 않은 환경에서의 실행법**은 [`docs/CLI.md`](docs/CLI.md) 를 참고하세요.
 > (`scripts/bench.py` 는 CLI 와 별개인 보조 실행 진입점입니다.)
 
