@@ -11,6 +11,12 @@
 # 목표선에 대조해 PASS/FAIL 을 낸다. 실제 재측정(모델 재실행) 경로는 아래 안내.
 # root 불필요 · 외부 네트워크 호출 0 · 결정론적(stdlib + 커밋 JSON).
 #
+# A1/A2 는 v0.0.5 봉인 골드셋(KR_PERSON 126) 측정 증거를 재생한다(게이트).
+# A3 는 I1 공개 골드셋(samples/gold, test n=372) 현행 baseline 을 **정보성**으로 표시한다
+#   (docs/reports/CMP-198-baseline-int8.json — onnx-int8 실측). PASS/FAIL 미산입.
+#   I1 baseline 재측정: PYTHONPATH=~/.cache/m5_libs python3 scripts/bench_m5.py \
+#     --backend onnx-int8 --split test --no-latency --json-out docs/reports/CMP-198-baseline-int8.json
+#
 # 사용: ./scripts/demo_accuracy.sh
 # 매뉴얼: docs/history/DEMO_v0.0.5.md · 측정 스택: docs/M5_MEASUREMENT_REPORT.md
 # 재측정: PYTHONPATH=~/.cache/m5_libs python3 scripts/export_onnx_int8.py   # per-channel INT8 산출
@@ -91,6 +97,34 @@ if [ "$RC" -eq 0 ]; then
 else
   bad "A2 INT8 p95 가 운영 기준 초과 — 측정/배포 점검"
 fi
+
+# --- A3: I1 공개 골드셋 현행 baseline (정보성, 게이트 아님) -------------------
+I1_BASELINE="docs/reports/CMP-198-baseline-int8.json"
+echo ""
+echo "A3 — I1 공개 골드셋 baseline (samples/gold test n=372) · 정보성(PASS/FAIL 미산입)"
+$PY - "$I1_BASELINE" <<'PYEOF'
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+except FileNotFoundError:
+    print(f"    I1 baseline 산출물 없음: {sys.argv[1]} (정보성 — 데모 판정 무관)"); sys.exit(0)
+sc = d["scores"]
+pc = sc["per_class"]
+def line(name, key, floor):
+    v = pc.get(key, {})
+    ci = v.get("ci95", [None, None])
+    mark = "≥" if (v.get("recall", 0) >= floor) else "↓"
+    print(f"    {name:14} recall={v.get('recall')} ({v.get('hit')}/{v.get('exp')}) "
+          f"CI95={ci}  [{mark}{floor} 점추정]")
+print(f"    backend={d.get('ner_backend_active')}  acceptance_pass={d.get('acceptance_pass')}")
+print(f"    집계 PII recall={sc['pii_recall']} CI95={sc['pii_recall_ci95']}  "
+      f"precision={sc['pii_precision']}  benign_false_block={sc['benign_false_block']} ({sc['benign_false_block_n']})")
+print(f"    강식별자(checksum) recall={sc['strong_recall']} CI95={sc['strong_recall_ci95']} (결정적 regex+checksum)")
+line("KR_PERSON", "KR_PERSON", 0.85)
+line("KR_LOCATION", "KR_LOCATION", 0.85)
+sys.exit(0)
+PYEOF
+echo "    (KR_PERSON CI 하한·KR_LOCATION 목표 미달은 I3/I4 코어 개선 추적 — §5 게이트 확정 입력)"
 
 echo "------------------------------------------------------------"
 echo "요약: $((PASS+FAIL))개 항목 중 ${PASS} PASS, ${FAIL} FAIL"
