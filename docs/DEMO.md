@@ -24,7 +24,8 @@ python3 -m pip install -r requirements.txt   # PyYAML·fastapi·uvicorn·httpx
 | [`demo.sh`](../scripts/demo.sh) | 게이트웨이 e2e — private 라우팅 · 강한 PII/비밀 차단(403) · 약한 PII 가명화 · 감사 로깅 | 6 | `./scripts/demo.sh` | 본 문서 §부록 |
 | [`demo_coverage.sh`](../scripts/demo_coverage.sh) | 감사 커버리지 — "내 트래픽 중 몇 %가 게이트웨이를 통과했나" + 우회 알림 | 3 | `./scripts/demo_coverage.sh` | [`CLI.md#coverage`](CLI.md) |
 | [`demo_dashboards.sh`](../scripts/demo_dashboards.sh) | 감사 대시보드 — 결정/무결성/우회/추이 4개 패널 어댑터(읽기 전용) | 6 | `./scripts/demo_dashboards.sh` | [`dashboards/README.md`](../dashboards/README.md) |
-| [`demo_report.sh`](../scripts/demo_report.sh) | SLA·규정준수 리포트 — 기간별 충족/위반 판정 + 해시체인 무결성 게이트 | 6 | `./scripts/demo_report.sh` | [`REPORTING.md`](REPORTING.md) |
+| [`demo_report.sh`](../scripts/demo_report.sh) | SLA·규정준수 리포트 — 기간별 충족/위반 판정 + 해시체인 무결성 게이트 + 점검항목 커버리지 | 7 | `./scripts/demo_report.sh` | [`REPORTING.md`](REPORTING.md) |
+| [`demo_compliance_mapping.sh`](../scripts/demo_compliance_mapping.sh) | 컴플라이언스 매핑 — 금융보안원 안내서·망분리 점검항목 대비 NuFi 통제 커버리지(직접/부분/범위밖) 자동 산출 + 무결성 게이트 0/1 유지 | 5 | `./scripts/demo_compliance_mapping.sh` | [`REPORTING.md`](REPORTING.md) |
 | [`demo_policy_ops.sh`](../scripts/demo_policy_ops.sh) | 정책 운영 — 다중 프로파일 · 경로별 바인딩 · 무재기동 롤백 · 변경 감사 | 4 | `./scripts/demo_policy_ops.sh` | [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) |
 | [`demo_multitenancy.sh`](../scripts/demo_multitenancy.sh) | 멀티테넌시·RBAC — 테넌트 읽기 경계 + viewer/operator 읽기전용 역할 | 6 | `./scripts/demo_multitenancy.sh` | [`MULTITENANCY.md`](MULTITENANCY.md) |
 | [`demo_audit_separation.sh`](../scripts/demo_audit_separation.sh) | 차등 감사 — public/private 분리 저장 + 패킷 레이어 우회 탭 + 비동기 감사봇 | 6 | `./scripts/demo_audit_separation.sh` | [`history/DEMO_v0.0.5.md`](history/DEMO_v0.0.5.md) |

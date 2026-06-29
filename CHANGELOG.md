@@ -6,6 +6,26 @@
 
 ## [Unreleased]
 
+### Added
+- **컴플라이언스 매핑 리포트 — 점검항목 커버리지(control coverage)** — 규정준수 증빙
+  게이트웨이의 첫 슬라이스. `report compliance` 에 **금융보안원 안내서 점검항목 + 망분리
+  평가기준** 대비 NuFi 통제 충족 상태를 **기존 리포트 증빙에서 자동 산출**하는 커버리지
+  섹션을 추가한다(게이트 결정·차단 규칙 무변경).
+  - `report compliance --controls`(기본 상시) / `--no-controls` / `--catalog FILE` — 통제
+    카탈로그 대비 매핑 표를 MD/HTML/JSON 으로 산출. 동봉 카탈로그는 direct 8 / partial 6 /
+    out_of_scope 5 항목.
+  - **직접(direct)** 통제는 결정론적 평가 규칙(`action_count`·`decisions_total`·`field_true`·
+    `chain_ok`·`nonempty`·`all_of`)으로 충족/미충족을 **자동판정**하고 증빙 출처를 행에 표기한다.
+    **부분(partial)/범위밖(out_of_scope)** 은 카탈로그의 정적 라벨 + 보강 로드맵으로 표기한다.
+  - 롤업 배지(직접 N(충족/미충족)·부분 N·범위밖 N) + 항목별 행을 md/html/json 렌더러에 추가.
+  - **종료코드는 기존 무결성 게이트(정상 0 · 변조 1)를 유지** — 커버리지는 정보성이며 신규
+    비-0 종료를 만들지 않는다.
+  - 1-명령 데모 [`scripts/demo_compliance_mapping.sh`](scripts/demo_compliance_mapping.sh)
+    (커버리지 롤업·MD 표·무결성 게이트 0/1 유지·`--no-controls` 회귀 5/5) + `demo_all` 러너
+    등록 + [`docs/DEMO.md`](docs/DEMO.md) 카탈로그 등록.
+  - 운영자 매뉴얼 [`docs/MANUAL.md`](docs/MANUAL.md) §5.4 에 매핑 리포트 절(사용법·출력 해석·
+    증거 출처) 신설 — 권위 [`docs/REPORTING.md`](docs/REPORTING.md) §3 으로 링크(단일출처 유지).
+
 ## [0.0.8] - 2026-06-28
 
 ### Added

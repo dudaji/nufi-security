@@ -259,6 +259,32 @@ Control)를 적용합니다. `viewer` 역할이 정책 변경이나 다테넌트
 다테넌트 집계(`--all-tenants`)도 지원합니다. 권위: [`REPORTING.md`](REPORTING.md). 1-명령
 데모: [`../scripts/demo_report.sh`](../scripts/demo_report.sh).
 
+**컴플라이언스 매핑 — 점검항목 커버리지(control coverage).** 규정준수 리포트에
+`--controls` 를 더하면, **금융보안원 안내서 점검항목 + 망분리 평가기준** 대비 NuFi 통제의
+충족 상태를 위 리포트의 **기존 증빙에서 자동 산출**한 매핑 표가 붙습니다. 감사관·구매자가
+"어느 점검항목을 무엇으로 충족하나"를 한 장으로 보는 **규제 준수 증빙 게이트웨이**입니다.
+
+```bash
+# 점검항목 커버리지 포함 컴플라이언스 리포트(제출용 MD)
+nufi-egress report compliance --audit audit.jsonl --change-log changes.jsonl \
+  --flow flow.jsonl --controls --customer "Acme Corp" --format md
+```
+
+- **출력 해석** — 롤업 배지(직접 N(충족/미충족) · 부분 N · 범위밖 N) 아래에 항목별 행이
+  옵니다. 충족 구분은 세 가지입니다:
+  - **직접(direct)** — 차단/가명화 결정·무결 체인 같은 **리포트 증빙으로 충족/미충족을
+    자동판정**(✅/❌). 증빙 출처(`action_counts`·`decisions.total`·`chain.ok` 등)가 행에 표기됩니다.
+  - **부분(partial)** — 일부만 충족하는 통제. 정적 라벨 + 보강 로드맵(🟡)을 보여줍니다.
+  - **범위밖(out_of_scope)** — 파트너·이연 영역(⛔). 솔직하게 범위 밖으로 표기합니다.
+- **증거 출처** — 별도 입력이 아니라 **같은 리포트의 감사 결정·정책 변경·우회 증빙**에서
+  결정론적으로 평가합니다(새 측정 없음). 통제 카탈로그는 동봉 기본값을 쓰며 `--catalog` 로
+  교체할 수 있고, `--no-controls` 로 섹션을 끌 수 있습니다.
+- **종료코드** — 커버리지는 **정보성**입니다. 기존 무결성 게이트의 종료코드(정상 0 ·
+  변조 1)를 **바꾸지 않습니다**.
+
+권위: [`REPORTING.md`](REPORTING.md) §3. 1-명령 데모:
+[`../scripts/demo_compliance_mapping.sh`](../scripts/demo_compliance_mapping.sh).
+
 ### 5.5 감사 가시성 — 대시보드 & 커버리지
 
 - **읽기 전용 대시보드** — 결정 뷰어·해시체인 무결성·우회 타임라인·카테고리 추이 4개 패널.

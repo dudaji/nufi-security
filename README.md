@@ -95,6 +95,7 @@ curl -s localhost:4000/v1/chat/completions \
 | **명령어 전체 레퍼런스** (`nufi-egress` 모든 서브커맨드) | [`docs/CLI.md`](docs/CLI.md) |
 | **데모 전체 목록** (이름·목적·시나리오 수·실행법 카탈로그) | [`docs/DEMO.md`](docs/DEMO.md) |
 | **SLA·규정준수 리포트 내기** (감사관·구매자 제출용, 기간별 충족/위반) | [`docs/REPORTING.md`](docs/REPORTING.md) |
+| **컴플라이언스 매핑 리포트** (안내서·망분리 점검항목 대비 통제 커버리지 — 증빙 자동판정) | [`docs/REPORTING.md`](docs/REPORTING.md) · [`docs/MANUAL.md`](docs/MANUAL.md) |
 | **여러 테넌트를 한 게이트웨이에서** (테넌트 읽기 격리 + 읽기전용 역할) | [`docs/MULTITENANCY.md`](docs/MULTITENANCY.md) |
 | **내부 구조·다이어그램** 보기 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
 | **감사 로그를 화면으로** 보기 (읽기 전용 대시보드) | [`dashboards/README.md`](dashboards/README.md) |
@@ -116,6 +117,9 @@ nufi-egress monitor  --simulate samples/flow_bypass_burst.jsonl --threshold 1
 
 # 3b) SLA·규정준수 리포트 — 기간별 충족/위반 판정 + 변경 감사/무결성(제출용)
 ./scripts/demo_report.sh                      # 매뉴얼: docs/REPORTING.md
+
+# 3b') 컴플라이언스 매핑 — 안내서·망분리 점검항목 대비 통제 커버리지(증빙 자동판정)
+./scripts/demo_compliance_mapping.sh          # 매뉴얼: docs/REPORTING.md §3 · docs/MANUAL.md §5.4
 
 # 3c) 멀티테넌시·읽기전용 역할 — 테넌트 조회 격리 + viewer/operator RBAC
 ./scripts/demo_multitenancy.sh               # 매뉴얼: docs/MULTITENANCY.md
