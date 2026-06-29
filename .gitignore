@@ -11,3 +11,11 @@ dist/
 docs/gtm/
 *_GTM_*.zip
 *GTM_package*
+
+# 데모 실행 시 재생성되는 산출물 (scripts/demo_*.sh) — 큐레이트된 샘플
+# (.md/.zip/.txt/.jsonl, 이미 추적 중)만 커밋하고, 재생성 산출물은 무시 (CMP-187)
+demo_outputs/**/*.json
+demo_outputs/**/*.html
+demo_outputs/**/*.stderr
+demo_outputs/compliance_mapping/
+demo_outputs/multitenancy/
