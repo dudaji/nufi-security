@@ -94,7 +94,7 @@ curl -s localhost:4000/v1/chat/completions \
 | **내 LLM 서비스 앞단에 붙이기** (통합 경로·프리셋·점검·결정 트리) | [`docs/INTEGRATION_GUIDE.md`](docs/INTEGRATION_GUIDE.md) |
 | **명령어 전체 레퍼런스** (`nufi-egress` 모든 서브커맨드) | [`docs/CLI.md`](docs/CLI.md) |
 | **데모 전체 목록** (이름·목적·시나리오 수·실행법 카탈로그) | [`docs/DEMO.md`](docs/DEMO.md) |
-| **컴플라이언스 매핑 리포트** (안내서·망분리 점검항목 대비 통제 커버리지 — 증빙 자동판정) | [`docs/REPORTING.md`](docs/REPORTING.md) · [`docs/MANUAL.md`](docs/MANUAL.md) |
+| **컴플라이언스 매핑 리포트** (한국 규제팩 — 금융 AI 안내서·망분리·개인정보보호법·신용정보법·ISMS-P 대비 통제 커버리지, 증빙 자동판정) | [`docs/REPORTING.md`](docs/REPORTING.md) · [`docs/MANUAL.md`](docs/MANUAL.md) |
 | **내부 구조·다이어그램** 보기 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
 | **온프렘/에어갭 설치** | [`deploy/README.md`](deploy/README.md) · [`deploy/airgap/INSTALL.md`](deploy/airgap/INSTALL.md) |
 | **SDK 한 줄 통합 예제** | [`examples/`](examples/) |

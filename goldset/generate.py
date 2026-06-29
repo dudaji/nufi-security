@@ -14,13 +14,32 @@
 - **스키마:** `{"id","prompt","expect":[type...],"spans":[[start,end,type]...],"source":"synth"}`.
 - **분할:** 클래스별 층화 dev 40% / test 60%. test 는 튜닝 중 열람 금지(누수 방지).
 
-실행: python3 goldset/generate.py  →  samples/gold/{dev,test}.jsonl + manifest.json
+공개 배포 형태(CMP-197 I1)
+-------------------------
+- **라이선스:** `samples/gold/LICENSE` (CC0 1.0 — 전량 합성이므로 퍼블릭 도메인 헌정).
+- **README:** `samples/gold/README.md` — 스키마·클래스 커버리지·재현 명령.
+- **결정적 재현 검증:** manifest 에 `content_hash`(dev+test 직렬화 바이트의 SHA-256)를 기록한다.
+  재생성 → 동일 바이트 → 동일 해시. `python3 goldset/generate.py --verify` 는 커밋된
+  산출물을 재생성·대조해 불일치 시 비-0 종료(CI/배포 게이트).
+
+실행:
+  python3 goldset/generate.py            # 평가셋 + manifest(해시 포함) 재생성
+  python3 goldset/generate.py --verify   # 커밋본과 결정적 재현 일치 검증(비-0=불일치)
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import random
+import sys as _sys
 from pathlib import Path
+
+# 공개 배포 형태(CMP-197 I1) — Must 7종(체크섬/구조형 강한 PII): dev/test 충분 표본 보장 대상.
+MUST_CLASSES = ["KR_RRN", "KR_FOREIGNER_REG", "KR_PASSPORT", "KR_DRIVER_LICENSE",
+                "KR_ACCOUNT", "KR_BRN", "CREDIT_CARD"]
+# Must 7종 각 분할 최소 표본(현재 산출 기준 dev≥6/test≥9 → 보수적 floor).
+MUST_MIN_DEV = 5
+MUST_MIN_TEST = 8
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "samples" / "gold"
@@ -37,7 +56,7 @@ GAZ_SURNAMES = set(_SURNAMES.split("|"))
 LISTED_SURNAMES = ["김", "이", "박", "최", "정", "강", "조", "윤", "장", "한", "오", "서", "신"]
 # gazetteer 미수록 — 희귀 단성 + 복성. 폴백 백엔드는 구조적으로 탐지 불가(누수 방지 핵심).
 UNLISTED_SURNAMES = ["옥", "음", "동", "경", "사", "호", "모", "봉", "갈", "좌", "어",
-                     "탁", "피", "빈", "단", "견", "범", "복", "승", "화", "선", "옹",
+                     "탁", "피", "빈", "단", "견", "범", "복", "승", "화", "초", "옹",
                      "남궁", "황보", "제갈", "선우", "독고", "사공", "서문", "동방"]
 GIVEN = ["민수", "지훈", "서연", "예준", "도윤", "하준", "지우", "서준", "주원", "은지",
          "현우", "수빈", "유진", "지원", "다은", "준호", "예린", "시우", "하은", "태윤",
@@ -141,9 +160,19 @@ def make_secret(rng):
     up = lambda n: "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789") for _ in range(n))
     kind = rng.choice(["aws", "aws_secret", "google", "slack", "github", "openai", "anthropic", "jwt", "generic"])
     if kind == "aws":
-        return f"AKIA{up(16)}", "배포 키 {v} 검토 바랍니다."
+        # AWS 자격증명은 GitHub Push Protection(GH013) 및 다운스트림 스캐너가 실키로 오탐하는
+        # 유일한 SECRET 종류다(다른 키는 파트너 체크섬 미통과로 합성값이 발화하지 않음). 공개 CC0
+        # 배포셋이 스캐너-발화 없이 유통되도록 AWS 공식 예시 Access Key ID(허용목록 등재, EXAMPLE
+        # 마커)로 고정한다. NuFi AWS_ACCESS_KEY 패턴은 그대로 발화 → 탐지 recall 불변.
+        # up(16) draw 는 소비만 하고 버려 다른 SECRET 종류의 rng 스트림 위치를 보존한다(결정적·최소 diff).
+        _ = up(16)
+        return "AKIAIOSFODNN7EXAMPLE", "배포 키 {v} 검토 바랍니다."
     if kind == "aws_secret":
-        return f"aws_secret_access_key={b62(40)}", "{v}"
+        # 40자 base62 랜덤은 GitHub 'AWS Secret Access Key' 스캐너를 발화시켜 push 를 차단한다(GH013).
+        # AWS 공식 예시 Secret Access Key(허용목록 등재, EXAMPLEKEY 마커)로 고정 → 스캐너 통과.
+        # NuFi AWS_SECRET_KEY 패턴(aws_secret…=[A-Za-z0-9/+]{40})은 그대로 발화 → 탐지 recall 불변.
+        _ = b62(40)
+        return "aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY", "{v}"
     if kind == "google":
         return f"AIza{b62(35)}", "지도 API 키 {v} 노출됐어."
     if kind == "slack":
@@ -227,10 +256,10 @@ def build():
     # CMP-100 의 sealed test KR_PERSON n=48(=80×0.6) → CI [0.704,0.913] 가 목표 0.85 를 포함(측정 정밀도 한계).
     # 표본을 210 으로 확대하면 test = int(210*0.6) = 126 ≥ 120 → CI 폭이 좁아져 게이트를 정직하게 판정.
     #
-    # **변경 격리(측정 무결성):** CMP-100 원본 80 표본은 *전역* rng 로 동일 draw 시퀀스를 재생(이 블록
-    # 이후의 KR_LOCATION/SECRET 전역 draw 가 CMP-100 과 비트동일 → 범위 밖 클래스 게이트 불변). 확대분
-    # 130 은 *독립* rng(SEED+13)로 생성해 전역 stream 을 일절 건드리지 않는다. 즉 본 이슈 변경은 KR_PERSON
-    # sealed test 만 확장하고 다른 클래스의 sealed test 프롬프트는 보존한다(누수방지·층화·합성 원칙 동일).
+    # **이중 rng 구조:** 80 표본은 전역 rng, 확대분 130 은 독립 rng(SEED+13)로 생성한다(원래 CMP-100
+    # sealed 측정과의 draw 격리를 위한 구조). 공개 배포 형태(CMP-197 I1)에서 평가셋 전체를 결정적으로
+    # 재생성하고 manifest content_hash 로 버전을 고정하므로, 산출 일치 기준은 이 해시다(과거 비트동일
+    # 불변식은 더 이상 보증 대상이 아님). 누수방지·층화·합성 원칙은 동일하게 유지된다.
     def _gen_persons(r, count):
         n_unl = round(count * 0.56)  # 미수록(gazetteer 미등재) 비율 56% 유지
         lst = []
@@ -290,7 +319,17 @@ def build():
     return rows
 
 
-def split_and_write(rows):
+def _serialize_row(r):
+    """공개 산출 행의 결정적 직렬화(메타키 제거, 채점 슬라이스 키만 보존)."""
+    out = {k: v for k, v in r.items() if not k.startswith("_")}
+    # 메타는 별도 키로 보존(채점 슬라이스용)
+    if "_gazetteer_unlisted" in r:
+        out["gazetteer_unlisted"] = r["_gazetteer_unlisted"]
+    return json.dumps(out, ensure_ascii=False)
+
+
+def stratify(rows):
+    """클래스별 층화 dev 40% / test 60% 분할(결정적). (dev, test) 반환."""
     rng = random.Random(SEED + 1)
     by_cls = {}
     for r in rows:
@@ -304,18 +343,15 @@ def split_and_write(rows):
             (dev if j < cut else test).append(items[k])
     for split in (dev, test):
         split.sort(key=lambda r: r["id"])
+    return dev, test
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    for name, split in (("dev", dev), ("test", test)):
-        with open(OUT_DIR / f"{name}.jsonl", "w", encoding="utf-8") as f:
-            for r in split:
-                out = {k: v for k, v in r.items() if not k.startswith("_")}
-                # 메타는 별도 키로 보존(채점 슬라이스용)
-                if "_gazetteer_unlisted" in r:
-                    out["gazetteer_unlisted"] = r["_gazetteer_unlisted"]
-                f.write(json.dumps(out, ensure_ascii=False) + "\n")
 
-    # 매니페스트(규모·구성 검증 + 누수방지 비율 기록)
+def build_manifest(rows, dev, test):
+    """규모·구성·누수방지·Must 커버리지 + 결정적 재현 해시(content_hash)를 담은 매니페스트.
+
+    content_hash = SHA-256( dev.jsonl 본문 + test.jsonl 본문 ), 두 산출의 정확한 바이트열.
+    재생성 시 동일 시드 → 동일 행 → 동일 직렬화 → 동일 해시(결정적 재현 검증의 기준값).
+    """
     pos = [r for r in rows if r["expect"]]
     neg = [r for r in rows if not r["expect"]]
     persons = [r for r in rows if r["_cls"] == "KR_PERSON"]
@@ -323,24 +359,106 @@ def split_and_write(rows):
     counts = {}
     for r in rows:
         counts[r["_cls"]] = counts.get(r["_cls"], 0) + 1
-    manifest = {
+
+    dev_counts, test_counts = {}, {}
+    for r in dev:
+        dev_counts[r["_cls"]] = dev_counts.get(r["_cls"], 0) + 1
+    for r in test:
+        test_counts[r["_cls"]] = test_counts.get(r["_cls"], 0) + 1
+    must_coverage = {
+        c: {"dev": dev_counts.get(c, 0), "test": test_counts.get(c, 0)} for c in MUST_CLASSES
+    }
+
+    h = hashlib.sha256()
+    for split in (dev, test):
+        for r in split:
+            h.update((_serialize_row(r) + "\n").encode("utf-8"))
+
+    return {
+        "schema_version": 1,
         "seed": SEED,
+        "source": "synth",  # 전량 합성 — 실고객 데이터 0
+        "license": "CC0-1.0",
         "total": len(rows),
         "positives": len(pos),
         "negatives": len(neg),
         "class_counts": counts,
-        "dev_size": int(len(rows) * 0.4),
+        "dev_size": len(dev),
+        "test_size": len(test),
+        "must_classes": MUST_CLASSES,
+        "must_coverage": must_coverage,
+        "must_min": {"dev": MUST_MIN_DEV, "test": MUST_MIN_TEST},
         "person_unlisted_ratio": round(len(unlisted_persons) / len(persons), 3),
         "person_unlisted_n": len(unlisted_persons),
         "split": {"dev_pct": 0.4, "test_pct": 0.6, "stratified": True},
-        "note": "test 셋은 튜닝 중 열람 금지(누수 방지). person_unlisted_ratio ≥ 0.5 보장.",
+        "content_hash": "sha256:" + h.hexdigest(),
+        "note": "test 셋은 튜닝 중 열람 금지(누수 방지). person_unlisted_ratio ≥ 0.5 보장. "
+                "content_hash 로 결정적 재현 검증(goldset/generate.py --verify).",
     }
+
+
+def split_and_write(rows):
+    dev, test = stratify(rows)
+    manifest = build_manifest(rows, dev, test)
+
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    for name, split in (("dev", dev), ("test", test)):
+        with open(OUT_DIR / f"{name}.jsonl", "w", encoding="utf-8") as f:
+            for r in split:
+                f.write(_serialize_row(r) + "\n")
     with open(OUT_DIR / "manifest.json", "w", encoding="utf-8") as f:
         json.dump(manifest, f, ensure_ascii=False, indent=2)
     return manifest
 
 
+def verify():
+    """커밋된 산출물을 재생성·대조(결정적 재현 검증). 일치=0, 불일치/누락=1 종료코드."""
+    rows = build()
+    dev, test = stratify(rows)
+    fresh = build_manifest(rows, dev, test)
+    errs = []
+
+    mpath = OUT_DIR / "manifest.json"
+    if not mpath.exists():
+        errs.append(f"manifest 없음: {mpath} — 먼저 `python3 goldset/generate.py` 실행")
+    else:
+        committed = json.loads(mpath.read_text(encoding="utf-8"))
+        if committed.get("content_hash") != fresh["content_hash"]:
+            errs.append(f"content_hash 불일치: committed={committed.get('content_hash')} "
+                        f"regenerated={fresh['content_hash']}")
+
+    for name, split in (("dev", dev), ("test", test)):
+        p = OUT_DIR / f"{name}.jsonl"
+        expect = "".join(_serialize_row(r) + "\n" for r in split)
+        if not p.exists():
+            errs.append(f"{name}.jsonl 없음: {p}")
+        elif p.read_text(encoding="utf-8") != expect:
+            errs.append(f"{name}.jsonl 바이트 불일치 — 커밋본이 시드 산출과 다름")
+
+    # Must 7종 dev/test 충분 표본
+    for c in MUST_CLASSES:
+        cov = fresh["must_coverage"][c]
+        if cov["dev"] < MUST_MIN_DEV or cov["test"] < MUST_MIN_TEST:
+            errs.append(f"Must 커버리지 부족 {c}: dev={cov['dev']}(≥{MUST_MIN_DEV}) "
+                        f"test={cov['test']}(≥{MUST_MIN_TEST})")
+    # 누수방지 슬라이스
+    if fresh["person_unlisted_ratio"] < 0.5:
+        errs.append(f"KR_PERSON 미수록 성씨 비율 {fresh['person_unlisted_ratio']} < 0.5 (누수방지 위반)")
+
+    if errs:
+        print("VERIFY FAIL")
+        for e in errs:
+            print("  -", e)
+        return 1
+    print(f"VERIFY OK — content_hash {fresh['content_hash']} · "
+          f"total {fresh['total']} (dev {fresh['dev_size']}/test {fresh['test_size']}) · "
+          f"person_unlisted {fresh['person_unlisted_ratio']}")
+    return 0
+
+
 if __name__ == "__main__":
+    if "--verify" in _sys.argv[1:]:
+        raise SystemExit(verify())
     rows = build()
     m = split_and_write(rows)
     print(json.dumps(m, ensure_ascii=False, indent=2))

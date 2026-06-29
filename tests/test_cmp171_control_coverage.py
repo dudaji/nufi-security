@@ -27,15 +27,21 @@ FLOW = str(SDIR / "flow_bypass.jsonl")
 # --------------------------------------------------------------------------- #
 # 카탈로그
 # --------------------------------------------------------------------------- #
+# 한국 규제 증빙 팩 확장 후 총계(fsec-ai + net-sep + pipa + cia + isms-p).
+EXPECT_DIRECT = 23
+EXPECT_PARTIAL = 9
+EXPECT_OOS = 8
+
+
 def test_catalog_has_all_direct_and_partial():
     cat = rpt.load_catalog()
     by_type = {}
     for c in cat["controls"]:
         by_type.setdefault(c["coverage_type"], []).append(c["id"])
-    # 설계 명세 §2: direct 8 · partial 6 · out_of_scope 5.
-    assert len(by_type[rpt.COV_DIRECT]) == 8
-    assert len(by_type[rpt.COV_PARTIAL]) == 6
-    assert len(by_type[rpt.COV_OUT_OF_SCOPE]) == 5
+    # 한국 규제 증빙 팩: direct 23 · partial 9 · out_of_scope 8.
+    assert len(by_type[rpt.COV_DIRECT]) == EXPECT_DIRECT
+    assert len(by_type[rpt.COV_PARTIAL]) == EXPECT_PARTIAL
+    assert len(by_type[rpt.COV_OUT_OF_SCOPE]) == EXPECT_OOS
     # 핵심 direct 항목이 카탈로그에 존재(매핑표 전사).
     direct = set(by_type[rpt.COV_DIRECT])
     assert {"C-07", "C-26", "C-24", "M-1.2", "M-2.4", "M-2.5", "M-3.1", "M-2.7"} <= direct
@@ -43,6 +49,29 @@ def test_catalog_has_all_direct_and_partial():
     for c in cat["controls"]:
         if c["coverage_type"] == rpt.COV_DIRECT:
             assert c.get("eval"), f"{c['id']} direct 인데 eval 규칙 없음"
+
+
+def test_every_control_has_framework():
+    """하위호환·확장 불변: 모든 항목은 알려진 framework 에 속한다."""
+    cat = rpt.load_catalog()
+    known = set(rpt.FRAMEWORK_META)
+    for c in cat["controls"]:
+        assert c.get("framework") in known, f"{c['id']} framework 누락/미지정"
+
+
+def test_maps_to_references_existing_control():
+    """maps_to 교차참조는 카탈로그에 실재하는 원천 통제를 가리킨다."""
+    cat = rpt.load_catalog()
+    ids = {c["id"] for c in cat["controls"]}
+    for c in cat["controls"]:
+        mt = c.get("maps_to")
+        if mt is not None:
+            assert mt in ids, f"{c['id']} maps_to {mt} 미존재"
+    # 신규 규제 행이 기존 통제를 재사용함을 명시(대표 케이스).
+    by_id = {c["id"]: c for c in cat["controls"]}
+    assert by_id["PIPA-23"]["maps_to"] == "C-07"
+    assert by_id["CIA-XBORDER"]["maps_to"] == "C-26"
+    assert by_id["ISMS-2.9.4"]["maps_to"] == "M-1.2"
 
 
 # --------------------------------------------------------------------------- #
@@ -54,12 +83,19 @@ def test_direct_met_from_real_evidence():
     cc = rep["control_coverage"]
     s = cc["summary"]
     # 동봉 픽스처: 차단/가명화 결정 + 무결 체인 → 모든 direct 충족.
-    assert s["direct"] == 8 and s["direct_met"] == 8 and s["direct_unmet"] == 0
+    assert s["direct"] == EXPECT_DIRECT and s["direct_met"] == EXPECT_DIRECT \
+        and s["direct_unmet"] == 0
     items = {i["id"]: i for i in cc["items"]}
     assert items["C-07"]["status"] == rpt.COV_MET
     assert items["M-2.7"]["status"] == rpt.COV_MET
+    # 신규 한국 규제 direct 항목도 동일 증빙으로 자동 충족판정.
+    for cid in ("PIPA-23", "PIPA-24", "PIPA-28-2", "CIA-PII", "ISMS-3.3"):
+        assert items[cid]["status"] == rpt.COV_MET, cid
     # 충족 항목엔 증빙 문자열이 채워진다.
     assert items["C-26"]["evidence"] and "block=" in items["C-26"]["evidence"]
+    # 신규 direct 항목 증빙출처 표기(eval 경로).
+    assert "pseudonymize=" in items["PIPA-28-2"]["evidence"]
+    assert items["PIPA-29-INTEG"]["evidence"] == "integrity_ok=True"
 
 
 # --------------------------------------------------------------------------- #
@@ -77,9 +113,11 @@ def _empty_report() -> dict:
 def test_direct_unmet_when_no_evidence():
     cc = rpt.build_control_coverage(_empty_report())
     s = cc["summary"]
-    assert s["direct"] == 8 and s["direct_met"] == 0 and s["direct_unmet"] == 8
+    assert s["direct"] == EXPECT_DIRECT and s["direct_met"] == 0 \
+        and s["direct_unmet"] == EXPECT_DIRECT
     items = {i["id"]: i for i in cc["items"]}
-    for cid in ("C-07", "C-26", "C-24", "M-1.2", "M-2.4", "M-2.5", "M-3.1", "M-2.7"):
+    # 기존 + 신규 한국 규제 direct 항목 모두 증빙 부재 시 미충족.
+    for cid in ("C-07", "M-2.7", "PIPA-23", "PIPA-29-LOG", "CIA-20", "ISMS-3.1"):
         assert items[cid]["status"] == rpt.COV_UNMET, cid
 
 
@@ -110,10 +148,63 @@ def test_renderers_include_coverage_section():
     md = rpt.render(rep, "md")
     html = rpt.render(rep, "html")
     js = json.loads(rpt.render(rep, "json"))
-    assert "점검항목 커버리지" in md and "직접 8" in md
-    assert "C-07" in md
+    assert "점검항목 커버리지" in md and f"직접 {EXPECT_DIRECT}" in md
+    assert "C-07" in md and "PIPA-23" in md
+    # 프레임워크별 소계 + 표시명 + maps_to 교차참조.
+    assert "프레임워크별 소계" in md and "개인정보보호법" in md
+    assert "(←C-07)" in md
     assert "점검항목 커버리지" in html and "<table>" in html
-    assert "control_coverage" in js and js["control_coverage"]["summary"]["direct"] == 8
+    assert "프레임워크별 소계" in html and "신용정보법" in html
+    assert "control_coverage" in js
+    assert js["control_coverage"]["summary"]["direct"] == EXPECT_DIRECT
+    assert js["control_coverage"]["summary"]["by_framework"]["pipa"]["direct"] == 6
+
+
+# --------------------------------------------------------------------------- #
+# 프레임워크 롤업·필터 — 한국 규제 증빙 팩
+# --------------------------------------------------------------------------- #
+def test_by_framework_rollup_counts():
+    cc = rpt.build_control_coverage(rpt.build_compliance_report(
+        audit_path=AUDIT, change_log_path=CHANGES, flow_paths=[FLOW]))
+    bf = cc["summary"]["by_framework"]
+    assert bf["fsec-ai"]["direct"] == 3 and bf["fsec-ai"]["partial"] == 6 \
+        and bf["fsec-ai"]["out_of_scope"] == 5
+    assert bf["net-sep"]["direct"] == 5
+    assert bf["pipa"]["direct"] == 6 and bf["pipa"]["partial"] == 1 \
+        and bf["pipa"]["out_of_scope"] == 1
+    assert bf["cia"]["direct"] == 4 and bf["cia"]["partial"] == 1
+    assert bf["isms-p"]["direct"] == 5 and bf["isms-p"]["out_of_scope"] == 2
+    # 소계 합 == 전체 롤업(불변).
+    s = cc["summary"]
+    for key in ("direct", "partial", "out_of_scope", "direct_met", "direct_unmet"):
+        assert sum(r[key] for r in bf.values()) == s[key]
+
+
+def test_framework_filter_subsets_catalog():
+    full = rpt.build_control_coverage(rpt.build_compliance_report(
+        audit_path=AUDIT, change_log_path=CHANGES))
+    cc = rpt.build_control_coverage(rpt.build_compliance_report(
+        audit_path=AUDIT, change_log_path=CHANGES), frameworks=["pipa", "cia"])
+    # 필터된 집합만 — 다른 규제 행은 없다.
+    fws = {i["framework"] for i in cc["items"]}
+    assert fws == {"pipa", "cia"}
+    assert cc["frameworks_filter"] == ["cia", "pipa"]
+    # 롤업도 필터 기준(pipa direct 6 + cia direct 4 = 10).
+    assert cc["summary"]["direct"] == 10
+    assert set(cc["summary"]["by_framework"]) == {"pipa", "cia"}
+    # 전체보다 항목 수가 적다(부분집합).
+    assert len(cc["items"]) < len(full["items"])
+
+
+def test_framework_filter_via_cli_exit_code_unchanged(tmp_path):
+    """--framework 필터는 정보성 — 종료코드(무결성 게이트)에 영향 없음."""
+    rc = cli_main(["report", "compliance", "--audit", AUDIT,
+                   "--change-log", CHANGES, "--framework", "pipa",
+                   "--format", "json", "--out", str(tmp_path / "f.json")])
+    assert rc == 0
+    js = json.loads((tmp_path / "f.json").read_text(encoding="utf-8"))
+    assert js["control_coverage"]["frameworks_filter"] == ["pipa"]
+    assert {i["framework"] for i in js["control_coverage"]["items"]} == {"pipa"}
 
 
 # --------------------------------------------------------------------------- #

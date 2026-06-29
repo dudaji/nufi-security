@@ -6,6 +6,16 @@
 
 ## [Unreleased]
 
+### Added
+- **한국 규제 증빙 팩 — 컴플라이언스 매핑 카탈로그 확장** — `report compliance --controls`
+  점검항목 커버리지를 금융분야 AI 보안 안내서·망분리에서 **개인정보보호법(PIPA)·
+  신용정보법·ISMS-P** 로 확장. 각 통제에 `framework` 필드 + 기존 통제를 재사용하는 규제
+  행은 `maps_to` 교차참조("한 번 통제, 여러 규제 자동 증빙"). 롤업에 프레임워크별 소계
+  `by_framework` 추가, 렌더(MD/HTML/JSON)에 규제별 헤더·소계, `--framework ID`(반복)
+  정보성 필터 + SDK `build_control_coverage(..., frameworks=)`. 새 측정 없음 — 기존 증빙을
+  한국 규제 언어로 재증빙. 종료코드는 무결성 게이트(0/1)만 따름(커버리지는 정보성).
+  권위: [`docs/REPORTING.md`](docs/REPORTING.md) §3.
+
 ## [0.0.9] - 2026-06-29
 
 ### Added

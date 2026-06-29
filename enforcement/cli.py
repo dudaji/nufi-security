@@ -549,7 +549,8 @@ def cmd_report(args) -> int:
             flow_dir=getattr(args, "flow_dir", None), flow_paths=flow_paths,
             customer=args.customer, title=args.title, session=session,
             controls=not getattr(args, "no_controls", False),
-            catalog_path=getattr(args, "catalog", None))
+            catalog_path=getattr(args, "catalog", None),
+            frameworks=(getattr(args, "framework", None) or None))
         _report_write(_rpt.render(rep, fmt), args.out)
         # 해시체인 변조가 탐지되면 비0(무결성 게이트).
         return 0 if rep["integrity_ok"] else 1
@@ -782,6 +783,11 @@ def main(argv: Optional[List[str]] = None) -> int:
                     help="점검항목 커버리지 섹션 생략")
     rp.add_argument("--catalog", default=None,
                     help="통제 카탈로그 YAML 오버라이드(기본 동봉 catalog)")
+    rp.add_argument("--framework", action="append", default=None,
+                    metavar="ID",
+                    help="규제 프레임워크 정보성 필터(반복 허용): "
+                         "fsec-ai|net-sep|pipa|cia|isms-p. 지정 시 해당 규제 행만 "
+                         "렌더(롤업도 필터 기준). 종료코드 불변(무결성 게이트만).")
     rp.add_argument("--flow", default=None, help="flow tap JSONL(우회 요약)")
     rp.add_argument("--flow-dir", default=None, help="flow tap 로그 디렉터리")
     rp.add_argument("--customer", default=None, help="고객명(리포트 헤더)")

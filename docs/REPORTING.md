@@ -148,6 +148,7 @@ nufi-egress --role viewer --tenant acme \
 nufi-egress report compliance [--audit AUDIT.jsonl] [--change-log CHANGES.jsonl]
                               [--flow FLOW.jsonl | --flow-dir DIR]
                               [--controls | --no-controls] [--catalog CATALOG.yaml]
+                              [--framework ID ...]
                               [--customer NAME] [--format {md,html,json}] [--out PATH]
 ```
 
@@ -158,8 +159,8 @@ nufi-egress report compliance [--audit AUDIT.jsonl] [--change-log CHANGES.jsonl]
 2. **차단·가명화 집계** — outcome 분포, 액션별 건수, 차단 엔티티별 건수,
    감사 로그 해시체인 무결성.
 3. **우회 탐지 요약** — flow tap 의 게이트웨이 우회 이벤트(있을 때).
-4. **점검항목 커버리지** — 금융보안원 안내서·망분리 평가기준 통제 충족 상태(아래 §3).
-   기본 포함이며 `--no-controls` 로 생략합니다.
+4. **점검항목 커버리지** — 금융보안원 안내서·망분리 평가기준 + 한국 규제(개인정보보호법·
+   신용정보법·ISMS-P) 통제 충족 상태(아래 §3). 기본 포함이며 `--no-controls` 로 생략합니다.
 
 ### 무결성 게이트 — 종료코드
 
@@ -180,10 +181,24 @@ nufi-egress report compliance \
 
 ## 3. 점검항목 커버리지 (control coverage)
 
-`report compliance` 는 위 증빙을 **금융보안원 「금융분야 인공지능 보안 안내서」(2026.6)
-점검항목 + 망분리 혁신금융 보안대책 평가기준**에 자동 매핑해, NuFi 통제 충족 상태를
-한 표로 보여줍니다 — *"NuFi 도입 = 점검표 자동 충족 증빙"*. 새 측정 없이 이미 산출된
-리포트 증빙에서 결정론적으로 산출합니다.
+`report compliance` 는 위 증빙을 한국 규제 프레임워크에 자동 매핑해, NuFi 통제 충족
+상태를 규제별로 한 표로 보여줍니다 — *"NuFi 도입 = 점검표 자동 충족 증빙"*. 새 측정 없이
+이미 산출된 리포트 증빙에서 결정론적으로 산출합니다.
+
+### 프레임워크 (규제)
+
+| id | 규제 |
+|---|---|
+| `fsec-ai` | 금융분야 인공지능 보안 안내서(2026.6) |
+| `net-sep` | 망분리 혁신금융서비스 보안대책 |
+| `pipa` | 개인정보보호법 |
+| `cia` | 신용정보법(개인신용정보 보호) |
+| `isms-p` | ISMS-P 인증기준 |
+
+핵심은 **한 번 통제, 여러 규제 자동 증빙**입니다. 동일 NuFi 증빙(예: 감사 해시체인)이
+망분리 1.2 · 개인정보보호법 §29 · 신용정보법 §20 · ISMS-P 2.9.4 를 **동시에** 충족합니다.
+규제별 행은 재사용하는 원천 통제를 `maps_to` 로 교차참조해 감사관이 규제별로 한 줄씩
+투명하게 읽도록 합니다(예: `PIPA-23 (←C-07)`).
 
 ### 충족유형
 
@@ -202,8 +217,22 @@ direct 항목은 기존 증빙 필드로 자동판정됩니다. 예:
 
 ### 통제 카탈로그
 
-매핑표 원천은 정적 데이터 `enforcement/compliance_catalog.yaml` 입니다(항목 id·출처·요구사항·
-NuFi 통제·충족유형·자동증빙규칙). `--catalog PATH` 로 오버라이드할 수 있습니다.
+매핑표 원천은 정적 데이터 `enforcement/compliance_catalog.yaml` 입니다(항목 id·`framework`·
+출처·요구사항·NuFi 통제·충족유형·`maps_to` 교차참조·자동증빙규칙). `--catalog PATH` 로
+오버라이드할 수 있습니다.
+
+### 규제별 필터 (`--framework`)
+
+`--framework ID`(반복 허용)로 특정 규제 행만 렌더할 수 있습니다 — 예: 개인정보보호법
+점검만 제출할 때 `--framework pipa`. 롤업도 필터된 집합 기준으로 산출됩니다. 필터는
+**정보성**이며 종료코드(무결성 게이트)에 영향을 주지 않습니다.
+
+```bash
+nufi-egress report compliance \
+  --audit samples/sla/audit_decisions.jsonl \
+  --change-log samples/sla/policy_changes.jsonl \
+  --framework pipa --framework cia --format md
+```
 
 ### 종료코드 — 정보성
 
@@ -221,8 +250,10 @@ nufi-egress report compliance \
   --controls --format json --out reports/acme_controls.json
 ```
 
-JSON 산출물의 `control_coverage.summary` 는 롤업 카운트(`direct`/`partial`/`out_of_scope`,
-`direct_met`/`direct_unmet`)를, `control_coverage.items[]` 는 항목별 상태와 증빙을 담습니다.
+JSON 산출물의 `control_coverage.summary` 는 전체 롤업 카운트(`direct`/`partial`/`out_of_scope`,
+`direct_met`/`direct_unmet`)와 **프레임워크별 소계** `by_framework`(규제 id → 같은 카운트
+구조)를 담습니다. `control_coverage.items[]` 는 항목별 `framework`·`maps_to`·상태와 증빙을
+담습니다.
 
 ---
 

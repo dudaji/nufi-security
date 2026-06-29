@@ -80,6 +80,17 @@ COV_MET = "met"          # direct 충족(증빙으로 자동판정)
 COV_UNMET = "unmet"      # direct 미충족
 COV_NA = "n/a"           # partial/out_of_scope — 자동판정 비대상(정적 라벨)
 
+# 프레임워크(규제) 메타 — 한국 규제 증빙 팩. 표시명 + 렌더 순서.
+FRAMEWORK_META: Dict[str, str] = {
+    "fsec-ai": "금융분야 AI 보안 안내서",
+    "net-sep": "망분리 보안대책",
+    "pipa":    "개인정보보호법",
+    "cia":     "신용정보법",
+    "isms-p":  "ISMS-P 인증기준",
+}
+FRAMEWORK_ORDER = list(FRAMEWORK_META)
+_FW_UNKNOWN = "(미분류)"   # framework 미지정 항목(하위호환) 묶음 표기
+
 # 기본 카탈로그 — 패키지 동봉(enforcement/compliance_catalog.yaml).
 _DEFAULT_CATALOG = Path(__file__).resolve().parent / "compliance_catalog.yaml"
 
@@ -490,28 +501,51 @@ def evaluate_control(item: dict, report: dict) -> tuple[str, Optional[str]]:
     return (COV_MET if ok else COV_UNMET), evidence
 
 
-def build_control_coverage(report: dict, *, catalog_path: Optional[str] = None) -> dict:
+def _empty_rollup() -> Dict[str, int]:
+    return {COV_DIRECT: 0, COV_PARTIAL: 0, COV_OUT_OF_SCOPE: 0,
+            "direct_met": 0, "direct_unmet": 0}
+
+
+def _tally(rollup: Dict[str, int], ctype: Optional[str], status: str) -> None:
+    """롤업 누산기에 한 항목을 더한다(충족유형 + direct status)."""
+    if ctype in rollup:
+        rollup[ctype] += 1
+    if ctype == COV_DIRECT:
+        rollup["direct_met" if status == COV_MET else "direct_unmet"] += 1
+
+
+def build_control_coverage(report: dict, *, catalog_path: Optional[str] = None,
+                           frameworks: Optional[Iterable[str]] = None) -> dict:
     """compliance 리포트 모델 + 통제 카탈로그 → 점검항목 커버리지 섹션.
 
     각 direct 항목은 기존 증빙(decisions/integrity_ok 등)으로 충족 상태가 자동
     산출되고, partial/out_of_scope 는 정적 라벨로 들어간다. 롤업 카운트(직접 N/
-    부분 M/범위밖 K, 직접 충족 x/미충족 y)를 함께 제공한다.
+    부분 M/범위밖 K, 직접 충족 x/미충족 y)와 **프레임워크(규제)별 소계**
+    (``summary.by_framework``)를 함께 제공한다.
+
+    ``frameworks`` 가 주어지면 그 규제 행만 포함하고 롤업도 필터된 집합 기준으로
+    낸다(정보성 필터 — 종료코드 무관). None(기본)이면 전체.
 
     **종료코드 영향 없음** — 이 섹션은 정보성이다(무결성 게이트만 종료코드 결정).
     """
     catalog = load_catalog(catalog_path)
+    fw_filter = set(frameworks) if frameworks is not None else None
     items_out: List[dict] = []
-    summary = {COV_DIRECT: 0, COV_PARTIAL: 0, COV_OUT_OF_SCOPE: 0,
-               "direct_met": 0, "direct_unmet": 0}
+    summary = _empty_rollup()
+    by_framework: Dict[str, Dict[str, int]] = {}
     for item in catalog.get("controls", []):
+        fw = item.get("framework")
+        if fw_filter is not None and fw not in fw_filter:
+            continue
         ctype = item.get("coverage_type")
         status, evidence = evaluate_control(item, report)
-        if ctype in summary:
-            summary[ctype] += 1
-        if ctype == COV_DIRECT:
-            summary["direct_met" if status == COV_MET else "direct_unmet"] += 1
+        _tally(summary, ctype, status)
+        _tally(by_framework.setdefault(fw or _FW_UNKNOWN, _empty_rollup()),
+               ctype, status)
         items_out.append({
             "id": item.get("id"),
+            "framework": fw,
+            "maps_to": item.get("maps_to"),
             "source": item.get("source"),
             "requirement": item.get("requirement"),
             "control": item.get("control"),
@@ -520,9 +554,11 @@ def build_control_coverage(report: dict, *, catalog_path: Optional[str] = None) 
             "evidence": evidence,
             "remediation_ref": item.get("remediation_ref"),
         })
+    summary["by_framework"] = by_framework
     return {
         "catalog_version": str(catalog.get("version", "?")),
         "catalog_source": catalog.get("_source"),
+        "frameworks_filter": sorted(fw_filter) if fw_filter is not None else None,
         "summary": summary,
         "items": items_out,
     }
@@ -540,7 +576,8 @@ def build_compliance_report(*,
                             title: Optional[str] = None,
                             session: Optional[Session] = None,
                             controls: bool = True,
-                            catalog_path: Optional[str] = None) -> dict:
+                            catalog_path: Optional[str] = None,
+                            frameworks: Optional[Iterable[str]] = None) -> dict:
     """정책 변경 감사 + 차단/가명화/우회 요약 리포트 모델 구성(전부 read-only 재사용).
 
     ``session`` 이 테넌트를 지정하면(v0.0.6 C2) 변경 감사·결정·flow 레코드를 그
@@ -616,7 +653,8 @@ def build_compliance_report(*,
 
     # 4) 점검항목 커버리지(control coverage) — 위 증빙에서 자동 산출(정보성).
     if controls:
-        rep["control_coverage"] = build_control_coverage(rep, catalog_path=catalog_path)
+        rep["control_coverage"] = build_control_coverage(
+            rep, catalog_path=catalog_path, frameworks=frameworks)
 
     return rep
 
@@ -625,6 +663,26 @@ def build_compliance_report(*,
 # 렌더러 — Markdown / HTML / JSON
 # --------------------------------------------------------------------------- #
 _BADGE = {MEET: "✅ 충족", VIOLATION: "❌ 위반", NO_DATA: "— 데이터없음"}
+
+
+def _fw_label(fw: str) -> str:
+    """프레임워크 id → '표시명 (id)' (미지정은 묶음 라벨)."""
+    name = FRAMEWORK_META.get(fw)
+    return f"{name} ({fw})" if name else fw
+
+
+def _ordered_frameworks(d: Dict[str, Any]) -> List[str]:
+    """프레임워크 키를 표준 순서(FRAMEWORK_ORDER)로, 미지정은 뒤에 정렬."""
+    known = [fw for fw in FRAMEWORK_ORDER if fw in d]
+    rest = sorted(k for k in d if k not in FRAMEWORK_ORDER)
+    return known + rest
+
+
+def _group_items_by_framework(items: List[dict]) -> Dict[str, List[dict]]:
+    out: Dict[str, List[dict]] = {}
+    for it in items:
+        out.setdefault(it.get("framework") or _FW_UNKNOWN, []).append(it)
+    return out
 
 
 def _cov_badge(item: dict) -> str:
@@ -756,20 +814,44 @@ def render_compliance_md(rep: dict) -> str:
     if cc:
         s = cc["summary"]
         L.append("## 4. 점검항목 커버리지 (control coverage)")
+        if cc.get("frameworks_filter"):
+            L.append(f"_프레임워크 필터: {', '.join(cc['frameworks_filter'])}_  ")
         L.append(f"카탈로그 v{cc['catalog_version']}  ·  "
                  f"**직접 {s['direct']}**(충족 {s['direct_met']}/미충족 {s['direct_unmet']})  ·  "
                  f"**부분 {s['partial']}**  ·  **범위밖 {s['out_of_scope']}**")
         L.append("")
-        L.append("> 금융보안원 안내서 점검항목 + 망분리 평가기준 대비 NuFi 통제 충족 — "
-                 "위 증빙에서 자동 산출(정보성; 종료코드 미반영).")
+        L.append("> 한국 규제(금융 AI 안내서·망분리·개인정보보호법·신용정보법·ISMS-P) 대비 "
+                 "NuFi 통제 충족 — 위 증빙에서 자동 산출(정보성; 종료코드 미반영). "
+                 "동일 통제가 여러 규제를 충족(maps_to)함을 규제별 행으로 투명하게 보인다.")
         L.append("")
-        L.append("| 항목 | 출처 | 요구사항 | NuFi 통제 | 충족 | 증빙/보강 |")
-        L.append("|---|---|---|---|---|---|")
-        for it in cc["items"]:
-            note = it.get("evidence") or it.get("remediation_ref") or "—"
-            L.append(f"| {it['id']} | {it.get('source','')} | {it.get('requirement','')} | "
-                     f"{it.get('control','')} | {_cov_badge(it)} | {note} |")
-        L.append("")
+        # 프레임워크별 소계
+        bf = s.get("by_framework", {})
+        if bf:
+            L.append("### 프레임워크별 소계")
+            L.append("| 규제 | 직접(충족/미충족) | 부분 | 범위밖 |")
+            L.append("|---|---|---|---|")
+            for fw in _ordered_frameworks(bf):
+                r = bf[fw]
+                L.append(f"| {_fw_label(fw)} | {r['direct']} "
+                         f"({r['direct_met']}/{r['direct_unmet']}) | "
+                         f"{r['partial']} | {r['out_of_scope']} |")
+            L.append("")
+        # 프레임워크별 매핑 표(기존 컬럼 유지 + 교차참조)
+        items_by_fw = _group_items_by_framework(cc["items"])
+        for fw in _ordered_frameworks(items_by_fw):
+            r = bf.get(fw, {})
+            sub = (f" — 직접 {r['direct']}(충족 {r['direct_met']}/미충족 {r['direct_unmet']})"
+                   f"·부분 {r['partial']}·범위밖 {r['out_of_scope']}") if r else ""
+            L.append(f"### {_fw_label(fw)}{sub}")
+            L.append("| 항목 | 출처 | 요구사항 | NuFi 통제 | 충족 | 증빙/보강 |")
+            L.append("|---|---|---|---|---|---|")
+            for it in items_by_fw[fw]:
+                note = it.get("evidence") or it.get("remediation_ref") or "—"
+                mt = f" (←{it['maps_to']})" if it.get("maps_to") else ""
+                L.append(f"| {it['id']}{mt} | {it.get('source','')} | "
+                         f"{it.get('requirement','')} | {it.get('control','')} | "
+                         f"{_cov_badge(it)} | {note} |")
+            L.append("")
     return "\n".join(L)
 
 
@@ -912,21 +994,44 @@ def render_compliance_html(rep: dict) -> str:
     if cc:
         s = cc["summary"]
         b.append("<h2>4. 점검항목 커버리지 (control coverage)</h2>")
+        if cc.get("frameworks_filter"):
+            b.append(f"<p><i>프레임워크 필터: "
+                     f"{_html.escape(', '.join(cc['frameworks_filter']))}</i></p>")
         b.append(f"<p>카탈로그 v{_html.escape(cc['catalog_version'])} · "
                  f"<b>직접 {s['direct']}</b>(충족 {s['direct_met']}/미충족 {s['direct_unmet']}) · "
                  f"<b>부분 {s['partial']}</b> · <b>범위밖 {s['out_of_scope']}</b></p>")
-        b.append("<blockquote>금융보안원 안내서 점검항목 + 망분리 평가기준 대비 NuFi 통제 "
-                 "충족 — 위 증빙에서 자동 산출(정보성; 종료코드 미반영).</blockquote>")
-        b.append("<table><tr><th>항목</th><th>출처</th><th>요구사항</th>"
-                 "<th>NuFi 통제</th><th>충족</th><th>증빙/보강</th></tr>")
-        for it in cc["items"]:
-            note = it.get("evidence") or it.get("remediation_ref") or "—"
-            badge = f"<span class='{_cov_badge_cls(it)}'>{_html.escape(_cov_badge(it))}</span>"
-            cells = "".join(f"<td>{_html.escape(str(x))}</td>" for x in
-                            [it["id"], it.get("source", ""), it.get("requirement", ""),
-                             it.get("control", "")])
-            b.append(f"<tr>{cells}<td>{badge}</td><td>{_html.escape(note)}</td></tr>")
-        b.append("</table>")
+        b.append("<blockquote>한국 규제(금융 AI 안내서·망분리·개인정보보호법·신용정보법·"
+                 "ISMS-P) 대비 NuFi 통제 충족 — 위 증빙에서 자동 산출(정보성; 종료코드 "
+                 "미반영). 동일 통제가 여러 규제를 충족(maps_to)함을 규제별 행으로 보인다."
+                 "</blockquote>")
+        bf = s.get("by_framework", {})
+        if bf:
+            b.append("<h3>프레임워크별 소계</h3>")
+            b.append("<table><tr><th>규제</th><th>직접(충족/미충족)</th>"
+                     "<th>부분</th><th>범위밖</th></tr>")
+            for fw in _ordered_frameworks(bf):
+                r = bf[fw]
+                b.append(f"<tr><td>{_html.escape(_fw_label(fw))}</td>"
+                         f"<td>{r['direct']} ({r['direct_met']}/{r['direct_unmet']})</td>"
+                         f"<td>{r['partial']}</td><td>{r['out_of_scope']}</td></tr>")
+            b.append("</table>")
+        items_by_fw = _group_items_by_framework(cc["items"])
+        for fw in _ordered_frameworks(items_by_fw):
+            r = bf.get(fw, {})
+            sub = (f" — 직접 {r['direct']}(충족 {r['direct_met']}/미충족 {r['direct_unmet']})"
+                   f"·부분 {r['partial']}·범위밖 {r['out_of_scope']}") if r else ""
+            b.append(f"<h3>{_html.escape(_fw_label(fw) + sub)}</h3>")
+            b.append("<table><tr><th>항목</th><th>출처</th><th>요구사항</th>"
+                     "<th>NuFi 통제</th><th>충족</th><th>증빙/보강</th></tr>")
+            for it in items_by_fw[fw]:
+                note = it.get("evidence") or it.get("remediation_ref") or "—"
+                badge = f"<span class='{_cov_badge_cls(it)}'>{_html.escape(_cov_badge(it))}</span>"
+                idtxt = it["id"] + (f" (←{it['maps_to']})" if it.get("maps_to") else "")
+                cells = "".join(f"<td>{_html.escape(str(x))}</td>" for x in
+                                [idtxt, it.get("source", ""), it.get("requirement", ""),
+                                 it.get("control", "")])
+                b.append(f"<tr>{cells}<td>{badge}</td><td>{_html.escape(note)}</td></tr>")
+            b.append("</table>")
     return _html_doc(rep["title"], "".join(b))
 
 

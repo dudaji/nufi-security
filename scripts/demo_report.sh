@@ -130,18 +130,18 @@ else
   bad "변조인데 exit=$RC (1 기대)"
 fi
 
-# --- C7: 점검항목 커버리지 — 안내서·망분리 통제 충족 자동 산출 ----------------- #
-hr ; echo "C7  점검항목 커버리지 — 안내서·망분리 통제 충족 자동 산출"
+# --- C7: 점검항목 커버리지 — 한국 규제팩 통제 충족 자동 산출 ------------------- #
+hr ; echo "C7  점검항목 커버리지 — 한국 규제팩 통제 충족 자동 산출"
 COV_JSON="$OUT/compliance_controls.json"
 "${CLI[@]}" report compliance --audit "$SDIR/audit_decisions.jsonl" \
   --change-log "$SDIR/policy_changes.jsonl" --flow "$SDIR/flow_bypass.jsonl" \
   --controls --customer "Acme Corp" --format json > "$COV_JSON"
 RC=$?
-# 동봉 증빙: direct 8 전부 충족(차단/가명화 결정 + 무결 체인).
+# 동봉 증빙: direct 23 전부 충족(차단/가명화 결정 + 무결 체인).
 DIRECT_MET=$("$PY" -c "import json;d=json.load(open('$COV_JSON'));s=d['control_coverage']['summary'];print(s['direct'],s['direct_met'])")
-if [ "$RC" -eq 0 ] && [ "$DIRECT_MET" = "8 8" ] \
-   && "$PY" -c "import json;d=json.load(open('$COV_JSON'));ids={i['id'] for i in d['control_coverage']['items']};assert 'C-07' in ids and 'M-2.7' in ids" ; then
-  ok "direct 8/8 충족 + partial/out_of_scope 라벨 산출 (정보성 · exit 0)"
+if [ "$RC" -eq 0 ] && [ "$DIRECT_MET" = "23 23" ] \
+   && "$PY" -c "import json;d=json.load(open('$COV_JSON'));ids={i['id'] for i in d['control_coverage']['items']};assert {'C-07','M-2.7','PIPA-23','CIA-PII','ISMS-3.3'} <= ids" ; then
+  ok "direct 23/23 충족 + partial/out_of_scope 라벨 산출 (정보성 · exit 0)"
 else
   bad "커버리지 산출 실패(direct_met='$DIRECT_MET', exit=$RC)"
 fi

@@ -13,11 +13,13 @@
 # **새 측정·새 벤치 없음** — 동봉 샘플 픽스처만 read-only 로 재사용한다.
 # root 불필요 · 외부 네트워크 호출 0 (표준 라이브러리 + 동봉 픽스처).
 #
-#   M1  커버리지 롤업(JSON)   → 직접 8(충족 8/미충족 0) · 부분 6 · 범위밖 5
+#   M1  커버리지 롤업(JSON)   → 직접 23(충족 23/미충족 0) · 부분 9 · 범위밖 8
 #   M2  커버리지 표(MD)       → 충족/부분충족/범위밖 3구분 행 + 자동 증빙 출처
 #   M3  무결성 게이트 유지(0) → --controls 켜도 정보성 — 정상 체인은 exit 0
 #   M4  무결성 게이트 유지(1) → 감사 체인 변조 시 커버리지와 무관하게 exit 1(제출 차단)
 #   M5  --no-controls        → 커버리지 섹션 생략(기존 컴플라이언스 리포트로 회귀)
+#   M6  한국 규제팩 소계      → 프레임워크별(fsec-ai/net-sep/pipa/cia/isms-p) 소계 + maps_to
+#   M7  --framework 필터      → 규제별 행만 렌더(롤업도 필터 기준) · 종료코드 불변
 #
 # 사용: ./scripts/demo_compliance_mapping.sh
 # 매뉴얼: docs/REPORTING.md §3 · docs/MANUAL.md §5.4
@@ -48,15 +50,15 @@ EVID=(--audit "$SDIR/audit_decisions.jsonl"
       --flow "$SDIR/flow_bypass.jsonl")
 
 # --- M1: 커버리지 롤업(JSON) — 직접/부분/범위밖 자동 산출 -------------------- #
-hr ; echo "M1  커버리지 롤업(JSON) — 직접 8(충족8/미충족0)·부분 6·범위밖 5"
+hr ; echo "M1  커버리지 롤업(JSON) — 직접 23(충족23/미충족0)·부분 9·범위밖 8"
 COV_JSON="$OUT/compliance_controls.json"
 "${CLI[@]}" report compliance "${EVID[@]}" \
   --controls --customer "Acme Corp" --format json > "$COV_JSON"
 RC=$?
 SUMMARY=$("$PY" -c "import json;s=json.load(open('$COV_JSON'))['control_coverage']['summary'];print(s['direct'],s['direct_met'],s['direct_unmet'],s['partial'],s['out_of_scope'])")
-if [ "$RC" -eq 0 ] && [ "$SUMMARY" = "8 8 0 6 5" ] \
-   && "$PY" -c "import json;ids={i['id'] for i in json.load(open('$COV_JSON'))['control_coverage']['items']};assert {'C-07','M-2.7'} <= ids" 2>/dev/null ; then
-  ok "롤업 자동 산출: 직접 8/8 충족 · 부분 6 · 범위밖 5 (정보성 · exit 0)"
+if [ "$RC" -eq 0 ] && [ "$SUMMARY" = "23 23 0 9 8" ] \
+   && "$PY" -c "import json;ids={i['id'] for i in json.load(open('$COV_JSON'))['control_coverage']['items']};assert {'C-07','M-2.7','PIPA-23','CIA-PII','ISMS-3.3'} <= ids" 2>/dev/null ; then
+  ok "롤업 자동 산출: 직접 23/23 충족 · 부분 9 · 범위밖 8 (정보성 · exit 0)"
 else
   bad "롤업 산출 실패(summary='$SUMMARY', exit=$RC)"
 fi
@@ -116,6 +118,42 @@ if [ "$RC" -eq 0 ] && ! grep -q "점검항목 커버리지" "$NOCOV_MD" ; then
   ok "--no-controls 는 커버리지 섹션을 빼고 기존 컴플라이언스 리포트만 산출"
 else
   bad "--no-controls 인데 커버리지 섹션이 남음(exit=$RC) — $NOCOV_MD 확인"
+fi
+
+# --- M6: 한국 규제팩 프레임워크별 소계 + maps_to 교차참조 ------------------ #
+hr ; echo "M6  한국 규제팩 소계 — 프레임워크별(pipa/cia/isms-p) + maps_to"
+if "$PY" -c "
+import json
+bf=json.load(open('$COV_JSON'))['control_coverage']['summary']['by_framework']
+assert bf['pipa']['direct']==6 and bf['pipa']['partial']==1 and bf['pipa']['out_of_scope']==1, bf['pipa']
+assert bf['cia']['direct']==4 and bf['cia']['partial']==1, bf['cia']
+assert bf['isms-p']['direct']==5 and bf['isms-p']['out_of_scope']==2, bf['isms-p']
+items={i['id']:i for i in json.load(open('$COV_JSON'))['control_coverage']['items']}
+assert items['PIPA-23']['maps_to']=='C-07'
+assert items['CIA-XBORDER']['maps_to']=='C-26'
+assert items['ISMS-2.9.4']['maps_to']=='M-1.2'
+" 2>/dev/null ; then
+  ok "프레임워크별 소계(pipa 6/cia 4/isms-p 5 direct) + maps_to 교차참조 산출"
+else
+  bad "프레임워크 소계/maps_to 산출 실패 — $COV_JSON 확인"
+fi
+
+# --- M7: --framework 정보성 필터 — 규제별 행만 + 종료코드 불변 ------------- #
+hr ; echo "M7  --framework 필터 — pipa 만 렌더(롤업 필터 기준) · exit 0 불변"
+FILT_JSON="$OUT/compliance_pipa.json"
+"${CLI[@]}" report compliance "${EVID[@]}" \
+  --controls --framework pipa --format json > "$FILT_JSON"
+RC=$?
+if [ "$RC" -eq 0 ] && "$PY" -c "
+import json
+cc=json.load(open('$FILT_JSON'))['control_coverage']
+assert cc['frameworks_filter']==['pipa'], cc['frameworks_filter']
+assert {i['framework'] for i in cc['items']}=={'pipa'}
+assert cc['summary']['direct']==6 and set(cc['summary']['by_framework'])=={'pipa'}
+" 2>/dev/null ; then
+  ok "--framework pipa: pipa 8행만 렌더 · 롤업 직접 6 · 종료코드 0 유지(정보성)"
+else
+  bad "--framework 필터 실패(exit=$RC) — $FILT_JSON 확인"
 fi
 
 hr
