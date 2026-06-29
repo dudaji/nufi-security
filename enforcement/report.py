@@ -71,6 +71,18 @@ MEET = "meet"
 VIOLATION = "violation"
 NO_DATA = "no_data"
 
+# 점검항목 커버리지(control coverage) — v0.0.9 P0. 컴플라이언스 매핑 리포트.
+# 충족유형(정적, 카탈로그) + direct 항목의 자동판정 status.
+COV_DIRECT = "direct"
+COV_PARTIAL = "partial"
+COV_OUT_OF_SCOPE = "out_of_scope"
+COV_MET = "met"          # direct 충족(증빙으로 자동판정)
+COV_UNMET = "unmet"      # direct 미충족
+COV_NA = "n/a"           # partial/out_of_scope — 자동판정 비대상(정적 라벨)
+
+# 기본 카탈로그 — 패키지 동봉(enforcement/compliance_catalog.yaml).
+_DEFAULT_CATALOG = Path(__file__).resolve().parent / "compliance_catalog.yaml"
+
 
 # --------------------------------------------------------------------------- #
 # 입력 로더 (read-only)
@@ -406,6 +418,117 @@ def webhook_stub_payload(alert: dict, url: str) -> dict:
 
 
 # --------------------------------------------------------------------------- #
+# 점검항목 커버리지(control coverage) — 카탈로그 + 자동판정 (v0.0.9 P0)
+# --------------------------------------------------------------------------- #
+def load_catalog(path: Optional[str] = None) -> dict:
+    """통제 카탈로그(YAML) 적재. ``path`` 미지정 시 패키지 동봉 기본 카탈로그."""
+    import yaml  # PyYAML — 프로젝트 전역 의존성
+    p = Path(path) if path else _DEFAULT_CATALOG
+    with open(p, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f) or {}
+    data["_source"] = str(p)
+    return data
+
+
+def _get_path(report: dict, dotted: str) -> Any:
+    """'decisions.blocked_by_entity' 같은 점표기 경로로 리포트 값을 가져온다."""
+    cur: Any = report
+    for part in dotted.split("."):
+        if not isinstance(cur, dict):
+            return None
+        cur = cur.get(part)
+    return cur
+
+
+def _eval_rule(rule: dict, report: dict) -> tuple[bool, str]:
+    """단일 eval 규칙 → (충족여부, 증빙 문자열). 결정론적·read-only."""
+    # 복합 규칙: ``all_of:`` 키 형(카탈로그) 또는 ``type: all_of`` 형 모두 허용.
+    sub = rule.get("all_of") if "all_of" in rule else (
+        rule.get("rules") if rule.get("type") == "all_of" else None)
+    if sub is not None:
+        parts = [_eval_rule(r, report) for r in sub]
+        met = all(ok for ok, _ in parts)
+        return met, "; ".join(ev for _, ev in parts)
+    rtype = rule.get("type")
+    if rtype == "action_count":
+        counts = (_get_path(report, "decisions.action_counts") or {})
+        actions = rule.get("actions", [])
+        total = sum(int(counts.get(a, 0)) for a in actions)
+        hit = ", ".join(f"{a}={int(counts.get(a, 0))}" for a in actions)
+        return total > int(rule.get("min", 0)), f"action_counts[{hit}]"
+    if rtype == "decisions_total":
+        n = int(_get_path(report, "decisions.total") or 0)
+        return n > int(rule.get("min", 0)), f"decisions.total={n}"
+    if rtype == "field_true":
+        v = _get_path(report, rule["path"])
+        return bool(v), f"{rule['path']}={v}"
+    if rtype == "chain_ok":
+        chain = _get_path(report, rule["path"]) or {}
+        ok = chain.get("ok") is True
+        return ok, f"{rule['path']}.ok={chain.get('ok')}"
+    if rtype == "nonempty":
+        v = _get_path(report, rule["path"]) or {}
+        n = len(v)
+        return n > 0, f"{rule['path']}#={n}"
+    # 알 수 없는 규칙 타입 — 보수적으로 미충족(증빙에 명시).
+    return False, f"unknown_rule:{rtype}"
+
+
+def evaluate_control(item: dict, report: dict) -> tuple[str, Optional[str]]:
+    """카탈로그 항목 1개 → (status, evidence).
+
+    direct 항목은 eval 규칙으로 met/unmet 을 **자동판정**한다. partial/out_of_scope
+    는 정적 라벨(status=n/a)이며 자동판정하지 않는다(증빙 없음).
+    """
+    ctype = item.get("coverage_type")
+    if ctype != COV_DIRECT:
+        return COV_NA, None
+    rule = item.get("eval")
+    if not rule:
+        return COV_NA, None
+    ok, evidence = _eval_rule(rule, report)
+    return (COV_MET if ok else COV_UNMET), evidence
+
+
+def build_control_coverage(report: dict, *, catalog_path: Optional[str] = None) -> dict:
+    """compliance 리포트 모델 + 통제 카탈로그 → 점검항목 커버리지 섹션.
+
+    각 direct 항목은 기존 증빙(decisions/integrity_ok 등)으로 충족 상태가 자동
+    산출되고, partial/out_of_scope 는 정적 라벨로 들어간다. 롤업 카운트(직접 N/
+    부분 M/범위밖 K, 직접 충족 x/미충족 y)를 함께 제공한다.
+
+    **종료코드 영향 없음** — 이 섹션은 정보성이다(무결성 게이트만 종료코드 결정).
+    """
+    catalog = load_catalog(catalog_path)
+    items_out: List[dict] = []
+    summary = {COV_DIRECT: 0, COV_PARTIAL: 0, COV_OUT_OF_SCOPE: 0,
+               "direct_met": 0, "direct_unmet": 0}
+    for item in catalog.get("controls", []):
+        ctype = item.get("coverage_type")
+        status, evidence = evaluate_control(item, report)
+        if ctype in summary:
+            summary[ctype] += 1
+        if ctype == COV_DIRECT:
+            summary["direct_met" if status == COV_MET else "direct_unmet"] += 1
+        items_out.append({
+            "id": item.get("id"),
+            "source": item.get("source"),
+            "requirement": item.get("requirement"),
+            "control": item.get("control"),
+            "coverage_type": ctype,
+            "status": status,
+            "evidence": evidence,
+            "remediation_ref": item.get("remediation_ref"),
+        })
+    return {
+        "catalog_version": str(catalog.get("version", "?")),
+        "catalog_source": catalog.get("_source"),
+        "summary": summary,
+        "items": items_out,
+    }
+
+
+# --------------------------------------------------------------------------- #
 # 규정준수 리포트
 # --------------------------------------------------------------------------- #
 def build_compliance_report(*,
@@ -415,12 +538,19 @@ def build_compliance_report(*,
                             flow_paths: Optional[Iterable[str]] = None,
                             customer: Optional[str] = None,
                             title: Optional[str] = None,
-                            session: Optional[Session] = None) -> dict:
+                            session: Optional[Session] = None,
+                            controls: bool = True,
+                            catalog_path: Optional[str] = None) -> dict:
     """정책 변경 감사 + 차단/가명화/우회 요약 리포트 모델 구성(전부 read-only 재사용).
 
     ``session`` 이 테넌트를 지정하면(v0.0.6 C2) 변경 감사·결정·flow 레코드를 그
     테넌트로 **격리**한다 — 한 테넌트 조회 세션은 다른 테넌트 감사로그를 못 본다.
     해시체인 무결성은 격리된 부분집합 기준으로 재검증한다.
+
+    ``controls`` 가 참이면(기본) 점검항목 커버리지(control coverage) 섹션을 더한다
+    (v0.0.9 P0) — 금융보안원 안내서·망분리 평가기준 대비 NuFi 통제 충족 상태를
+    **위 증빙에서 자동 산출**. ``catalog_path`` 로 통제 카탈로그를 오버라이드한다.
+    커버리지는 정보성이며 종료코드(무결성 게이트)에 영향을 주지 않는다.
     """
     from enforcement.policy_ops import PolicyChangeAudit
 
@@ -456,7 +586,7 @@ def build_compliance_report(*,
     # 무결성 종합: 두 해시체인이 모두 정상(또는 체인 미부착)이면 ok.
     chains_ok = (audit_chain.get("ok") in (True, None)) and bool(change_chain.get("ok"))
 
-    return {
+    rep = {
         "kind": "compliance",
         "title": title or "규정준수 리포트",
         "customer": customer,
@@ -484,11 +614,34 @@ def build_compliance_report(*,
         },
     }
 
+    # 4) 점검항목 커버리지(control coverage) — 위 증빙에서 자동 산출(정보성).
+    if controls:
+        rep["control_coverage"] = build_control_coverage(rep, catalog_path=catalog_path)
+
+    return rep
+
 
 # --------------------------------------------------------------------------- #
 # 렌더러 — Markdown / HTML / JSON
 # --------------------------------------------------------------------------- #
 _BADGE = {MEET: "✅ 충족", VIOLATION: "❌ 위반", NO_DATA: "— 데이터없음"}
+
+
+def _cov_badge(item: dict) -> str:
+    """커버리지 항목 → 배지 텍스트(충족유형 + direct status 반영)."""
+    ctype = item.get("coverage_type")
+    if ctype == COV_DIRECT:
+        return "✅ 충족" if item.get("status") == COV_MET else "⚠️ 미충족"
+    if ctype == COV_PARTIAL:
+        return "🟡 부분충족"
+    return "⛔ 범위밖"
+
+
+def _cov_badge_cls(item: dict) -> str:
+    ctype = item.get("coverage_type")
+    if ctype == COV_DIRECT:
+        return "meet" if item.get("status") == COV_MET else "violation"
+    return "nodata"
 
 
 def _fmt_val(metric: str, value: Optional[float]) -> str:
@@ -598,6 +751,25 @@ def render_compliance_md(rep: dict) -> str:
             L.append(f"| {r.get('ts','')} | {r.get('dst_host','')} | "
                      f"{r.get('process','')} | {r.get('severity','')} |")
     L.append("")
+
+    cc = rep.get("control_coverage")
+    if cc:
+        s = cc["summary"]
+        L.append("## 4. 점검항목 커버리지 (control coverage)")
+        L.append(f"카탈로그 v{cc['catalog_version']}  ·  "
+                 f"**직접 {s['direct']}**(충족 {s['direct_met']}/미충족 {s['direct_unmet']})  ·  "
+                 f"**부분 {s['partial']}**  ·  **범위밖 {s['out_of_scope']}**")
+        L.append("")
+        L.append("> 금융보안원 안내서 점검항목 + 망분리 평가기준 대비 NuFi 통제 충족 — "
+                 "위 증빙에서 자동 산출(정보성; 종료코드 미반영).")
+        L.append("")
+        L.append("| 항목 | 출처 | 요구사항 | NuFi 통제 | 충족 | 증빙/보강 |")
+        L.append("|---|---|---|---|---|---|")
+        for it in cc["items"]:
+            note = it.get("evidence") or it.get("remediation_ref") or "—"
+            L.append(f"| {it['id']} | {it.get('source','')} | {it.get('requirement','')} | "
+                     f"{it.get('control','')} | {_cov_badge(it)} | {note} |")
+        L.append("")
     return "\n".join(L)
 
 
@@ -735,6 +907,26 @@ def render_compliance_html(rep: dict) -> str:
     bp = rep["bypass"]
     b.append("<h2>3. 우회 탐지 요약</h2>")
     b.append(f"<p>관측 flow {bp['observed']}건 · <b>우회 {bp['bypass_count']}건</b></p>")
+
+    cc = rep.get("control_coverage")
+    if cc:
+        s = cc["summary"]
+        b.append("<h2>4. 점검항목 커버리지 (control coverage)</h2>")
+        b.append(f"<p>카탈로그 v{_html.escape(cc['catalog_version'])} · "
+                 f"<b>직접 {s['direct']}</b>(충족 {s['direct_met']}/미충족 {s['direct_unmet']}) · "
+                 f"<b>부분 {s['partial']}</b> · <b>범위밖 {s['out_of_scope']}</b></p>")
+        b.append("<blockquote>금융보안원 안내서 점검항목 + 망분리 평가기준 대비 NuFi 통제 "
+                 "충족 — 위 증빙에서 자동 산출(정보성; 종료코드 미반영).</blockquote>")
+        b.append("<table><tr><th>항목</th><th>출처</th><th>요구사항</th>"
+                 "<th>NuFi 통제</th><th>충족</th><th>증빙/보강</th></tr>")
+        for it in cc["items"]:
+            note = it.get("evidence") or it.get("remediation_ref") or "—"
+            badge = f"<span class='{_cov_badge_cls(it)}'>{_html.escape(_cov_badge(it))}</span>"
+            cells = "".join(f"<td>{_html.escape(str(x))}</td>" for x in
+                            [it["id"], it.get("source", ""), it.get("requirement", ""),
+                             it.get("control", "")])
+            b.append(f"<tr>{cells}<td>{badge}</td><td>{_html.escape(note)}</td></tr>")
+        b.append("</table>")
     return _html_doc(rep["title"], "".join(b))
 
 

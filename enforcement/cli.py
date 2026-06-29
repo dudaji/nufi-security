@@ -547,7 +547,9 @@ def cmd_report(args) -> int:
         rep = _rpt.build_compliance_report(
             audit_path=args.audit, change_log_path=args.change_log,
             flow_dir=getattr(args, "flow_dir", None), flow_paths=flow_paths,
-            customer=args.customer, title=args.title, session=session)
+            customer=args.customer, title=args.title, session=session,
+            controls=not getattr(args, "no_controls", False),
+            catalog_path=getattr(args, "catalog", None))
         _report_write(_rpt.render(rep, fmt), args.out)
         # 해시체인 변조가 탐지되면 비0(무결성 게이트).
         return 0 if rep["integrity_ok"] else 1
@@ -768,11 +770,18 @@ def main(argv: Optional[List[str]] = None) -> int:
     rp.set_defaults(func=cmd_report)
 
     rp = rsub.add_parser("compliance",
-                         help="정책 변경 감사(+해시체인) · 차단/가명화 · 우회 요약")
+                         help="정책 변경 감사(+해시체인) · 차단/가명화 · 우회 요약 + "
+                              "점검항목 커버리지(control coverage)")
     rp.add_argument("--audit", default=None,
                     help="감사 JSONL 경로(기본 logs/egress_audit.jsonl)")
     rp.add_argument("--change-log", default=None,
                     help="정책 변경 감사 JSONL(기본 logs/policy_changes.jsonl)")
+    rp.add_argument("--controls", action="store_true",
+                    help="점검항목 커버리지 섹션 포함(기본 상시 포함 — 명시용)")
+    rp.add_argument("--no-controls", action="store_true",
+                    help="점검항목 커버리지 섹션 생략")
+    rp.add_argument("--catalog", default=None,
+                    help="통제 카탈로그 YAML 오버라이드(기본 동봉 catalog)")
     rp.add_argument("--flow", default=None, help="flow tap JSONL(우회 요약)")
     rp.add_argument("--flow-dir", default=None, help="flow tap 로그 디렉터리")
     rp.add_argument("--customer", default=None, help="고객명(리포트 헤더)")

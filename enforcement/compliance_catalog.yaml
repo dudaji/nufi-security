@@ -1,0 +1,189 @@
+# =============================================================================
+# 컴플라이언스 통제 카탈로그 (control coverage) — v0.0.9 P0
+#
+# 금융보안원 「금융분야 인공지능 보안 안내서」(2026.6) 점검항목 + 「망분리
+# 혁신금융서비스(생성형 AI 연계) 보안대책」 평가기준 ↔ NuFi 통제 매핑표.
+#
+# 이 카탈로그는 **정적 데이터(원천)** 이다. report compliance 가 이 카탈로그와
+# 기존 compliance 리포트 증빙(decisions/integrity_ok 등)을 결합해 항목별 충족
+# 상태를 산출한다. 새 측정 없음 — read-only.
+#
+# 충족유형(coverage_type):
+#   direct        — ✅ 자동판정. eval 규칙이 기존 리포트 증빙으로 status 산출.
+#   partial       — 🟡 부분충족(정적 라벨). remediation 트랙(P1~P3) 링크.
+#   out_of_scope  — ⛔ 범위밖(정적 라벨, MoSCoW Won't). 초점 보호 — 명시적 비범위.
+#
+# eval 규칙 타입(direct 항목만):
+#   action_count   {actions: [...], min: N}  — decisions.action_counts 합 > N
+#   decisions_total {min: N}                  — decisions.total > N
+#   field_true     {path: "<dotted>"}         — report[path] 가 truthy
+#   chain_ok       {path: "<dotted to chain>"}— 체인 dict 의 ok 가 True(엄격)
+#   nonempty       {path: "<dotted>"}         — dict/list 길이 > 0
+#   all_of         {rules: [ ... ]}           — 모든 하위 규칙 충족
+#
+# 종료코드 영향 없음: control coverage 는 **정보성**이다. 미충족 direct 가 있어도
+# report compliance 종료코드는 무결성 게이트(0 정상 / 1 변조)만 따른다.
+# =============================================================================
+version: "1.0"
+
+controls:
+  # --------------------------------------------------------------------------- #
+  # ✅ direct — 기존 리포트 증빙으로 자동판정
+  # --------------------------------------------------------------------------- #
+  - id: C-07
+    source: "안내서 점검 ⑦"
+    requirement: "입출력 고유식별정보·개인신용정보 탐지/마스킹"
+    control: "한국어 PII 탐지·차단·가명화"
+    coverage_type: direct
+    eval:
+      all_of:
+        - {type: action_count, actions: [mask, block, pseudonymize], min: 0}
+        - {type: nonempty, path: "decisions.blocked_by_entity"}
+
+  - id: C-26
+    source: "안내서 점검 26"
+    requirement: "데이터 국외이전 차단"
+    control: "egress 차단(국외 목적지) — 차단 결정으로 증빙"
+    coverage_type: direct
+    eval:
+      type: action_count
+      actions: [block]
+      min: 0
+
+  - id: C-24
+    source: "안내서 점검 24"
+    requirement: "자동화 접근 모니터링 + 최소권한"
+    control: "감사 결정 로깅 + 세션 RBAC(viewer/operator)"
+    coverage_type: direct
+    eval:
+      type: decisions_total
+      min: 0
+
+  - id: M-1.2
+    source: "망분리 1.2"
+    requirement: "입출력 로그 보존"
+    control: "감사 해시체인 로그(보존 + 무결성)"
+    coverage_type: direct
+    eval:
+      all_of:
+        - {type: decisions_total, min: 0}
+        - {type: chain_ok, path: "decisions.chain"}
+
+  - id: M-2.4
+    source: "망분리 2.4"
+    requirement: "중요정보 입력 방지"
+    control: "입력측 PII 차단/마스킹 결정"
+    coverage_type: direct
+    # 현재 감사 모델은 입력/출력 방향을 구분하지 않는다 — 게이트웨이는 양방향을
+    # 동일 필터로 처리하므로 차단/마스킹 결정 존재를 입력측 통제 증빙으로 본다.
+    eval:
+      type: action_count
+      actions: [mask, block]
+      min: 0
+
+  - id: M-2.5
+    source: "망분리 2.5"
+    requirement: "출력/모델정보 노출 방지"
+    control: "출력측 필터(마스킹·가명화·차단) 결정"
+    coverage_type: direct
+    eval:
+      type: action_count
+      actions: [mask, block, pseudonymize]
+      min: 0
+
+  - id: M-3.1
+    source: "망분리 3.1"
+    requirement: "중요정보 업로드 차단"
+    control: "egress 업로드 차단 결정"
+    coverage_type: direct
+    eval:
+      type: action_count
+      actions: [block]
+      min: 0
+
+  - id: M-2.7
+    source: "망분리 2.7"
+    requirement: "위변조 방지 형상관리"
+    control: "감사·변경 해시체인 무결성(audit_chain + change_chain)"
+    coverage_type: direct
+    eval:
+      type: field_true
+      path: "integrity_ok"
+
+  # --------------------------------------------------------------------------- #
+  # 🟡 partial — 부분충족(정적 라벨 + 보강 트랙)
+  # --------------------------------------------------------------------------- #
+  - id: C-06/09
+    source: "안내서 점검 ⑥·⑨"
+    requirement: "회피공격(프롬프트 인젝션·탈옥) 탐지"
+    control: "입출력 필터(룰) — 가드모델 미연동"
+    coverage_type: partial
+    remediation_ref: "P2 — 생성형 회피공격 인라인 가드모델"
+
+  - id: C-12
+    source: "안내서 점검 ⑫·망 2.6"
+    requirement: "사용자별 요청 횟수 제한"
+    control: "(미구현)"
+    coverage_type: partial
+    remediation_ref: "P1 — 테넌트/사용자별 rate limit"
+
+  - id: C-11
+    source: "안내서 점검 ⑪·32~35"
+    requirement: "실시간 모니터링·정기점검·보고"
+    control: "SLA/리포트(수동 산출)"
+    coverage_type: partial
+    remediation_ref: "P1+ — 모니터링·보고 자동화"
+
+  - id: C-14/17
+    source: "안내서 점검 ⑭·⑰"
+    requirement: "자산·모델 파일 해시 인벤토리"
+    control: "감사 무결성(부분) — 자산 해시 인벤토리 미구현"
+    coverage_type: partial
+    remediation_ref: "P3 — 자산 무결성 인벤토리"
+
+  - id: C-25
+    source: "안내서 점검 25"
+    requirement: "킬스위치"
+    control: "bypass 차단·전 규칙 제거(부분) — 명시적 킬스위치 미정의"
+    coverage_type: partial
+    remediation_ref: "P3 — 명시적 킬스위치"
+
+  - id: C-23
+    source: "안내서 점검 23"
+    requirement: "모델·학습데이터 접근통제(RBAC)"
+    control: "리포트 RBAC(부분) — 자산 RBAC 미구현"
+    coverage_type: partial
+    remediation_ref: "P1+ — 자산 RBAC"
+
+  # --------------------------------------------------------------------------- #
+  # ⛔ out_of_scope — 범위밖(MoSCoW Won't, 초점 보호)
+  # --------------------------------------------------------------------------- #
+  - id: OOS-ROBUST
+    source: "안내서 7.6"
+    requirement: "판단형 적대적 robustness 검증"
+    control: "범위밖 — 파트너/이연"
+    coverage_type: out_of_scope
+
+  - id: OOS-POISON
+    source: "안내서 7.3"
+    requirement: "데이터·모델 오염 공격 방어"
+    control: "범위밖 — 파트너/이연"
+    coverage_type: out_of_scope
+
+  - id: OOS-SBOM
+    source: "안내서 7.4"
+    requirement: "공급망 SBOM"
+    control: "범위밖 — 파트너/이연"
+    coverage_type: out_of_scope
+
+  - id: OOS-EDU
+    source: "안내서 일반"
+    requirement: "AI 보안 교육"
+    control: "범위밖 — 파트너/이연"
+    coverage_type: out_of_scope
+
+  - id: OOS-3RDPARTY
+    source: "안내서 7.6"
+    requirement: "제3자 검증 프로세스"
+    control: "범위밖 — 파트너/이연"
+    coverage_type: out_of_scope

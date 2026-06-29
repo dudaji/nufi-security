@@ -15,6 +15,7 @@
 #   C4  고객별 임계 override     → 임계 완화 시 동일 데이터가 충족(exit 0)
 #   C5  report compliance (MD) → 정책 변경 감사 + 차단/가명화 + 우회 요약
 #   C6  무결성 게이트            → 감사 로그 변조 시 compliance exit 1
+#   C7  점검항목 커버리지         → 안내서·망분리 통제 충족 자동 산출(정보성)
 #
 # 사용: ./scripts/demo_report.sh
 # 매뉴얼: docs/REPORTING.md · docs/HANDS_ON.md
@@ -127,6 +128,22 @@ if [ "$RC" -eq 1 ] ; then
   ok "변조된 감사 체인 탐지 → exit 1 (제출 차단)"
 else
   bad "변조인데 exit=$RC (1 기대)"
+fi
+
+# --- C7: 점검항목 커버리지 — 안내서·망분리 통제 충족 자동 산출 ----------------- #
+hr ; echo "C7  점검항목 커버리지 — 안내서·망분리 통제 충족 자동 산출"
+COV_JSON="$OUT/compliance_controls.json"
+"${CLI[@]}" report compliance --audit "$SDIR/audit_decisions.jsonl" \
+  --change-log "$SDIR/policy_changes.jsonl" --flow "$SDIR/flow_bypass.jsonl" \
+  --controls --customer "Acme Corp" --format json > "$COV_JSON"
+RC=$?
+# 동봉 증빙: direct 8 전부 충족(차단/가명화 결정 + 무결 체인).
+DIRECT_MET=$("$PY" -c "import json;d=json.load(open('$COV_JSON'));s=d['control_coverage']['summary'];print(s['direct'],s['direct_met'])")
+if [ "$RC" -eq 0 ] && [ "$DIRECT_MET" = "8 8" ] \
+   && "$PY" -c "import json;d=json.load(open('$COV_JSON'));ids={i['id'] for i in d['control_coverage']['items']};assert 'C-07' in ids and 'M-2.7' in ids" ; then
+  ok "direct 8/8 충족 + partial/out_of_scope 라벨 산출 (정보성 · exit 0)"
+else
+  bad "커버리지 산출 실패(direct_met='$DIRECT_MET', exit=$RC)"
 fi
 
 hr
