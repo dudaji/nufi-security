@@ -505,6 +505,11 @@ nufi-egress report sla --metrics samples/sla/sla_metrics.jsonl --set pii_recall=
 # 규정준수: 정책 변경 감사(+해시체인) · 차단/가명화 · 우회 요약을 한 장으로
 nufi-egress report compliance --audit samples/sla/audit_decisions.jsonl \
   --change-log samples/sla/policy_changes.jsonl --flow samples/sla/flow_bypass.jsonl --format md
+
+# 점검항목 커버리지(v0.0.9 신규): 안내서·망분리 점검항목 대비 충족 현황을 같은 리포트에 매핑
+nufi-egress report compliance --audit samples/sla/audit_decisions.jsonl \
+  --change-log samples/sla/policy_changes.jsonl --flow samples/sla/flow_bypass.jsonl \
+  --controls --customer "Acme Corp" --format md
 ```
 
 **무슨 일이 일어났나요?**
@@ -512,9 +517,17 @@ nufi-egress report compliance --audit samples/sla/audit_decisions.jsonl \
   각 항목에 **충족/위반**을 찍고, 위반이 하나라도 있으면 `exit 1`(CI/제출 게이트).
 - `report compliance` 는 변경 감사·감사 로그 두 **해시체인**을 검증해, 변조가 탐지되면
   `exit 1` 로 제출을 막습니다.
+- `--controls` *(v0.0.9 신규)* 를 더하면 **금융보안원 안내서 점검항목 + 망분리 평가기준** 대비
+  NuFi 통제 충족 현황을 **같은 리포트의 기존 증빙에서 자동 산출**한 매핑 표가 붙습니다. 한 행 =
+  **요구사항 → NuFi 통제 → 충족 여부 → 증빙 출처**, 롤업 배지로 직접 N(충족/미충족)·부분 N·범위밖 N.
+  - **직접(direct)** 은 차단/가명화 결정·무결 체인 증빙으로 충족/미충족을 **자동판정**(✅/❌),
+    **부분(partial)** 🟡 · **범위밖(out_of_scope)** ⛔ 은 정적 라벨로 솔직하게 구분합니다.
+  - 커버리지는 **정보성** — 무결성 게이트 종료코드(정상 0 · 변조 1)를 **바꾸지 않습니다**.
+    끄려면 `--no-controls`, 통제 카탈로그 교체는 `--catalog FILE`.
 
-> ✅ **체크포인트:** 1-명령 자동 채점은 `./scripts/demo_report.sh`(6/6 PASS, 권한 불필요),
-> 명령 전체 옵션·입력 스키마는 [`REPORTING.md`](REPORTING.md).
+> ✅ **체크포인트:** 1-명령 자동 채점은 `./scripts/demo_report.sh`(6/6 PASS, 권한 불필요)와
+> `./scripts/demo_compliance_mapping.sh`(점검항목 커버리지 5/5 PASS), 명령 전체 옵션·입력
+> 스키마는 [`REPORTING.md`](REPORTING.md)(점검항목 커버리지는 §3).
 
 ### 6.11 여러 테넌트를 한 게이트웨이에서 — `--tenant` · `--role`
 
