@@ -6,6 +6,10 @@
 
 ## [Unreleased]
 
+> **방향 재설정(v0.1.0) 트랙 집계** — 독립 경량 프로젝트로서 **한국어 PII·한국 규제 증빙**에
+> 집중하고, 프론트엔드 없이 **CLI/SDK**로 가며, 운영(ops) 레이어는 제외하되 게이트웨이 코어는
+> 유지하는 방향 전환을 릴리스에서 참으로 만든다. 근거: [`docs/ROADMAP.md`](docs/ROADMAP.md).
+
 ### Added
 - **한국 규제 증빙 팩 — 컴플라이언스 매핑 카탈로그 확장** — `report compliance --controls`
   점검항목 커버리지를 금융분야 AI 보안 안내서·망분리에서 **개인정보보호법(PIPA)·
@@ -15,6 +19,21 @@
   정보성 필터 + SDK `build_control_coverage(..., frameworks=)`. 새 측정 없음 — 기존 증빙을
   한국 규제 언어로 재증빙. 종료코드는 무결성 게이트(0/1)만 따름(커버리지는 정보성).
   권위: [`docs/REPORTING.md`](docs/REPORTING.md) §3.
+- **Python SDK 표면 설계 스펙** — 탐지·가명화·정책평가·증빙 리포트를 단일 `nufi` 파사드로
+  재노출하는 라이브러리 API 표면을 설계 문서로 확정. 안정성 3계층(안정/베타/내부)·CLI 동등
+  매핑·구현 인계 명세 포함. 본 릴리스는 **설계 스펙**을 싣고, 패키지 구현은 후속 백로그로 분리.
+  권위: [`docs/SDK.md`](docs/SDK.md).
+- **한국어 PII 평가셋 공개 배포 형태 정식화 + baseline 측정** — 골드셋에 라이선스(CC0)·README·
+  manifest content_hash·`generate.py --verify` 게이트(커버리지/누수방지)를 추가해 **결정적
+  재현** 가능한 공개 평가셋으로 정식화. 이어서 onnx-int8 백엔드로 **baseline 실측**을 커밋 자산
+  으로 승격(PII recall·precision·KR_PERSON/KR_LOCATION 카테고리별 + Wilson CI 하한)하여 정확도
+  재현 데모를 exit0 으로 회복. 엔진 정확도 개선 본편은 차기(v0.2.0).
+
+### Changed
+- **운영(ops) 레이어 제외 — 정체성 전환을 문서에서 참으로** — 멀티테넌시/RBAC·SLA·대시보드를
+  README·운영자 매뉴얼에서 제외/강등 표기하고, 코어(게이트웨이)+컴플라이언스 매핑(증빙)을
+  전면 동선으로 재배열. 경량 CLI/SDK·한국 규제 증빙이라는 새 정체성을 릴리스 표면에 반영.
+  권위: [`docs/ROADMAP.md`](docs/ROADMAP.md) · [`docs/MANUAL.md`](docs/MANUAL.md).
 
 ## [0.0.9] - 2026-06-29
 
