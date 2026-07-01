@@ -28,6 +28,18 @@
   재현** 가능한 공개 평가셋으로 정식화. 이어서 onnx-int8 백엔드로 **baseline 실측**을 커밋 자산
   으로 승격(PII recall·precision·KR_PERSON/KR_LOCATION 카테고리별 + Wilson CI 하한)하여 정확도
   재현 데모를 exit0 으로 회복. 엔진 정확도 개선 본편은 차기(v0.2.0).
+- **가명화 품질 벤치마크 — 가역/비가역 지표 산출 표면 + 리포트** — 기존 가명화 표면
+  (`egress_audit/surrogate.py` 가역 · `egress_audit/pseudonymize.py` 비가역 · 프리셋
+  `pseudonymize-roundtrip`)의 품질을 결정적으로 측정하는 하니스
+  [`scripts/bench_pseudonymize.py`](scripts/bench_pseudonymize.py) 를 추가하고 측정 결과를
+  `docs/reports/` 하위 커밋 자산(pseudonymize-quality)으로 승격. **가역**: 원복 정확도
+  (스트리밍 청크 경계 포함)·surrogate 충돌율(0)·결정성.
+  **비가역**: 원복불가·구조보존·동일값 일관 치환·충돌율(0). **차단 유지**: 강한 식별자·비밀
+  (주민/외국인/여권/면허/카드/계좌/비밀)은 가역 프리셋에서도 차단되어 가명화로도 송신되지
+  않음을 확인. 1-명령 데모 [`scripts/demo_pseudonymize.sh`](scripts/demo_pseudonymize.sh) +
+  `demo_all` 러너 등록 + [`docs/DEMO.md`](docs/DEMO.md) 카탈로그. 기계식 불변식(충돌 0·결정성·
+  원복 정확·차단 유지) 미달 시 하니스 비-0 종료. 새 런타임 동작 변경 없음 — 기존 표면 측정.
+  권위: [`docs/PRESETS.md`](docs/PRESETS.md).
 
 ### Changed
 - **운영(ops) 레이어 제외 — 정체성 전환을 문서에서 참으로** — 멀티테넌시/RBAC·SLA·대시보드를
