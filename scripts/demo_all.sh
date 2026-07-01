@@ -15,6 +15,7 @@
 #   demo_multitenancy.sh     멀티테넌시·RBAC — 테넌트 읽기 경계 + 읽기전용 역할
 #   demo_pseudonymize.sh     가명화 품질 — 가역/비가역 지표·충돌율 0·결정성·차단 유지
 #   demo_audit_separation.sh 차등 감사 — public/private 분리 + 패킷 우회 탭 + 비동기 봇
+#   demo_location_union.sh   주소 유니온 — 모델 ∪ 확장규칙(P2)로 KR_LOCATION 재현율 향상
 #   demo_accuracy.sh         정확도 재현 — KR_PERSON INT8 CI + 온프렘 p95 (측정 산출물 필요)
 #
 #   * demo_bypass_enforcement.sh(우회 실제 ENFORCED drop)는 root/nft 가 필요한
@@ -65,6 +66,7 @@ run_demo demo_policy_ops.sh       "정책 운영(프로파일·바인딩·롤백
 run_demo demo_multitenancy.sh     "멀티테넌시·RBAC(테넌트 경계 + 읽기전용 역할)"
 run_demo demo_pseudonymize.sh     "가명화 품질(가역/비가역 지표·충돌율 0·결정성·차단 유지)"
 run_demo demo_audit_separation.sh "차등 감사(분리 저장 + 우회 탭 + 비동기 봇)"
+run_demo demo_location_union.sh   "주소 유니온(모델 ∪ 확장규칙 P2 · KR_LOCATION 재현율)"
 
 # 정확도 데모는 커밋된 측정 산출물(docs/reports/*.json)이 있어야 재현 가능하다.
 if [ -f "$ROOT/docs/reports/recall-int8.json" ] \

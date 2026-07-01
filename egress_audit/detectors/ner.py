@@ -148,6 +148,78 @@ _PLACE_STOPWORDS = set(
 )
 
 
+# --- 지명(주소) 규칙 단독 배출 (CMP-222 P3) ---------------------------------
+# 아래 규칙(도로명·상세주소·랜드마크·시군구·광역·결합 행정 스팬)은 gazetteer
+# 백엔드 안에서만 쓰이던 것을 모듈 함수로 분리한다. 모델 백엔드(onnx-int8 등)와
+# **주소 채널만** 유니온하기 위해 재사용한다(다른 PII·인명 채널은 건드리지 않음).
+# 겹치는 규칙은 우선순위(더 길고 구체적인 스팬 우선)로 하나만 배출한다.
+def detect_kr_locations(text: str, source: str = "ner:gazetteer") -> Iterator[RawSpan]:
+    """텍스트에서 KR_LOCATION 후보를 규칙만으로 배출(인명·PII 무관, 순수 stdlib).
+
+    P2(CMP-221) 규칙 백엔드 확장을 모델 백엔드와 유니온 가능한 단위로 노출한다.
+    ``source`` 로 배출원을 구분(gazetteer 단독 vs 모델∪규칙 유니온)한다.
+    """
+    loc_spans: list[tuple[int, int]] = []
+
+    def emit_loc(start, end, txt, conf):
+        for a, b in loc_spans:
+            if start >= a and end <= b:   # 이미 더 넓은 스팬이 커버
+                return None
+        loc_spans.append((start, end))
+        return RawSpan("KR_LOCATION", txt, start, end, conf, source=source)
+
+    # 우선순위 1: 상세주소(동/호) — 가장 구체적
+    for m in _DETAIL_ADDR_RE.finditer(text):
+        span = emit_loc(m.start(1), m.end(1), m.group(1), 0.8)
+        if span:
+            yield span
+    # 우선순위 2: 도로명주소 (…로/길 + 건물번호). 부사/일반명사 오탐 차단.
+    for m in _ROAD_ADDR_RE.finditer(text):
+        # 도로명 "이름"부(번호 앞 …로/대로/길)를 뽑아 부사·일반명사(참고로·그대로 등) 차단.
+        road_name = re.match(r"[가-힣]+(?:대로|로|길)", m.group(1)).group(0)
+        if road_name in _ROAD_STOPWORDS:
+            continue
+        span = emit_loc(m.start(1), m.end(1), m.group(1), 0.8)
+        if span:
+            yield span
+    # 우선순위 3: 결합 행정 스팬(시 + 구) — 경계 품질(P1 class d)
+    for m in _METRO_DISTRICT_RE.finditer(text):
+        span = emit_loc(m.start(1), m.end(1), m.group(1), 0.85)
+        if span:
+            yield span
+    # 지명: 광역 접미사(특별시/광역시 등)
+    for m in _PLACE_SUFFIX_RE.finditer(text):
+        span = emit_loc(m.start(1), m.end(1), m.group(1), 0.85)
+        if span:
+            yield span
+    # 지명: 어휘밖 고유지명(랜드마크/개발지구 접미사) — 호모그래프 차단
+    for m in _LANDMARK_RE.finditer(text):
+        if m.group(1) in _LANDMARK_STOPWORDS:
+            continue
+        span = emit_loc(m.start(1), m.end(1), m.group(1), 0.7)
+        if span:
+            yield span
+    # 지명: 행정단위 접미사 (호모그래프 제외). 시군구 사전 등재 시 conf 승격.
+    for m in _PLACE_UNIT_RE.finditer(text):
+        if m.group(1) in _PLACE_STOPWORDS:
+            continue
+        conf = 0.8 if m.group(1) in _SIGUNGU else 0.65
+        span = emit_loc(m.start(1), m.end(1), m.group(1), conf)
+        if span:
+            yield span
+    # 지명: 알려진 광역/축약 지명
+    for place in _KNOWN_PLACES:
+        start = 0
+        while True:
+            idx = text.find(place, start)
+            if idx < 0:
+                break
+            span = emit_loc(idx, idx + len(place), place, 0.7)
+            if span:
+                yield span
+            start = idx + len(place)
+
+
 class _GazetteerBackend:
     name = "gazetteer"
 
@@ -172,68 +244,9 @@ class _GazetteerBackend:
             span = emit_person(m.start("name"), m.end("name"), m.group("name"))
             if span:
                 yield span
-        # 지명은 여러 규칙이 겹칠 수 있어(예: 도로명 안의 "…로", 결합 스팬 안의 "…시")
-        # 우선순위가 높은(더 길고 구체적인) 스팬을 먼저 배출하고, 이후 규칙이 이미
-        # 배출된 스팬에 포함되면 건너뛴다. loc_spans 는 (start,end) 커버리지 추적용.
-        loc_spans: list[tuple[int, int]] = []
-
-        def emit_loc(start, end, txt, conf):
-            for a, b in loc_spans:
-                if start >= a and end <= b:   # 이미 더 넓은 스팬이 커버
-                    return None
-            loc_spans.append((start, end))
-            return RawSpan("KR_LOCATION", txt, start, end, conf, source="ner:gazetteer")
-
-        # 우선순위 1: 상세주소(동/호) — 가장 구체적
-        for m in _DETAIL_ADDR_RE.finditer(text):
-            span = emit_loc(m.start(1), m.end(1), m.group(1), 0.8)
-            if span:
-                yield span
-        # 우선순위 2: 도로명주소 (…로/길 + 건물번호). 부사/일반명사 오탐 차단.
-        for m in _ROAD_ADDR_RE.finditer(text):
-            # 도로명 "이름"부(번호 앞 …로/대로/길)를 뽑아 부사·일반명사(참고로·그대로 등) 차단.
-            road_name = re.match(r"[가-힣]+(?:대로|로|길)", m.group(1)).group(0)
-            if road_name in _ROAD_STOPWORDS:
-                continue
-            span = emit_loc(m.start(1), m.end(1), m.group(1), 0.8)
-            if span:
-                yield span
-        # 우선순위 3: 결합 행정 스팬(시 + 구) — 경계 품질(P1 class d)
-        for m in _METRO_DISTRICT_RE.finditer(text):
-            span = emit_loc(m.start(1), m.end(1), m.group(1), 0.85)
-            if span:
-                yield span
-        # 지명: 광역 접미사(특별시/광역시 등)
-        for m in _PLACE_SUFFIX_RE.finditer(text):
-            span = emit_loc(m.start(1), m.end(1), m.group(1), 0.85)
-            if span:
-                yield span
-        # 지명: 어휘밖 고유지명(랜드마크/개발지구 접미사) — 호모그래프 차단
-        for m in _LANDMARK_RE.finditer(text):
-            if m.group(1) in _LANDMARK_STOPWORDS:
-                continue
-            span = emit_loc(m.start(1), m.end(1), m.group(1), 0.7)
-            if span:
-                yield span
-        # 지명: 행정단위 접미사 (호모그래프 제외). 시군구 사전 등재 시 conf 승격.
-        for m in _PLACE_UNIT_RE.finditer(text):
-            if m.group(1) in _PLACE_STOPWORDS:
-                continue
-            conf = 0.8 if m.group(1) in _SIGUNGU else 0.65
-            span = emit_loc(m.start(1), m.end(1), m.group(1), conf)
-            if span:
-                yield span
-        # 지명: 알려진 광역/축약 지명
-        for place in _KNOWN_PLACES:
-            start = 0
-            while True:
-                idx = text.find(place, start)
-                if idx < 0:
-                    break
-                span = emit_loc(idx, idx + len(place), place, 0.7)
-                if span:
-                    yield span
-                start = idx + len(place)
+        # 지명(주소)은 규칙 단위로 분리(CMP-222 P3, detect_kr_locations) — 모델 백엔드와
+        # 유니온 재사용. 우선순위(구체적 스팬 우선)·호모그래프 차단은 함수 내부에 보존.
+        yield from detect_kr_locations(text, source="ner:gazetteer")
 
 
 class _PipelineBackend:
@@ -353,10 +366,21 @@ class _OnnxInt8Backend(_PipelineBackend):
 
 
 class KoreanNerDetector:
-    """가능하면 transformers 백엔드, 아니면 gazetteer 폴백."""
+    """가능하면 transformers 백엔드, 아니면 gazetteer 폴백.
 
-    def __init__(self, backend: str = "auto", model_id: Optional[str] = None):
+    ``location_union`` (CMP-222 P3): 주소 채널(KR_LOCATION)에 한해 **모델 백엔드 ∪
+    확장 규칙(P2)** 유니온을 활성화한다. 모델 백엔드(transformers/onnx-int8)가 놓치는
+    구조적·어휘밖 주소를 규칙으로 회복해 재현율을 끌어올린다. recall(A∪B) ≥ max(A,B)
+    가 보장되고(스팬을 더할 뿐 제거하지 않음), 정밀도는 P2 차단목록으로 방어한다.
+    다른 PII·인명 채널은 건드리지 않는다. gazetteer 백엔드는 이미 규칙을 포함하므로
+    유니온이 무의미 → no-op(중복 배출 방지).
+    """
+
+    def __init__(self, backend: str = "auto", model_id: Optional[str] = None,
+                 location_union: bool = False):
         self.backend = self._build_backend(backend, model_id)
+        # 규칙은 gazetteer 백엔드에 이미 있으므로 모델 백엔드일 때만 유니온한다.
+        self.location_union = bool(location_union) and self.backend_name != "gazetteer"
 
     @staticmethod
     def _build_backend(backend: str, model_id: Optional[str]):
@@ -383,3 +407,8 @@ class KoreanNerDetector:
 
     def detect(self, text: str) -> Iterator[RawSpan]:
         yield from self.backend.detect(text)
+        # 주소 채널만 규칙 유니온(CMP-222 P3). 겹치는 스팬은 파이프라인 _merge 가
+        # 점수·길이 우선으로 하나만 남기되, 어느 백엔드든 잡으면 KR_LOCATION 존재는
+        # 보장되므로 클래스 recall(A∪B) ≥ max(A,B). 인명/기타 PII 는 미포함.
+        if self.location_union:
+            yield from detect_kr_locations(text, source="rule:kr-location")
