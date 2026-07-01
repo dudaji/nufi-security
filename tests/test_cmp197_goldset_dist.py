@@ -121,3 +121,26 @@ def test_spans_exact(built):
 def test_verify_cli_passes():
     """공개 재현 검증 진입점 verify() 가 커밋본에 대해 통과(rc=0)."""
     assert g.verify() == 0
+
+
+def test_no_scanner_firing_aws_patterns(built):
+    """CMP-215 회귀 방지 — 산출 골드셋에 스캐너-발화 AWS 자격증명 패턴 0건(공식 예시키만)."""
+    _, dev, test, _ = built
+    viol = g.scan_pushblock(dev, test)
+    assert viol == [], f"허용목록 외 AWS 패턴 검출(GH013 재발): {viol}"
+
+
+def test_pushblock_guard_catches_random_aws():
+    """CMP-215 가드 실효성 — 랜덤 고엔트로피 AWS 값 재유입 시 scan_pushblock 이 실제로 잡는다."""
+    # make_secret 회귀(랜덤 AKIA/40자 시크릿 재유입)를 모사한 오염 행
+    bad_id = [{"prompt": "배포 키 AKIA1234567890ABCDEF 검토", "expect": ["SECRET"],
+               "spans": [], "source": "synth", "id": "x", "_cls": "SECRET"}]
+    bad_secret = [{"prompt": "aws_secret_access_key=abcd1234ABCD5678efgh9012IJKL3456mnop7890 유출",
+                   "expect": ["SECRET"], "spans": [], "source": "synth", "id": "y", "_cls": "SECRET"}]
+    assert g.scan_pushblock(bad_id, []), "허용목록 외 AKIA 키를 놓침"
+    assert g.scan_pushblock([], bad_secret), "허용목록 외 40자 시크릿을 놓침"
+    # 공식 예시키는 허용목록이므로 위반 아님(recall 유지 · 스캐너 통과)
+    ok = [{"prompt": "배포 키 AKIAIOSFODNN7EXAMPLE / "
+                     "aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+           "expect": ["SECRET"], "spans": [], "source": "synth", "id": "z", "_cls": "SECRET"}]
+    assert g.scan_pushblock(ok, []) == []

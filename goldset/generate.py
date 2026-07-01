@@ -203,6 +203,41 @@ def make_secret(rng):
     return f'api_key="{b62(20)}"', "설정파일에 {v} 박혀있음."
 
 
+# --------------------------------------------------------------------------- push-protection 가드 (CMP-215 회귀 방지)
+# GitHub Push Protection(GH013)·다운스트림 스캐너가 '실 AWS 자격증명'으로 오탐해 공개 CC0 배포와
+# `git push` 를 차단하는 유일한 SECRET 종류가 AWS 다(다른 키는 파트너 체크섬 미통과로 합성값이
+# 발화하지 않음). 합성 골드셋은 반드시 AWS 공식 예시키(스캐너 허용목록 등재)만 사용해야 한다.
+# make_secret() 회귀 등으로 랜덤 고엔트로피 AWS 값이 재유입되면, 여기서 --verify 가 비-0 종료로
+# **배포·푸시 전에** 잡는다(CMP-215 재발 방지 게이트). detectors 는 이 예시키에도 그대로 발화 → recall 불변.
+import re as _re
+
+_AWS_ALLOWLIST = frozenset({
+    "AKIAIOSFODNN7EXAMPLE",                        # AWS 공식 예시 Access Key ID
+    "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",    # AWS 공식 예시 Secret Access Key
+})
+_AWS_ACCESS_KEY_RE = _re.compile(r"AKIA[0-9A-Z]{16}")
+_AWS_SECRET_RE = _re.compile(r"aws_secret_access_key=([A-Za-z0-9/+]{40})")
+
+
+def scan_pushblock(dev, test):
+    """공개 산출 바이트에서 스캐너-발화 AWS 자격증명 패턴을 탐지한다(허용목록 예외).
+
+    반환: 위반 설명 문자열 리스트(빈 리스트=안전). GH013/다운스트림 스캐너의 발화 조건과
+    동일한 고신뢰 AWS 패턴이 허용목록 밖 값으로 존재하면 위반으로 보고한다.
+    """
+    viol = []
+    for name, split in (("dev", dev), ("test", test)):
+        for r in split:
+            line = _serialize_row(r)
+            for m in _AWS_ACCESS_KEY_RE.findall(line):
+                if m not in _AWS_ALLOWLIST:
+                    viol.append(f"{name}: AWS Access Key ID 형태 {m!r} (허용목록 외 — 스캐너 발화)")
+            for m in _AWS_SECRET_RE.findall(line):
+                if m not in _AWS_ALLOWLIST:
+                    viol.append(f"{name}: AWS Secret Access Key 형태 {m[:6]}…{m[-4:]} (허용목록 외 — 스캐너 발화)")
+    return viol
+
+
 # --------------------------------------------------------------------------- benign / hard negatives
 HARD_NEG = [
     "송장번호 123456-789 로 배송 추적해줘.",
@@ -480,6 +515,9 @@ def verify():
     # 누수방지 슬라이스
     if fresh["person_unlisted_ratio"] < 0.5:
         errs.append(f"KR_PERSON 미수록 성씨 비율 {fresh['person_unlisted_ratio']} < 0.5 (누수방지 위반)")
+    # push-protection 가드(CMP-215): 스캐너-발화 AWS 자격증명 패턴 재유입 차단(GH013 재발 방지)
+    for v in scan_pushblock(dev, test):
+        errs.append(f"push-protection 위반(스캐너-발화 AWS 패턴): {v}")
 
     if errs:
         print("VERIFY FAIL")
