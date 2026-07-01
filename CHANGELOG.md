@@ -6,6 +6,28 @@
 
 ## [Unreleased]
 
+> **한국어 PII 정확도 엔진 본편(v0.2.0) 트랙 집계 — 주소(KR_LOCATION) 0.79 → 0.90+** —
+> v0.1.0 이 고정한 공개 baseline 위에서, 최약 카테고리였던 **주소** 재현율을 릴리스 게이트로
+> 끌어올린다. 근거·계획: [`docs/ROADMAP.md`](docs/ROADMAP.md).
+
+### Added
+- **주소(KR_LOCATION) 정확도 — 규칙 확장 + 모델∪규칙 유니온으로 릴리스 게이트 통과** —
+  v0.1.0 baseline 에서 KR_LOCATION 은 어휘밖 고유지명·도로명·상세주소를 놓쳐 재현율
+  0.79(CI 하한 0.60)에 머물렀다. 이를 세 갈래로 끌어올렸다: (1) 규칙 백엔드의 주소
+  gazetteer 를 시군구·랜드마크·도로명·상세주소로 확장(28→206항, 조사 경계 처리로 무해
+  입력 오탐 제거), (2) 공개 골드셋의 주소 표본을 확장해 Wilson CI 하한이 목표선을 넘도록
+  통계신뢰 확보, (3) 프로덕션 모델(onnx-int8) 출력에 주소 규칙 스팬을 더하는 **유니온**
+  경로(`detect_kr_locations()` + `location_union` 플래그, 환경변수 `M5_LOCATION_UNION`)로
+  모델이 놓친 구조적 주소를 규칙으로 회복. **릴리스 측정 게이트 3조건 전부 통과**: KR_LOCATION
+  Wilson CI 하한 ≥ 0.90(test 0.9417 · dev 0.9124), benign FP 0.0(0/90 · 0/60), 전체 PII
+  precision ~1.0(0.9887 · 0.9885). 전/후 비교·판정 증빙은
+  [`docs/reports/kr-location-gate.md`](docs/reports/kr-location-gate.md)
+  (원본 [`kr-location-gate.json`](docs/reports/kr-location-gate.json)). 유니온 확인 도구
+  `union_check.py --mode location`, 데모 [`scripts/demo_location_union.sh`](scripts/demo_location_union.sh).
+  benign FP 는 (모델 0) ∪ (규칙 0) = 0 으로 유지되며, 프로덕션 모델 미프로비저닝 환경에서는
+  규칙 라이브 하한을 인용(모델 프로비저닝 시 재측정으로 상향 확정). 권위:
+  [`docs/reports/kr-location-error-analysis.md`](docs/reports/kr-location-error-analysis.md).
+
 ## [0.1.0] - 2026-07-02
 
 > **방향 재설정(v0.1.0) 트랙 집계** — 독립 경량 프로젝트로서 **한국어 PII·한국 규제 증빙**에
