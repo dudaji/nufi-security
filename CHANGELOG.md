@@ -4,7 +4,7 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
-## [Unreleased]
+## [0.2.0] - 2026-07-02
 
 > **한국어 PII 정확도 엔진 본편(v0.2.0) 트랙 집계 — 주소(KR_LOCATION) 0.79 → 0.90+** —
 > v0.1.0 이 고정한 공개 baseline 위에서, 최약 카테고리였던 **주소** 재현율을 릴리스 게이트로
