@@ -254,3 +254,27 @@
 {"id": "zz_kr_account_credit-0017", "prompt": "입금 전용 가상계좌 470-7470625-12 로 송금해 주세요.", "expect": ["KR_ACCOUNT"], "spans": [[11, 25, "KR_ACCOUNT"]], "source": "synth"}
 {"id": "zz_kr_account_credit-0018", "prompt": "대출 상환 계좌 5879-76-1030258 잔액을 확인 바랍니다.", "expect": ["KR_ACCOUNT"], "spans": [[9, 24, "KR_ACCOUNT"]], "source": "synth"}
 {"id": "zz_kr_account_credit-0019", "prompt": "환급금 수령 계좌 491-51-2097855 등록 완료했습니다.", "expect": ["KR_ACCOUNT"], "spans": [[10, 24, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0004", "prompt": "사무실 위치 올림픽로 217-28 안내드립니다.", "expect": ["KR_LOCATION"], "spans": [[7, 18, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0006", "prompt": "관할 지역은 강남대로 446번길 39 입니다.", "expect": ["KR_LOCATION"], "spans": [[7, 20, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0008", "prompt": "방문지 반포대로 144-24 확인 부탁드립니다.", "expect": ["KR_LOCATION"], "spans": [[4, 15, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0014", "prompt": "방문지 국회대로 44번길 1 확인 부탁드립니다.", "expect": ["KR_LOCATION"], "spans": [[4, 15, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0017", "prompt": "등기 발송지 통일로 621 기재 바랍니다.", "expect": ["KR_LOCATION"], "spans": [[7, 14, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0018", "prompt": "관할 지역은 새문안로 16번길 41 입니다.", "expect": ["KR_LOCATION"], "spans": [[7, 19, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0019", "prompt": "새 주소는 청계천로 64번지 입니다.", "expect": ["KR_LOCATION"], "spans": [[6, 15, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0020", "prompt": "방문지 불정로 264-7 확인 부탁드립니다.", "expect": ["KR_LOCATION"], "spans": [[4, 13, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0023", "prompt": "등기 발송지 동판교로 21번지 기재 바랍니다.", "expect": ["KR_LOCATION"], "spans": [[7, 16, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0024", "prompt": "관할 지역은 분당수서로 485-29 입니다.", "expect": ["KR_LOCATION"], "spans": [[7, 19, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0025", "prompt": "새 주소는 101동 203호 입니다.", "expect": ["KR_LOCATION"], "spans": [[6, 15, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0028", "prompt": "사무실 위치 지하 1층 12호 안내드립니다.", "expect": ["KR_LOCATION"], "spans": [[7, 16, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0036", "prompt": "관할 지역은 12층 1204호 입니다.", "expect": ["KR_LOCATION"], "spans": [[7, 16, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0039", "prompt": "택배 수령지 김해시 등록했습니다.", "expect": ["KR_LOCATION"], "spans": [[7, 10, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0041", "prompt": "등기 발송지 포항시 기재 바랍니다.", "expect": ["KR_LOCATION"], "spans": [[7, 10, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0043", "prompt": "새 주소는 전주시 입니다.", "expect": ["KR_LOCATION"], "spans": [[6, 9, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0045", "prompt": "택배 수령지 서귀포시 등록했습니다.", "expect": ["KR_LOCATION"], "spans": [[7, 11, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0047", "prompt": "등기 발송지 양평군 기재 바랍니다.", "expect": ["KR_LOCATION"], "spans": [[7, 10, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0048", "prompt": "관할 지역은 완도군 입니다.", "expect": ["KR_LOCATION"], "spans": [[7, 10, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0049", "prompt": "새 주소는 울릉군 입니다.", "expect": ["KR_LOCATION"], "spans": [[6, 9, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0050", "prompt": "방문지 송파구 확인 부탁드립니다.", "expect": ["KR_LOCATION"], "spans": [[4, 7, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0054", "prompt": "관할 지역은 유성구 입니다.", "expect": ["KR_LOCATION"], "spans": [[7, 10, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0055", "prompt": "새 주소는 고양시 덕양구 입니다.", "expect": ["KR_LOCATION"], "spans": [[6, 13, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0057", "prompt": "택배 수령지 성남시 수정구 등록했습니다.", "expect": ["KR_LOCATION"], "spans": [[7, 14, "KR_LOCATION"]], "source": "synth"}

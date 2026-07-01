@@ -3,8 +3,8 @@
   "seed": 20260625,
   "source": "synth",
   "license": "CC0-1.0",
-  "total": 640,
-  "positives": 490,
+  "total": 702,
+  "positives": 552,
   "negatives": 150,
   "class_counts": {
     "KR_RRN": 30,
@@ -21,10 +21,11 @@
     "SECRET": 40,
     "benign_hard": 30,
     "benign": 120,
-    "zz_kr_account_credit": 20
+    "zz_kr_account_credit": 20,
+    "zz_kr_location_addr": 62
   },
-  "dev_size": 256,
-  "test_size": 384,
+  "dev_size": 280,
+  "test_size": 422,
   "must_classes": [
     "KR_RRN",
     "KR_FOREIGNER_REG",
@@ -75,6 +76,6 @@
     "test_pct": 0.6,
     "stratified": true
   },
-  "content_hash": "sha256:c0c136168037e7acb5346aef580c69c87001f9d8b4e848d49c5a81858df8b5fc",
+  "content_hash": "sha256:9da6e5bf2905893c77614f04016c759e12420d5dda38c25b51cc2c2e087296d4",
   "note": "test 셋은 튜닝 중 열람 금지(누수 방지). person_unlisted_ratio ≥ 0.5 보장. content_hash 로 결정적 재현 검증(goldset/generate.py --verify)."
 }

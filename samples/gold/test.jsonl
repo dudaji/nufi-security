@@ -382,3 +382,41 @@
 {"id": "zz_kr_account_credit-0015", "prompt": "환급금 수령 계좌 160-11-5419564 등록 완료했습니다.", "expect": ["KR_ACCOUNT"], "spans": [[10, 24, "KR_ACCOUNT"]], "source": "synth"}
 {"id": "zz_kr_account_credit-0016", "prompt": "카드대금 자동이체 계좌 042-1857245-55 로 설정했어요.", "expect": ["KR_ACCOUNT"], "spans": [[13, 27, "KR_ACCOUNT"]], "source": "synth"}
 {"id": "zz_kr_account_credit-0020", "prompt": "카드대금 자동이체 계좌 924-4401307-28 로 설정했어요.", "expect": ["KR_ACCOUNT"], "spans": [[13, 27, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0001", "prompt": "새 주소는 테헤란로 366 입니다.", "expect": ["KR_LOCATION"], "spans": [[6, 14, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0002", "prompt": "방문지 세종대로 155번길 23 확인 부탁드립니다.", "expect": ["KR_LOCATION"], "spans": [[4, 17, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0003", "prompt": "택배 수령지 봉은사로 34번지 등록했습니다.", "expect": ["KR_LOCATION"], "spans": [[7, 16, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0005", "prompt": "등기 발송지 언주로 371 기재 바랍니다.", "expect": ["KR_LOCATION"], "spans": [[7, 14, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0007", "prompt": "새 주소는 서초대로 78번지 입니다.", "expect": ["KR_LOCATION"], "spans": [[6, 15, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0009", "prompt": "택배 수령지 가락로 386 등록했습니다.", "expect": ["KR_LOCATION"], "spans": [[7, 14, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0010", "prompt": "사무실 위치 양재대로 127번길 34 안내드립니다.", "expect": ["KR_LOCATION"], "spans": [[7, 20, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0011", "prompt": "등기 발송지 위례성대로 77번지 기재 바랍니다.", "expect": ["KR_LOCATION"], "spans": [[7, 17, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0012", "prompt": "관할 지역은 송파대로 117-7 입니다.", "expect": ["KR_LOCATION"], "spans": [[7, 17, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0013", "prompt": "새 주소는 여의대로 501 입니다.", "expect": ["KR_LOCATION"], "spans": [[6, 14, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0015", "prompt": "택배 수령지 월드컵로 91번지 등록했습니다.", "expect": ["KR_LOCATION"], "spans": [[7, 16, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0016", "prompt": "사무실 위치 성산로 91-22 안내드립니다.", "expect": ["KR_LOCATION"], "spans": [[7, 16, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0021", "prompt": "택배 수령지 판교로 31 등록했습니다.", "expect": ["KR_LOCATION"], "spans": [[7, 13, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0022", "prompt": "사무실 위치 백현로 318번길 35 안내드립니다.", "expect": ["KR_LOCATION"], "spans": [[7, 19, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0026", "prompt": "방문지 205동 1503호 확인 부탁드립니다.", "expect": ["KR_LOCATION"], "spans": [[4, 14, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0027", "prompt": "택배 수령지 3층 402호 등록했습니다.", "expect": ["KR_LOCATION"], "spans": [[7, 14, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0029", "prompt": "등기 발송지 107동 902호 기재 바랍니다.", "expect": ["KR_LOCATION"], "spans": [[7, 16, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0030", "prompt": "관할 지역은 5층 501호 입니다.", "expect": ["KR_LOCATION"], "spans": [[7, 14, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0031", "prompt": "새 주소는 지하 2층 3호 입니다.", "expect": ["KR_LOCATION"], "spans": [[6, 14, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0032", "prompt": "방문지 110동 1801호 확인 부탁드립니다.", "expect": ["KR_LOCATION"], "spans": [[4, 14, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0033", "prompt": "택배 수령지 2층 210호 등록했습니다.", "expect": ["KR_LOCATION"], "spans": [[7, 14, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0034", "prompt": "사무실 위치 303동 604호 안내드립니다.", "expect": ["KR_LOCATION"], "spans": [[7, 16, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0035", "prompt": "등기 발송지 지하 1층 8호 기재 바랍니다.", "expect": ["KR_LOCATION"], "spans": [[7, 15, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0037", "prompt": "새 주소는 108동 지하 2호 입니다.", "expect": ["KR_LOCATION"], "spans": [[6, 16, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0038", "prompt": "방문지 7층 703호 확인 부탁드립니다.", "expect": ["KR_LOCATION"], "spans": [[4, 11, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0040", "prompt": "사무실 위치 여수시 안내드립니다.", "expect": ["KR_LOCATION"], "spans": [[7, 10, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0042", "prompt": "관할 지역은 천안시 입니다.", "expect": ["KR_LOCATION"], "spans": [[7, 10, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0044", "prompt": "방문지 제주시 확인 부탁드립니다.", "expect": ["KR_LOCATION"], "spans": [[4, 7, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0046", "prompt": "사무실 위치 가평군 안내드립니다.", "expect": ["KR_LOCATION"], "spans": [[7, 10, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0051", "prompt": "택배 수령지 마포구 등록했습니다.", "expect": ["KR_LOCATION"], "spans": [[7, 10, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0052", "prompt": "사무실 위치 해운대구 안내드립니다.", "expect": ["KR_LOCATION"], "spans": [[7, 11, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0053", "prompt": "등기 발송지 수성구 기재 바랍니다.", "expect": ["KR_LOCATION"], "spans": [[7, 10, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0056", "prompt": "방문지 안양시 동안구 확인 부탁드립니다.", "expect": ["KR_LOCATION"], "spans": [[4, 11, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0058", "prompt": "사무실 위치 용인시 처인구 안내드립니다.", "expect": ["KR_LOCATION"], "spans": [[7, 14, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0059", "prompt": "등기 발송지 수원시 팔달구 기재 바랍니다.", "expect": ["KR_LOCATION"], "spans": [[7, 14, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0060", "prompt": "관할 지역은 창원시 성산구 입니다.", "expect": ["KR_LOCATION"], "spans": [[7, 14, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0061", "prompt": "새 주소는 청주시 상당구 입니다.", "expect": ["KR_LOCATION"], "spans": [[6, 13, "KR_LOCATION"]], "source": "synth"}
+{"id": "zz_kr_location_addr-0062", "prompt": "방문지 천안시 서북구 확인 부탁드립니다.", "expect": ["KR_LOCATION"], "spans": [[4, 11, "KR_LOCATION"]], "source": "synth"}

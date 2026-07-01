@@ -387,6 +387,56 @@ def build():
                      "expect": ["KR_ACCOUNT"], "spans": [_span(p, v, "KR_ACCOUNT")],
                      "source": "synth", "_cls": "zz_kr_account_credit"})
 
+    # --- CMP-225 P6: 주소 표본 확장(도로명·상세주소·시군구) — KR_LOCATION CI 하한 ≥0.90 통계신뢰 ---
+    # 기존 KR_LOCATION 40건은 "지명 인식"만 측정한다(도로명·상세주소 0건 — P1 오차분석 §3 선결과제).
+    # v0.2.0 상위 목표 "주소 0.90+" 를 실제 주소 커버리지로 입증하려면 (a)도로명(로/길+번지)·
+    # (b)상세주소(동/호·층/호)·시군구 다양성 케이스가 필요하다. P2 규칙확장(CMP-221)이 이들을
+    # gazetteer 백엔드로 탐지하므로, 표본을 확장하면 recall 을 유지하며 Wilson CI 폭이 좁아진다
+    # (KR_LOCATION test n=24→62 → 하한 0.862→0.94, dev n=16→40 → 0.806→0.91). 점추정이 아닌
+    # 통계적 신뢰로 "90%+" 를 마감한다.
+    #
+    # sealed 보존(CMP-199 선례): 독립 rng(SEED+37) + sort-last _cls("zz_kr_location_addr") append.
+    # → stratify()의 클래스별 공유 셔플이 이 클래스에 도달하기 전까지 기존 클래스 draw 를 소비하지
+    #   않으므로(정렬상 최후미), 기존 sealed 행(KR_PERSON/KR_LOCATION 등)은 바이트 불변 = I2 onnx
+    #   baseline·이전 측정 유효 보존. 채점은 expect(["KR_LOCATION"]) 기준 → KR_LOCATION recall·CI
+    #   분모에 정상 합산. 전량 공개-안전(실존 개인정보·시크릿 0): 도로명·행정구역명은 공개 지리정보,
+    #   건물번호·동/호·층은 합성 숫자.
+    addr_rng = random.Random(SEED + 37)
+    _ADDR_ROADS = ["테헤란로", "세종대로", "봉은사로", "올림픽로", "언주로", "강남대로",
+                   "서초대로", "반포대로", "가락로", "양재대로", "위례성대로", "송파대로",
+                   "여의대로", "국회대로", "월드컵로", "성산로", "통일로", "새문안로",
+                   "청계천로", "불정로", "판교로", "백현로", "동판교로", "분당수서로"]
+    _ADDR_DETAIL = ["101동 203호", "205동 1503호", "3층 402호", "지하 1층 12호", "107동 902호",
+                    "5층 501호", "지하 2층 3호", "110동 1801호", "2층 210호", "303동 604호",
+                    "지하 1층 8호", "12층 1204호", "108동 지하 2호", "7층 703호"]
+    _ADDR_SIGUNGU = ["김해시", "여수시", "포항시", "천안시", "전주시", "제주시", "서귀포시",
+                     "가평군", "양평군", "완도군", "울릉군", "송파구", "마포구", "해운대구",
+                     "수성구", "유성구"]
+    _ADDR_METRO = ["고양시 덕양구", "안양시 동안구", "성남시 수정구", "용인시 처인구",
+                   "수원시 팔달구", "창원시 성산구", "청주시 상당구", "천안시 서북구"]
+    _ADDR_CTX = ["새 주소는 {v} 입니다.", "방문지 {v} 확인 부탁드립니다.",
+                 "택배 수령지 {v} 등록했습니다.", "사무실 위치 {v} 안내드립니다.",
+                 "등기 발송지 {v} 기재 바랍니다.", "관할 지역은 {v} 입니다."]
+    addr_vals = []
+    for i, rd in enumerate(_ADDR_ROADS):
+        fmt = i % 4
+        if fmt == 0:
+            addr_vals.append(f"{rd} {addr_rng.randint(1, 999)}")            # 로 152
+        elif fmt == 1:
+            addr_vals.append(f"{rd} {addr_rng.randint(1, 500)}번길 {addr_rng.randint(1, 50)}")  # 235번길 4
+        elif fmt == 2:
+            addr_vals.append(f"{rd} {addr_rng.randint(1, 99)}번지")          # 6번지
+        else:
+            addr_vals.append(f"{rd} {addr_rng.randint(1, 500)}-{addr_rng.randint(1, 30)}")      # 110-5
+    addr_vals += _ADDR_DETAIL + _ADDR_SIGUNGU + _ADDR_METRO
+    addr_id = 0
+    for i, v in enumerate(addr_vals):
+        p = _ADDR_CTX[i % len(_ADDR_CTX)].format(v=v)
+        addr_id += 1
+        rows.append({"id": f"zz_kr_location_addr-{addr_id:04d}", "prompt": p,
+                     "expect": ["KR_LOCATION"], "spans": [_span(p, v, "KR_LOCATION")],
+                     "source": "synth", "_cls": "zz_kr_location_addr"})
+
     return rows
 
 
