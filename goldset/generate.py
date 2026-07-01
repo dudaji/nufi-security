@@ -154,6 +154,21 @@ def make_account(rng):
     return rng.choice([f"{g(3)}-{g(6)}-{g(5)}", f"{g(6)}-{g(2)}-{g(6)}", f"{g(4)}-{g(4)}-{g(4)}"])
 
 
+def make_credit_account(rng):
+    """CMP-199 I3 — 7~8자리 세그먼트 계좌(개인신용정보 계좌 신호).
+
+    구 KR_ACCOUNT({2,6})가 놓친 실포맷: 신한 3-7-2, 4-2-7/3-2-7 입금전용 가상계좌.
+    확장 규칙({2,8})만 잡으므로, 이 표본은 규칙 확장을 실측으로 검증한다(회귀 가드).
+    """
+    g = lambda n: "".join(str(rng.randint(0, 9)) for _ in range(n))
+    return rng.choice([
+        f"{g(3)}-{g(7)}-{g(2)}",   # 신한 3-7-2 표준 포맷
+        f"{g(4)}-{g(2)}-{g(7)}",   # 4-2-7 가상계좌(입금전용)
+        f"{g(3)}-{g(2)}-{g(7)}",   # 3-2-7 가상계좌
+        f"{g(3)}-{g(8)}-{g(2)}",   # 3-8-2 (8자리 세그먼트)
+    ])
+
+
 # --------------------------------------------------------------------------- SECRET 생성기 (패턴 매칭)
 def make_secret(rng):
     b62 = lambda n: "".join(rng.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789") for _ in range(n))
@@ -315,6 +330,27 @@ def build():
             tag = "benign"
         add(p, [], [], tag)
         bn += 1
+
+    # --- CMP-199 I3: 개인신용정보 계좌 표본(7~8자리 세그먼트) — 규칙 확장 검증 ---
+    # 독립 rng(SEED+29) + sort-last _cls("zz_kr_account_credit") 로 append.
+    # → stratify()의 클래스별 공유 셔플이 기존(우선정렬) 클래스에 도달하기 전까지 소비되므로,
+    #   기존 sealed test 행(KR_PERSON/KR_LOCATION 등)은 바이트 불변 = I2 onnx baseline 유효 보존.
+    # 채점은 expect(=["KR_ACCOUNT"]) 기준 → KR_ACCOUNT recall 분모에 정상 합산.
+    ca_rng = random.Random(SEED + 29)
+    ca_ctx = [
+        "입금 전용 가상계좌 {v} 로 송금해 주세요.",
+        "대출 상환 계좌 {v} 잔액을 확인 바랍니다.",
+        "환급금 수령 계좌 {v} 등록 완료했습니다.",
+        "카드대금 자동이체 계좌 {v} 로 설정했어요.",
+    ]
+    ca_id = 0
+    for _ in range(20):
+        v = make_credit_account(ca_rng)
+        p = ca_ctx[ca_id % len(ca_ctx)].format(v=v)
+        ca_id += 1
+        rows.append({"id": f"zz_kr_account_credit-{ca_id:04d}", "prompt": p,
+                     "expect": ["KR_ACCOUNT"], "spans": [_span(p, v, "KR_ACCOUNT")],
+                     "source": "synth", "_cls": "zz_kr_account_credit"})
 
     return rows
 

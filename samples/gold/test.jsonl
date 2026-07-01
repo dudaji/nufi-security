@@ -370,3 +370,15 @@
 {"id": "benign_hard-0601", "prompt": "도서 ISBN 978-89-12345-67-8 주문.", "expect": [], "spans": [], "source": "synth"}
 {"id": "benign_hard-0611", "prompt": "포인트 적립 9001011234560 조회 (영수증 번호).", "expect": [], "spans": [], "source": "synth"}
 {"id": "benign_hard-0616", "prompt": "프로젝트 마일스톤 M5 일정 공유.", "expect": [], "spans": [], "source": "synth"}
+{"id": "zz_kr_account_credit-0001", "prompt": "입금 전용 가상계좌 267-57-3011140 로 송금해 주세요.", "expect": ["KR_ACCOUNT"], "spans": [[11, 25, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0002", "prompt": "대출 상환 계좌 011-8078624-43 잔액을 확인 바랍니다.", "expect": ["KR_ACCOUNT"], "spans": [[9, 23, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0003", "prompt": "환급금 수령 계좌 0384-03-9769655 등록 완료했습니다.", "expect": ["KR_ACCOUNT"], "spans": [[10, 25, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0004", "prompt": "카드대금 자동이체 계좌 2602-09-6360761 로 설정했어요.", "expect": ["KR_ACCOUNT"], "spans": [[13, 28, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0006", "prompt": "대출 상환 계좌 2591-38-5976591 잔액을 확인 바랍니다.", "expect": ["KR_ACCOUNT"], "spans": [[9, 24, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0008", "prompt": "카드대금 자동이체 계좌 342-87288825-26 로 설정했어요.", "expect": ["KR_ACCOUNT"], "spans": [[13, 28, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0009", "prompt": "입금 전용 가상계좌 945-46-2295122 로 송금해 주세요.", "expect": ["KR_ACCOUNT"], "spans": [[11, 25, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0011", "prompt": "환급금 수령 계좌 5502-85-1904823 등록 완료했습니다.", "expect": ["KR_ACCOUNT"], "spans": [[10, 25, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0014", "prompt": "대출 상환 계좌 434-82615628-78 잔액을 확인 바랍니다.", "expect": ["KR_ACCOUNT"], "spans": [[9, 24, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0015", "prompt": "환급금 수령 계좌 160-11-5419564 등록 완료했습니다.", "expect": ["KR_ACCOUNT"], "spans": [[10, 24, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0016", "prompt": "카드대금 자동이체 계좌 042-1857245-55 로 설정했어요.", "expect": ["KR_ACCOUNT"], "spans": [[13, 27, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0020", "prompt": "카드대금 자동이체 계좌 924-4401307-28 로 설정했어요.", "expect": ["KR_ACCOUNT"], "spans": [[13, 27, "KR_ACCOUNT"]], "source": "synth"}

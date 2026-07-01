@@ -246,3 +246,11 @@
 {"id": "benign_hard-0576", "prompt": "분기 매출은 전년 대비 12.5% 증가했습니다.", "expect": [], "spans": [], "source": "synth"}
 {"id": "benign_hard-0581", "prompt": "운송장 1234-5678-9012 배송 조회.", "expect": [], "spans": [], "source": "synth"}
 {"id": "benign_hard-0606", "prompt": "택배 박스 규격 350x250x120 으로 포장해줘.", "expect": [], "spans": [], "source": "synth"}
+{"id": "zz_kr_account_credit-0005", "prompt": "입금 전용 가상계좌 9840-30-9250792 로 송금해 주세요.", "expect": ["KR_ACCOUNT"], "spans": [[11, 26, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0007", "prompt": "환급금 수령 계좌 155-08752853-77 등록 완료했습니다.", "expect": ["KR_ACCOUNT"], "spans": [[10, 25, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0010", "prompt": "대출 상환 계좌 626-8720592-01 잔액을 확인 바랍니다.", "expect": ["KR_ACCOUNT"], "spans": [[9, 23, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0012", "prompt": "카드대금 자동이체 계좌 002-1198978-03 로 설정했어요.", "expect": ["KR_ACCOUNT"], "spans": [[13, 27, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0013", "prompt": "입금 전용 가상계좌 8935-42-7639188 로 송금해 주세요.", "expect": ["KR_ACCOUNT"], "spans": [[11, 26, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0017", "prompt": "입금 전용 가상계좌 470-7470625-12 로 송금해 주세요.", "expect": ["KR_ACCOUNT"], "spans": [[11, 25, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0018", "prompt": "대출 상환 계좌 5879-76-1030258 잔액을 확인 바랍니다.", "expect": ["KR_ACCOUNT"], "spans": [[9, 24, "KR_ACCOUNT"]], "source": "synth"}
+{"id": "zz_kr_account_credit-0019", "prompt": "환급금 수령 계좌 491-51-2097855 등록 완료했습니다.", "expect": ["KR_ACCOUNT"], "spans": [[10, 24, "KR_ACCOUNT"]], "source": "synth"}
