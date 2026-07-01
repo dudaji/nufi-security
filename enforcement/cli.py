@@ -16,6 +16,7 @@
   dashboard 감사 가시성 대시보드 기동(read-only 데이터소스 HTTP 서버 · CMP-158).
   policy    정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사(CMP-144 B1).
   report    기간별 SLA·규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음 · CMP-150 C1).
+  benchmark 정확도(커밋 산출물 게이트) + 가명화 품질(라이브) 벤치마크 단일 재현(CMP-201 I5).
 
 설치형 진입점(pyproject.toml console_scripts): ``pip install -e .`` 후 ``nufi-egress``
 (별칭 ``nufi``) 로 PATH 에서 직접 실행. 레거시 ``python3 -m enforcement.cli`` 동치 유지.
@@ -559,6 +560,22 @@ def cmd_report(args) -> int:
     return 2
 
 
+def cmd_benchmark(args) -> int:
+    # 정확도(커밋 측정 산출물 게이트) + 가명화(라이브 하니스)를 단일 명령으로 재현.
+    # 모델 재실행 없음: 정확도는 봉인 골드셋 측정 JSON 을 목표선에 대조, 가명화는 결정적 하니스.
+    from enforcement import benchmark as _bench
+    report = _bench.run_benchmarks(only=getattr(args, "only", None))
+    if getattr(args, "json", False):
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+    else:
+        print(_bench.render(report))
+    if getattr(args, "json_out", None):
+        Path(args.json_out).write_text(
+            json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # 게이트 판정: 전체 PASS 면 0, 하나라도 미달이면 1(CI/데모/제출 게이트).
+    return 0 if report["overall_pass"] else 1
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(prog="nufi-egress",
                                  description="NuFi Egress Enforcement CLI")
@@ -796,6 +813,17 @@ def main(argv: Optional[List[str]] = None) -> int:
                     help="출력 형식(기본 md)")
     rp.add_argument("--out", default=None, help="출력 파일 경로(생략 시 stdout)")
     rp.set_defaults(func=cmd_report)
+
+    p = sub.add_parser("benchmark",
+                       help="정확도(커밋 산출물 게이트)+가명화(라이브) 벤치마크 단일 재현 "
+                            "— 전체 PASS 시 exit 0, 미달 시 1")
+    p.add_argument("--only", choices=["accuracy", "pseudonymize"], default=None,
+                   help="한 축만 실행(기본: 둘 다)")
+    p.add_argument("--json", action="store_true",
+                   help="사람 친화 요약 대신 원시 JSON 리포트 출력")
+    p.add_argument("--json-out", default=None,
+                   help="JSON 리포트를 파일로도 기록(경로)")
+    p.set_defaults(func=cmd_benchmark)
 
     args = ap.parse_args(argv)
     return args.func(args)

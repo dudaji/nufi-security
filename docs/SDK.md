@@ -136,6 +136,40 @@ assert model["integrity"]["ok"] is True
 - **종료코드 의미 보존:** 무결성 게이트(0 정상 / 1 변조)는 CLI 와 동일하게 모델 안에
   표현하며, 커버리지는 정보성으로 비-0 을 만들지 않는다([REPORTING.md](REPORTING.md) §3 권위).
 
+### 2.6 벤치마크 재현 (Accuracy + Pseudonymization benchmark)
+
+> §2.1–2.5 는 `nufi` 파사드 **설계**(미구현)지만, 본 벤치마크 표면은 **이미 구현·출하**되어
+> 있다(`enforcement.benchmark`, advanced 계층). 파사드가 나중에 재노출할 수 있다.
+
+정확도 게이트(봉인 골드셋 측정 산출물 대조, 모델 재실행 없음)와 가명화 품질 하니스(라이브,
+결정적)를 **한 함수**로 재현한다. CLI `nufi-egress benchmark` 와 동일 결과를 반환한다.
+
+```python
+from enforcement.benchmark import (run_benchmarks, evaluate_accuracy_gate,
+                                   run_pseudonymize_benchmark)
+
+# 한 번에 — 정확도 게이트 + 가명화 품질(전부 결정적, 외부호출 0)
+report = run_benchmarks()                 # only=None → 둘 다
+assert report["overall_pass"] is True     # 게이트 판정(CLI exit 0 과 동치)
+
+# 축 선택
+acc = run_benchmarks(only="accuracy")     # 커밋 측정 JSON → 게이트 대조(모델 불필요)
+ps  = run_benchmarks(only="pseudonymize") # 가역/비가역 하니스 라이브 재실행
+
+# 저수준 — 게이트/하니스 개별 호출
+gate = evaluate_accuracy_gate()           # {gates:[...], baseline_informational, pass}
+quality = run_pseudonymize_benchmark()    # {scores, acceptance, acceptance_pass}
+```
+
+- `run_benchmarks(only=None)` = 정확도(`evaluate_accuracy_gate`) + 가명화
+  (`run_pseudonymize_benchmark`) 통합 리포트. `overall_pass` 는 CLI 종료코드(0/1)와 동치.
+- **정확도 게이트**: KR_PERSON Wilson CI 하한 ≥ 0.85, 온프렘 p95(c≤2) ≤ 목표. I1 공개
+  골드셋 baseline 은 정보성(게이트 미산입). 산출물 누락 시 해당 게이트 fail + `missing` 기록.
+- **가명화 하니스**: `scripts/bench_pseudonymize.run_all()` 재사용 — 충돌율 0·결정성·원복
+  정확·차단 유지 불변식. 실고객 데이터 0(전량 합성).
+- 실제 정확도 **재측정**(모델 스택 필요)은 `scripts/export_onnx_int8.py` +
+  `scripts/bench_m5.py` 경로(벤치마크 진입점은 커밋된 측정 증거를 대조만 한다).
+
 ---
 
 ## 3. CLI ↔ SDK 동등 매핑
@@ -147,6 +181,7 @@ assert model["integrity"]["ok"] is True
 | `nufi-egress` 집행 결정 | `Guard().inspect(text)` | 탐지+정책 평가 |
 | `nufi-egress report compliance` | `compliance_report(...)` + `render_report(...)` | 증빙 리포트 |
 | `nufi-egress report sla` | `build_sla_report(...)` (advanced 계층) | 운영 리포트 |
+| `nufi-egress benchmark` | `run_benchmarks(only=None)` (구현·출하) | 정확도+가명화 벤치마크 재현 |
 
 > 운영(SLA/대시보드/멀티테넌시)은 ROADMAP §3 에서 제외 대상이다. SDK 는 해당 함수를
 > **advanced 계층**으로 남겨 두되 신규 표면을 추가하지 않는다.

@@ -40,6 +40,16 @@
   `demo_all` 러너 등록 + [`docs/DEMO.md`](docs/DEMO.md) 카탈로그. 기계식 불변식(충돌 0·결정성·
   원복 정확·차단 유지) 미달 시 하니스 비-0 종료. 새 런타임 동작 변경 없음 — 기존 표면 측정.
   권위: [`docs/PRESETS.md`](docs/PRESETS.md).
+- **정확도·가명화 벤치마크 단일 진입점 — `nufi-egress benchmark` (CLI) + `run_benchmarks` (SDK)** —
+  흩어져 있던 두 벤치마크를 **한 명령/한 함수**로 묶어 재현한다. 정확도는 봉인 골드셋 측정
+  산출물(커밋된 JSON 증거)을 게이트 목표선(KR_PERSON Wilson CI 하한 ≥ 0.85 · 온프렘 p95
+  c≤2 ≤ 목표)에 대조하고(모델 재실행 없음, I1 공개 골드셋 baseline 은 정보성), 가명화는
+  품질 하니스를 라이브로 재실행(가역/비가역 불변식). `--only accuracy|pseudonymize` 축 선택,
+  `--json`/`--json-out` 리포트 산출, 전체 PASS 시 exit 0·미달 시 1(CI/제출 게이트). SDK 표면
+  `enforcement.benchmark.run_benchmarks / evaluate_accuracy_gate / run_pseudonymize_benchmark`
+  ([`docs/SDK.md`](docs/SDK.md) §2.6·§3 문서화). 데모 [`scripts/demo_accuracy.sh`](scripts/demo_accuracy.sh)
+  에 단일 명령 재현 섹션(B) 추가 — 정확도 커밋 JSON + 가명화 하니스 동시 PASS 게이트.
+  새 측정 알고리즘 없음 — 기존 두 벤치마크의 진입점 통합. 권위: [`docs/SDK.md`](docs/SDK.md).
 
 ### Changed
 - **운영(ops) 레이어 제외 — 정체성 전환을 문서에서 참으로** — 멀티테넌시/RBAC·SLA·대시보드를

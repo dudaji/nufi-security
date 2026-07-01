@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# NuFi 정확도 재현 데모 — KR_PERSON INT8 정확도 + 온프렘 p95
+# NuFi 정확도 재현 데모 — KR_PERSON INT8 정확도 + 온프렘 p95 + 단일 명령 벤치마크(I5)
 #
 # M6 정확도 부채(세 버전 이연)의 두 산출물을 **재현·검증**한다:
 #   A1  KR_PERSON 신뢰구간   → per-channel INT8 양자화로 Wilson CI 하한 ≥ 0.85
@@ -125,6 +125,19 @@ line("KR_LOCATION", "KR_LOCATION", 0.85)
 sys.exit(0)
 PYEOF
 echo "    (KR_PERSON CI 하한·KR_LOCATION 목표 미달은 I3/I4 코어 개선 추적 — §5 게이트 확정 입력)"
+
+# --- B: 단일 명령 벤치마크 (I5) — 정확도 게이트 + 가명화 품질 --------------
+# 정확도(I2 커밋 측정 JSON 게이트)와 가명화 품질(I4 하니스 라이브)을 한 명령으로 재현.
+# 흩어진 두 벤치마크를 SDK/CLI 단일 진입점(`nufi-egress benchmark`)으로 노출한 검증.
+echo ""
+echo "B — 단일 명령 재현: nufi-egress benchmark (정확도 I2 커밋 JSON + 가명화 I4 하니스)"
+if $PY -m enforcement.cli benchmark >/tmp/nufi_benchmark_demo.log 2>&1; then
+  ok "B 단일 명령 벤치마크 PASS(exit0) — 정확도 게이트 + 가명화 품질 동시 재현"
+  sed -n 's/^/    /p' /tmp/nufi_benchmark_demo.log | grep -E '\[(PASS|FAIL)\]' || true
+else
+  bad "B 단일 명령 벤치마크 FAIL — 로그: /tmp/nufi_benchmark_demo.log"
+  sed -n 's/^/    /p' /tmp/nufi_benchmark_demo.log | tail -12
+fi
 
 echo "------------------------------------------------------------"
 echo "요약: $((PASS+FAIL))개 항목 중 ${PASS} PASS, ${FAIL} FAIL"
