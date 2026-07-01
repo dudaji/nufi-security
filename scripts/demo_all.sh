@@ -67,8 +67,8 @@ run_demo demo_pseudonymize.sh     "가명화 품질(가역/비가역 지표·충
 run_demo demo_audit_separation.sh "차등 감사(분리 저장 + 우회 탭 + 비동기 봇)"
 
 # 정확도 데모는 커밋된 측정 산출물(docs/reports/*.json)이 있어야 재현 가능하다.
-if [ -f "$ROOT/docs/reports/CMP-145-recall-int8.json" ] \
-   && [ -f "$ROOT/docs/reports/CMP-123-load-p95.json" ]; then
+if [ -f "$ROOT/docs/reports/recall-int8.json" ] \
+   && [ -f "$ROOT/docs/reports/load-p95.json" ]; then
   run_demo demo_accuracy.sh       "정확도 재현(KR_PERSON INT8 CI + 온프렘 p95)"
 else
   skip_demo demo_accuracy.sh "측정 산출물 부재 — 모델 스택으로 재측정 필요(헤더 참조)"

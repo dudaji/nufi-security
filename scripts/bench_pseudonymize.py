@@ -27,7 +27,7 @@
 
 실행:
   python3 scripts/bench_pseudonymize.py                      # 리포트 stdout
-  python3 scripts/bench_pseudonymize.py --json-out docs/reports/CMP-200-pseudonymize-quality.json
+  python3 scripts/bench_pseudonymize.py --json-out docs/reports/pseudonymize-quality.json
 종료코드: 기계식 불변식(충돌 0 · 결정성 · 원복 정확 · 차단 유지) 미달 시 1, 아니면 0.
 """
 from __future__ import annotations

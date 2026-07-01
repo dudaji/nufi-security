@@ -13,9 +13,9 @@
 #
 # A1/A2 는 v0.0.5 봉인 골드셋(KR_PERSON 126) 측정 증거를 재생한다(게이트).
 # A3 는 I1 공개 골드셋(samples/gold, test n=372) 현행 baseline 을 **정보성**으로 표시한다
-#   (docs/reports/CMP-198-baseline-int8.json — onnx-int8 실측). PASS/FAIL 미산입.
+#   (docs/reports/baseline-int8.json — onnx-int8 실측). PASS/FAIL 미산입.
 #   I1 baseline 재측정: PYTHONPATH=~/.cache/m5_libs python3 scripts/bench_m5.py \
-#     --backend onnx-int8 --split test --no-latency --json-out docs/reports/CMP-198-baseline-int8.json
+#     --backend onnx-int8 --split test --no-latency --json-out docs/reports/baseline-int8.json
 #
 # 사용: ./scripts/demo_accuracy.sh
 # 매뉴얼: docs/history/DEMO_v0.0.5.md · 측정 스택: docs/M5_MEASUREMENT_REPORT.md
@@ -26,8 +26,8 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 PY="${PYTHON:-python3}"
 
-RECALL_REPORT="docs/reports/CMP-145-recall-int8.json"   # per-channel INT8(활성) recall
-P95_REPORT="docs/reports/CMP-123-load-p95.json"         # INT8 부하 p95(동시성 sweep)
+RECALL_REPORT="docs/reports/recall-int8.json"   # per-channel INT8(활성) recall
+P95_REPORT="docs/reports/load-p95.json"         # INT8 부하 p95(동시성 sweep)
 PERSON_CI_FLOOR_TARGET="0.85"
 
 PASS=0 ; FAIL=0
@@ -99,7 +99,7 @@ else
 fi
 
 # --- A3: I1 공개 골드셋 현행 baseline (정보성, 게이트 아님) -------------------
-I1_BASELINE="docs/reports/CMP-198-baseline-int8.json"
+I1_BASELINE="docs/reports/baseline-int8.json"
 echo ""
 echo "A3 — I1 공개 골드셋 baseline (samples/gold test n=372) · 정보성(PASS/FAIL 미산입)"
 $PY - "$I1_BASELINE" <<'PYEOF'

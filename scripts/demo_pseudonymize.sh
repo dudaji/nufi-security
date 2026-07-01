@@ -10,14 +10,14 @@
 # 무거운 모델 스택 없이 실행(gazetteer NER + 합성 코퍼스). root 불필요·외부 호출 0·결정적.
 #
 # 사용:   ./scripts/demo_pseudonymize.sh
-# 하니스: scripts/bench_pseudonymize.py · 리포트 자산: docs/reports/CMP-200-pseudonymize-quality.json
-# 재측정: python3 scripts/bench_pseudonymize.py --json-out docs/reports/CMP-200-pseudonymize-quality.json
+# 하니스: scripts/bench_pseudonymize.py · 리포트 자산: docs/reports/pseudonymize-quality.json
+# 재측정: python3 scripts/bench_pseudonymize.py --json-out docs/reports/pseudonymize-quality.json
 # =============================================================================
 set -uo pipefail
 cd "$(dirname "$0")/.."
 PY="${PYTHON:-python3}"
 
-REPORT="docs/reports/CMP-200-pseudonymize-quality.json"
+REPORT="docs/reports/pseudonymize-quality.json"
 PASS=0 ; FAIL=0
 ok()  { echo "  [PASS] $1" ; PASS=$((PASS+1)) ; }
 bad() { echo "  [FAIL] $1" ; FAIL=$((FAIL+1)) ; }

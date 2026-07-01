@@ -15,7 +15,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import bench_pseudonymize as B  # noqa: E402
 
-REPORT = ROOT / "docs" / "reports" / "CMP-200-pseudonymize-quality.json"
+REPORT = ROOT / "docs" / "reports" / "pseudonymize-quality.json"
 
 
 def _corpus():
