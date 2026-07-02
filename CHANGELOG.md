@@ -4,7 +4,7 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
-## [Unreleased]
+## [0.2.2] - 2026-07-02
 
 > **공개 정확도·성능 수치 무결성 (v0.2.2)** — 코드·규칙·모델·재현율 무변경의 문서·가드 패치.
 > 공개 문서에 실린 헤드라인 수치가 커밋된 근거 리포트와 정확히 일치하도록 봉인하고, 드리프트
