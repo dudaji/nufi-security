@@ -236,8 +236,11 @@ python3 scripts/bench.py --ner gazetteer
 
 알려진 한계:
 
-- INT8 양자화(quantization)에서 한국어 인명(KR_PERSON) 재현율의 신뢰구간 하한이 목표선을
-  소폭 하회합니다(소표본 양자화 노이즈; FP32 는 충족). NER 베이스 모델 격상은 후속 과제.
+- INT8 양자화(quantization)에서 한국어 인명(KR_PERSON) 재현율(0.9127, 신뢰구간 하한 0.8504)의
+  신뢰구간 하한이 목표선 0.90 을 소폭 하회합니다(FP32 는 충족). 오차는 사전 미수록 인명
+  (희성·복성)에 집중되며, 원인 분석과 다음 캠페인 근거는
+  [`docs/reports/kr-person-error-analysis.md`](docs/reports/kr-person-error-analysis.md)
+  에 있습니다. NER 베이스 모델 격상은 후속 과제.
 - 외부 원문 보존을 켜면 외부로 나간 원문이 디스크에 남습니다(기본 꺼짐; 위 설정 주의 참조).
 - 라이브 패킷 캡처는 관리자 권한(root/CAP_NET_RAW)이 필요합니다(에어갭·CI 는 `--simulate`
   리플레이로 권한 없이 동일 로직 재현).
