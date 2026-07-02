@@ -9,6 +9,8 @@ ARCHITECTURE.md §7 의 '사람이 기억하는 드리프트 방지 체크리스
   2. 식별자 교차검증    — ARCHITECTURE.md 가 인용한 모듈/클래스/함수가 실제 코드에 존재하는지 AST 대조.
   3. 버전 정합          — VERSION == CHANGELOG.md 최신 [x.y.z] 헤더.
   4. 내부 링크 (선택)   — living 문서의 상대 링크가 실제로 resolve 되는지.
+  5. 정확도 수치 추적   — 공개 문서의 정확도·성능 헤드라인 수치가 커밋된 근거 리포트(docs/reports/*.json)
+                          값과 일치하는지 대조. 리포트가 갱신됐는데 문서가 안 따라오면(또는 그 반대) 실패.
 
 living vs frozen:
   living  = 현행 정합 대상(드리프트 검사 ON).
@@ -22,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import json
 import re
 import sys
 from pathlib import Path
@@ -41,6 +44,26 @@ CHANGELOG = "CHANGELOG.md"
 
 # 식별자 교차검증 대상: 단일 권위 문서만 (frozen SPEC/IMPL/DEMO 는 역사적 스냅샷이라 제외).
 IDENTIFIER_DOC = ARCHITECTURE
+
+# --- 정확도·성능 수치 ↔ 근거 리포트 추적 -------------------------------------------
+# 공개 문서에 실린 헤드라인 수치는 커밋된 리포트(docs/reports/*.json)의 현재 값을 그대로
+# 인용해야 한다. 리포트가 바뀌면(또는 문서만 옛 값으로 남으면) 이 대조가 실패한다.
+# json_path 는 리포트 dict 를 파고드는 키/인덱스 시퀀스. 각 항목의 값 문자열이 문서에
+# 그대로 등장하는지(presence) 검사 — 드리프트(공개 수치 ≠ 근거) 재발 차단.
+NUMBER_CLAIMS = [
+    # README 성능·정확도 요약표 + 하단 서술
+    ("README.md", "docs/reports/recall-int8.json", ("scores", "pii_recall"), "전체 PII recall"),
+    ("README.md", "docs/reports/recall-int8.json", ("scores", "pii_recall_ci95", 0), "PII recall CI 하한"),
+    ("README.md", "docs/reports/recall-int8.json", ("scores", "pii_recall_ci95", 1), "PII recall CI 상한"),
+    ("README.md", "docs/reports/recall-int8.json", ("scores", "span_precision"), "정밀도(span)"),
+    ("README.md", "docs/reports/load-p95.json", ("concurrency_sweep", "1", "lat_p95_ms"), "인라인 지연 p95(c=1)"),
+    ("README.md", "docs/reports/kr-location-gate.json", ("after_v0.2.0", "test", "kr_location_ci95_low"), "KR_LOCATION CI 하한"),
+    ("README.md", "docs/reports/recall-int8.json", ("scores", "person_recall"), "KR_PERSON recall"),
+    ("README.md", "docs/reports/recall-int8.json", ("scores", "person_recall_ci_low"), "KR_PERSON CI 하한"),
+    # docs/README 한 줄 요약
+    ("docs/README.md", "docs/reports/recall-int8.json", ("scores", "pii_recall"), "전체 PII recall"),
+    ("docs/README.md", "docs/reports/load-p95.json", ("concurrency_sweep", "1", "lat_p95_ms"), "인라인 지연 p95(c=1)"),
+]
 
 VALID_MERMAID_TYPES = (
     "flowchart", "graph", "sequenceDiagram", "classDiagram", "stateDiagram",
@@ -195,6 +218,52 @@ def check_links_text(text: str, base_dir: Path, label: str) -> tuple[list[str], 
     return errs, n
 
 
+def fmt_report_number(v) -> str:
+    """리포트 JSON 값을 문서에 등장하는 표기로 정규화. 정수값 float(41.0)은 '41',
+    그 외 float 는 최단 왕복 표기(0.9433)."""
+    if isinstance(v, bool):
+        return str(v)
+    if isinstance(v, float):
+        return str(int(v)) if v.is_integer() else repr(v)
+    return str(v)
+
+
+def dig_json(obj, path):
+    """키/인덱스 시퀀스로 dict/list 를 파고든다. 없으면 KeyError/IndexError/TypeError."""
+    cur = obj
+    for k in path:
+        cur = cur[k] if isinstance(cur, dict) else cur[int(k)]
+    return cur
+
+
+def check_number_integrity(claims, doc_texts: dict, reports: dict) -> list[str]:
+    """공개 문서의 헤드라인 수치가 근거 리포트의 현재 값과 일치하는지 대조.
+    claims = [(doc_rel, report_rel, json_path, label), ...].
+    doc_texts[doc_rel] = 문서 텍스트, reports[report_rel] = 파싱된 JSON.
+    각 값 문자열이 문서에 등장하지 않으면(=드리프트) 오류를 낸다. 순수 함수(테스트 가능)."""
+    errs: list[str] = []
+    for doc_rel, report_rel, jpath, label in claims:
+        text = doc_texts.get(doc_rel)
+        if text is None:
+            errs.append(f"[number] 문서 텍스트 없음: {doc_rel}")
+            continue
+        rep = reports.get(report_rel)
+        if rep is None:
+            errs.append(f"[number] 근거 리포트 없음: {report_rel}")
+            continue
+        try:
+            val = dig_json(rep, jpath)
+        except (KeyError, IndexError, TypeError, ValueError):
+            errs.append(f"[number] {report_rel} 경로 없음: {'/'.join(map(str, jpath))}")
+            continue
+        s = fmt_report_number(val)
+        if s not in text:
+            errs.append(
+                f"[number] {doc_rel}: {label} 값 '{s}'(근거 {report_rel}#{'/'.join(map(str, jpath))}) "
+                f"가 문서에 없음 — 공개 수치가 리포트와 드리프트")
+    return errs
+
+
 def build_symbol_index(root: Path) -> tuple[dict[str, set[str]], set[str]]:
     """저장소 전체 .py 를 AST 로 스캔 → (classes{name:{methods}}, all_defs{모든 def 이름})."""
     classes: dict[str, set[str]] = {}
@@ -270,6 +339,27 @@ def run_all(root: Path, verbose: bool = False) -> tuple[list[tuple[str, int]], l
         n_links += n
     checks.append((f"내부 링크 ({n_links}개)", len(lerr)))
     errors += lerr
+
+    # 5. 정확도·성능 수치 ↔ 근거 리포트 추적
+    doc_texts: dict = {}
+    for doc_rel in {c[0] for c in NUMBER_CLAIMS}:
+        p = root / doc_rel
+        if p.exists():
+            doc_texts[doc_rel] = p.read_text(encoding="utf-8")
+    reports: dict = {}
+    nerr: list[str] = []
+    for rep_rel in {c[1] for c in NUMBER_CLAIMS}:
+        p = root / rep_rel
+        if not p.exists():
+            nerr.append(f"[number] 근거 리포트 파일 없음: {rep_rel}")
+            continue
+        try:
+            reports[rep_rel] = json.loads(p.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as e:
+            nerr.append(f"[number] 리포트 JSON 파싱 실패: {rep_rel} ({e})")
+    nerr += check_number_integrity(NUMBER_CLAIMS, doc_texts, reports)
+    checks.append((f"정확도 수치 추적 ({len(NUMBER_CLAIMS)}건)", len(nerr)))
+    errors += nerr
 
     return checks, errors
 

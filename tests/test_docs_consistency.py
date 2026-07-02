@@ -95,6 +95,40 @@ def test_broken_link_fails(tmp_path):
     assert errs2 == [] and n2 == 0
 
 
+# --- 정확도 수치 ↔ 근거 리포트 추적 (v0.2.2) -----------------------------------
+def test_number_fmt_and_dig():
+    assert cd.fmt_report_number(0.9433) == "0.9433"
+    assert cd.fmt_report_number(41.0) == "41"      # 정수값 float 은 소수점 제거
+    assert cd.fmt_report_number(True) == "True"
+    rep = {"scores": {"pii_recall": 0.9433, "ci": [0.9098, 0.9648]}, "sweep": {"1": {"p95": 41.0}}}
+    assert cd.dig_json(rep, ("scores", "pii_recall")) == 0.9433
+    assert cd.dig_json(rep, ("scores", "ci", 1)) == 0.9648
+    assert cd.dig_json(rep, ("sweep", "1", "p95")) == 41.0
+
+
+def test_number_integrity_matches_and_drifts():
+    reports = {"r.json": {"scores": {"pii_recall": 0.9433}, "sweep": {"1": {"p95": 41.0}}}}
+    claims = [
+        ("doc.md", "r.json", ("scores", "pii_recall"), "recall"),
+        ("doc.md", "r.json", ("sweep", "1", "p95"), "p95"),
+    ]
+    # 문서가 현재 리포트 값을 인용하면 통과.
+    ok = cd.check_number_integrity(claims, {"doc.md": "재현율 0.9433, 지연 41 ms"}, reports)
+    assert ok == [], f"일치인데 오탐: {ok}"
+    # 문서가 옛 값(0.946/38ms)으로 남으면 드리프트로 실패.
+    drift = cd.check_number_integrity(claims, {"doc.md": "재현율 0.946, 지연 38 ms"}, reports)
+    assert len(drift) == 2 and all("드리프트" in e for e in drift)
+
+
+def test_number_integrity_missing_report_and_path():
+    claims = [("doc.md", "gone.json", ("a",), "x")]
+    errs = cd.check_number_integrity(claims, {"doc.md": "t"}, {})
+    assert errs and "근거 리포트 없음" in errs[0]
+    errs2 = cd.check_number_integrity([("doc.md", "r.json", ("nope",), "x")],
+                                      {"doc.md": "t"}, {"r.json": {"a": 1}})
+    assert errs2 and "경로 없음" in errs2[0]
+
+
 if __name__ == "__main__":
     import traceback
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]

@@ -4,6 +4,30 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [Unreleased]
+
+> **공개 정확도·성능 수치 무결성 (v0.2.2)** — 코드·규칙·모델·재현율 무변경의 문서·가드 패치.
+> 공개 문서에 실린 헤드라인 수치가 커밋된 근거 리포트와 정확히 일치하도록 봉인하고, 드리프트
+> 재발을 기계 가드로 차단한다. 보안·컴플라이언스 제품에서 공개 수치의 정직성은 신뢰의 근거다.
+
+### Changed
+- **README 헤드라인 정확도·성능 수치를 근거 리포트 값으로 교정** — v0.0.1 초기 헤드라인이
+  갱신되지 않아 남아 있던 드리프트 3건을 커밋된 실측값으로 맞췄다: 전체 PII 재현율
+  0.946 → **0.9433** [신뢰구간 0.9098–0.9648], 정밀도 0.985 → **0.9925**(span), 인라인
+  지연 p95 38ms → **41ms**(단일 동시성). 각 수치에 근거 리포트 경로를 명시해 추적성을
+  더했다. 근거: [`docs/reports/recall-int8.json`](docs/reports/recall-int8.json) ·
+  [`docs/reports/load-p95.json`](docs/reports/load-p95.json). `docs/README.md`·`docs/MANUAL.md`·
+  `docs/DOC_STYLE.md` 의 동일 잔상도 함께 교정. KR_LOCATION·KR_PERSON·benign FP·부하 p95 등
+  v0.1.0~v0.2.1 신규 공개치는 대조 결과 전부 근거와 일치(교정 불필요).
+
+### Added
+- **공개 수치 ↔ 리포트 무결성 감사 리포트** — README·SDK·MANUAL·RELEASE_NOTES·CHANGELOG 의
+  모든 정확도·성능 수치를 근거 리포트와 전수 대조한 대조표(드리프트 3건·일치 6건).
+  [`docs/reports/accuracy-integrity-audit.md`](docs/reports/accuracy-integrity-audit.md).
+- **정확도 수치 회귀 가드** — `check_docs` 에 "문서 헤드라인 수치 ↔ 리포트 JSON 값" 대조
+  검사를 추가했다. 리포트가 갱신됐는데 문서가 안 따라오면(또는 그 반대) rc=1 로 실패하여
+  드리프트 재발을 차단한다. 순수 헬퍼는 합성 드리프트로 단위 테스트(`tests/test_docs_consistency.py`).
+
 ## [0.2.1] - 2026-07-02
 
 > **v0.2.0 정리 + 인명(KR_PERSON) 정확도 착수 준비** — 코드·규칙·모델 무변경의

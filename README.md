@@ -177,15 +177,19 @@ python3 scripts/bench.py --ner gazetteer
 
 | 지표 | 값 | 목표 |
 |---|---|---|
-| 한국어 개인정보 재현율 (recall, 전체) | **0.946** [신뢰구간 0.906–0.970] | ≥ 0.90 ✅ |
+| 한국어 개인정보 재현율 (recall, 전체) | **0.9433** [신뢰구간 0.9098–0.9648] | ≥ 0.90 ✅ |
 | 주소(KR_LOCATION) 재현율 (recall) | **1.000** [Wilson 신뢰구간 하한 0.9417] | ≥ 0.90 ✅ |
 | 강한 개인정보 / 비밀 재현율 | **1.000** | — |
-| 정밀도 (precision) | **0.985** | — |
+| 정밀도 (precision) | **0.9925** | — |
 | 오탐 (benign false-positive) | **0 / 90** | 낮을수록 ✅ |
-| 인라인 지연 (latency p95, 512자) | **38 ms** (CPU) | ≤ 150 ms ✅ |
+| 인라인 지연 (latency p95, 512자, 단일 동시성) | **41 ms** (CPU) | ≤ 150 ms ✅ |
 
 - **재현율(recall)** = 실제 개인정보 중 잡아낸 비율, **정밀도(precision)** = 잡아냈다고
   한 것 중 진짜인 비율, **p95** = 100건 중 95건이 이 시간 안에 처리됨.
+- 위 표의 재현율·정밀도는 [`docs/reports/recall-int8.json`](docs/reports/recall-int8.json)
+  (onnx-int8, split=test), 인라인 지연은 [`docs/reports/load-p95.json`](docs/reports/load-p95.json)
+  (단일 동시성 p95)의 커밋된 실측값입니다. 대조·무결성 감사는
+  [`docs/reports/accuracy-integrity-audit.md`](docs/reports/accuracy-integrity-audit.md).
 - 보안 하드닝(hardening) 점검 **12/12 통과** (기록 실패 시 차단·감사 해시체인·원문 미저장 등).
 - 사전 기반(gazetteer) 코어 백엔드는 에어갭 최소 보장 라인으로, 샘플셋 기준 지연 p95 < 1ms.
 - 주소(KR_LOCATION)는 규칙 사전 확장(시군구·랜드마크·도로명·상세주소, 28→206항)과
