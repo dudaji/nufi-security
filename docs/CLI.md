@@ -469,8 +469,63 @@ nufi-egress report compliance --audit samples/sla/audit_decisions.jsonl \
   --change-log samples/sla/policy_changes.jsonl --format html --out reports/compliance.html
 ```
 
-> 공통 옵션: `--customer NAME`(헤더), `--format {md,html,json}`, `--out PATH`(생략 시 stdout).
-> 1-명령 데모: `./scripts/demo_report.sh`(6/6 PASS, 권한 불필요).
+**`report sla` 추가 옵션 — 선제 알림·다테넌트 집계**
+
+| 옵션 | 무엇 |
+|---|---|
+| `--alert FILE` | SLA 위반 요약을 JSON 파일로 기록(주기 점검·cron 친화). |
+| `--webhook URL` | 알림 웹훅 URL(스텁 — 실제 전송 없이 페이로드만 기록). |
+| `--all-tenants` | 테넌트별 행으로 플릿 SLA 표 산출(operator 전용 — viewer 는 자기 테넌트만). |
+
+```bash
+# 위반 시 알림 파일을 남기고 종료코드 1 (cron/주기 점검)
+nufi-egress report sla --metrics samples/sla/sla_metrics.jsonl \
+  --alert reports/sla_alert.json --webhook https://example/hook
+```
+
+**`report compliance` 추가 옵션 — 점검항목 커버리지·규제 필터**
+
+| 옵션 | 무엇 |
+|---|---|
+| `--controls` / `--no-controls` | 점검항목 커버리지 섹션 포함(기본)/생략. |
+| `--catalog FILE` | 통제 카탈로그 YAML 오버라이드(기본 동봉 catalog). |
+| `--framework ID` | 규제 프레임워크 정보성 필터(반복 허용): `fsec-ai`·`net-sep`·`pipa`·`cia`·`isms-p`. 해당 규제 행만 렌더. **종료코드 불변**(무결성 게이트만). |
+
+```bash
+# 개인정보보호법(pipa) 관련 통제만 렌더
+nufi-egress report compliance --audit samples/sla/audit_decisions.jsonl \
+  --change-log samples/sla/policy_changes.jsonl --framework pipa
+```
+
+> 공통 옵션: `--customer NAME`(헤더), `--title NAME`, `--format {md,html,json}`, `--out PATH`(생략 시 stdout).
+> 1-명령 데모: `./scripts/demo_report.sh`(6/6 PASS, 권한 불필요). 규제 매핑 데모: `./scripts/demo_compliance_mapping.sh`.
+> SLA 알림 데모: `./scripts/demo_sla_alert.sh`.
+
+---
+
+## `benchmark`
+
+정확도(accuracy)와 가명화 품질(pseudonymize)을 **한 명령으로** 측정하는 단일 진입점입니다.
+정확도 축은 커밋된 측정 JSON(게이트)을 읽어 모델 없이도 판정하고, 가명화 축은 라이브
+하니스로 가역/비가역 지표를 산출합니다. 릴리스 전 회귀 확인·CI 게이트에 씁니다.
+
+```text
+usage: nufi-egress benchmark [--only {accuracy,pseudonymize}] [--json] [--json-out PATH]
+```
+
+| 옵션 | 무엇 |
+|---|---|
+| `--only {accuracy,pseudonymize}` | 한 축만 실행(기본: 둘 다). |
+| `--json` | 사람 친화 요약 대신 원시 JSON 리포트 출력. |
+| `--json-out PATH` | JSON 리포트를 파일로도 기록. |
+
+```bash
+nufi-egress benchmark                       # 정확도 + 가명화 둘 다, 요약 출력
+nufi-egress benchmark --only accuracy --json-out reports/bench.json
+```
+
+> 종료코드: 게이트 충족 0 / 미충족 1. 상세 지표·리포트 스키마는 [`SDK.md`](SDK.md)(§벤치마크).
+> 1-명령 데모는 [`DEMO.md`](DEMO.md) 참조.
 
 ---
 

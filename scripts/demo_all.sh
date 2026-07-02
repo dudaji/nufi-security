@@ -10,6 +10,7 @@
 #   demo_coverage.sh         감사 커버리지 — public 전송 100% 기록 무결성
 #   demo_dashboards.sh       감사 대시보드 — 결정/무결성/우회/추이 패널 어댑터
 #   demo_report.sh           SLA·규정준수 리포트 — 기간 충족/위반 + 해시체인 게이트
+#   demo_sla_alert.sh        SLA 선제 알림·다테넌트 집계 — 위반 알림 JSON + 플릿 표
 #   demo_compliance_mapping.sh 컴플라이언스 매핑 — 점검항목 커버리지(직접/부분/범위밖)
 #   demo_policy_ops.sh       정책 운영 — 다중 프로파일·바인딩·무재기동 롤백·변경 감사
 #   demo_multitenancy.sh     멀티테넌시·RBAC — 테넌트 읽기 경계 + 읽기전용 역할
@@ -61,6 +62,7 @@ run_demo demo.sh                  "게이트웨이 e2e(private 라우팅·차단
 run_demo demo_coverage.sh         "감사 커버리지(전송 100% 기록 무결성)"
 run_demo demo_dashboards.sh       "감사 대시보드(결정/무결성/우회/추이 패널)"
 run_demo demo_report.sh           "SLA·규정준수 리포트(충족/위반 + 해시체인)"
+run_demo demo_sla_alert.sh        "SLA 선제 알림·다테넌트 집계(위반 알림 JSON + 플릿 표)"
 run_demo demo_compliance_mapping.sh "컴플라이언스 매핑(점검항목 커버리지 직접/부분/범위밖)"
 run_demo demo_policy_ops.sh       "정책 운영(프로파일·바인딩·롤백·변경 감사)"
 run_demo demo_multitenancy.sh     "멀티테넌시·RBAC(테넌트 경계 + 읽기전용 역할)"

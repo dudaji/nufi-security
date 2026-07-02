@@ -44,6 +44,14 @@ ALWAYS_EXCLUDE = {
     "docs/DOC_STYLE.md",
 }
 
+# --- 예외 2: 내부 인수인계(handover) 트리 ---------------------------------------
+# `HANDOVER/` 는 공개 제품 문서(외부 사용자용)가 아니라, 이 저장소를 **이어받아 작업할
+# 팀 구성원·그들의 AI 에이전트**를 독자로 하는 내부 운영 문서다. 거버넌스·역할·에이전트
+# 동작 규약을 다루므로 본질적으로 역할 호칭(엔지니어·보드 등)을 인용할 수밖에 없다.
+# DOC_STYLE.md 자체를 예외로 두는 것과 같은 이유로 이 트리 전체를 스타일 가드에서 제외한다.
+# (공개 제품 문서 규칙은 그대로 README/CHANGELOG/docs/** 전 범위에 강제된다.)
+INTERNAL_DOC_PREFIXES = ("HANDOVER/",)
+
 # 내부 전용 문서(내부 status·제안서·엔지니어링 리포트·CMP-태깅 스냅샷)는 스크럽 대신
 # 공개 저장소에서 제거하기로 정렬됐다(완료). 따라서 임시 제외 목록은 비어 있고, 가드는
 # DOC_STYLE.md 한 건만 빼고 전 범위(추적 *.md 전체)를 강제한다.
@@ -67,7 +75,7 @@ def scan() -> list[tuple[str, int, str]]:
     """위반 (파일, 줄번호, 줄내용) 목록."""
     violations: list[tuple[str, int, str]] = []
     for rel in tracked_md_files():
-        if rel in EXCLUDE:
+        if rel in EXCLUDE or rel.startswith(INTERNAL_DOC_PREFIXES):
             continue
         path = REPO / rel
         if not path.exists():
@@ -108,7 +116,7 @@ def scan_raw_module_commands() -> list[tuple[str, int, str]]:
     """우리 모듈을 raw ``python -m`` 으로 *주 명령* 표기한 *.md 줄 위반 목록."""
     violations: list[tuple[str, int, str]] = []
     for rel in tracked_md_files():
-        if rel in EXCLUDE:
+        if rel in EXCLUDE or rel.startswith(INTERNAL_DOC_PREFIXES):
             continue
         path = REPO / rel
         if not path.exists():
