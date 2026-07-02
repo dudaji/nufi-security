@@ -4,6 +4,36 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.2.1] - 2026-07-02
+
+> **v0.2.0 정리 + 인명(KR_PERSON) 정확도 착수 준비** — 코드·규칙·모델 무변경의
+> 측정·문서·정리 패치. v0.2.0 이 남긴 실측 잔여를 정직하게 마무리하고, 공개 README 에
+> 남은 마지막 정확도 한계인 **인명(KR_PERSON)** 개선의 근거(오차분석)를 확보한다.
+> 인명 정확도 본편(규칙 확장 + 모델∪규칙 유니온 + 골드셋 확장 + 게이트)은 v0.3.0 으로 분리.
+
+### Added
+- **인명(KR_PERSON) 오차 분석 — false-negative 덤프·클래스 분류** — 주소에서 통한
+  플레이북(오차분석 → 규칙/유니온 → 골드셋 → 게이트)의 첫 단계를 인명에 적용했다.
+  프로덕션(onnx-int8) 인명 재현율은 0.9127(test 115/126)로 점추정은 목표선 0.90 을
+  넘지만 Wilson 신뢰구간 하한이 0.8504 라 통계적 확신이 아직 부족하다. 커밋 baseline
+  분해 결과 놓친 11건 중 약 9건이 **사전 미수록 인명**(희성/미수록 단성 66% · 복성 34%)에
+  집중됨을 확인하고, 미수록 인명 후보 풀(test+dev 118건)을 성씨 형태·도메인·조사 경계로
+  분류했다. **리포트만 산출 — 규칙·모델은 변경하지 않았다.** 재현 도구
+  [`scripts/dump_kr_person_fn.py`](scripts/dump_kr_person_fn.py)(에어갭·결정적), 분석
+  [`docs/reports/kr-person-error-analysis.md`](docs/reports/kr-person-error-analysis.md),
+  원자료 [`kr-person-fn-dump.json`](docs/reports/kr-person-fn-dump.json). 이 리포트가
+  v0.3.0 인명 정확도 캠페인의 근거가 된다. gazetteer 백엔드(recall 0.37)는 프로덕션
+  프록시가 아니라 이름 형태 분포의 구조 참고치로만 사용하며, 권위 수치는 커밋 baseline
+  ([`docs/reports/recall-int8.json`](docs/reports/recall-int8.json))을 인용한다.
+
+### Changed
+- **README 알려진 한계 — 인명 수치·근거 동기화** — 인명(KR_PERSON) 한계 항목에 실측 수치
+  (재현율 0.9127 · 신뢰구간 하한 0.8504)와 오차 분석 리포트 링크를 명시해, 공개 문서가
+  분석 데이터를 직접 가리키도록 했다.
+- **주소 유니온 프로덕션 실측(이월)** — onnx-int8 이 에어갭/CI 환경에 여전히 미프로비저닝이라
+  `union_check --mode location` 프로덕션 재측정은 skip 을 유지한다(정직 보고). 유니온
+  재현율은 규칙 하한(1.0)으로 인용하며, 모델 러너 확보 시 재실행으로 상향 확정한다.
+
 ## [0.2.0] - 2026-07-02
 
 > **한국어 PII 정확도 엔진 본편(v0.2.0) 트랙 집계 — 주소(KR_LOCATION) 0.79 → 0.90+** —
