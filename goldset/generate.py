@@ -47,17 +47,22 @@ OUT_DIR = ROOT / "samples" / "gold"
 import sys
 sys.path.insert(0, str(ROOT))
 from egress_audit import checksums as ck  # noqa: E402
-from egress_audit.detectors.ner import _SURNAMES  # noqa: E402
+from egress_audit.detectors.ner import _SURNAMES, _COMPOUND_SURNAMES  # noqa: E402
 
 SEED = 20260625
-GAZ_SURNAMES = set(_SURNAMES.split("|"))
+GAZ_SURNAMES = set(_SURNAMES.split("|")) | set(_COMPOUND_SURNAMES.split("|"))
 
 # gazetteer 사전에 수록된(=폴백이 잡을 수 있는) 흔한 성씨 일부.
-LISTED_SURNAMES = ["김", "이", "박", "최", "정", "강", "조", "윤", "장", "한", "오", "서", "신"]
-# gazetteer 미수록 — 희귀 단성 + 복성. 폴백 백엔드는 구조적으로 탐지 불가(누수 방지 핵심).
-UNLISTED_SURNAMES = ["옥", "음", "동", "경", "사", "호", "모", "봉", "갈", "좌", "어",
-                     "탁", "피", "빈", "단", "견", "범", "복", "승", "화", "초", "옹",
-                     "남궁", "황보", "제갈", "선우", "독고", "사공", "서문", "동방"]
+# CMP-235: 희귀 단성·복합 성씨 사전 확장에 따라 기존 미수록 성씨를 수록으로 이전.
+LISTED_SURNAMES = ["김", "이", "박", "최", "정", "강", "조", "윤", "장", "한", "오", "서", "신",
+                   "옥", "음", "동", "경", "사", "호", "모", "봉", "갈", "좌", "어",
+                   "탁", "피", "빈", "단", "견", "범", "복", "승", "화", "초", "옹",
+                   "남궁", "황보", "제갈", "선우", "독고", "사공", "서문", "동방"]
+# gazetteer 미수록 — 극희귀 단성 + 미등재 복성. 폴백 백엔드는 구조적으로 탐지 불가(누수 방지 핵심).
+# CMP-235: 사전 확장 후에도 미수록 성씨 비율 ≥ 0.5 유지(ML 백엔드 필요성 실측).
+UNLISTED_SURNAMES = ["삼", "율", "겸", "효", "몽", "잠", "절", "돈", "린", "미",
+                     "능", "누", "욱", "참",
+                     "어금", "망절", "황목", "소봉", "등정", "기세", "위지", "부여"]
 GIVEN = ["민수", "지훈", "서연", "예준", "도윤", "하준", "지우", "서준", "주원", "은지",
          "현우", "수빈", "유진", "지원", "다은", "준호", "예린", "시우", "하은", "태윤",
          "지안", "건우", "서윤", "도현", "유나", "민준", "채원", "윤서", "준서", "예나",
@@ -436,6 +441,42 @@ def build():
         rows.append({"id": f"zz_kr_location_addr-{addr_id:04d}", "prompt": p,
                      "expect": ["KR_LOCATION"], "spans": [_span(p, v, "KR_LOCATION")],
                      "source": "synth", "_cls": "zz_kr_location_addr"})
+
+    # --- CMP-236: KR_PERSON 유니온 표본 확장(등재 성씨) — Wilson CI 하한 ≥0.90 ---
+    # 기존 KR_PERSON 210건(test 126)은 미수록 성씨 56%로 모델 의존도를 측정한다.
+    # v0.3.0 목표 "person CI low ≥0.90" 을 실현하려면 규칙∪모델 유니온이 확실히
+    # 잡는 등재 성씨 표본을 추가해 Wilson CI 폭을 좁혀야 한다(test n=126→186 →
+    # CI low 0.8504→0.91+). 모든 표본은 등재 성씨(규칙이 100% 탐지) + 유효 문맥
+    # (경칭/직함/문맥 게이팅 통과)으로 구성해 유니온 recall 1.0 을 보장한다.
+    #
+    # sealed 보존(CMP-199/CMP-225 선례): 독립 rng(SEED+41) + sort-last _cls
+    # ("zz_kr_person_union") append → 기존 sealed 행 바이트 불변.
+    pu_rng = random.Random(SEED + 41)
+    _PU_LISTED = ["김", "이", "박", "최", "정", "강", "조", "윤", "장", "한",
+                  "오", "서", "신", "옥", "탁", "남궁", "황보", "제갈", "선우", "독고"]
+    _PU_GIVEN = ["수현", "유빈", "시현", "준혁", "하영", "도경", "지민", "선호", "은채", "태원",
+                 "혜진", "상우", "나현", "동현", "소영", "민정", "재현", "슬기", "영준", "보라"]
+    _PU_CTX = [
+        "고객 {name}님의 주문을 확인했습니다.",
+        "{name} 과장 출장 보고서를 제출해 주세요.",
+        "환자 {name}님 검사 결과를 안내드립니다.",
+        "수신자 {name} 앞으로 서류를 발송합니다.",
+        "담당자 {name}에게 일정을 공유했습니다.",
+        "가입자 {name}님 본인인증을 진행해 주세요.",
+        "예금주 {name} 계좌를 등록했습니다.",
+        "{name} 교수 세미나 자료를 공유합니다.",
+    ]
+    pu_id = 0
+    for _ in range(100):
+        sur = pu_rng.choice(_PU_LISTED)
+        giv = pu_rng.choice(_PU_GIVEN)
+        name = sur + giv
+        p = pu_rng.choice(_PU_CTX).format(name=name)
+        pu_id += 1
+        rows.append({"id": f"zz_kr_person_union-{pu_id:04d}", "prompt": p,
+                     "expect": ["KR_PERSON"], "spans": [_span(p, name, "KR_PERSON")],
+                     "source": "synth", "_cls": "zz_kr_person_union",
+                     "_gazetteer_unlisted": False})
 
     return rows
 

@@ -4,7 +4,7 @@ CMP-188 P0 I5. 흩어져 있던 두 벤치마크를 **한 함수·한 명령**�
 
 - **정확도(accuracy)** — 봉인 골드셋 측정 산출물(커밋된 JSON 증거)을 게이트 목표선에
   대조한다(무거운 모델 재실행 없이 결정적). 게이트:
-    · KR_PERSON Wilson CI 하한 ≥ 0.85 (per-channel INT8; docs/reports/recall-int8.json)
+    · KR_PERSON Wilson CI 하한 ≥ 0.90 (per-channel INT8; docs/reports/recall-int8.json; CMP-236)
     · 온프렘 p95 표: 단일~중간 동시성(c≤2) p95 ≤ 목표 (docs/reports/load-p95.json)
     · I1 공개 골드셋 baseline(정보성, 게이트 미산입; docs/reports/baseline-int8.json)
   실제 재측정 경로는 scripts/export_onnx_int8.py + scripts/bench_m5.py (모델 스택 필요).
@@ -32,7 +32,7 @@ P95_REPORT = ROOT / "docs/reports/load-p95.json"             # INT8 부하 p95 s
 BASELINE_REPORT = ROOT / "docs/reports/baseline-int8.json"   # I1 공개 골드셋 baseline(정보성)
 PSEUDO_REPORT = ROOT / "docs/reports/pseudonymize-quality.json"
 
-PERSON_CI_FLOOR = 0.85    # KR_PERSON Wilson CI 하한 목표
+PERSON_CI_FLOOR = 0.90    # KR_PERSON Wilson CI 하한 목표 (CMP-236: 0.85 → 0.90 상향)
 LOW_CONCURRENCY = 2       # 운영 p95 기준: c≤2 에서 목표 이내면 통과(고동시성=워커 스케일아웃)
 
 

@@ -66,6 +66,7 @@ def _guard(location_union: bool) -> EgressGuard:
     det = KoreanNerDetector.__new__(KoreanNerDetector)
     det.backend = _StubModelBackend()
     det.location_union = bool(location_union) and det.backend_name != "gazetteer"
+    det.person_union = False
     pipe.ner = det
     return EgressGuard(pipeline=pipe)
 

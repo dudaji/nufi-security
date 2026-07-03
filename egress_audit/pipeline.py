@@ -60,7 +60,8 @@ class DetectionPipeline:
     def __init__(self, patterns_path: Optional[str] = None, ner_backend: str = "auto",
                  enable_ner: bool = True, model_id: Optional[str] = None,
                  confidential_path: Optional[str] = None, edm_index_path: Optional[str] = None,
-                 enable_confidential: bool = True, location_union: bool = False):
+                 enable_confidential: bool = True, location_union: bool = False,
+                 person_union: bool = False):
         patterns_path = patterns_path or str(_CONFIG_DIR / "patterns.yaml")
         with open(patterns_path, "r", encoding="utf-8") as f:
             cfg = yaml.safe_load(f)
@@ -69,11 +70,16 @@ class DetectionPipeline:
         # location_union(CMP-222 P3): 주소 채널만 모델 백엔드 ∪ 확장 규칙(P2) 유니온.
         # 운영에서 게이트웨이가 파이프라인을 내부 구성하므로 kwarg 미도달 시 env 로도
         # 활성화한다(M5_LOCATION_UNION=1). 기본 off(하위호환). gazetteer 백엔드는 no-op.
-        env_union = os.environ.get("M5_LOCATION_UNION", "").strip().lower() \
+        env_loc_union = os.environ.get("M5_LOCATION_UNION", "").strip().lower() \
+            in ("1", "true", "yes", "on")
+        # person_union(CMP-236): 인명 채널만 모델 백엔드 ∪ 규칙(경칭/직함/문맥 게이팅) 유니온.
+        # KR_LOCATION 유니온과 동일 플레이북. env M5_PERSON_UNION=1 로도 활성화.
+        env_per_union = os.environ.get("M5_PERSON_UNION", "").strip().lower() \
             in ("1", "true", "yes", "on")
         self.ner = KoreanNerDetector(
             backend=ner_backend, model_id=model_id,
-            location_union=location_union or env_union) if enable_ner else None
+            location_union=location_union or env_loc_union,
+            person_union=person_union or env_per_union) if enable_ner else None
 
         # --- M4 기밀 탐지 ---
         self.confidential = None

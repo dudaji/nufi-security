@@ -131,8 +131,8 @@
     "irreversible": {
       "n_values": 360,
       "irreversible_consistency": 1.0,
-      "distinct_inputs": 348,
-      "distinct_tokens": 348,
+      "distinct_inputs": 360,
+      "distinct_tokens": 360,
       "irreversible_collisions": 0,
       "irreversible_collision_rate": 0.0,
       "irreversible_non_restorable": true,

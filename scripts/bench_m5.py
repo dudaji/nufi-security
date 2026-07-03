@@ -239,8 +239,9 @@ def prefilter_compare():
     return out
 
 
-def build_guard(backend):
+def build_guard(backend, *, person_union=False, location_union=False):
     """백엔드 빌드. transformers/onnx-int8 미설치 시 (guard=None, reason) 반환."""
+    union_kwargs = {"person_union": person_union, "location_union": location_union}
     if backend in ("transformers", "onnx-int8"):
         try:
             import transformers  # noqa: F401
@@ -254,14 +255,14 @@ def build_guard(backend):
                 return None, "onnx-int8 미설치(onnxruntime/optimum 없음) — 모델 양자화·프로비저닝 후 측정."
             try:
                 # 실제 INT8 ONNX 세션 로드(FP32 스텁 아님). 산출: scripts/export_onnx_int8.py
-                return EgressGuard(ner_backend="onnx-int8"), None
+                return EgressGuard(ner_backend="onnx-int8", **union_kwargs), None
             except Exception as e:
                 return None, f"onnx-int8 모델 미산출 — `python3 scripts/export_onnx_int8.py` 후 측정 ({e})"
         try:
-            return EgressGuard(ner_backend="transformers"), None
+            return EgressGuard(ner_backend="transformers", **union_kwargs), None
         except Exception as e:
             return None, f"{backend} 백엔드 로드 실패: {e}"
-    return EgressGuard(ner_backend="gazetteer"), None
+    return EgressGuard(ner_backend="gazetteer", **union_kwargs), None
 
 
 def main():
@@ -271,10 +272,16 @@ def main():
     ap.add_argument("--split", default="test", choices=["test", "dev"])
     ap.add_argument("--baseline", choices=["write", "check"])
     ap.add_argument("--no-latency", action="store_true")
+    ap.add_argument("--person-union", action="store_true",
+                    help="인명 채널 규칙∪모델 유니온 활성(CMP-236)")
+    ap.add_argument("--location-union", action="store_true",
+                    help="주소 채널 규칙∪모델 유니온 활성(CMP-222)")
     ap.add_argument("--json-out")
     args = ap.parse_args()
 
-    guard, reason = build_guard(args.backend)
+    guard, reason = build_guard(args.backend,
+                                person_union=args.person_union,
+                                location_union=args.location_union)
     report = {"backend": args.backend, "split": args.split, "targets": TARGETS}
 
     if guard is None:
@@ -295,15 +302,16 @@ def main():
 
     # --- 합격 판정 (test 셋만 binary) ---
     if args.split == "test":
-        # CMP-123 수용기준: KR_PERSON 은 점추정이 아니라 Wilson CI '하한' ≥0.85.
+        # CMP-236 수용기준: KR_PERSON Wilson CI '하한' ≥0.90 (0.85 → 0.90 상향).
         person_ci_low = sc["per_class"].get("KR_PERSON", {}).get("ci95", [0.0, 0.0])[0]
         sc["person_recall_ci_low"] = person_ci_low
+        person_ci_target = 0.90
         chk = {
             "pii_recall>=0.90": sc["pii_recall"] >= TARGETS["pii_recall"],
             "pii_precision>=0.85": sc["pii_precision"] >= TARGETS["pii_precision"],
             "strong_recall>=0.98": sc["strong_recall"] >= TARGETS["strong_recall"],
             "person_recall>=0.85": sc["person_recall"] >= TARGETS["person_recall"],
-            "person_recall_ci_low>=0.85": person_ci_low >= TARGETS["person_recall"],
+            f"person_recall_ci_low>={person_ci_target}": person_ci_low >= person_ci_target,
             "location_recall>=0.85": sc["location_recall"] >= TARGETS["location_recall"],
             "secret_recall>=0.90": sc["secret_recall"] >= TARGETS["secret_recall"],
             "benign_false_block<=0.02": sc["benign_false_block"] <= TARGETS["benign_false_block"],

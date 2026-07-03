@@ -19,11 +19,23 @@ from typing import Iterator, List, Optional
 from .korean_pii import RawSpan
 from ._infer_pool import BoundedInference
 
-# 빈도 높은 한국 성씨(상위 ~60). gazetteer 백엔드용.
+# 한국 성씨 사전: 상위 ~60 + 희귀 단성 ~78 (CMP-235). gazetteer 백엔드용.
 _SURNAMES = (
     "김|이|박|최|정|강|조|윤|장|임|한|오|서|신|권|황|안|송|전|홍|유|고|문|양|손|"
     "배|백|허|노|심|하|곽|성|차|주|우|구|민|류|나|진|지|엄|채|원|천|방|공|현|함|"
-    "변|염|여|추|도|소|석|선|설|마|길|연|위|표|명|기|반|라|왕"
+    "변|염|여|추|도|소|석|선|설|마|길|연|위|표|명|기|반|라|왕|"
+    # 희귀 단성 ~78 추가 (CMP-235: 미등재 성씨 FN 해소)
+    "탁|옥|음|동|경|사|호|모|봉|갈|좌|어|피|빈|단|견|범|복|승|화|초|옹|"
+    "국|감|맹|상|편|제|계|팽|풍|종|용|남|은|빙|온|궁|묵|"
+    "담|영|태|내|야|매|근|운|판|평|금|수|비|형|독|등|대|혁|무|색|"
+    "뇌|필|두|개|부|환|곡|점|시|섭|루|록|번|저|직|란|돌|열|관|해"
+)
+
+# 복합 성씨(2음절 성: 남궁·선우·황보·제갈 등, CMP-235). gazetteer 백엔드용.
+# 복합 성씨는 단성보다 앞에서 매칭해야 탐욕적 정규식이 올바르게 동작한다.
+_COMPOUND_SURNAMES = (
+    "남궁|선우|황보|제갈|독고|사공|서문|동방|"
+    "사마|상관|공손|장곡|강전|소시"
 )
 
 # 인명 게이팅: 뒤따르는 경칭/직함, 또는 앞서는 문맥 명사.
@@ -38,7 +50,8 @@ _CONTEXT = ("고객|환자|담당자|직원|대표|발신|수신|성함|이름|�
 #  - 경칭이 바로 붙은 경우 (님/씨/군/양) — 뒤 조사 허용
 #  - 공백 뒤 직함이 오는 경우 — 뒤 조사 허용
 #  - 앞에 문맥 명사(고객/환자/담당자 등)가 오는 경우 — 일반 후보
-_NAME = rf"(?:{_SURNAMES})[가-힣]{{1,2}}"
+# 복합 성씨(2음절)를 단성(1음절)보다 앞에 놓아 탐욕적 매칭 보장(CMP-235).
+_NAME = rf"(?:(?:{_COMPOUND_SURNAMES})|(?:{_SURNAMES}))[가-힣]{{1,2}}"
 _PERSON_HONOR_RE = re.compile(rf"(?<![가-힣])(?P<name>{_NAME})(?:{_HONORIFICS})")
 _PERSON_TITLE_RE = re.compile(rf"(?<![가-힣])(?P<name>{_NAME})\s(?:{_TITLES})")
 _PERSON_CAND_RE = re.compile(rf"(?<![가-힣])(?P<name>{_NAME})(?![가-힣])")
@@ -148,6 +161,37 @@ _PLACE_STOPWORDS = set(
 )
 
 
+# --- 인명 규칙 단독 배출 (CMP-236) ------------------------------------------
+# gazetteer 백엔드의 인명 탐지 로직을 모듈 함수로 분리한다. 모델 백엔드(onnx-int8
+# 등)와 **인명 채널만** 유니온하기 위해 재사용한다(KR_LOCATION 유니온 CMP-222 P3 와
+# 동일 플레이북). 경칭/직함/문맥 게이팅으로 호모그래프 오탐을 억제한다.
+def detect_kr_persons(text: str, source: str = "ner:gazetteer") -> Iterator[RawSpan]:
+    """텍스트에서 KR_PERSON 후보를 규칙만으로 배출(지명·PII 무관, 순수 stdlib).
+
+    경칭/직함/문맥 게이팅 3종으로 호모그래프 오탐을 억제한다.
+    ``source`` 로 배출원을 구분(gazetteer 단독 vs 모델∪규칙 유니온).
+    """
+    seen: set[tuple[int, int]] = set()
+
+    def emit_person(start, end, name):
+        if (start, end) in seen:
+            return None
+        seen.add((start, end))
+        return RawSpan("KR_PERSON", name, start, end, 0.75, source=source)
+
+    for rx in (_PERSON_HONOR_RE, _PERSON_TITLE_RE):
+        for m in rx.finditer(text):
+            span = emit_person(m.start("name"), m.end("name"), m.group("name"))
+            if span:
+                yield span
+    for m in _PERSON_CAND_RE.finditer(text):
+        if not _CONTEXT_RE.search(text[max(0, m.start() - 8):m.start()]):
+            continue
+        span = emit_person(m.start("name"), m.end("name"), m.group("name"))
+        if span:
+            yield span
+
+
 # --- 지명(주소) 규칙 단독 배출 (CMP-222 P3) ---------------------------------
 # 아래 규칙(도로명·상세주소·랜드마크·시군구·광역·결합 행정 스팬)은 gazetteer
 # 백엔드 안에서만 쓰이던 것을 모듈 함수로 분리한다. 모델 백엔드(onnx-int8 등)와
@@ -224,26 +268,8 @@ class _GazetteerBackend:
     name = "gazetteer"
 
     def detect(self, text: str) -> Iterator[RawSpan]:
-        # 인명: 성씨 + 1~2자, 경칭/직함/선행 문맥으로 게이팅(호모그래프 오탐 억제)
-        seen: set[tuple[int, int]] = set()
-
-        def emit_person(start, end, name):
-            if (start, end) in seen:
-                return None
-            seen.add((start, end))
-            return RawSpan("KR_PERSON", name, start, end, 0.75, source="ner:gazetteer")
-
-        for rx in (_PERSON_HONOR_RE, _PERSON_TITLE_RE):
-            for m in rx.finditer(text):
-                span = emit_person(m.start("name"), m.end("name"), m.group("name"))
-                if span:
-                    yield span
-        for m in _PERSON_CAND_RE.finditer(text):
-            if not _CONTEXT_RE.search(text[max(0, m.start() - 8):m.start()]):
-                continue
-            span = emit_person(m.start("name"), m.end("name"), m.group("name"))
-            if span:
-                yield span
+        # 인명: 규칙 단위로 분리(CMP-236, detect_kr_persons) — 모델 백엔드와 유니온 재사용.
+        yield from detect_kr_persons(text, source="ner:gazetteer")
         # 지명(주소)은 규칙 단위로 분리(CMP-222 P3, detect_kr_locations) — 모델 백엔드와
         # 유니온 재사용. 우선순위(구체적 스팬 우선)·호모그래프 차단은 함수 내부에 보존.
         yield from detect_kr_locations(text, source="ner:gazetteer")
@@ -372,15 +398,20 @@ class KoreanNerDetector:
     확장 규칙(P2)** 유니온을 활성화한다. 모델 백엔드(transformers/onnx-int8)가 놓치는
     구조적·어휘밖 주소를 규칙으로 회복해 재현율을 끌어올린다. recall(A∪B) ≥ max(A,B)
     가 보장되고(스팬을 더할 뿐 제거하지 않음), 정밀도는 P2 차단목록으로 방어한다.
-    다른 PII·인명 채널은 건드리지 않는다. gazetteer 백엔드는 이미 규칙을 포함하므로
-    유니온이 무의미 → no-op(중복 배출 방지).
+    다른 PII·인명 채널은 건드리지 않는다.
+
+    ``person_union`` (CMP-236): 인명 채널(KR_PERSON)에 한해 **모델 백엔드 ∪ 규칙
+    (경칭/직함/문맥 게이팅)** 유니온을 활성화한다. 모델이 놓치는 등재 성씨 인명을
+    규칙으로 회복한다. KR_LOCATION 유니온과 동일 플레이북(스팬 추가 전용, _merge 중복
+    제거). gazetteer 백엔드는 이미 규칙을 포함하므로 유니온이 무의미 → no-op.
     """
 
     def __init__(self, backend: str = "auto", model_id: Optional[str] = None,
-                 location_union: bool = False):
+                 location_union: bool = False, person_union: bool = False):
         self.backend = self._build_backend(backend, model_id)
         # 규칙은 gazetteer 백엔드에 이미 있으므로 모델 백엔드일 때만 유니온한다.
         self.location_union = bool(location_union) and self.backend_name != "gazetteer"
+        self.person_union = bool(person_union) and self.backend_name != "gazetteer"
 
     @staticmethod
     def _build_backend(backend: str, model_id: Optional[str]):
@@ -412,3 +443,7 @@ class KoreanNerDetector:
         # 보장되므로 클래스 recall(A∪B) ≥ max(A,B). 인명/기타 PII 는 미포함.
         if self.location_union:
             yield from detect_kr_locations(text, source="rule:kr-location")
+        # 인명 채널 규칙 유니온(CMP-236). 모델이 놓친 등재 성씨 인명을 규칙
+        # (경칭/직함/문맥 게이팅)으로 회복. 위 주소 유니온과 동일 플레이북.
+        if self.person_union:
+            yield from detect_kr_persons(text, source="rule:kr-person")
