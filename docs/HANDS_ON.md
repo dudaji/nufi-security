@@ -574,7 +574,7 @@ nufi-egress --role viewer policy bind tenant-acme strict                       #
 6. **자동 테스트** — acceptance(10/10) · unit · bench(recall·p95)
 
 > 이건 Part A~E 에서 본 SDK 동작(차단/가명화/감사)을 **서버 경유**로 재확인하는 셈입니다.
-> 더 좁은 데모도 있습니다: `./scripts/demo_coverage.sh`(커버리지), `./scripts/demo_dashboards.sh`(감사 대시보드).
+> 더 좁은 데모도 있습니다: `./scripts/demo_coverage.sh`(커버리지).
 
 ---
 

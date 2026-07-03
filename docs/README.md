@@ -44,9 +44,6 @@
 > **서빙 앞단 통합·CLI 를 보려면** → [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md)(통합/사용
 > 가이드) + [`CLI.md`](CLI.md)(`nufi-egress` 전 서브커맨드 레퍼런스).
 >
-> **감사를 *읽는 화면*(읽기 전용 대시보드)을 보려면** → [`../dashboards/README.md`](../dashboards/README.md)
-> (결정 뷰어·해시체인 무결성·우회 타임라인·카테고리 추이). 1-명령 데모: [`../scripts/demo_dashboards.sh`](../scripts/demo_dashboards.sh).
->
 > **'내 트래픽 중 몇 %가 게이트웨이를 통과'(커버리지)를 보려면** → [`CLI.md#coverage`](CLI.md#coverage)
 > (`coverage`/`monitor` 리포트 + 우회 알림). 1-명령 데모: [`../scripts/demo_coverage.sh`](../scripts/demo_coverage.sh).
 >

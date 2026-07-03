@@ -4,8 +4,8 @@
 **새 측정·새 벤치는 추가하지 않는다** — 기존 산출물을 read-only 로 재사용한다.
 
 재사용(범위 가드):
-  - 감사 결정/우회 집계 · 해시체인 무결성 → :mod:`dashboards.adapter`
-    (``panel_decisions`` / ``panel_bypass_timeline``) + :func:`egress_audit.audit.verify_chain_records`.
+  - 감사 결정/우회 집계 · 해시체인 무결성 → 인라인 read-only 유틸
+    (``_panel_decisions`` / ``_panel_bypass_timeline``) + :func:`egress_audit.audit.verify_chain_records`.
   - 정책 변경 감사(누가·언제·무엇 + 해시체인) → :class:`enforcement.policy_ops.PolicyChangeAudit`.
   - 게이트웨이 커버리지 → :class:`capture.coverage.CoverageAggregator`.
   - PII recall / 지연 p95 → 기존 측정 산출물(JSONL 샘플; M5 벤치·온프렘 p95 리포트).
@@ -37,13 +37,99 @@ import sys
 if str(_ROOT) not in sys.path:  # 스크립트 직접 실행 경로 보장
     sys.path.insert(0, str(_ROOT))
 
-from dashboards.adapter import (  # noqa: E402  read-only 어댑터 재사용
-    load_audit,
-    load_flows,
-    panel_bypass_timeline,
-    panel_decisions,
-)
+import os  # noqa: E402
 from egress_audit.audit import verify_chain_records  # noqa: E402
+
+# --------------------------------------------------------------------------- #
+# read-only 로더 (구 dashboards.adapter 에서 인라인 — CMP-194 dashboard 제거)
+# --------------------------------------------------------------------------- #
+_DEFAULT_AUDIT_LOG = _ROOT / "logs" / "egress_audit.jsonl"
+_DEFAULT_FLOW_DIR = _ROOT / "logs" / "packets" / "public"
+
+
+def _read_jsonl(path: Path) -> list:
+    if not path.exists():
+        return []
+    out: list = []
+    with open(path, "r", encoding="utf-8") as f:
+        for ln in f:
+            ln = ln.strip()
+            if ln:
+                out.append(json.loads(ln))
+    return out
+
+
+def load_audit(path: Optional[str] = None) -> list:
+    p = Path(path or os.environ.get("EGRESS_AUDIT_LOG", str(_DEFAULT_AUDIT_LOG)))
+    return _read_jsonl(p)
+
+
+def load_flows(flow_dir: Optional[str] = None,
+               paths: Optional[Iterable[str]] = None) -> list:
+    recs: list = []
+    if paths:
+        for p in paths:
+            recs.extend(_read_jsonl(Path(p)))
+        return recs
+    d = Path(flow_dir or os.environ.get("EGRESS_FLOW_DIR", str(_DEFAULT_FLOW_DIR)))
+    if d.is_file():
+        return _read_jsonl(d)
+    if d.exists():
+        for p in sorted(d.glob("flow-*.jsonl")):
+            recs.extend(_read_jsonl(p))
+    return recs
+
+
+def _mask(text: Optional[str]) -> str:
+    if text is None:
+        return ""
+    n = len(str(text))
+    return f"\u00ab{n}\uc790\u00bb" if n else ""
+
+
+def _redact_finding(f: dict, redact: bool) -> dict:
+    out = {
+        "entity_type": f.get("entity_type") or f.get("category") or f.get("type"),
+        "score": f.get("score"),
+        "source": f.get("source"),
+        "start": f.get("start"),
+        "end": f.get("end"),
+    }
+    out["text"] = _mask(f.get("text")) if redact else f.get("text")
+    return out
+
+
+def panel_decisions(records: list, *, redact: bool = True, **_kw: Any) -> dict:
+    rows = []
+    for r in records:
+        ents = [f.get("entity_type") or f.get("category") or f.get("type")
+                for f in r.get("findings", []) if isinstance(f, dict)]
+        dec = r.get("decision") or {}
+        rows.append({
+            "id": r.get("id"), "ts": r.get("ts"), "epoch_ms": r.get("epoch_ms"),
+            "outcome": r.get("outcome"), "blocked": dec.get("blocked"),
+            "action_counts": dec.get("action_counts") or {},
+            "finding_count": dec.get("finding_count", len(r.get("findings", []))),
+            "entity_types": sorted(set(e for e in ents if e)),
+            "findings": [_redact_finding(f, redact)
+                         for f in r.get("findings", []) if isinstance(f, dict)],
+        })
+    rows.sort(key=lambda x: x.get("epoch_ms") or 0, reverse=True)
+    return {"panel": "decisions", "count": len(rows), "rows": rows, "redacted": redact}
+
+
+def panel_bypass_timeline(flows: list, **_kw: Any) -> dict:
+    rows = []
+    for fr in flows:
+        rows.append({
+            "flow_id": fr.get("flow_id"), "ts": fr.get("ts"),
+            "epoch_ms": fr.get("epoch_ms"), "severity": fr.get("severity"),
+            "bypass": fr.get("bypass"), "dst_host": fr.get("dst_host") or fr.get("sni"),
+            "provider": fr.get("provider"), "via_gateway": fr.get("via_gateway"),
+        })
+    rows.sort(key=lambda x: x.get("epoch_ms") or 0, reverse=True)
+    bypass_n = sum(1 for r in rows if r.get("bypass"))
+    return {"panel": "bypass_timeline", "count": len(rows), "bypass_count": bypass_n, "rows": rows}
 from enforcement.access import (  # noqa: E402  테넌트 읽기 경계·역할(C2)
     ROLE_OPERATOR,
     Session,

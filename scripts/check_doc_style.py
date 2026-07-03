@@ -99,7 +99,7 @@ def scan() -> list[tuple[str, int, str]]:
 #   단, (a) 같은 줄에 ``nufi-egress``/``nufi `` 리드가 함께 있거나(주 명령은 CLI, 모듈은
 #   부가 표기), (b) 그 줄 또는 직전 2줄에 폴백 표지(아래 _FALLBACK_MARKERS)가 있으면 허용.
 # pip/pytest 등 표준 도구는 우리 모듈이 아니므로 대상이 아니다(모듈명으로 한정).
-_OUR_MODULES = ("enforcement", "egress_audit", "capture", "dashboards")
+_OUR_MODULES = ("enforcement", "egress_audit", "capture")
 _RAW_MODULE = re.compile(
     r"python3?\s+-m\s+(?:" + "|".join(_OUR_MODULES) + r")(?:\.[\w.]+)?\b"
 )

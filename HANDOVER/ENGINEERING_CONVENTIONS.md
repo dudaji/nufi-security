@@ -31,7 +31,7 @@ export EGRESS_NER_BACKEND=gazetteer           # 에어갭·CI 안전: 사전 기
    `영업`(단 `영업비밀`은 허용)·`CMP-<번호>`(내부 이슈 번호)·`CEO`/`CPO`/`CMO`(단어 경계)·`Engineer`.
 2. **코드의 사용자 표면 문자열**(argparse help/description, stdout, 생성물 헤더, JSON 응답)에
    내부 이슈 번호 금지. (순수 내부 docstring/주석은 허용.)
-3. 문서가 우리 모듈(`enforcement`·`egress_audit`·`capture`·`dashboards`)을 raw
+3. 문서가 우리 모듈(`enforcement`·`egress_audit`·`capture`)을 raw
    `python -m …` 으로 **주 명령**으로 표기 금지 — 주 명령은 단일 진입점 `nufi-egress <서브>`.
    (같은 줄에 `nufi-egress` 리드가 있거나 "레거시/폴백/비설치 동치"로 명시하면 허용.)
 
@@ -68,7 +68,7 @@ python3 scripts/check_docs.py                      # 문서 링크·수치↔리
 - **주 명령은 항상 `nufi-egress <서브커맨드>`**(= `nufi <서브>`). 설치: `pip install -e .`.
 - raw 모듈 실행(`python3 -m enforcement.cli …`)은 **비설치 동치/레거시 폴백**으로만 표기합니다.
 - 서브커맨드: `render`·`apply`·`disable`·`status`·`feedback`·`doctor`·`coverage`·`monitor`·
-  `init`·`audit`·`targets`·`flow-tap`·`dashboard`·`policy`(list/bind/snapshot/versions/
+  `init`·`audit`·`targets`·`flow-tap`·`policy`(list/bind/snapshot/versions/
   rollback/audit/inspect)·`report`(sla/compliance)·`benchmark`. 권위 레퍼런스는
   [`../docs/CLI.md`](../docs/CLI.md).
 

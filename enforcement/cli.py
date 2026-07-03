@@ -13,7 +13,6 @@
   audit     비동기 감사 봇(report/daemon/once) + §4 감사로그 조회(query · CMP-141).
   targets   capture_targets.yaml 파생/조회 + BPF 필터 출력(CMP-87 캡처 레이어 · CMP-143).
   flow-tap  public 목적지 flow tap(우회 탐지) — --simulate 리플레이/--live 캡처(CMP-143).
-  dashboard 감사 가시성 대시보드 기동(read-only 데이터소스 HTTP 서버 · CMP-158).
   policy    정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사(CMP-144 B1).
   report    기간별 SLA·규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음 · CMP-150 C1).
   benchmark 정확도(커밋 산출물 게이트) + 가명화 품질(라이브) 벤치마크 단일 재현(CMP-201 I5).
@@ -443,19 +442,6 @@ def cmd_flow_tap(args) -> int:
     return _flow_tap_main(argv)
 
 
-def cmd_dashboard(args) -> int:
-    # 감사 가시성 대시보드(read-only 데이터소스 HTTP 서버)를 통합 CLI 로 기동(CMP-158 D7).
-    # 기존 모듈 진입점(``python3 -m dashboards.server``)은 비설치 동치로 그대로 유지.
-    from dashboards.server import main as _dash_main
-    argv: List[str] = ["--host", args.host, "--port", str(args.port)]
-    if getattr(args, "audit", None):
-        argv += ["--audit", args.audit]
-    if getattr(args, "flow_dir", None):
-        argv += ["--flow-dir", args.flow_dir]
-    _dash_main(argv)
-    return 0
-
-
 # --- SLA·규정준수 리포팅 (v0.0.6 C1 · CMP-150) ----------------------------- #
 def _report_thresholds(args) -> Optional[dict]:
     """--thresholds JSON 파일 + --set key=value override 병합(둘 다 선택)."""
@@ -702,15 +688,6 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--targets", default=None, help="capture_targets.yaml 경로")
     p.add_argument("--out", default=None, help="flow 로그 출력 base_dir(기본 logs/packets)")
     p.set_defaults(func=cmd_flow_tap)
-
-    p = sub.add_parser("dashboard",
-                       help="감사 가시성 대시보드 기동(read-only 데이터소스 HTTP 서버)")
-    p.add_argument("--host", default="127.0.0.1", help="바인드 호스트(기본 127.0.0.1)")
-    p.add_argument("--port", type=int, default=8099, help="포트(기본 8099)")
-    p.add_argument("--audit", default=None,
-                   help="감사 JSONL 경로(기본 logs/egress_audit.jsonl)")
-    p.add_argument("--flow-dir", default=None, help="flow tap 로그 디렉터리/파일")
-    p.set_defaults(func=cmd_dashboard)
 
     p = sub.add_parser("policy",
                        help="정책 운영 자동화: 다중 프로파일·묶기·버전/되돌리기·변경 감사")

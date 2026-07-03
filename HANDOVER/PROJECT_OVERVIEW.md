@@ -56,7 +56,6 @@
 | `enforcement/` | **CLI 및 운영 기능.** cli.py(단일 진입점 `nufi-egress`), report.py(SLA·컴플라이언스 리포트), policy_ops.py(다중 프로파일 운영), access.py(세션/RBAC), benchmark.py(정확도·가명화 벤치 단일 진입점), compliance_catalog.yaml(규제 매핑 카탈로그), doctor.py(진단), feedback.py, rule_builder.py, applier.py, decision.py |
 | `capture/` | **네트워크 커버리지·우회 차단.** flow_tap.py(패킷 탭), bypass_monitor.py(우회 탐지), coverage.py(게이트 통과율), targets.py, content_dump.py |
 | `gateway/` | **실행 경로.** app.py(단독 FastAPI 게이트웨이), litellm_hook.py(LiteLLM Proxy 콜백, 권장 프로덕션), router.py·core.py |
-| `dashboards/` | 읽기 전용 감사 대시보드(server.py·adapter.py·viewer.html·grafana) |
 | `nufi_client/` | 얇은 파이썬 클라이언트(client.py·transport.py·models.py) |
 | `config/` | 운영자가 YAML로 바꾸는 설정: patterns.yaml(탐지 규칙)·policy.yaml(동작)·routing.yaml(라우팅)·audit_profiles.yaml(감사 프로파일)·litellm_config.yaml |
 | `goldset/` | **공개 배포용 한국어 PII 평가셋**(합성·비-PII, CC0). generate.py --verify 로 결정적 재현·커버리지 게이트 |

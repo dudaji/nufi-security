@@ -25,7 +25,7 @@ nufi-egress --help            # 전체 서브커맨드
 ```
 usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
                    [--tenant TENANT] [--role {viewer,operator}]
-                   {render,apply,disable,status,feedback,doctor,coverage,monitor,init,audit,targets,flow-tap,dashboard,policy,report} ...
+                   {render,apply,disable,status,feedback,doctor,coverage,monitor,init,audit,targets,flow-tap,policy,report} ...
 ```
 
 | 전역 옵션 | 무엇 | 기본 |
@@ -52,7 +52,6 @@ usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
 | [`audit`](#audit) | 비동기 감사 봇(report/daemon/once) + §4 감사로그 조회(query) | 불필요 |
 | [`targets`](#targets) | 캡처 대상(`capture_targets.yaml`) 파생/조회 + BPF 필터 | 불필요 |
 | [`flow-tap`](#flow-tap) | public 목적지 flow tap — 우회 탐지(`--simulate` 리플레이/`--live`) | 라이브는 root/CAP_NET_RAW |
-| [`dashboard`](#dashboard) | 감사 가시성 대시보드 기동(read-only 데이터소스 HTTP 서버) | 불필요 |
 | [`policy`](#policy) | 정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사 | 불필요 |
 | [`report`](#report) | 기간별 SLA·규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음) | 불필요 |
 
@@ -373,32 +372,6 @@ nufi-egress flow-tap --simulate samples/flow_replay.jsonl
 ```
 
 > 종료코드: 성공 시 0(우회를 탐지해도 0 — 판정은 `coverage`/`monitor`/감사 봇이 게이트). `--simulate`·`--live` 둘 다 없으면 2(인자 오류).
-
----
-
-## `dashboard`
-
-감사 가시성 **대시보드**(결정/무결성/우회/추이 4개 패널)를 **read-only 데이터소스 HTTP 서버**로 기동합니다. 게이트웨이가 이미 적재한 추가전용 감사 JSONL·flow tap 로그를 `'r'` 로만 읽어 패널 모델로 노출하므로 프로덕션 무변경·쓰기 권한 없음(GET/HEAD 외 405). 엔진은 `dashboards/server.py`, 자세한 패널·Grafana 연결은 [`../dashboards/README.md`](../dashboards/README.md).
-
-```
-usage: nufi-egress dashboard [-h] [--host HOST] [--port PORT]
-                             [--audit AUDIT] [--flow-dir FLOW_DIR]
-```
-
-| 옵션 | 무엇 | 기본 |
-|---|---|---|
-| `--host HOST` | 바인드 호스트 | `127.0.0.1` |
-| `--port PORT` | 포트 | `8099` |
-| `--audit PATH` | 감사 JSONL 경로 | `logs/egress_audit.jsonl` |
-| `--flow-dir PATH` | flow tap 로그 디렉터리/파일 | `logs/packets/public/` |
-
-```bash
-nufi-egress dashboard --port 8099 \
-  --audit dashboards/sample/audit_chain.jsonl --flow-dir dashboards/sample
-# → http://127.0.0.1:8099/viewer (read-only 뷰어) · /api/{model,decisions,chain,bypass,trend}
-```
-
-> 비설치 동치: `python3 -m dashboards.server --port 8099 …`. 환경변수 `EGRESS_AUDIT_LOG`·`EGRESS_FLOW_DIR` 로도 데이터소스 지정 가능.
 
 ---
 

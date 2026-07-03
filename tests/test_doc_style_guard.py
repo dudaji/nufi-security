@@ -44,7 +44,6 @@ def test_repo_has_no_raw_module_main_command():
 
 # --- 2. 규칙 동작(긍정/부정) ----------------------------------------------------
 def test_raw_module_main_command_is_flagged():
-    assert _flag(["python3 -m dashboards.server --port 8099"]) == [1]
     assert _flag(["sudo python3 -m enforcement.cli apply"]) == [1]
 
 

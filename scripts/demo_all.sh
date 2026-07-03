@@ -8,7 +8,6 @@
 #
 #   demo.sh                  게이트웨이 e2e — private 라우팅·강한 PII/비밀 차단·가명화·감사
 #   demo_coverage.sh         감사 커버리지 — public 전송 100% 기록 무결성
-#   demo_dashboards.sh       감사 대시보드 — 결정/무결성/우회/추이 패널 어댑터
 #   demo_report.sh           SLA·규정준수 리포트 — 기간 충족/위반 + 해시체인 게이트
 #   demo_sla_alert.sh        SLA 선제 알림·다테넌트 집계 — 위반 알림 JSON + 플릿 표
 #   demo_compliance_mapping.sh 컴플라이언스 매핑 — 점검항목 커버리지(직접/부분/범위밖)
@@ -60,7 +59,6 @@ skip_demo() {
 
 run_demo demo.sh                  "게이트웨이 e2e(private 라우팅·차단·가명화·감사)"
 run_demo demo_coverage.sh         "감사 커버리지(전송 100% 기록 무결성)"
-run_demo demo_dashboards.sh       "감사 대시보드(결정/무결성/우회/추이 패널)"
 run_demo demo_report.sh           "SLA·규정준수 리포트(충족/위반 + 해시체인)"
 run_demo demo_sla_alert.sh        "SLA 선제 알림·다테넌트 집계(위반 알림 JSON + 플릿 표)"
 run_demo demo_compliance_mapping.sh "컴플라이언스 매핑(점검항목 커버리지 직접/부분/범위밖)"
