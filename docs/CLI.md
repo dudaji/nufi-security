@@ -25,7 +25,6 @@ nufi --help                   # nufi-egress 와 동일(별칭)
 
 ```
 usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
-                   [--tenant TENANT] [--role {viewer,operator}]
                    {render,apply,disable,status,feedback,doctor,coverage,monitor,init,audit,targets,flow-tap,policy,report,benchmark} ...
 ```
 
@@ -33,11 +32,6 @@ usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
 |---|---|---|
 | `--routing PATH` | `routing.yaml` 경로 | `config/routing.yaml` |
 | `--policy PATH` | `policy.yaml` 경로 | `config/policy.yaml` |
-| `--tenant KEY` | 테넌트 읽기 경계 — 조회를 이 테넌트로 격리(`report`) ⚠️ 운영 레이어 제외 | 전체(env `NUFI_TENANT`) |
-| `--role {viewer,operator}` | RBAC — `viewer`=조회만, `operator`=조회+정책변경 ⚠️ 운영 레이어 제외 | `operator`(env `NUFI_ROLE`) |
-
-> 테넌트 읽기 격리 + 읽기전용 역할의 동작·범위는 [`MULTITENANCY.md`](MULTITENANCY.md). `viewer` 가
-> `policy bind/snapshot/rollback` 을 시도하면 권한 거부로 `exit 3`.
 
 | 서브커맨드 | 한 줄 | 권한 |
 |---|---|---|
@@ -54,7 +48,7 @@ usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
 | [`targets`](#targets) | 캡처 대상(`capture_targets.yaml`) 파생/조회 + BPF 필터 | 불필요 |
 | [`flow-tap`](#flow-tap) | public 목적지 flow tap — 우회 탐지(`--simulate` 리플레이/`--live`) | 라이브는 root/CAP_NET_RAW |
 | [`policy`](#policy) | 정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사 | 불필요 |
-| [`report`](#report) | 기간별 SLA·규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음) | 불필요 |
+| [`report`](#report) | 규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음) | 불필요 |
 | [`benchmark`](#benchmark) | 정확도+가명화 벤치마크 재현(커밋 증거 대조 + 라이브 하니스) | 불필요 |
 
 > **신규 도입 5분 경로:** `init audit-only` → SDK/게이트웨이 배선 → `doctor`(core-3 GREEN 확인) → `status`/감사 로그 관찰 → 준비되면 `apply`. 자세한 결정 트리는 [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md).
@@ -419,47 +413,22 @@ nufi-egress policy audit --verify-chain             # 변경 감사 + 변조탐�
 
 ## `report`
 
-> ⚠️ **`report sla`** 와 관련 플래그(`--alert`, `--webhook`, `--all-tenants`)는 운영 레이어
-> 제외 대상입니다([`ROADMAP.md`](ROADMAP.md) §3). 코드는 남아 있으나 신규 기능·지원 없음.
-> **`report compliance`** 는 코어 증빙 기능으로 그대로 유지됩니다.
-
-이미 측정·적재된 지표를 **기간별(일/주/월) 제출용 리포트**로 묶습니다. 새 측정·새 벤치를
+이미 측정·적재된 지표를 **제출용 규정준수 리포트**로 묶습니다. 새 측정·새 벤치를
 돌리지 않고 기존 산출물만 읽기 전용으로 재사용해 Markdown/HTML/JSON 을 산출합니다.
 전체 입력 스키마·예시는 [`REPORTING.md`](REPORTING.md).
 
 ```text
-usage: nufi-egress report {sla,compliance} ...
+usage: nufi-egress report compliance ...
 ```
 
 | 하위 | 무엇 | 종료코드 |
 |---|---|---|
-| `report sla` | PII recall·지연 p95·커버리지 기간별 집계 + 충족/위반 판정 | 위반 시 1 |
 | `report compliance` | 정책 변경 감사(+해시체인)·차단/가명화·우회 요약 | 체인 변조 시 1 |
 
 ```bash
-# SLA — 기본 임계 = recall ≥ 0.9 / p95 ≤ 150ms / 커버리지 ≥ 99%
-nufi-egress report sla --metrics samples/sla/sla_metrics.jsonl \
-  --flow samples/sla/flow_bypass.jsonl --period week --format md
-# 고객별 임계 override(설정 노출)
-nufi-egress report sla --metrics samples/sla/sla_metrics.jsonl \
-  --thresholds customer_sla.json --set pii_recall=0.95
 # 규정준수 — 변경 감사 + 차단/가명화 + 우회
 nufi-egress report compliance --audit samples/sla/audit_decisions.jsonl \
   --change-log samples/sla/policy_changes.jsonl --format html --out reports/compliance.html
-```
-
-**`report sla` 추가 옵션 — 선제 알림·다테넌트 집계**
-
-| 옵션 | 무엇 |
-|---|---|
-| `--alert FILE` | SLA 위반 요약을 JSON 파일로 기록(주기 점검·cron 친화). |
-| `--webhook URL` | 알림 웹훅 URL(스텁 — 실제 전송 없이 페이로드만 기록). |
-| `--all-tenants` | 테넌트별 행으로 플릿 SLA 표 산출(operator 전용 — viewer 는 자기 테넌트만). |
-
-```bash
-# 위반 시 알림 파일을 남기고 종료코드 1 (cron/주기 점검)
-nufi-egress report sla --metrics samples/sla/sla_metrics.jsonl \
-  --alert reports/sla_alert.json --webhook https://example/hook
 ```
 
 **`report compliance` 추가 옵션 — 점검항목 커버리지·규제 필터**
@@ -477,8 +446,7 @@ nufi-egress report compliance --audit samples/sla/audit_decisions.jsonl \
 ```
 
 > 공통 옵션: `--customer NAME`(헤더), `--title NAME`, `--format {md,html,json}`, `--out PATH`(생략 시 stdout).
-> 1-명령 데모: `./scripts/demo_report.sh`(6/6 PASS, 권한 불필요). 규제 매핑 데모: `./scripts/demo_compliance_mapping.sh`.
-> SLA 알림 데모: `./scripts/demo_sla_alert.sh`.
+> 1-명령 데모: `./scripts/demo_report.sh`(권한 불필요). 규제 매핑 데모: `./scripts/demo_compliance_mapping.sh`.
 
 ---
 
@@ -575,4 +543,4 @@ python3 scripts/demo_pii_routing.py    # 4 시나리오 PASS, LiteLLM 불필요
 
 ---
 
-*작성: 2026-06-28 — v0.0.2 기준. 통합 CLI(`enforcement/cli.py`) 표면을 `--help` 실측으로 기술. 단독 진입점(`enforcement.doctor`·`egress_audit.init_cli`)은 동치로 병기. v0.4.9 — PII 라우팅 설정 섹션 추가.*
+*작성: 2026-06-28 — v0.0.2 기준. 통합 CLI(`enforcement/cli.py`) 표면을 `--help` 실측으로 기술. 단독 진입점(`enforcement.doctor`·`egress_audit.init_cli`)은 동치로 병기. v0.4.9 — PII 라우팅 설정 섹션 추가. v0.4.11 — RBAC/멀티테넌시·SLA 리포팅 제거.*

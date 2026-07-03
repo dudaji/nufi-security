@@ -8,11 +8,9 @@
 #
 #   demo.sh                  게이트웨이 e2e — private 라우팅·강한 PII/비밀 차단·가명화·감사
 #   demo_coverage.sh         감사 커버리지 — public 전송 100% 기록 무결성
-#   demo_report.sh           SLA·규정준수 리포트 — 기간 충족/위반 + 해시체인 게이트
-#   demo_sla_alert.sh        SLA 선제 알림·다테넌트 집계 — 위반 알림 JSON + 플릿 표
+#   demo_report.sh           규정준수 리포트 — 해시체인 게이트 + 점검항목 커버리지
 #   demo_compliance_mapping.sh 컴플라이언스 매핑 — 점검항목 커버리지(직접/부분/범위밖)
 #   demo_policy_ops.sh       정책 운영 — 다중 프로파일·바인딩·무재기동 롤백·변경 감사
-#   demo_multitenancy.sh     멀티테넌시·RBAC — 테넌트 읽기 경계 + 읽기전용 역할
 #   demo_pseudonymize.sh     가명화 품질 — 가역/비가역 지표·충돌율 0·결정성·차단 유지
 #   demo_audit_separation.sh 차등 감사 — public/private 분리 + 패킷 우회 탭 + 비동기 봇
 #   demo_location_union.sh   주소 유니온 — 모델 ∪ 확장규칙(P2)로 KR_LOCATION 재현율 향상
@@ -67,11 +65,9 @@ skip_demo() {
 
 run_demo demo.sh                  "게이트웨이 e2e(private 라우팅·차단·가명화·감사)"
 run_demo demo_coverage.sh         "감사 커버리지(전송 100% 기록 무결성)"
-run_demo demo_report.sh           "SLA·규정준수 리포트(충족/위반 + 해시체인)"
-run_demo demo_sla_alert.sh        "SLA 선제 알림·다테넌트 집계(위반 알림 JSON + 플릿 표)"
+run_demo demo_report.sh           "규정준수 리포트(해시체인 + 점검항목 커버리지)"
 run_demo demo_compliance_mapping.sh "컴플라이언스 매핑(점검항목 커버리지 직접/부분/범위밖)"
 run_demo demo_policy_ops.sh       "정책 운영(프로파일·바인딩·롤백·변경 감사)"
-run_demo demo_multitenancy.sh     "멀티테넌시·RBAC(테넌트 경계 + 읽기전용 역할)"
 run_demo demo_pseudonymize.sh     "가명화 품질(가역/비가역 지표·충돌율 0·결정성·차단 유지)"
 run_demo demo_audit_separation.sh "차등 감사(분리 저장 + 우회 탭 + 비동기 봇)"
 run_demo demo_location_union.sh   "주소 유니온(모델 ∪ 확장규칙 P2 · KR_LOCATION 재현율)"

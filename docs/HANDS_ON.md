@@ -491,37 +491,24 @@ nufi-egress policy audit --verify-chain              # 체인 BROKEN 이면 exit
 
 ### 6.10 제출용 리포트로 묶기 — `report`
 
-> ⚠️ **운영 레이어 제외 안내** — `report sla`와 관련 플래그(`--alert`, `--webhook`,
-> `--all-tenants`)는 운영 레이어 제외 대상입니다([`ROADMAP.md`](ROADMAP.md) §3).
-> `report compliance`(증빙)는 코어 기능으로 그대로 유지됩니다.
-
-지금까지 쌓인 측정·감사 로그를 감사관·구매자에게 낼 수 있는 **기간별 리포트**로 묶습니다.
+지금까지 쌓인 측정·감사 로그를 감사관·구매자에게 낼 수 있는 **규정준수 리포트**로 묶습니다.
 새 측정을 돌리지 않고 이미 있는 산출물만 읽어 Markdown/HTML/JSON 을 만듭니다.
 
 ```bash
-# SLA: recall·지연 p95·커버리지를 주별로 집계 + 목표 대비 충족/위반 판정
-nufi-egress report sla --metrics samples/sla/sla_metrics.jsonl \
-  --flow samples/sla/flow_bypass.jsonl --period week --customer "Acme Corp" --format md
-
-# 고객별 임계는 설정으로 노출 — 완화/강화 모두 가능
-nufi-egress report sla --metrics samples/sla/sla_metrics.jsonl --set pii_recall=0.95
-
 # 규정준수: 정책 변경 감사(+해시체인) · 차단/가명화 · 우회 요약을 한 장으로
 nufi-egress report compliance --audit samples/sla/audit_decisions.jsonl \
   --change-log samples/sla/policy_changes.jsonl --flow samples/sla/flow_bypass.jsonl --format md
 
-# 점검항목 커버리지(v0.0.9 신규): 안내서·망분리 점검항목 대비 충족 현황을 같은 리포트에 매핑
+# 점검항목 커버리지: 안내서·망분리 점검항목 대비 충족 현황을 같은 리포트에 매핑
 nufi-egress report compliance --audit samples/sla/audit_decisions.jsonl \
   --change-log samples/sla/policy_changes.jsonl --flow samples/sla/flow_bypass.jsonl \
   --controls --customer "Acme Corp" --format md
 ```
 
 **무슨 일이 일어났나요?**
-- `report sla` 는 기본 품질약속(PII recall ≥ 0.9 / p95 ≤ 150ms / 커버리지 ≥ 99%) 대비
-  각 항목에 **충족/위반**을 찍고, 위반이 하나라도 있으면 `exit 1`(CI/제출 게이트).
 - `report compliance` 는 변경 감사·감사 로그 두 **해시체인**을 검증해, 변조가 탐지되면
   `exit 1` 로 제출을 막습니다.
-- `--controls` *(v0.0.9 신규, v1.2 확장)* 를 더하면 **금융보안원 안내서·망분리 + 개인정보보호법·신용정보법·ISMS-P** 점검항목 대비
+- `--controls` 를 더하면 **금융보안원 안내서·망분리 + 개인정보보호법·신용정보법·ISMS-P** 점검항목 대비
   NuFi 통제 충족 현황을 **같은 리포트의 기존 증빙에서 자동 산출**한 매핑 표가 붙습니다. 한 행 =
   **요구사항 → NuFi 통제 → 충족 여부 → 증빙 출처**, 롤업 배지로 직접 N(충족/미충족)·부분 N·범위밖 N.
   - **직접(direct)** 은 차단/가명화 결정·무결 체인 증빙으로 충족/미충족을 **자동판정**(✅/❌),
@@ -530,39 +517,11 @@ nufi-egress report compliance --audit samples/sla/audit_decisions.jsonl \
   - 커버리지는 **정보성** — 무결성 게이트 종료코드(정상 0 · 변조 1)를 **바꾸지 않습니다**.
     끄려면 `--no-controls`, 통제 카탈로그 교체는 `--catalog FILE`.
 
-> ✅ **체크포인트:** 1-명령 자동 채점은 `./scripts/demo_report.sh`(6/6 PASS, 권한 불필요)와
+> ✅ **체크포인트:** 1-명령 자동 채점은 `./scripts/demo_report.sh`(권한 불필요)와
 > `./scripts/demo_compliance_mapping.sh`(점검항목 커버리지 5/5 PASS), 명령 전체 옵션·입력
-> 스키마는 [`REPORTING.md`](REPORTING.md)(점검항목 커버리지는 §3).
+> 스키마는 [`REPORTING.md`](REPORTING.md)(점검항목 커버리지는 §2).
 
-### 6.11 여러 테넌트를 한 게이트웨이에서 — `--tenant` · `--role`
-
-> ⚠️ **운영 레이어 제외 안내** — 멀티테넌시·RBAC(`--tenant`, `--role`, `--all-tenants`)는
-> 운영 레이어 제외 대상입니다([`ROADMAP.md`](ROADMAP.md) §3). 코드는 남아 있으나 신규
-> 기능·지원 없음.
-
-다수 테넌트를 한 게이트웨이에서 운영할 때, 조회를 **테넌트별로 격리**하고 **읽기전용 역할**을
-분리합니다(기존 동작·차단 규칙은 그대로).
-
-```bash
-# 테넌트 읽기 경계: acme 조회는 acme 레코드만 — 다른 테넌트는 보이지 않는다
-nufi-egress --tenant acme report compliance --audit samples/sla/audit_decisions.jsonl --format json
-
-# 읽기전용 역할(viewer): 조회는 되지만…
-nufi-egress --role viewer report sla --metrics samples/sla/sla_metrics.jsonl   # ✅ 동작
-# …정책 변경은 거부된다(부수효과 없음, exit 3)
-nufi-egress --role viewer policy bind tenant-acme strict                       # ❌ 권한 거부
-```
-
-**무슨 일이 일어났나요?**
-- `--tenant` 는 조회를 그 테넌트로 **격리**합니다. 미귀속 레코드도 격리 시 비노출(fail-closed)이며,
-  해시체인 무결성은 **전체 체인** 기준으로 검증하므로 한 테넌트만 봐도 변조 탐지는 그대로입니다.
-- `--role viewer` 는 **조회만** 허용하고 `policy bind/snapshot/rollback` 을 막습니다(`operator` 는 둘 다).
-  기본 역할은 `operator`(역호환). `NUFI_TENANT`/`NUFI_ROLE` env 로도 줄 수 있습니다.
-
-> ✅ **체크포인트:** 1-명령 자동 채점은 `./scripts/demo_multitenancy.sh`(6/6 PASS, 권한 불필요),
-> 자세한 동작·범위는 [`MULTITENANCY.md`](MULTITENANCY.md).
-
-### 6.12 PII 기반 하이브리드 라우팅 — PII 면 로컬, 아니면 클라우드 *(v0.4.0 신규)*
+### 6.11 PII 기반 하이브리드 라우팅 — PII 면 로컬, 아니면 클라우드 *(v0.4.0 신규)*
 
 PII 가 포함된 요청은 클라우드로 보내지 않고 **로컬 모델로 강제 전환**하는 라우팅 레이어를
 체험합니다. 기존 egress 감사(차단/가명화)보다 **앞단**에서 실행되어 PII 유출 경로 자체를

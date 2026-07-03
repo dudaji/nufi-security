@@ -24,7 +24,7 @@
 - [§2 5분 퀵스타트](#2-5분-퀵스타트)
 - [§3 핵심 개념 — 무엇이 어떻게 흐르나](#3-핵심-개념)
 - [§4 CLI 레퍼런스 — `nufi-egress`](#4-cli-레퍼런스)
-- [§5 운영 — 정책·리로드·멀티테넌시·리포팅·가시성](#5-운영)
+- [§5 운영 — 정책·리로드·리포팅·가시성](#5-운영)
 - [§6 보안 운영 — 원문 보존·키 회전](#6-보안-운영)
 - [§7 트러블슈팅 & FAQ — 자주 막히는 지점](#7-트러블슈팅--faq)
 - [§8 업그레이드 & 마이그레이션](#8-업그레이드--마이그레이션)
@@ -216,7 +216,7 @@ result = Guard().inspect("김민수님 계좌번호 110-123-456789")
 | 패킷 레이어 [우회](#9-용어집) 차단 | 게이트웨이를 거치지 않는 직접 트래픽을 패킷 수준에서 잡아 방화벽 허용목록(nftables allowlist)으로 차단 | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
 | 정책 프리셋 | 차단/마스킹/가명화/경고 동작을 YAML 로 운영자가 조정 | [`PRESETS.md`](PRESETS.md) |
 
-> 위 용어(egress·가역 가명화·해시체인·우회·[커버리지](#9-용어집)·테넌트/RBAC·EDM)의 짧은
+> 위 용어(egress·가역 가명화·해시체인·우회·[커버리지](#9-용어집)·EDM)의 짧은
 > 정의는 [§9 용어집](#9-용어집)에 모아 두었습니다.
 
 탐지 정확도(한국어 개인정보 재현율 0.977 등) 실측값과 한계는 루트
@@ -239,10 +239,8 @@ result = Guard().inspect("김민수님 계좌번호 110-123-456789")
 | `monitor` | 우회를 실시간 알림으로 |
 | `audit` | 감사 로그 집계·조회 |
 | `targets` / `flow-tap` | 캡처 대상 생성·우회 탐지 |
-| ~~`dashboard`~~ | 읽기 전용 감사 대시보드 — **제외(유지보수 안 함)**, [`ROADMAP.md`](ROADMAP.md) §3 |
 | `policy` | 다중 프로파일·묶기·무재기동 되돌리기·변경 감사 |
 | `report compliance` | 규정준수·컴플라이언스 매핑 리포트(증빙, 제출용) |
-| ~~`report sla`~~ | SLA 리포트·알림 — **제외(유지보수 안 함)**, [`ROADMAP.md`](ROADMAP.md) §3 |
 | `benchmark` | 정확도+가명화 벤치마크 재현(커밋 증거 대조 + 라이브 하니스) |
 
 ```bash
@@ -259,10 +257,6 @@ nufi-egress coverage --simulate samples/flow_replay.jsonl
 
 돌아가는 게이트웨이를 **운영·튜닝**하는 작업입니다. 주제마다 권위 문서가 따로 있습니다.
 
-> **⚠️ 운영(ops) 레이어 제외** — 방향 재설정([`ROADMAP.md`](ROADMAP.md) §3)에 따라 **멀티테넌시·RBAC(§5.3)**,
-> **SLA 리포팅·알림(§5.4 중 SLA 부분)**, **감사 대시보드(§5.5 중 대시보드)** 는 **유지보수 없이 제외**되었습니다.
-> 코드는 당분간 남아 있을 수 있으나 신규 기능·지원이 없으며, 필요 시 별도 결정으로 부활합니다. 게이트웨이
-> 코어(정책 집행·핫리로드·커버리지)와 **컴플라이언스 매핑(증빙, §5.4)** 은 그대로 유지됩니다.
 
 ### 5.1 여러 정책을 한 게이트웨이에서 (정책 at scale)
 
@@ -275,25 +269,10 @@ nufi-egress coverage --simulate samples/flow_replay.jsonl
 게이트웨이를 재기동하지 않고 룰셋을 검증(validate) → 드라이런(dry-run) → 적용(reload)
 합니다. fail-closed 안전 불변식을 보장합니다. 권위: [`OPS_RULE_RELOAD.md`](OPS_RULE_RELOAD.md).
 
-### 5.3 멀티테넌시 & 읽기전용 역할(RBAC) — ~~제외(유지보수 안 함)~~
-
-> **제외됨**([`ROADMAP.md`](ROADMAP.md) §3). 아래 서술은 과거 기능 참고용이며 신규 지원이 없습니다.
-
-여러 [테넌트](#9-용어집)(tenant)를 한 게이트웨이에서 운영하면서 **테넌트별 조회 격리**와
-읽기전용(viewer)/운영(operator) 역할 기반 접근 제어([RBAC](#9-용어집), Role-Based Access
-Control)를 적용합니다. `viewer` 역할이 정책 변경이나 다테넌트 집계를 시도하면 거부되고
-**종료코드 3**으로 끊깁니다([§7](#7-트러블슈팅--faq) 5번 참조). 권위:
-[`MULTITENANCY.md`](MULTITENANCY.md). 1-명령 데모:
-[`../scripts/demo_multitenancy.sh`](../scripts/demo_multitenancy.sh).
-
-### 5.4 규정준수·컴플라이언스 매핑 리포팅 (증빙)
+### 5.3 규정준수·컴플라이언스 매핑 리포팅 (증빙)
 
 감사관·구매자 제출용 **규정준수 리포트**(정책 변경 감사 + 차단/가명화 + 우회 증빙)를 냅니다.
 이것이 NuFi 의 **한국 규제 증빙** 축입니다(코어 유지 대상).
-
-> **~~SLA 리포팅·알림 제외~~** — 기간별 SLA 충족/위반(`report sla`), 위반 선제 알림
-> (`--alert`/`--webhook`), 다테넌트 집계(`--all-tenants`)는 운영 모니터링으로 분류되어
-> **제외(유지보수 안 함)** 되었습니다([`ROADMAP.md`](ROADMAP.md) §3). 아래 **컴플라이언스 매핑**은 유지됩니다.
 
 **컴플라이언스 매핑 — 점검항목 커버리지(control coverage).** 규정준수 리포트에
 `--controls` 를 더하면, **금융분야 AI 보안 안내서·망분리 평가기준 + 개인정보보호법·
@@ -323,27 +302,22 @@ nufi-egress report compliance --audit audit.jsonl --change-log changes.jsonl \
 - **종료코드** — 커버리지는 **정보성**입니다. 기존 무결성 게이트의 종료코드(정상 0 ·
   변조 1)를 **바꾸지 않습니다**.
 
-권위: [`REPORTING.md`](REPORTING.md) §3. 1-명령 데모:
+권위: [`REPORTING.md`](REPORTING.md) §2. 1-명령 데모:
 [`../scripts/demo_compliance_mapping.sh`](../scripts/demo_compliance_mapping.sh).
 
-### 5.5 감사 가시성 — 커버리지
-
-> **~~읽기 전용 대시보드 제외~~** — 결정 뷰어·해시체인 무결성·우회 타임라인·카테고리 추이
-> 4개 패널 대시보드(`nufi-egress dashboard`)와 프론트엔드 UI 표면은 **제외(유지보수 안 함)**
-> 되었습니다([`ROADMAP.md`](ROADMAP.md) §3). 무결성·우회 증빙은 CLI(`audit`·`coverage`·
-> `monitor`)와 리포트로 확인합니다.
+### 5.4 감사 가시성 — 커버리지
 
 - **커버리지 점검** — "내 트래픽 중 몇 %가 게이트웨이를 통과했나" + 우회 알림. 권위:
   [`CLI.md#coverage`](CLI.md#coverage). 1-명령 데모:
   [`../scripts/demo_coverage.sh`](../scripts/demo_coverage.sh).
 
-### 5.6 정책 프리셋 고르기
+### 5.5 정책 프리셋 고르기
 
 도입 단계·위험 수준에 맞춰 `strict-kr-pii`·`audit-only`·`pseudonymize-roundtrip` 중 하나를
 고릅니다. 동일 입력에 대한 프리셋별 결정 diff 와 fail-closed 보증은
 [`PRESETS.md`](PRESETS.md) 가 권위입니다.
 
-### 5.7 게이트웨이 강건성 설정 (v0.4.2+)
+### 5.6 게이트웨이 강건성 설정 (v0.4.2+)
 
 프로덕션 환경에서 게이트웨이를 안전하게 운영하기 위한 세 가지 환경변수입니다.
 
@@ -441,13 +415,7 @@ nufi-egress monitor                                         # 우회를 실시�
 - 디렉터리 모드 — `flow-*.jsonl` 패턴에 맞는 파일명인지 확인(예: `flow-2026-06-28.jsonl`).
   패턴과 다른 이름은 **조용히 건너뜁니다**.
 
-### 7.5 ~~테넌트/RBAC 거부 — 종료코드 3~~ (제외)
-
-> **제외됨**([`ROADMAP.md`](ROADMAP.md) §3). 멀티테넌시·RBAC가 운영 레이어로 제외되면서
-> `--tenant`/`--all-tenants`/`--role` 플래그와 종료코드 3(RBAC 거부) 경로는 유지보수되지
-> 않습니다. 종료코드는 **0 정상 · 1 무결성/리포트 게이트 실패** 만 현행입니다.
-
-### 7.6 해시체인 무결성 실패 — 종료코드 1
+### 7.5 해시체인 무결성 실패 — 종료코드 1
 
 `report` 가 감사 로그의 해시체인에서 변조·유실을 탐지하면 `integrity_ok=false` 와 함께
 "❌ 무결성 위반(변조 의심)" 및 끊긴 지점(`broken_seq`)을 출력하고 **종료코드 1**로 끝납니다.
@@ -455,8 +423,7 @@ nufi-egress monitor                                         # 우회를 실시�
 원문 보존·키 회전 보안 절차는 [`SECURITY_RETAIN_RAW_KEYROTATION.md`](SECURITY_RETAIN_RAW_KEYROTATION.md)
 가 권위입니다.
 
-> 종료코드 요약: **0** 정상 · **1** 무결성/리포트 게이트 실패. (~~**3** 권한(RBAC) 거부~~ 는
-> 멀티테넌시·RBAC 제외와 함께 더 이상 현행이 아닙니다 — [`ROADMAP.md`](ROADMAP.md) §3.)
+> 종료코드 요약: **0** 정상 · **1** 무결성/리포트 게이트 실패.
 > 각 서브커맨드의 종료코드 표는 [`CLI.md`](CLI.md) 가 권위입니다.
 
 ---
@@ -491,8 +458,6 @@ nufi-egress monitor                                         # 우회를 실시�
 | **해시체인(hash chain)** | 감사 레코드를 직전 레코드의 해시에 연결해, 중간이 변조·유실되면 체인이 끊기는 변조탐지(tamper-evident) 구조. `report` 무결성 게이트의 기반. |
 | **우회(bypass)** | 게이트웨이를 경유하지 않고 나가는 송신. `coverage`/`monitor` 가 측정·표본화하고, 패킷 레이어(nftables 허용목록)에서 원천 차단. |
 | **커버리지(coverage)** | 전체 송신 중 게이트웨이를 경유한(`via_gateway`) 비율. nftables 집행을 "몇 %를 실제로 통과시켰나"라는 측정 가능한 보증으로 만든다. |
-| ~~**테넌트(tenant)**~~ (제외) | 격리 경계(예: `tenant:acme`). 멀티테넌시 제외와 함께 더 이상 현행 아님 — [`ROADMAP.md`](ROADMAP.md) §3. |
-| ~~**RBAC(역할 기반 접근 제어)**~~ (제외) | 역할: `viewer`/`operator`. 운영 레이어 제외와 함께 더 이상 현행 아님 — [`ROADMAP.md`](ROADMAP.md) §3. |
 | **EDM(Exact Data Match, 정확 일치)** | 고객 데이터셋 사전을 기반으로 한 정확 일치 탐지 — 정규식·NER 로 잡기 어려운 고객 고유 식별자를 직접 매칭. |
 | **NER(개체명 인식)** | Named Entity Recognition. 한국어 인명 등 문맥상 개체를 인식하는 탐지 백엔드(선택, 미설치 시 사전 기반으로 동작). |
 | **fail-closed** | 실패 시 **안전 쪽으로** 닫힘 — 감사 기록에 실패하면 외부 전송을 차단. 가용성보다 유출 방지를 우선. |
@@ -517,9 +482,6 @@ nufi-egress monitor                                         # 우회를 실시�
 | 룰 핫리로드 | [`OPS_RULE_RELOAD.md`](OPS_RULE_RELOAD.md) |
 | 규정준수·컴플라이언스 매핑(증빙) | [`REPORTING.md`](REPORTING.md) |
 | 정책 프리셋 | [`PRESETS.md`](PRESETS.md) |
-| ~~멀티테넌시·RBAC~~ (제외, §3) | [`MULTITENANCY.md`](MULTITENANCY.md) |
-| ~~SLA 리포팅·알림~~ (제외, §3) | [`REPORTING.md`](REPORTING.md) |
-| ~~감사 대시보드~~ (제외, §3) | [`../dashboards/README.md`](../dashboards/README.md) |
 | 원문 보존·키 회전 | [`SECURITY_RETAIN_RAW_KEYROTATION.md`](SECURITY_RETAIN_RAW_KEYROTATION.md) |
 </content>
 </invoke>

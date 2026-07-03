@@ -55,7 +55,7 @@ python3 scripts/check_docs.py                      # 문서 링크·수치↔리
 상세는 [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md) §3. 요약:
 
 - `egress_audit/` — 탐지·가명화·감사 코어
-- `enforcement/` — CLI(`cli.py`, 단일 진입점 `nufi-egress`)·리포트·정책 운영·벤치·RBAC
+- `enforcement/` — CLI(`cli.py`, 단일 진입점 `nufi-egress`)·리포트·정책 운영·벤치
 - `capture/` — 네트워크 커버리지·우회 차단(패킷 레이어)
 - `gateway/` — 실행 경로(단독 FastAPI / LiteLLM 콜백)
 - `config/` — 운영자 YAML 설정
@@ -69,7 +69,7 @@ python3 scripts/check_docs.py                      # 문서 링크·수치↔리
 - raw 모듈 실행(`python3 -m enforcement.cli …`)은 **비설치 동치/레거시 폴백**으로만 표기합니다.
 - 서브커맨드: `render`·`apply`·`disable`·`status`·`feedback`·`doctor`·`coverage`·`monitor`·
   `init`·`audit`·`targets`·`flow-tap`·`policy`(list/bind/snapshot/versions/
-  rollback/audit/inspect)·`report`(sla/compliance)·`benchmark`. 권위 레퍼런스는
+  rollback/audit/inspect)·`report`(compliance)·`benchmark`. 권위 레퍼런스는
   [`../docs/CLI.md`](../docs/CLI.md).
 
 ## 5. 테스트·데모 검증

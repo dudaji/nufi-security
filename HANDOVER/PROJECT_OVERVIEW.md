@@ -27,8 +27,7 @@
   운전면허·계좌·사업자번호)와 개인신용정보를 높은 정확도로 탐지·가명화합니다.
 - **직접 구현한 경량 파이썬:** 오픈소스를 조립한 게 아니라 직접 구현한 가벼운 코드 그 자체가
   차별점입니다. **코어는 외부 네트워크 의존이 0** 이라 온프렘·에어갭(인터넷 단절)에서 돕니다.
-- **형태:** 프론트엔드 없음. **CLI + Python SDK** 만으로 제공. 운영(멀티테넌시/SLA/대시보드)
-  레이어는 의도적으로 최소화하고 한국 특화 IP에 집중합니다.
+- **형태:** 프론트엔드 없음. **CLI + Python SDK** 만으로 제공. 한국 특화 IP에 집중합니다.
 
 ---
 
@@ -56,7 +55,7 @@
 | 경로 | 무엇 |
 |---|---|
 | `egress_audit/` | **탐지·가명화·감사의 코어.** detectors/(한국어 PII·비밀 탐지), pseudonymize.py·reversible.py·surrogate.py·vault.py(가명화/원복/매핑), audit.py·checksums.py(해시체인 감사), policy.py·presets.py·enforcement.py·pipeline.py(정책·집행), edm.py(정확 데이터 매칭), reload.py(무재기동 규칙 리로드) |
-| `enforcement/` | **CLI 및 운영 기능.** cli.py(단일 진입점 `nufi-egress`), report.py(SLA·컴플라이언스 리포트), policy_ops.py(다중 프로파일 운영), access.py(세션/RBAC), benchmark.py(정확도·가명화 벤치 단일 진입점), compliance_catalog.yaml(규제 매핑 카탈로그), doctor.py(진단), feedback.py, rule_builder.py, applier.py, decision.py |
+| `enforcement/` | **CLI 및 운영 기능.** cli.py(단일 진입점 `nufi-egress`), report.py(컴플라이언스 리포트), policy_ops.py(다중 프로파일 운영), benchmark.py(정확도·가명화 벤치 단일 진입점), compliance_catalog.yaml(규제 매핑 카탈로그), doctor.py(진단), feedback.py, rule_builder.py, applier.py, decision.py |
 | `capture/` | **네트워크 커버리지·우회 차단.** flow_tap.py(패킷 탭), bypass_monitor.py(우회 탐지), coverage.py(게이트 통과율), targets.py, content_dump.py |
 | `gateway/` | **실행 경로.** app.py(단독 FastAPI 게이트웨이), litellm_hook.py(LiteLLM Proxy 콜백, 권장 프로덕션), router.py·core.py |
 | `nufi/` | **Python SDK 파사드.** `from nufi import detect, Guard, pseudonymize` — stable 심볼 재노출 + 편의 함수(`scan_file`·`guard_file`·`batch_detect`) |
@@ -84,7 +83,7 @@
 | 전체 데모 카탈로그 | [`../docs/DEMO.md`](../docs/DEMO.md) |
 | SDK 표면(구현 완료) | [`../docs/SDK.md`](../docs/SDK.md) |
 | PII 기반 하이브리드 LLM 라우팅 | [`../docs/PII_ROUTING.md`](../docs/PII_ROUTING.md) |
-| 리포팅(SLA·컴플라이언스) | [`../docs/REPORTING.md`](../docs/REPORTING.md) |
+| 리포팅(컴플라이언스) | [`../docs/REPORTING.md`](../docs/REPORTING.md) |
 | 정책 운영 규모화 | [`../docs/OPS_POLICY_AT_SCALE.md`](../docs/OPS_POLICY_AT_SCALE.md) |
 | 로드맵(방향·우선순위) | [`../docs/ROADMAP.md`](../docs/ROADMAP.md) |
 | 릴리스 노트(사람 친화) / 체크리스트 | [`../docs/RELEASE_NOTES.md`](../docs/RELEASE_NOTES.md) · [`../docs/RELEASE_CHECKLIST.md`](../docs/RELEASE_CHECKLIST.md) |

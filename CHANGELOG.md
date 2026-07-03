@@ -479,7 +479,7 @@
   - `report sla --webhook URL` — 알림을 외부로 보내는 발송 경로(스텁; 본 릴리스는 페이로드
     형식 고정까지).
   - 검증 `tests/test_cmp157_sla_alert_fleet.py`(13 케이스) · 1-명령 데모
-    [`scripts/demo_sla_alert.sh`](scripts/demo_sla_alert.sh)(6/6 PASS, 권한 불필요).
+    `scripts/demo_sla_alert.sh`(6/6 PASS, 권한 불필요; CMP-194에서 제거됨).
 - **대시보드 운영 CLI** — read-only 감사 대시보드 데이터소스(`dashboards/server.py`)를
   통합 진입점 서브커맨드로 흡수: `nufi-egress dashboard [--host --port --audit
   --flow-dir]`. 마지막까지 모듈 직접 실행으로만 띄우던 운영 표면을 설치형 CLI 로
@@ -543,8 +543,8 @@
     가능하고 정책 변경(`policy bind/snapshot/rollback`)은 **거부**된다(exit 3). `operator`
     는 조회+변경. 기본값 `operator`(역호환). `NUFI_TENANT`/`NUFI_ROLE` env 폴백.
   - 구현 `enforcement/access.py`(테넌트 키 추출·격리 필터 + 역할 세션·권한 가드) ·
-    매뉴얼 [`docs/MULTITENANCY.md`](docs/MULTITENANCY.md) · 1-명령 데모
-    [`scripts/demo_multitenancy.sh`](scripts/demo_multitenancy.sh) · 검증
+    매뉴얼 `docs/MULTITENANCY.md`(CMP-194에서 제거됨) · 1-명령 데모
+    `scripts/demo_multitenancy.sh`(CMP-194에서 제거됨) · 검증
     `tests/test_cmp151_access.py`.
   - 범위 밖(→ 다음 단계): 완전 테넌트 격리(런타임/자격증명 분리), 쓰기 RBAC(역할별 세분
     변경 권한), 권한 위임.
