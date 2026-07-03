@@ -122,6 +122,36 @@ class Gateway:
             body_retained=body_retained,
             extra={"requested_model": route.requested_model})
 
+    def _try_pii_route(self, requested_model: str, prompt_text: str,
+                       conv_id: str, turn: int,
+                       body: Dict[str, Any]) -> Optional[GatewayResponse]:
+        """CMP-247: PII 감지 → 로컬 모델 강제 라우팅. PII 없으면 None 반환."""
+        try:
+            findings = self.guard.pipeline.analyze(prompt_text)
+        except Exception:
+            # PII 감지 실패 시 안전측: 일반 라우팅 흐름으로 폴백 (egress guard가 잡음)
+            return None
+        if not findings:
+            return None
+        entity_types = sorted({f.entity_type for f in findings})
+        route = self.router.resolve_for_pii(requested_model, entity_types)
+        if route is None:
+            return None
+        # PII 감지 → private 강제 라우팅. 원문 그대로 로컬 모델에 전달.
+        self.audit.log(
+            model=route.backend, provider=route.provider, is_public=False,
+            request_body={"model": requested_model, "redacted": True},
+            decision_summary={"pii_routed": True, "entity_types": entity_types},
+            findings=[_mask_finding(f.to_dict()) for f in findings],
+            outcome="pii_routed")
+        self._store(conversation_id=conv_id, turn=turn, direction="in",
+                    route=route, body=body)
+        resp_body = _stub_completion(route.backend, "[private-llm stub response — PII routed]")
+        self._store(conversation_id=conv_id, turn=turn, direction="out",
+                    route=route, body=resp_body)
+        return GatewayResponse(200, route, "pii_routed", None, resp_body,
+                               conversation_id=conv_id)
+
     def process(self, body: Dict[str, Any]) -> GatewayResponse:
         requested_model = body.get("model", "nufi-default")
         prompt_text = extract_text(body.get("messages", []))
@@ -131,6 +161,14 @@ class Gateway:
         # 라우팅: 기본 private, private 불가 시 public 폴백
         private_down = os.environ.get("EGRESS_PRIVATE_DOWN", "0") == "1"
         route = self.router.resolve(requested_model, force_fallback=private_down)
+
+        # --- CMP-247: PII 라우팅 (Phase 1) ---
+        # public 경로로 해석된 요청에 PII 포함 → 로컬 모델로 강제 라우팅.
+        # egress 감사보다 먼저 실행되어, PII가 외부로 나가는 것을 원천 차단.
+        if route.is_public and self.router.pii_routing.enabled:
+            pii_route = self._try_pii_route(requested_model, prompt_text, conv_id, turn, body)
+            if pii_route is not None:
+                return pii_route
 
         # private 경로: 조직 외부로 나가지 않음 → 외부 감사(egress_audit.jsonl)는 없으나,
         # 요구사항(2)에 따라 in/out 메시지는 private 싱크에 보존(온프렘 원문).

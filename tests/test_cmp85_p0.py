@@ -71,12 +71,13 @@ def test_p0(tmp):
         ("nufi-default", True, "연락처 정리: 010-1234-5678 김민수"),   # public (약 PII→가명화)
         ("nufi-default", True, "이번 분기 일정 알려줘"),               # public benign
     ]
-    expected_class = {}  # conversation_id -> 라우팅이 정한 egress_class
+    expected_class = {}  # conversation_id -> 실제 라우팅 결과의 egress_class
     for model, force_public, content in cases:
         os.environ["EGRESS_PRIVATE_DOWN"] = "1" if force_public else "0"
         resp = gw.process(req(model, content))
-        route = router.resolve(model, force_fallback=force_public)
-        expected_class[resp.conversation_id] = route.egress_class
+        # CMP-247: PII 라우팅이 활성이면 실제 결정(resp.route)이 router.resolve()와
+        # 다를 수 있으므로, 실제 응답의 egress_class 를 기준으로 비교한다.
+        expected_class[resp.conversation_id] = resp.route.egress_class
     os.environ["EGRESS_PRIVATE_DOWN"] = "0"
 
     priv = store.read_class("private")
@@ -114,6 +115,8 @@ def test_p0(tmp):
     prof_f = os.path.join(tmp, "prof_false.yaml")
     Path(prof_f).write_text(_profiles_yaml(public_retain_raw=False), encoding="utf-8")
     gw_f = make_gateway(tmp, msg_dir=dir_f, profiles_path=prof_f)
+    # CMP-247: PII 라우팅을 비활성화하여 PII 텍스트가 public 경로를 타게 함 (retain_raw 정책 검증용)
+    gw_f.router.pii_routing.enabled = False
     gw_f.process(req("nufi-default", pii_text))
     in_f = [r for r in gw_f.messages.read_class("public") if r["direction"] == "in"][0]
 
@@ -121,6 +124,7 @@ def test_p0(tmp):
     prof_t = os.path.join(tmp, "prof_true.yaml")
     Path(prof_t).write_text(_profiles_yaml(public_retain_raw=True), encoding="utf-8")
     gw_t = make_gateway(tmp, msg_dir=dir_t, profiles_path=prof_t)
+    gw_t.router.pii_routing.enabled = False
     gw_t.process(req("nufi-default", pii_text))
     in_t = [r for r in gw_t.messages.read_class("public") if r["direction"] == "in"][0]
     os.environ["EGRESS_PRIVATE_DOWN"] = "0"

@@ -1,3 +1,3 @@
-from .router import Router, RouteDecision
+from .router import Router, RouteDecision, PIIRoutingConfig
 
-__all__ = ["Router", "RouteDecision"]
+__all__ = ["Router", "RouteDecision", "PIIRoutingConfig"]
