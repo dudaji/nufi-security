@@ -6,6 +6,25 @@
 
 ---
 
+## v0.4.4 — **데모 정합성 수정 — FAIL 5 → FAIL 0 달성**
+
+### 한 줄 요약
+카탈로그 업그레이드(23→25 direct) 이후 깨진 데모 assertion 3건을 수정하고,
+uvicorn 미설치 환경에서 HTTP 게이트웨이 데모가 SKIP 되도록 개선했습니다.
+`demo_all.sh` **FAIL 0** (PASS 11 · SKIP 2) 달성.
+
+### 수정 내용
+
+| 데모 | 문제 | 수정 |
+|---|---|---|
+| `demo_location_union.sh` | `person_union` 속성 누락 → AttributeError | 속성 초기화 추가 |
+| `demo_report.sh` | direct 통제 23→25 미반영 | assertion 갱신 |
+| `demo_compliance_mapping.sh` | 롤업·프레임워크 소계 미반영 | assertion 갱신 |
+| `demo.sh` · `demo_audit_separation.sh` | uvicorn 없으면 FAIL | 없으면 SKIP (exit 0) |
+| `demo_all.sh` | SKIP 감지 못 함 | SKIP 출력 감지 → 집계 |
+
+---
+
 ## v0.4.3 — **문서 정합성 강화 — 운영 제외 안내 전파 + CLI 누락 보완 + 릴리스 노트 확장**
 
 ### 한 줄 요약

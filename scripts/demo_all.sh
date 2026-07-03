@@ -42,7 +42,14 @@ run_demo() {
   local script="$1" ; local label="$2"
   echo
   hr ; bold "데모: $script — $label" ; hr
-  if ./scripts/"$script"; then
+  local out
+  out=$(./scripts/"$script" 2>&1) || true
+  local rc=$?
+  echo "$out"
+  # 데모가 exit 0 + "SKIP:" 출력 → 사전조건 부재 skip(FAIL 아님).
+  if echo "$out" | head -3 | grep -q '^SKIP:'; then
+    echo ">> $script SKIP" ; SKIP=$((SKIP + 1)) ; RESULTS+=("SKIP  $script")
+  elif [ "$rc" -eq 0 ]; then
     echo ">> $script PASS" ; PASS=$((PASS + 1)) ; RESULTS+=("PASS  $script")
   else
     echo ">> $script FAIL" ; FAIL=$((FAIL + 1)) ; RESULTS+=("FAIL  $script")

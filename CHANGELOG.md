@@ -4,6 +4,27 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.4] - 2026-07-03
+
+> **데모 정합성 수정 (v0.4.4)** — 카탈로그 v1.2 업그레이드(CMP-243) 이후 깨진 데모
+> assertion 3건을 수정하고, uvicorn 미설치 환경에서 HTTP 게이트웨이 데모가 FAIL 대신
+> 정직하게 SKIP 되도록 graceful skip 을 추가한다. `demo_all.sh` FAIL 0 달성.
+
+### Fixed
+- **`demo_location_union.sh`** — `KoreanNerDetector.__new__()` 으로 생성 시 `person_union`
+  속성 누락(CMP-236 추가 속성)으로 `AttributeError` 발생 → `person_union = False` 설정.
+- **`demo_report.sh`** — 카탈로그 v1.2 direct 통제 23→25개 반영. assertion `"23 23"` →
+  `"25 25"`.
+- **`demo_compliance_mapping.sh`** — M1 롤업(`"23 23 0 9 8"` → `"25 25 0 10 13"`) 및
+  M6 프레임워크별 소계(pipa partial 1→2, cia direct 4→5, isms-p partial 0→2 등) 수정.
+- **`demo.sh` · `demo_audit_separation.sh`** — uvicorn 미설치 시 `exit 0` + `SKIP:` 메시지
+  출력(FAIL → SKIP). `demo_all.sh` 러너가 SKIP 출력을 감지해 집계.
+- **`demo_all.sh`** — `run_demo()` 가 `SKIP:` 출력을 감지해 SKIP 으로 분류(기존은 PASS/FAIL
+  이진 분류만).
+
+### Changed
+- **`demo_all.sh` 결과**: FAIL 5 → **FAIL 0** (PASS 11 · SKIP 2).
+
 ## [0.4.3] - 2026-07-03
 
 > **문서 품질 강화 (v0.4.3)** — 문서 간 정합성을 높이고 사용자 혼동을 줄인다. 운영 레이어

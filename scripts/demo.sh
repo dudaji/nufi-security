@@ -20,10 +20,16 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 
+PY="${PYTHON:-python3}"
+
+# uvicorn 필수 — 미설치 시 SKIP(에어갭/CI 환경에서 정상적 skip).
+if ! "$PY" -c "import uvicorn" 2>/dev/null; then
+  echo "SKIP: uvicorn 미설치 — pip install uvicorn 후 재실행"; exit 0
+fi
+
 export EGRESS_NER_BACKEND="${EGRESS_NER_BACKEND:-gazetteer}"   # 에어갭·결정적
 export EGRESS_AUDIT_LOG="${EGRESS_AUDIT_LOG:-$ROOT/logs/egress_audit.jsonl}"
 START_PORT="${PORT:-4000}"
-PY="${PYTHON:-python3}"
 
 PASS=0; FAIL=0
 SERVER_PID=""

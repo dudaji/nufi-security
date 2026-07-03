@@ -46,6 +46,11 @@ WS="$ROOT/logs/demo_audit_separation"
 rm -rf "$WS"
 mkdir -p "$WS/messages" "$WS/packets" "$WS/audit_state"
 
+# uvicorn 필수 — 미설치 시 SKIP(에어갭/CI 환경에서 정상적 skip).
+if ! "$PY" -c "import uvicorn" 2>/dev/null; then
+  echo "SKIP: uvicorn 미설치 — pip install uvicorn 후 재실행"; exit 0
+fi
+
 export EGRESS_NER_BACKEND="gazetteer"            # 에어갭·결정적(NFR1)
 export EGRESS_AUDIT_PROFILES="$WS/profiles.yaml"  # 봇·스토어 공용 프로파일(NFR3)
 export EGRESS_MESSAGE_STORE_DIR="$WS/messages"    # 게이트웨이 메시지 스토어

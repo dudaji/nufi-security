@@ -50,15 +50,15 @@ EVID=(--audit "$SDIR/audit_decisions.jsonl"
       --flow "$SDIR/flow_bypass.jsonl")
 
 # --- M1: 커버리지 롤업(JSON) — 직접/부분/범위밖 자동 산출 -------------------- #
-hr ; echo "M1  커버리지 롤업(JSON) — 직접 23(충족23/미충족0)·부분 9·범위밖 8"
+hr ; echo "M1  커버리지 롤업(JSON) — 직접 25(충족25/미충족0)·부분 10·범위밖 13"
 COV_JSON="$OUT/compliance_controls.json"
 "${CLI[@]}" report compliance "${EVID[@]}" \
   --controls --customer "Acme Corp" --format json > "$COV_JSON"
 RC=$?
 SUMMARY=$("$PY" -c "import json;s=json.load(open('$COV_JSON'))['control_coverage']['summary'];print(s['direct'],s['direct_met'],s['direct_unmet'],s['partial'],s['out_of_scope'])")
-if [ "$RC" -eq 0 ] && [ "$SUMMARY" = "23 23 0 9 8" ] \
+if [ "$RC" -eq 0 ] && [ "$SUMMARY" = "25 25 0 10 13" ] \
    && "$PY" -c "import json;ids={i['id'] for i in json.load(open('$COV_JSON'))['control_coverage']['items']};assert {'C-07','M-2.7','PIPA-23','CIA-PII','ISMS-3.3'} <= ids" 2>/dev/null ; then
-  ok "롤업 자동 산출: 직접 23/23 충족 · 부분 9 · 범위밖 8 (정보성 · exit 0)"
+  ok "롤업 자동 산출: 직접 25/25 충족 · 부분 10 · 범위밖 13 (정보성 · exit 0)"
 else
   bad "롤업 산출 실패(summary='$SUMMARY', exit=$RC)"
 fi
@@ -125,15 +125,15 @@ hr ; echo "M6  한국 규제팩 소계 — 프레임워크별(pipa/cia/isms-p) +
 if "$PY" -c "
 import json
 bf=json.load(open('$COV_JSON'))['control_coverage']['summary']['by_framework']
-assert bf['pipa']['direct']==6 and bf['pipa']['partial']==1 and bf['pipa']['out_of_scope']==1, bf['pipa']
-assert bf['cia']['direct']==4 and bf['cia']['partial']==1, bf['cia']
-assert bf['isms-p']['direct']==5 and bf['isms-p']['out_of_scope']==2, bf['isms-p']
+assert bf['pipa']['direct']==6 and bf['pipa']['partial']==2 and bf['pipa']['out_of_scope']==2, bf['pipa']
+assert bf['cia']['direct']==5 and bf['cia']['partial']==1 and bf['cia']['out_of_scope']==2, bf['cia']
+assert bf['isms-p']['direct']==5 and bf['isms-p']['partial']==2 and bf['isms-p']['out_of_scope']==4, bf['isms-p']
 items={i['id']:i for i in json.load(open('$COV_JSON'))['control_coverage']['items']}
 assert items['PIPA-23']['maps_to']=='C-07'
 assert items['CIA-XBORDER']['maps_to']=='C-26'
 assert items['ISMS-2.9.4']['maps_to']=='M-1.2'
 " 2>/dev/null ; then
-  ok "프레임워크별 소계(pipa 6/cia 4/isms-p 5 direct) + maps_to 교차참조 산출"
+  ok "프레임워크별 소계(pipa 6/cia 5/isms-p 5 direct) + maps_to 교차참조 산출"
 else
   bad "프레임워크 소계/maps_to 산출 실패 — $COV_JSON 확인"
 fi

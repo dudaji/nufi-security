@@ -137,11 +137,11 @@ COV_JSON="$OUT/compliance_controls.json"
   --change-log "$SDIR/policy_changes.jsonl" --flow "$SDIR/flow_bypass.jsonl" \
   --controls --customer "Acme Corp" --format json > "$COV_JSON"
 RC=$?
-# 동봉 증빙: direct 23 전부 충족(차단/가명화 결정 + 무결 체인).
+# 동봉 증빙: direct 전부 충족(차단/가명화 결정 + 무결 체인). 카탈로그 v1.2+ → 25 direct.
 DIRECT_MET=$("$PY" -c "import json;d=json.load(open('$COV_JSON'));s=d['control_coverage']['summary'];print(s['direct'],s['direct_met'])")
-if [ "$RC" -eq 0 ] && [ "$DIRECT_MET" = "23 23" ] \
+if [ "$RC" -eq 0 ] && [ "$DIRECT_MET" = "25 25" ] \
    && "$PY" -c "import json;d=json.load(open('$COV_JSON'));ids={i['id'] for i in d['control_coverage']['items']};assert {'C-07','M-2.7','PIPA-23','CIA-PII','ISMS-3.3'} <= ids" ; then
-  ok "direct 23/23 충족 + partial/out_of_scope 라벨 산출 (정보성 · exit 0)"
+  ok "direct 25/25 충족 + partial/out_of_scope 라벨 산출 (정보성 · exit 0)"
 else
   bad "커버리지 산출 실패(direct_met='$DIRECT_MET', exit=$RC)"
 fi

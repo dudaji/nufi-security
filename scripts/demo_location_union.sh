@@ -71,7 +71,7 @@ class Stub:
 def guard(union):
     p = DetectionPipeline(ner_backend='gazetteer')
     d = KoreanNerDetector.__new__(KoreanNerDetector)
-    d.backend = Stub(); d.location_union = union and d.backend_name != 'gazetteer'
+    d.backend = Stub(); d.location_union = union and d.backend_name != 'gazetteer'; d.person_union = False
     p.ner = d
     return EgressGuard(pipeline=p)
 
