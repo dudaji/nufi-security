@@ -160,6 +160,26 @@ nufi-egress doctor          # 5개 항목 배선 자가진단
 
 > 데모 전체 목록(이름·목적·시나리오 수·실행법)은 [`DEMO.md`](DEMO.md) 카탈로그를 보세요.
 
+### 라이브러리로 쓰기 (Python SDK)
+
+게이트웨이 없이, 코드에서 NuFi 엔진을 직접 임포트해 쓸 수 있습니다.
+
+```python
+from nufi import detect, Guard, pseudonymize
+
+# 탐지
+findings = detect("김민수님 계좌번호 110-123-456789")
+
+# 가명화
+token = pseudonymize("KR_PERSON", "김민수")
+
+# 탐지+정책 한 번에
+result = Guard().inspect("김민수님 계좌번호 110-123-456789")
+```
+
+`import nufi` 는 모델·config 를 로딩하지 않습니다(지연 로딩 — 에어갭 안전). API 전체
+목록·안정성 계층은 [`SDK.md`](SDK.md), 실습은 [`HANDS_ON.md`](HANDS_ON.md) §7b 참고.
+
 ---
 
 ## §3 핵심 개념
@@ -181,6 +201,10 @@ nufi-egress doctor          # 5개 항목 배선 자가진단
 - **사내 LLM 우선** — 사내(private)에서 처리 가능하면 데이터가 아예 외부로 나가지 않습니다.
 - **외부 LLM 은 폴백** — 사내에서 못 할 때만 외부로 나가며, 이때는 **항상** 게이트웨이를
   통과합니다(OpenAI 호환 `/v1/chat/completions` — 기존 코드를 거의 그대로 사용).
+- **PII 기반 하이브리드 라우팅** (v0.4.0+) — PII 감지가 기존 감사보다 **앞서** 실행되어,
+  PII 포함 요청은 **로컬 모델로 강제 전환**합니다. 클라우드로 나가는 경로 자체가
+  사라지므로 "차단"이 아니라 **"유출 경로 원천 제거"**입니다. 설정·데모는
+  [`PII_ROUTING.md`](PII_ROUTING.md) 참고.
 
 ### 운영자가 알아야 할 다섯 가지
 
@@ -195,7 +219,7 @@ nufi-egress doctor          # 5개 항목 배선 자가진단
 > 위 용어(egress·가역 가명화·해시체인·우회·[커버리지](#9-용어집)·테넌트/RBAC·EDM)의 짧은
 > 정의는 [§9 용어집](#9-용어집)에 모아 두었습니다.
 
-탐지 정확도(한국어 개인정보 재현율 0.9433 등) 실측값과 한계는 루트
+탐지 정확도(한국어 개인정보 재현율 0.977 등) 실측값과 한계는 루트
 [`../README.md`](../README.md) 의 *성능·정확도* 절을 보세요.
 
 ---
@@ -219,9 +243,11 @@ nufi-egress doctor          # 5개 항목 배선 자가진단
 | `policy` | 다중 프로파일·묶기·무재기동 되돌리기·변경 감사 |
 | `report compliance` | 규정준수·컴플라이언스 매핑 리포트(증빙, 제출용) |
 | ~~`report sla`~~ | SLA 리포트·알림 — **제외(유지보수 안 함)**, [`ROADMAP.md`](ROADMAP.md) §3 |
+| `benchmark` | 정확도+가명화 벤치마크 재현(커밋 증거 대조 + 라이브 하니스) |
 
 ```bash
 nufi-egress --help              # 전체 서브커맨드
+nufi --help                     # nufi-egress 와 동일(별칭)
 nufi-egress coverage --simulate samples/flow_replay.jsonl
 ```
 
@@ -316,6 +342,27 @@ nufi-egress report compliance --audit audit.jsonl --change-log changes.jsonl \
 도입 단계·위험 수준에 맞춰 `strict-kr-pii`·`audit-only`·`pseudonymize-roundtrip` 중 하나를
 고릅니다. 동일 입력에 대한 프리셋별 결정 diff 와 fail-closed 보증은
 [`PRESETS.md`](PRESETS.md) 가 권위입니다.
+
+### 5.7 게이트웨이 강건성 설정 (v0.4.2+)
+
+프로덕션 환경에서 게이트웨이를 안전하게 운영하기 위한 세 가지 환경변수입니다.
+
+| 환경변수 | 무엇 | 기본값 |
+|---|---|---|
+| `NUFI_DETECT_TIMEOUT_MS` | NER 탐지 타임아웃 (밀리초). 초과 시 fail-closed 차단 | `5000` (5초) |
+| `NUFI_MAX_PROMPT_BYTES` | 탐지 대상 프롬프트 최대 크기 (바이트). 초과 시 잘라서 탐지 | `524288` (512KB) |
+| `X-NuFi-Latency-Ms` | 응답 헤더로 반환되는 처리 지연 (밀리초). 감사 로그에도 기록 | (자동) |
+
+```bash
+# 예: 타임아웃을 3초로 줄이고 프롬프트 크기를 256KB로 제한
+export NUFI_DETECT_TIMEOUT_MS=3000
+export NUFI_MAX_PROMPT_BYTES=262144
+```
+
+- **fail-closed**: 탐지 타임아웃 시 요청을 **차단**(통과 아님)합니다. 안전쪽 실패.
+- **방어 파싱**: `content=None`, 비-dict 메시지 등 비정상 입력을 안전하게 건너뜁니다.
+
+1-명령 데모: [`../scripts/demo_resilience.sh`](../scripts/demo_resilience.sh) (5/5 PASS).
 
 ---
 

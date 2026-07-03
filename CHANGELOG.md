@@ -4,15 +4,36 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.5] - 2026-07-03
+
+> **운영자 매뉴얼 v0.4.x 반영 (v0.4.5)** — v0.4.0~v0.4.4 에서 추가된 기능(Python SDK·PII
+> 라우팅·게이트웨이 강건성·벤치마크)을 운영자 매뉴얼(`docs/MANUAL.md`)에 반영한다. 보드
+> 지시의 "working s/w에 대한 매뉴얼 생성" 요구를 충족한다.
+
+### Changed
+- **MANUAL §2 퀵스타트 — Python SDK 섹션 추가** — 게이트웨이 없이 코드에서 직접 임포트하는
+  "라이브러리로 쓰기" 5줄 코드 예시(detect·Guard·pseudonymize). [`SDK.md`](docs/SDK.md) 링크.
+- **MANUAL §3 핵심 개념 — PII 기반 하이브리드 라우팅 추가** — v0.4.0 의 PII 라우팅을 운영
+  흐름도에 반영. "차단"이 아닌 "유출 경로 원천 제거" 개념 설명.
+  [`PII_ROUTING.md`](docs/PII_ROUTING.md) 링크.
+- **MANUAL §4 CLI 표 — `benchmark` 추가 + `nufi` 별칭 명시** — 벤치마크 서브커맨드를 표에
+  추가하고, `nufi-egress` 와 동일한 `nufi` 별칭을 실행 방법에 명시.
+- **MANUAL §5.7 게이트웨이 강건성 설정 신설** — `NUFI_DETECT_TIMEOUT_MS`(탐지 타임아웃,
+  fail-closed)·`NUFI_MAX_PROMPT_BYTES`(프롬프트 크기 제한)·`X-NuFi-Latency-Ms`(지연 추적)
+  환경변수 표·사용 예시·데모 링크.
+- **MANUAL §3 정확도 수치 갱신** — 전체 PII 재현율 0.9433 → **0.977** (v0.3.0 인명 유니온
+  결과 반영).
+- **CHANGELOG v0.4.4 내부 식별자 제거** — doc-style 가드 위반(내부 식별자 표기) 수정.
+
 ## [0.4.4] - 2026-07-03
 
-> **데모 정합성 수정 (v0.4.4)** — 카탈로그 v1.2 업그레이드(CMP-243) 이후 깨진 데모
+> **데모 정합성 수정 (v0.4.4)** — 카탈로그 v1.2 업그레이드 이후 깨진 데모
 > assertion 3건을 수정하고, uvicorn 미설치 환경에서 HTTP 게이트웨이 데모가 FAIL 대신
 > 정직하게 SKIP 되도록 graceful skip 을 추가한다. `demo_all.sh` FAIL 0 달성.
 
 ### Fixed
 - **`demo_location_union.sh`** — `KoreanNerDetector.__new__()` 으로 생성 시 `person_union`
-  속성 누락(CMP-236 추가 속성)으로 `AttributeError` 발생 → `person_union = False` 설정.
+  속성 누락(인명 유니온 추가 속성)으로 `AttributeError` 발생 → `person_union = False` 설정.
 - **`demo_report.sh`** — 카탈로그 v1.2 direct 통제 23→25개 반영. assertion `"23 23"` →
   `"25 25"`.
 - **`demo_compliance_mapping.sh`** — M1 롤업(`"23 23 0 9 8"` → `"25 25 0 10 13"`) 및
