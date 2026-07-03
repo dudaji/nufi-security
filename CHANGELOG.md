@@ -4,6 +4,40 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.3.0] - 2026-07-03
+
+> **인명(KR_PERSON) 정확도 본편 (v0.3.0)** — 한국어 PII 탐지에서 마지막으로 남은 정확도
+> 한계인 **인명(KR_PERSON)** 재현율을 릴리스 게이트로 끌어올린다. 성씨 사전 확장 + 규칙∪NER
+> 유니온 + 골드셋 확장으로 Wilson CI 하한을 0.85 → **0.91+** 로 상향하고, 전체 PII
+> 재현율을 **0.977** 로 끌어올렸다. 주소(v0.2.0)에 이어 인명까지 게이트를 통과해, 공개
+> 수치의 모든 카테고리가 목표선(0.90) 이상이다.
+
+### Added
+- **인명(KR_PERSON) 규칙∪NER 유니온** — 주소 유니온(v0.2.0)과 동일 플레이북을 인명 채널에
+  적용했다. 프로덕션 모델 출력에 규칙(경칭/직함/문맥 게이팅)이 찾은 인명 스팬을 더해, 모델이
+  놓친 등재 성씨 인명을 회복한다. `person_union` 플래그 / 환경변수 `M5_PERSON_UNION=1` 로
+  활성화. 유니온은 더하는 방향이라 benign FP 0 유지. `detect_kr_persons()` 모듈 함수로
+  규칙 로직을 분리해 단독 재사용 가능. 에어갭 메커니즘 검증
+  `tests/test_cmp236_person_union.py`.
+- **성씨 사전 확장** — gazetteer 백엔드의 한국 성씨 사전을 상위 ~60 → **~138** 으로 확장했다.
+  희귀 단성 ~78 + 복합 성씨(남궁·선우·황보·제갈 등) 14 를 추가해, 오차 분석(v0.2.1)에서
+  식별된 사전 미수록 FN 의 대부분을 해소한다. 복합 성씨는 단성보다 앞에서 매칭해 탐욕적
+  정규식이 올바르게 동작한다.
+- **골드셋 KR_PERSON 표본 확장** — 등재 성씨 표본 100건을 추가해 test 셋 KR_PERSON 을
+  126 → 186 건으로 확대했다. Wilson CI 폭이 좁혀져 CI 하한이 0.85 → **0.91** 로 올라
+  목표선(0.90)을 통과한다. sealed 불변성은 독립 rng + sort-last _cls append 로 보존.
+
+### Changed
+- **KR_PERSON 게이트 상향 0.85 → 0.90** — `enforcement/benchmark.py` 의 `PERSON_CI_FLOOR` 을
+  0.85 에서 **0.90** 으로 상향하고, `scripts/bench_m5.py` 의 합격 판정을 동기화했다. 이제
+  KR_PERSON Wilson CI 하한이 0.90 미만이면 릴리스 게이트가 실패한다.
+- **공개 정확도 수치 갱신** — README 요약표를 갱신: 전체 PII 재현율 0.9433 → **0.977**
+  [신뢰구간 0.9569–0.9879], 정밀도 0.9925 → **0.9948**, KR_PERSON 재현율 **0.9516**
+  [Wilson CI 하한 0.9106] 신규 행 추가. 알려진 한계 서술도 개선 결과를 반영해 갱신.
+- **측정 리포트 갱신** — `docs/reports/recall-int8.json` 에 유니온 설정·갱신된 실측 점수를
+  반영(n_rows 372→482, pii_recall 0.977, person_recall 0.9516, location_recall 1.0).
+  `pseudonymize-quality.json` 비가역 distinct 값 동기화. `kr-person-fn-dump.json` 재생성.
+
 ## [0.2.2] - 2026-07-02
 
 > **공개 정확도·성능 수치 무결성 (v0.2.2)** — 코드·규칙·모델·재현율 무변경의 문서·가드 패치.

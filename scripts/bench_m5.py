@@ -273,9 +273,9 @@ def main():
     ap.add_argument("--baseline", choices=["write", "check"])
     ap.add_argument("--no-latency", action="store_true")
     ap.add_argument("--person-union", action="store_true",
-                    help="인명 채널 규칙∪모델 유니온 활성(CMP-236)")
+                    help="인명 채널 규칙∪모델 유니온 활성")
     ap.add_argument("--location-union", action="store_true",
-                    help="주소 채널 규칙∪모델 유니온 활성(CMP-222)")
+                    help="주소 채널 규칙∪모델 유니온 활성")
     ap.add_argument("--json-out")
     args = ap.parse_args()
 

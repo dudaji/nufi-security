@@ -244,7 +244,7 @@ python3 scripts/bench.py --ner gazetteer
 
 알려진 한계:
 
-- 한국어 인명(KR_PERSON) 재현율은 규칙∪NER 유니온(CMP-236)과 골드셋 확장으로
+- 한국어 인명(KR_PERSON) 재현율은 규칙∪NER 유니온과 골드셋 확장으로
   **0.9516**(Wilson CI 하한 **0.9106** ≥ 목표 0.90)을 달성했습니다. 잔여 FN 은
   사전 미수록 희성·복성에 집중되며, 원인 분석은
   [`docs/reports/kr-person-error-analysis.md`](docs/reports/kr-person-error-analysis.md)
