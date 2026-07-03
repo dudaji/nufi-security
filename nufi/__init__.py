@@ -66,6 +66,43 @@ from enforcement.report import (  # noqa: E402
 )
 
 # ---------------------------------------------------------------------------
+# 편의 함수 (Convenience helpers) — v0.4.6
+# ---------------------------------------------------------------------------
+
+def scan_file(file_path: str | pathlib.Path, **kwargs: Any) -> list[Finding]:
+    """텍스트 파일의 PII 를 탐지한다.
+
+    >>> findings = scan_file("customer_data.txt")
+    >>> for f in findings:
+    ...     print(f.entity_type, f.text)
+    """
+    text = pathlib.Path(file_path).read_text(encoding="utf-8")
+    return detect(text, **kwargs)
+
+
+def guard_file(file_path: str | pathlib.Path, **kwargs: Any) -> "GuardResult":
+    """텍스트 파일을 정책 평가한다 — "이 파일을 외부로 보내도 되는가?"
+
+    >>> result = guard_file("proposal.md")
+    >>> if result.blocked:
+    ...     print("차단됨:", [a["entity_type"] for a in result.decision.actions])
+    """
+    text = pathlib.Path(file_path).read_text(encoding="utf-8")
+    return Guard(**kwargs).inspect(text)
+
+
+def batch_detect(texts: list[str], **kwargs: Any) -> list[list[Finding]]:
+    """여러 텍스트를 한 번에 탐지한다 — Detector 재사용으로 효율적.
+
+    >>> results = batch_detect(["홍길동", "test@test.com", "안녕"])
+    >>> [len(r) for r in results]
+    [1, 1, 0]
+    """
+    detector = Detector(**kwargs) if kwargs else Detector()
+    return [detector.analyze(t) for t in texts]
+
+
+# ---------------------------------------------------------------------------
 # __all__ — stable 계층만
 # ---------------------------------------------------------------------------
 __all__ = [
@@ -89,4 +126,8 @@ __all__ = [
     "compliance_report",
     "render_report",
     "load_catalog",
+    # convenience
+    "scan_file",
+    "guard_file",
+    "batch_detect",
 ]

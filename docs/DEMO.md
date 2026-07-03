@@ -34,6 +34,7 @@ python3 -m pip install -r requirements.txt   # PyYAML·fastapi·uvicorn·httpx
 | [`demo_pii_routing.py`](../scripts/demo_pii_routing.py) | PII 기반 하이브리드 라우팅 — PII 포함 → 로컬 모델 강제, PII 없음 → 클라우드 허용, 비용 추적, 프로바이더 장애 fail-closed 폴백 | 4 | `python3 scripts/demo_pii_routing.py` | [`PII_ROUTING.md`](PII_ROUTING.md) |
 | [`demo_sdk.sh`](../scripts/demo_sdk.sh) | Python SDK — `from nufi import ...` 한 줄로 탐지·가명화·정책 평가 (임포트·버전 동기화·detect·pseudonymize·mask·redact·Guard.inspect) | 4 | `./scripts/demo_sdk.sh` | [`SDK.md`](SDK.md) |
 | [`demo_resilience.sh`](../scripts/demo_resilience.sh) | 게이트웨이 강건성 — 지연 추적(latency_ms)·방어 파싱(content=None·비-dict·큰 프롬프트 잘림)·탐지 타임아웃 fail-closed 차단 | 5 | `./scripts/demo_resilience.sh` | 본 문서 |
+| [`demo_sdk_helpers.sh`](../scripts/demo_sdk_helpers.sh) | SDK 편의 함수 — `scan_file`(파일 PII 탐지)·`guard_file`(파일 정책 평가)·`batch_detect`(일괄 탐지) | 5 | `./scripts/demo_sdk_helpers.sh` | [`SDK.md`](SDK.md) |
 | [`demo_accuracy.sh`](../scripts/demo_accuracy.sh) | 정확도 재현 — KR_PERSON INT8 Wilson CI 하한 ≥ 0.85 + 온프렘 p95 표 + 단일 명령 벤치마크(`nufi-egress benchmark`: 정확도+가명화 동시 재현) *(측정 산출물 필요)* | 3 | `./scripts/demo_accuracy.sh` | [`history/DEMO_v0.0.5.md`](history/DEMO_v0.0.5.md) |
 | [`demo_bypass_enforcement.sh`](../scripts/demo_bypass_enforcement.sh) | 우회 차단(ENFORCED) — 격리 netns 에서 실제 egress drop *(root/nft 필요)* | 3 | `sudo bash scripts/demo_bypass_enforcement.sh` | [`history/DEMO_v0.0.5.md`](history/DEMO_v0.0.5.md) |
 | [`demo_all.sh`](../scripts/demo_all.sh) | 전체 데모 러너 — 위 데모를 차례로 실행하고 집계 PASS/FAIL 출력 | — | `./scripts/demo_all.sh` | 본 문서 |

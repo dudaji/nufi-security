@@ -172,6 +172,31 @@ quality = run_pseudonymize_benchmark()    # {scores, acceptance, acceptance_pass
 - 실제 정확도 **재측정**(모델 스택 필요)은 `scripts/export_onnx_int8.py` +
   `scripts/bench_m5.py` 경로(벤치마크 진입점은 커밋된 측정 증거를 대조만 한다).
 
+### 2.7 편의 함수 (Convenience helpers, v0.4.6)
+
+파일 단위·일괄 처리 같은 흔한 패턴을 한 줄로 끝내는 편의 함수다.
+
+```python
+from nufi import scan_file, guard_file, batch_detect
+
+# 파일에서 PII 탐지
+findings = scan_file("customer_data.txt")        # list[Finding]
+for f in findings:
+    print(f.entity_type, f.text)
+
+# 파일을 외부로 보내도 되는지 판정
+result = guard_file("proposal.md")               # GuardResult
+if result.blocked:
+    print("차단:", [a["entity_type"] for a in result.decision.actions])
+
+# 여러 텍스트 한 번에 탐지 (Detector 재사용으로 효율적)
+all_findings = batch_detect(["텍스트1", "텍스트2", "텍스트3"])
+```
+
+- `scan_file(path)` = 텍스트 파일을 읽어 `detect()` 실행.
+- `guard_file(path)` = 텍스트 파일을 읽어 `Guard().inspect()` 실행.
+- `batch_detect(texts)` = `Detector` 를 한 번 생성해 여러 텍스트를 순차 탐지.
+
 ---
 
 ## 3. CLI ↔ SDK 동등 매핑

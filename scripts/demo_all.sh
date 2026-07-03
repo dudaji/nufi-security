@@ -76,6 +76,7 @@ run_demo demo_audit_separation.sh "차등 감사(분리 저장 + 우회 탭 + �
 run_demo demo_location_union.sh   "주소 유니온(모델 ∪ 확장규칙 P2 · KR_LOCATION 재현율)"
 run_demo demo_sdk.sh              "Python SDK(from nufi import — 탐지·가명화·정책 평가)"
 run_demo demo_resilience.sh       "게이트웨이 강건성(타임아웃·방어파싱·지연추적)"
+run_demo demo_sdk_helpers.sh      "SDK 편의 함수(scan_file·guard_file·batch_detect)"
 
 # 정확도 데모는 커밋된 측정 산출물(docs/reports/*.json)이 있어야 재현 가능하다.
 if [ -f "$ROOT/docs/reports/recall-int8.json" ] \

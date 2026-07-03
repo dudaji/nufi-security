@@ -104,7 +104,22 @@ if result.blocked:
     print("차단:", result.decision.actions)
 ```
 
-API 전체 목록·안정성 계층은 [`docs/SDK.md`](docs/SDK.md), 데모는 `./scripts/demo_sdk.sh` 참고.
+파일 단위·일괄 탐지도 가능합니다.
+
+```python
+from nufi import scan_file, guard_file, batch_detect
+
+# 파일에서 PII 찾기
+findings = scan_file("customer_data.txt")
+
+# 파일을 외부로 보내도 되는지 판정
+result = guard_file("proposal.md")
+
+# 여러 텍스트 한 번에 탐지
+all_findings = batch_detect(["텍스트1", "텍스트2", "텍스트3"])
+```
+
+API 전체 목록·안정성 계층은 [`docs/SDK.md`](docs/SDK.md), 데모는 `./scripts/demo_sdk.sh` · `./scripts/demo_sdk_helpers.sh` 참고.
 
 ---
 

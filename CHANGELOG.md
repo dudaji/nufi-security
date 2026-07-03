@@ -4,6 +4,25 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.6] - 2026-07-03
+
+> **SDK 편의 함수 + 벤치마크 데모 (v0.4.6)** — 파일 단위·일괄 PII 탐지 등 흔한
+> 사용 패턴을 한 줄로 끝내는 편의 함수 3종(`scan_file`, `guard_file`, `batch_detect`)을
+> `nufi` 파사드에 추가한다. "SDK로 무엇을 할 수 있나" 를 사용자가 즉시 체감하게 한다.
+
+### Added
+- **SDK 편의 함수** — `nufi` 파사드에 3종 추가:
+  - `scan_file(path)` — 텍스트 파일의 PII 를 탐지. `detect()` 의 파일 래퍼.
+  - `guard_file(path)` — 텍스트 파일의 정책 평가(차단/허용 판정).
+  - `batch_detect(texts)` — 여러 텍스트를 `Detector` 재사용으로 효율적 일괄 탐지.
+- **SDK 편의 함수 테스트** — `tests/test_cmp249_sdk_helpers.py`(14/14 PASS).
+- **SDK 편의 함수 데모** — `scripts/demo_sdk_helpers.sh`(5/5 PASS).
+  `demo_all.sh` 러너·[`docs/DEMO.md`](docs/DEMO.md) 카탈로그 등록.
+
+### Changed
+- **README** — 라이브러리 퀵스타트에 `scan_file`·`guard_file`·`batch_detect` 예시 추가.
+- **SDK.md §2.7** — 편의 함수 API 문서 추가.
+
 ## [0.4.5] - 2026-07-03
 
 > **운영자 매뉴얼 v0.4.x 반영 (v0.4.5)** — v0.4.0~v0.4.4 에서 추가된 기능(Python SDK·PII

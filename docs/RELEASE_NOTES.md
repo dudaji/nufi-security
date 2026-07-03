@@ -6,6 +6,43 @@
 
 ---
 
+## v0.4.6 — **SDK 편의 함수 — 파일·일괄 PII 탐지를 한 줄로**
+
+### 한 줄 요약
+`scan_file("고객데이터.txt")` 한 줄로 파일의 PII 를 탐지하고,
+`guard_file("제안서.md")` 로 외부 전송 가부를 판정하고,
+`batch_detect(["텍스트1", "텍스트2"])` 로 여러 텍스트를 효율적으로 일괄 탐지합니다.
+
+### 사용법
+
+```python
+from nufi import scan_file, guard_file, batch_detect
+
+# 파일에서 PII 찾기
+findings = scan_file("customer_data.txt")
+
+# 파일을 외부로 보내도 되는지 판정
+result = guard_file("proposal.md")
+if result.blocked:
+    print("차단됨")
+
+# 여러 텍스트 한 번에 탐지
+all_findings = batch_detect(["텍스트1", "텍스트2"])
+```
+
+### 검증
+- 테스트: `python3 tests/test_cmp249_sdk_helpers.py` — 14/14 PASS
+- 데모: `./scripts/demo_sdk_helpers.sh` — 5/5 PASS
+
+---
+
+## v0.4.5 — **운영자 매뉴얼 v0.4.x 반영**
+
+MANUAL.md 에 v0.4.0~v0.4.4 기능(SDK·PII 라우팅·강건성·벤치마크)을 반영했습니다.
+상세: [`CHANGELOG.md`](../CHANGELOG.md) [0.4.5] 참고.
+
+---
+
 ## v0.4.4 — **데모 정합성 수정 — FAIL 5 → FAIL 0 달성**
 
 ### 한 줄 요약
