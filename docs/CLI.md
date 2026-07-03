@@ -508,6 +508,58 @@ nufi-egress benchmark --only accuracy --json-out reports/bench.json
 
 ---
 
+## PII 기반 하이브리드 LLM 라우팅
+
+PII 감지 엔진을 기존 egress 감사 **앞단의 라우팅 최우선 레이어**로 활용합니다.
+PII 가 포함된 요청은 클라우드(public LLM)로 나가기 전에 **로컬 모델로 강제 전환**되어,
+egress 감사 단계에 도달하지 않습니다. PII 없는 요청만 기존 라우팅 로직을 따릅니다.
+전체 설계·아키텍처는 [`PII_ROUTING.md`](PII_ROUTING.md).
+
+### 설정 (`config/routing.yaml`)
+
+```yaml
+pii_routing:
+  enabled: true                   # PII 라우팅 활성화 (false 로 끄기)
+  local_backend: private-llm      # PII 요청을 보낼 로컬 백엔드
+  entity_types: []                # 빈 리스트 = 모든 PII 엔티티 대상
+```
+
+특정 엔티티만 로컬로 강제하려면 `entity_types` 에 나열합니다:
+
+```yaml
+pii_routing:
+  enabled: true
+  local_backend: private-llm
+  entity_types:
+    - KR_RRN            # 주민등록번호
+    - CREDIT_CARD       # 신용카드번호
+```
+
+| 키 | 무엇 | 기본 |
+|---|---|---|
+| `enabled` | PII 라우팅 활성화 여부 | `true` |
+| `local_backend` | PII 포함 요청을 보낼 로컬 백엔드(backends 에 정의된 이름) | `private-llm` |
+| `entity_types` | 라우팅 대상 엔티티 타입 목록(빈 리스트 = 전체 PII) | `[]` |
+
+### 동작 흐름
+
+```
+요청 → [PII 감지] → PII 있음 → 로컬 모델 (강제, outcome=pii_routed)
+                 → PII 없음 → [기존 라우팅] → private/public 결정
+```
+
+- **강한 PII(KR_RRN, SECRET 등)가 정책상 block 대상**이면 PII 라우팅이 양보하고
+  egress guard 의 차단 흐름이 실행됩니다(v0.4.8 수정).
+- 프로바이더 장애 시 **fail-closed** — 로컬 모델 접속 불가 시에도 클라우드로 보내지 않습니다.
+
+### 데모
+
+```bash
+python3 scripts/demo_pii_routing.py    # 4 시나리오 PASS, LiteLLM 불필요
+```
+
+---
+
 ## 관련 스크립트 (CLI 외)
 
 `nufi-egress` 서브커맨드가 아닌 별도 스크립트입니다.
@@ -515,6 +567,7 @@ nufi-egress benchmark --only accuracy --json-out reports/bench.json
 | 명령 | 무엇 | 문서 |
 |---|---|---|
 | `python3 scripts/bench.py --ner gazetteer` | recall/precision + 지연 p95 벤치 | — |
+| `python3 scripts/demo_pii_routing.py` | PII 기반 하이브리드 라우팅 데모(4시나리오) | [`PII_ROUTING.md`](PII_ROUTING.md) |
 | `./scripts/demo_audit_separation.sh` | 차등 감사 통합 데모(6시나리오, root 불필요) | [`DEMO.md`](DEMO.md) |
 | `./scripts/demo_all.sh` | 전체 기능 데모 러너 — 집계 PASS/FAIL | [`DEMO.md`](DEMO.md) |
 
@@ -522,4 +575,4 @@ nufi-egress benchmark --only accuracy --json-out reports/bench.json
 
 ---
 
-*작성: 2026-06-28 — v0.0.2 기준. 통합 CLI(`enforcement/cli.py`) 표면을 `--help` 실측으로 기술. 단독 진입점(`enforcement.doctor`·`egress_audit.init_cli`)은 동치로 병기.*
+*작성: 2026-06-28 — v0.0.2 기준. 통합 CLI(`enforcement/cli.py`) 표면을 `--help` 실측으로 기술. 단독 진입점(`enforcement.doctor`·`egress_audit.init_cli`)은 동치로 병기. v0.4.9 — PII 라우팅 설정 섹션 추가.*

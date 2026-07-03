@@ -4,6 +4,25 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.9] - 2026-07-04
+
+> **문서·데모 완성도 강화 (v0.4.9)** — CLI.md 에 PII 라우팅 설정 섹션을 추가하고,
+> 미커밋 리포트 3건을 커밋하며, PII 라우팅 데모를 demo_all.sh 러너에 통합한다.
+> README 데모 목록을 최신 상태로 갱신한다.
+
+### Added
+- **CLI.md PII 라우팅 섹션** — `config/routing.yaml` 의 `pii_routing` 설정 키·동작
+  흐름·데모 명령을 CLI 레퍼런스에 추가. 관련 스크립트 표에 `demo_pii_routing.py` 추가.
+- **PII 라우팅 셸 래퍼** — `scripts/demo_pii_routing.sh` 추가. `demo_all.sh` 러너에
+  등록해 전체 데모 집계에 포함.
+- **미커밋 리포트 3건 커밋** — `CMP-172-pii-accuracy-gap-analysis.md`,
+  `CMP-238-llm-routing-research.md`, `CMP-246-llm-routing-market-research.md`.
+
+### Changed
+- **README 데모 목록 갱신** — PII 라우팅 데모를 셸 래퍼로 교체, SDK 편의 함수 데모
+  추가, 번호 순서 정리(#7~#11).
+- **DEMO.md 카탈로그** — PII 라우팅 데모 항목을 `.py` → `.sh` 래퍼로 갱신.
+
 ## [0.4.8] - 2026-07-04
 
 > **테스트 스위트 수정 — 5 failures + 2 errors 해결 (v0.4.8)** — CMP-247 PII 라우팅

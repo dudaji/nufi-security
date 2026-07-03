@@ -16,6 +16,7 @@
 #   demo_pseudonymize.sh     가명화 품질 — 가역/비가역 지표·충돌율 0·결정성·차단 유지
 #   demo_audit_separation.sh 차등 감사 — public/private 분리 + 패킷 우회 탭 + 비동기 봇
 #   demo_location_union.sh   주소 유니온 — 모델 ∪ 확장규칙(P2)로 KR_LOCATION 재현율 향상
+#   demo_pii_routing.sh      PII 라우팅 — PII 포함→로컬, PII 없음→클라우드(4시나리오)
 #   demo_accuracy.sh         정확도 재현 — KR_PERSON INT8 CI + 온프렘 p95 (측정 산출물 필요)
 #
 #   * demo_bypass_enforcement.sh(우회 실제 ENFORCED drop)는 root/nft 가 필요한
@@ -77,6 +78,7 @@ run_demo demo_location_union.sh   "주소 유니온(모델 ∪ 확장규칙 P2 �
 run_demo demo_sdk.sh              "Python SDK(from nufi import — 탐지·가명화·정책 평가)"
 run_demo demo_resilience.sh       "게이트웨이 강건성(타임아웃·방어파싱·지연추적)"
 run_demo demo_sdk_helpers.sh      "SDK 편의 함수(scan_file·guard_file·batch_detect)"
+run_demo demo_pii_routing.sh     "PII 라우팅(PII 포함→로컬, PII 없음→클라우드)"
 
 # 정확도 데모는 커밋된 측정 산출물(docs/reports/*.json)이 있어야 재현 가능하다.
 if [ -f "$ROOT/docs/reports/recall-int8.json" ] \
