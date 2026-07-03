@@ -4,6 +4,38 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.1] - 2026-07-03
+
+> **Python SDK 파사드 구현 (v0.4.1)** — 로드맵 P2 "Python SDK (경량 임포트 API)"의 구현을
+> 완료한다. 흩어져 있던 탐지·가명화·정책 평가·증빙 리포트 표면을 단일 `nufi` 파사드 패키지로
+> 통합해, `from nufi import detect, Guard, pseudonymize` 한 줄로 시작할 수 있게 한다.
+> 새 알고리즘·동작 변경 없음 — 기존 구현의 **재노출·이름 정렬**이 핵심이다.
+
+### Added
+- **`nufi` 파사드 패키지** — 네 기능(탐지·가명화·정책 평가·증빙 리포트)의 stable 심볼을
+  한 곳에서 재노출하는 최상위 패키지. `from nufi import detect, Detector, Finding,
+  pseudonymize, mask, redact, ReversibleEgress, Guard, GuardResult, PolicyEngine,
+  Decision, compliance_report, render_report, load_catalog` 전부 성공.
+  `import nufi` 는 모델·config 를 로딩하지 않는다(지연 로딩 — 에어갭 제약 보존).
+  `nufi.__version__` 은 루트 `VERSION` 파일과 동기화.
+  - **편의 함수 `detect(text)`** — 프로세스 캐시된 기본 `Detector` 로 위임하는 한 줄 탐지.
+  - **별칭**: `Detector`=`DetectionPipeline`, `Guard`=`EgressGuard`,
+    `pseudonymize`=`pseudo_token`, `compliance_report`=`build_compliance_report`,
+    `render_report`=`render`.
+  - **안정성 계층**: `__all__` 에는 stable 만 담고, advanced/internal 은 하위 패키지 직접
+    임포트([`docs/SDK.md`](docs/SDK.md) §4).
+- **SDK 스모크 테스트** — `tests/test_cmp249_sdk.py`(26 케이스): 임포트 부수효과 0 검증,
+  `__version__` 동기화, stable 심볼 전수 임포트, `detect`·`pseudonymize`·`mask`·`redact`·
+  `Guard.inspect`·`load_catalog` 동작 검증, 별칭 정합.
+- **SDK 데모** — `scripts/demo_sdk.sh`(4/4 PASS): 임포트+버전·detect·가명화·Guard 검증.
+  `demo_all.sh` 러너·[`docs/DEMO.md`](docs/DEMO.md) 카탈로그 등록.
+
+### Changed
+- **README 라이브러리 퀵스타트 추가** — 빠른 시작 뒤에 "라이브러리로 쓰기 (Python SDK)"
+  섹션 5줄 코드 예시, "처음 오셨다면" 표에 SDK 행, 데모 목록에 `demo_sdk.sh` 추가.
+- **HANDS_ON §7b 실습** — "Part G — 라이브러리로 직접 쓰기" 실습 절(detect·pseudonymize·Guard).
+- **SDK 설계 스펙 상태 갱신** — `docs/SDK.md` 상태를 "설계 확정 대기" → "구현 완료 (v0.4.1)".
+
 ## [0.4.0] - 2026-07-03
 
 > **한국 규제 증빙 48 통제 완성 + PII 기반 하이브리드 LLM 라우팅 Phase 1 (v0.4.0)** —

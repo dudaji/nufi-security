@@ -607,6 +607,45 @@ python3 scripts/demo_pii_routing.py
 
 ---
 
+## 7b. Part G — 라이브러리로 직접 쓰기 (Python SDK)
+
+게이트웨이 없이, 코드 안에서 NuFi 엔진을 직접 임포트해 쓸 수 있습니다.
+`from nufi import ...` 한 줄이면 됩니다.
+
+```python
+# 1) 탐지 — 텍스트에서 한국어 PII 찾기
+from nufi import detect
+
+findings = detect("김민수님 계좌번호 110-123-456789")
+for f in findings:
+    print(f"{f.entity_type}: {f.text}")
+# KR_PERSON: 김민수
+# KR_ACCOUNT: 110-123-456789
+```
+
+```python
+# 2) 가명화 — 원본을 알아볼 수 없게
+from nufi import pseudonymize, mask, redact
+
+pseudonymize("KR_PERSON", "김민수")   # → <KR_PERSON_fa2a85f7c4>
+mask("900101-1234567", keep_tail=4)    # → ******-***4567
+redact("KR_RRN")                       # → <KR_RRN_REDACTED>
+```
+
+```python
+# 3) 탐지+정책 한 번에 — Guard
+from nufi import Guard
+
+result = Guard().inspect("김민수님 계좌번호 110-123-456789")
+print(result.blocked)        # True/False
+print(result.findings)       # 탐지 결과
+print(result.decision)       # 정책 판정 (차단/가명화/경고)
+```
+
+데모: `./scripts/demo_sdk.sh` (4/4 PASS). 전체 API 는 [`SDK.md`](SDK.md) 참고.
+
+---
+
 ## 8. 정리 — 치트시트 & 다음 단계
 
 여기까지 했으면 여러분은 **앱(SDK) + 운영(CLI)** 양쪽을 다 손에 익혔습니다.

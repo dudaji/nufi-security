@@ -1,0 +1,92 @@
+"""NuFi Python SDK — 한국어 PII 탐지·가명화·정책 평가·증빙 리포트를 한 줄로.
+
+설계 원칙 (docs/SDK.md):
+- 단일 진입점: ``from nufi import detect, Guard, ...``
+- 부수효과 없는 임포트: ``import nufi`` 가 모델·config 를 로딩하지 않는다(지연 로딩).
+- CLI 동등: SDK 로 할 수 있는 일과 CLI(nufi-egress)로 할 수 있는 일 1:1.
+- 안정성 계층: __all__ 에는 stable 만 담는다.
+"""
+
+from __future__ import annotations
+
+import pathlib
+from typing import Any
+
+# ---------------------------------------------------------------------------
+# __version__ — 루트 VERSION 파일과 동기화 (pyproject dynamic version 과 일치)
+# ---------------------------------------------------------------------------
+_VERSION_FILE = pathlib.Path(__file__).resolve().parent.parent / "VERSION"
+try:
+    __version__: str = _VERSION_FILE.read_text().strip()
+except FileNotFoundError:  # pragma: no cover – 설치 후 VERSION 없을 수도
+    __version__ = "0.0.0"
+
+# ---------------------------------------------------------------------------
+# 탐지 (Detection) — §2.2
+# ---------------------------------------------------------------------------
+from egress_audit.pipeline import DetectionPipeline as Detector, Finding  # noqa: E402
+
+_DEFAULT_DETECTOR: Detector | None = None
+
+
+def detect(text: str, **kwargs: Any) -> list[Finding]:
+    """기본 설정으로 즉시 탐지 — 프로세스 캐시된 Detector 사용(지연 로딩).
+
+    >>> findings = detect("홍길동 주민번호 900101-1234567")
+    """
+    global _DEFAULT_DETECTOR
+    if _DEFAULT_DETECTOR is None:
+        _DEFAULT_DETECTOR = Detector(**kwargs) if kwargs else Detector()
+    return _DEFAULT_DETECTOR.analyze(text)
+
+
+# ---------------------------------------------------------------------------
+# 가명화 (Pseudonymization) — §2.3
+# ---------------------------------------------------------------------------
+from egress_audit.pseudonymize import (  # noqa: E402
+    pseudo_token as pseudonymize,
+    mask,
+    redact,
+)
+from egress_audit.reversible import ReversibleEgress  # noqa: E402
+
+# ---------------------------------------------------------------------------
+# 정책 평가 (Policy evaluation) — §2.4
+# ---------------------------------------------------------------------------
+from egress_audit.guard import EgressGuard as Guard, GuardResult  # noqa: E402
+from egress_audit.policy import PolicyEngine, Decision  # noqa: E402
+
+# ---------------------------------------------------------------------------
+# 증빙 리포트 (Compliance / evidence report) — §2.5
+# ---------------------------------------------------------------------------
+from enforcement.report import (  # noqa: E402
+    build_compliance_report as compliance_report,
+    render as render_report,
+    load_catalog,
+)
+
+# ---------------------------------------------------------------------------
+# __all__ — stable 계층만
+# ---------------------------------------------------------------------------
+__all__ = [
+    # meta
+    "__version__",
+    # detection
+    "detect",
+    "Detector",
+    "Finding",
+    # pseudonymization
+    "pseudonymize",
+    "mask",
+    "redact",
+    "ReversibleEgress",
+    # policy
+    "Guard",
+    "GuardResult",
+    "PolicyEngine",
+    "Decision",
+    # compliance
+    "compliance_report",
+    "render_report",
+    "load_catalog",
+]
