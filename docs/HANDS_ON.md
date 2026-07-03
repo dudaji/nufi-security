@@ -690,6 +690,33 @@ curl -sv localhost:4000/v1/chat/completions \
 
 ---
 
+## 7d. Part I — SDK 편의 함수 *(v0.4.6 신규)*
+
+v0.4.6에서 파일 단위·일괄 탐지를 한 줄로 끝내는 편의 함수 3종이 추가되었습니다.
+
+```python
+from nufi import scan_file, guard_file, batch_detect
+
+# 1) 파일에서 PII 찾기
+findings = scan_file("customer_data.txt")
+for f in findings:
+    print(f"{f.entity_type}: {f.text}")
+
+# 2) 파일을 외부로 보내도 되는지 판정
+result = guard_file("proposal.md")
+if result.blocked:
+    print("차단:", result.decision.actions)
+
+# 3) 여러 텍스트 한 번에 탐지 (Detector 재사용으로 효율적)
+all_findings = batch_detect(["텍스트1", "텍스트2", "텍스트3"])
+for i, findings in enumerate(all_findings):
+    print(f"텍스트{i+1}: {len(findings)}건")
+```
+
+데모: `./scripts/demo_sdk_helpers.sh` (5/5 PASS). API 문서는 [`SDK.md`](SDK.md) §2.7 참고.
+
+---
+
 ## 8. 정리 — 치트시트 & 다음 단계
 
 여기까지 했으면 여러분은 **앱(SDK) + 운영(CLI)** 양쪽을 다 손에 익혔습니다.
