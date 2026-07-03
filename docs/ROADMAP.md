@@ -58,7 +58,7 @@ NuFi의 PII 감지를 라우팅 규칙의 첫 번째 레이어로 활용하여, 
 - **목표 산출물:** LiteLLM 프록시 + RouteLLM 분류기 + NuFi PII 라우팅 규칙 통합.
 - **레버리지:** 기존 PII 감지 엔진(P0 자산)이 라우팅 규칙의 핵심 입력.
 - **차별점:** 범용 라우터와 달리, *한국어 PII 감지를 라우팅의 최우선 규칙으로* 사용해 보안과 비용 최적화를 동시에 달성.
-- **조사 근거:** [CMP-238 조사 보고서](reports/CMP-238-llm-routing-research.md).
+- **조사 근거:** [LLM 라우팅 조사 보고서](reports/llm-routing-research.md).
 
 ### 유지 — 게이트웨이 코어
 

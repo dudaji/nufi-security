@@ -554,6 +554,34 @@ nufi-egress --role viewer policy bind tenant-acme strict                       #
 > ✅ **체크포인트:** 1-명령 자동 채점은 `./scripts/demo_multitenancy.sh`(6/6 PASS, 권한 불필요),
 > 자세한 동작·범위는 [`MULTITENANCY.md`](MULTITENANCY.md).
 
+### 6.12 PII 기반 하이브리드 라우팅 — PII 면 로컬, 아니면 클라우드 *(v0.4.0 신규)*
+
+PII 가 포함된 요청은 클라우드로 보내지 않고 **로컬 모델로 강제 전환**하는 라우팅 레이어를
+체험합니다. 기존 egress 감사(차단/가명화)보다 **앞단**에서 실행되어 PII 유출 경로 자체를
+없앱니다.
+
+```bash
+# 데모 실행 — LiteLLM 불필요, 4 시나리오 자동 PASS/FAIL
+python3 scripts/demo_pii_routing.py
+```
+
+데모가 보여주는 시나리오:
+
+1. **PII 포함 요청** → 🔒 LOCAL 모델로 강제 (`outcome=pii_routed`)
+2. **PII 없는 요청** → ☁️ CLOUD 모델 허용 (기존 라우팅 유지)
+3. **비용 추적** → 로컬 vs 클라우드 요청별 비용 비교
+4. **프로바이더 장애** → fail-closed 로 로컬 폴백
+
+**무슨 일이 일어났나요?**
+- PII 감지가 라우팅 **최우선 레이어**로 동작합니다. 주민번호·전화번호 같은 PII 가 하나라도
+  포함되면 클라우드 경로에 도달하지 않고 로컬 모델로 갑니다.
+- PII 없는 요청은 기존 private/public 라우팅을 그대로 따릅니다.
+- `config/routing.yaml` 의 `pii_routing` 섹션에서 활성화/비활성화, 로컬 백엔드, 감지 대상
+  엔티티를 설정합니다.
+
+> ✅ **체크포인트:** `python3 scripts/demo_pii_routing.py` 가 4/4 PASS 이면 성공.
+> 상세 설정은 [`PII_ROUTING.md`](PII_ROUTING.md).
+
 ---
 
 ## 7. Part F — 한 번에 끝까지: end-to-end 데모

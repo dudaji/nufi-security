@@ -34,6 +34,7 @@ nufi = "enforcement.cli:main"
 [tool.setuptools]
 # 명시 패키지 목록(자동 디스커버리 누락/오탐 방지 — find_packages 대신 고정).
 packages = [
+    "nufi",
     "enforcement",
     "egress_audit",
     "egress_audit.detectors",

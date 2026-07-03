@@ -80,6 +80,29 @@ curl -s localhost:4000/v1/chat/completions \
 
 차단된 시도·외부로 나간 요청은 모두 `logs/egress_audit.jsonl` 에 기록됩니다.
 
+### 라이브러리로 쓰기 (Python SDK)
+
+게이트웨이 없이, 코드에서 직접 임포트해 탐지·가명화·정책 평가를 할 수 있습니다.
+
+```python
+from nufi import detect, Guard, pseudonymize
+
+# 탐지 — 한국어 PII 찾기
+findings = detect("김민수님 계좌번호 110-123-456789")
+for f in findings:
+    print(f.entity_type, f.text)  # KR_PERSON 김민수, KR_ACCOUNT 110-123-456789
+
+# 가명화 — 원본을 알아볼 수 없게 치환
+token = pseudonymize("KR_PERSON", "김민수")  # <KR_PERSON_fa2a85f7c4>
+
+# 탐지+정책 한 번에 — 차단 여부 판정
+result = Guard().inspect("김민수님 계좌번호 110-123-456789")
+if result.blocked:
+    print("차단:", result.decision.actions)
+```
+
+API 전체 목록·안정성 계층은 [`docs/SDK.md`](docs/SDK.md), 데모는 `./scripts/demo_sdk.sh` 참고.
+
 ---
 
 ## 처음 오셨다면 — 무엇부터 보나
@@ -94,9 +117,11 @@ curl -s localhost:4000/v1/chat/completions \
 | **내 LLM 서비스 앞단에 붙이기** (통합 경로·프리셋·점검·결정 트리) | [`docs/INTEGRATION_GUIDE.md`](docs/INTEGRATION_GUIDE.md) |
 | **명령어 전체 레퍼런스** (`nufi-egress` 모든 서브커맨드) | [`docs/CLI.md`](docs/CLI.md) |
 | **데모 전체 목록** (이름·목적·시나리오 수·실행법 카탈로그) | [`docs/DEMO.md`](docs/DEMO.md) |
-| **컴플라이언스 매핑 리포트** (한국 규제팩 — 금융 AI 안내서·망분리·개인정보보호법·신용정보법·ISMS-P 대비 통제 커버리지, 증빙 자동판정) | [`docs/REPORTING.md`](docs/REPORTING.md) · [`docs/MANUAL.md`](docs/MANUAL.md) |
+| **PII 기반 하이브리드 LLM 라우팅** (PII 포함 요청 → 로컬 모델 강제, PII 없는 요청 → 클라우드 허용 — 유출 경로 원천 차단) | [`docs/PII_ROUTING.md`](docs/PII_ROUTING.md) |
+| **컴플라이언스 매핑 리포트** (한국 규제팩 — 금융 AI 안내서·망분리·개인정보보호법·신용정보법·ISMS-P 대비 통제 커버리지 48개 통제, 증빙 자동판정) | [`docs/REPORTING.md`](docs/REPORTING.md) · [`docs/MANUAL.md`](docs/MANUAL.md) |
 | **내부 구조·다이어그램** 보기 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
 | **온프렘/에어갭 설치** | [`deploy/README.md`](deploy/README.md) · [`deploy/airgap/INSTALL.md`](deploy/airgap/INSTALL.md) |
+| **Python SDK (라이브러리 임포트 API)** — `from nufi import detect, Guard, ...` | [`docs/SDK.md`](docs/SDK.md) · 데모 `./scripts/demo_sdk.sh` |
 | **SDK 한 줄 통합 예제** | [`examples/`](examples/) |
 
 > **⚠️ 운영(ops) 레이어 제외 안내** — 방향 재설정([`docs/ROADMAP.md`](docs/ROADMAP.md) §3)에 따라
@@ -122,6 +147,12 @@ curl -s localhost:4000/v1/chat/completions \
 # 3) 커버리지 점검 — "내 트래픽 중 몇 %가 게이트웨이를 통과했나" + 우회 알림
 nufi-egress coverage --simulate samples/flow_replay.jsonl
 nufi-egress monitor  --simulate samples/flow_bypass_burst.jsonl --threshold 1
+
+# 3b) PII 라우팅 데모 — PII 포함 → 로컬 모델, PII 없음 → 클라우드 허용
+python3 scripts/demo_pii_routing.py           # 매뉴얼: docs/PII_ROUTING.md
+
+# 3b'') Python SDK 데모 — from nufi import ... 탐지·가명화·정책 평가
+./scripts/demo_sdk.sh                         # 매뉴얼: docs/SDK.md
 
 # 3b') 컴플라이언스 매핑 — 안내서·망분리 점검항목 대비 통제 커버리지(증빙 자동판정)
 ./scripts/demo_compliance_mapping.sh          # 매뉴얼: docs/REPORTING.md §3 · docs/MANUAL.md §5.4
@@ -149,6 +180,11 @@ python3 scripts/bench.py --ner gazetteer
 - **하이브리드 게이트웨이(hybrid gateway)** — 사내 LLM(private) 우선 라우팅 + 외부 LLM(public)
   폴백. 사내에서 처리 가능하면 외부로 나가지 않고, 외부 경로는 **항상** 게이트웨이를 통과합니다
   (OpenAI 호환 `/v1/chat/completions`).
+- **PII 기반 하이브리드 LLM 라우팅** — PII 감지 엔진을 기존 감사 **앞단의 라우팅 최우선
+  레이어**로 활용합니다. PII 가 포함된 요청은 클라우드로 나가기 전에 **로컬 모델로 강제 전환**
+  되어 유출 경로 자체를 없앱니다. PII 없는 요청만 기존 라우팅을 따릅니다. 요청별 비용 추적과
+  프로바이더 장애 시 fail-closed 폴백을 지원합니다. 설정:
+  [`docs/PII_ROUTING.md`](docs/PII_ROUTING.md).
 - **한국어 개인정보·비밀 탐지·차단** — 한국 개인정보 정규식(regular expression) + 체크섬(checksum)
   (주민등록번호·외국인등록번호·사업자등록번호·전화·계좌·카드·여권·면허·이메일), 한국어 인명/지명
   개체명 인식(NER, Named Entity Recognition — KoELECTRA 모델 또는 사전 기반 폴백), 비밀 탐지

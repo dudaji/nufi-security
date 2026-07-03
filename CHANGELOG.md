@@ -4,6 +4,51 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.0] - 2026-07-03
+
+> **한국 규제 증빙 48 통제 완성 + PII 기반 하이브리드 LLM 라우팅 Phase 1 (v0.4.0)** —
+> 한국 규제 증빙 팩을 PIPA·CIA·ISMS-P 48개 통제(카탈로그 v1.2)로 확장하고, partial 항목을
+> direct 로 승격해 자동 증빙 비율을 높였다. 동시에 PII 감지 엔진을 **라우팅 최우선 레이어**로
+> 올려, PII 포함 요청을 클라우드로 보내기 전에 로컬 모델로 강제 전환하는 하이브리드 라우팅
+> PoC 를 도입했다. 규제 감사에서 "어느 점검항목을 어떻게 충족하나" 에 대한 답을 더 두텁게
+> 하면서, 동시에 PII 유출 경로 자체를 원천 차단하는 새로운 방어 계층을 얹은 릴리스다.
+
+### Added
+- **PII 기반 하이브리드 LLM 라우팅 Phase 1** — NuFi PII 감지 엔진을 기존 egress 감사
+  **앞단의 라우팅 최우선 레이어**로 추가했다. PII 가 포함된 요청은 클라우드(public LLM)로
+  나가기 전에 **로컬 모델로 강제 전환**되어, egress 감사 단계에 도달하지 않는다. PII 없는
+  요청만 기존 라우팅 로직(private/public 결정)을 따른다. 이로써 PII 유출을 "차단"이 아니라
+  "경로 자체를 없앰"으로 원천 방지한다.
+  - `gateway/router.py` — `Router.resolve_for_pii()`: PII 엔티티 유형별 필터링 + 로컬
+    백엔드 강제 결정.
+  - `gateway/pii_router.py` — `PiiRouter`: LiteLLM 훅용 PII 라우터 + 요청별 비용 추적 +
+    모델별 비용 요약. 프로바이더 장애 시 fail-closed 자동 폴백.
+  - `gateway/core.py` — `Gateway._try_pii_route()`: FastAPI PoC 경로 PII 인터셉트
+    (`outcome=pii_routed`).
+  - `gateway/litellm_hook.py` — `EgressAuditHook` 에 pre_call PII 라우팅 실행 + LiteLLM
+    프록시 모델 등록(`config/litellm_config.yaml` 확장).
+  - `config/routing.yaml` — `pii_routing` 섹션(enabled/local_backend/entity_types) 신설.
+  - 데모 [`scripts/demo_pii_routing.py`](scripts/demo_pii_routing.py)(4 시나리오 PASS,
+    LiteLLM 불필요). 매뉴얼 [`docs/PII_ROUTING.md`](docs/PII_ROUTING.md).
+  - 검증 `tests/test_cmp244_pii_routing.py`(14 케이스) +
+    `tests/test_cmp247_pii_routing.py`(35 케이스 — Router·PiiRouter·Gateway 통합).
+- **한국 규제 증빙 팩 확장 — 카탈로그 v1.2, 48개 통제 완성** — 컴플라이언스 매핑 카탈로그를
+  PIPA 10항목·CIA 7항목·ISMS-P 11항목으로 확장해 **총 48개 통제**(direct 25 / partial 10 /
+  OOS 13)를 완비했다. v0.1.0 의 초기 19개 대비 2.5배 확장이다.
+  - **partial → direct 승격**: C-11(모니터링·보고)을 감사 결정 + 정책 변경 로그 증빙으로
+    자동판정하도록 승격. CIA-19 를 CIA-19-INTEG(direct, 위변조방지) + CIA-19-IDS(partial,
+    침입탐지)로 분리해 자동판정 범위를 넓혔다.
+  - **증빙 출처(evidence_source) 강화**: direct 항목에 로그 경로·체인 수·무결성 상태를
+    포함해, 감사관이 "이 통제는 **어떤 증빙**으로 충족했나"를 행 단위로 확인할 수 있다.
+  - 검증 `tests/test_cmp245_regulatory_coverage.py`(21 케이스) +
+    `tests/test_cmp171_control_coverage.py` 갱신(기존 테스트 48개 통제 반영).
+
+### Changed
+- **대시보드 레이어 코드 제거** — 방향 재설정(v0.1.0)에서 제외된 대시보드 레이어의 코드를
+  정리했다. `dashboards/` 디렉터리·CLI 서브커맨드(`dashboard`)·데모(`demo_dashboards.sh`)·
+  테스트(`test_cmp134_dashboards.py`)를 삭제. README·CLI·문서지도에서 대시보드 참조를
+  정리했다.
+
 ## [0.3.0] - 2026-07-03
 
 > **인명 인식률 95% 달성 — 모든 한국어 PII 목표 통과 (v0.3.0)** — 한국어 PII 탐지에서
