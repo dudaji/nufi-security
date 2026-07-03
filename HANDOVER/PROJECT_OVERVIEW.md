@@ -34,17 +34,20 @@
 
 ## 2. 현재 상태 (한눈에)
 
-- **버전:** `VERSION` 파일 = **v0.2.2** (2026-07-02 릴리스).
-- **성격:** 동작하는 PoC(proof-of-concept). 게이트웨이·탐지·가명화·기밀 탐지·우회 차단·
-  비동기 감사·벤치/하드닝까지 동작.
+- **버전:** `VERSION` 파일 = **v0.4.6** (2026-07-03 릴리스).
+- **성격:** 동작하는 제품. 게이트웨이·탐지·가명화·기밀 탐지·우회 차단·비동기 감사·
+  Python SDK·PII 기반 하이브리드 LLM 라우팅·한국 규제 증빙 48개 통제까지 동작.
 - **핵심 정확도 수치(공개 헤드라인):**
-  - 한국어 개인정보 재현율(recall, 전체) **0.9433** (신뢰구간 0.9098–0.9648) — 목표 ≥0.90 ✅
+  - 한국어 개인정보 재현율(recall, 전체) **0.977** (신뢰구간 0.9569–0.9879) — 목표 ≥0.90 ✅
+  - 인명(KR_PERSON) 재현율 **0.9516** (Wilson 신뢰구간 하한 0.9106) — 목표 ≥0.90 ✅
   - 주소(KR_LOCATION) 재현율 **1.000** (Wilson 신뢰구간 하한 0.9417) — 목표 ≥0.90 ✅
-  - 정밀도(precision) **0.9925**
+  - 정밀도(precision) **0.9948**
   - 인라인 지연(p95, 512자, CPU) **41 ms** — 목표 ≤150ms ✅
-  - **알려진 한계:** INT8 양자화에서 인명(KR_PERSON) 재현율 0.9127(신뢰구간 하한 0.8504)로
-    목표선 0.90 을 신뢰구간 하한 기준 소폭 하회. 원인=사전 미수록 인명(희성·복성).
-    (수치의 권위는 `docs/reports/*.json`. 자세한 버전별 상태는 [`PROJECT_STATE.md`](PROJECT_STATE.md).)
+  - (수치의 권위는 `docs/reports/*.json`. 자세한 버전별 상태는 [`PROJECT_STATE.md`](PROJECT_STATE.md).)
+- **Python SDK:** `from nufi import detect, Guard, pseudonymize` — 게이트웨이 없이 코드에서
+  직접 임포트. 편의 함수: `scan_file`·`guard_file`·`batch_detect`. 설계: [`../docs/SDK.md`](../docs/SDK.md).
+- **PII 라우팅:** PII 포함 요청 → 로컬 모델 강제, PII 없음 → 클라우드 허용.
+  설정: [`../docs/PII_ROUTING.md`](../docs/PII_ROUTING.md).
 
 ---
 
@@ -56,7 +59,8 @@
 | `enforcement/` | **CLI 및 운영 기능.** cli.py(단일 진입점 `nufi-egress`), report.py(SLA·컴플라이언스 리포트), policy_ops.py(다중 프로파일 운영), access.py(세션/RBAC), benchmark.py(정확도·가명화 벤치 단일 진입점), compliance_catalog.yaml(규제 매핑 카탈로그), doctor.py(진단), feedback.py, rule_builder.py, applier.py, decision.py |
 | `capture/` | **네트워크 커버리지·우회 차단.** flow_tap.py(패킷 탭), bypass_monitor.py(우회 탐지), coverage.py(게이트 통과율), targets.py, content_dump.py |
 | `gateway/` | **실행 경로.** app.py(단독 FastAPI 게이트웨이), litellm_hook.py(LiteLLM Proxy 콜백, 권장 프로덕션), router.py·core.py |
-| `nufi_client/` | 얇은 파이썬 클라이언트(client.py·transport.py·models.py) |
+| `nufi/` | **Python SDK 파사드.** `from nufi import detect, Guard, pseudonymize` — stable 심볼 재노출 + 편의 함수(`scan_file`·`guard_file`·`batch_detect`) |
+| `nufi_client/` | 얇은 파이썬 클라이언트(client.py·transport.py·models.py) — 게이트웨이 HTTP 심 |
 | `config/` | 운영자가 YAML로 바꾸는 설정: patterns.yaml(탐지 규칙)·policy.yaml(동작)·routing.yaml(라우팅)·audit_profiles.yaml(감사 프로파일)·litellm_config.yaml |
 | `goldset/` | **공개 배포용 한국어 PII 평가셋**(합성·비-PII, CC0). generate.py --verify 로 결정적 재현·커버리지 게이트 |
 | `scripts/` | 데모(`demo_*.sh`)·벤치·가드(`check_doc_style.py`·`check_docs.py`)·릴리스(`publish_github_release.sh`) |
@@ -78,7 +82,8 @@
 | CLI 전 서브커맨드 레퍼런스 | [`../docs/CLI.md`](../docs/CLI.md) |
 | 통합 가이드(서빙 앞단에 끼우기) | [`../docs/INTEGRATION_GUIDE.md`](../docs/INTEGRATION_GUIDE.md) |
 | 전체 데모 카탈로그 | [`../docs/DEMO.md`](../docs/DEMO.md) |
-| SDK 설계 표면 | [`../docs/SDK.md`](../docs/SDK.md) |
+| SDK 표면(구현 완료) | [`../docs/SDK.md`](../docs/SDK.md) |
+| PII 기반 하이브리드 LLM 라우팅 | [`../docs/PII_ROUTING.md`](../docs/PII_ROUTING.md) |
 | 리포팅(SLA·컴플라이언스) | [`../docs/REPORTING.md`](../docs/REPORTING.md) |
 | 정책 운영 규모화 | [`../docs/OPS_POLICY_AT_SCALE.md`](../docs/OPS_POLICY_AT_SCALE.md) |
 | 로드맵(방향·우선순위) | [`../docs/ROADMAP.md`](../docs/ROADMAP.md) |
