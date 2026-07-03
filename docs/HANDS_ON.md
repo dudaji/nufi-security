@@ -243,7 +243,7 @@ nufi-egress doctor --no-json
 ```
 
 ```text
-nufi doctor — 하이브리드 배선 진단 (v0.0.3)
+nufi doctor — 하이브리드 배선 진단
 ============================================================
 [PASS] ✔ config       설정 검증
         라우트 2개·백엔드 3개 (public 2/private 1), 정책 엔티티 19개 — 구조·일관성 정상
@@ -448,7 +448,7 @@ nufi-egress monitor --simulate samples/flow_bypass_burst.jsonl --threshold 1
 
 ---
 
-### 6.9 여러 정책을 한 게이트웨이에서 — `policy` *(v0.0.5 신규)*
+### 6.9 여러 정책을 한 게이트웨이에서 — `policy`
 
 부서·테넌트마다 다른 강도의 정책을 **하나의 게이트웨이**에서 동시에 운영하고, 위험한 정책
 변경을 **프로세스 재기동 없이 되돌리는**(rollback) 운영자 작업을 실습합니다. 토이로 격리해서
@@ -491,6 +491,10 @@ nufi-egress policy audit --verify-chain              # 체인 BROKEN 이면 exit
 
 ### 6.10 제출용 리포트로 묶기 — `report`
 
+> ⚠️ **운영 레이어 제외 안내** — `report sla`와 관련 플래그(`--alert`, `--webhook`,
+> `--all-tenants`)는 운영 레이어 제외 대상입니다([`ROADMAP.md`](ROADMAP.md) §3).
+> `report compliance`(증빙)는 코어 기능으로 그대로 유지됩니다.
+
 지금까지 쌓인 측정·감사 로그를 감사관·구매자에게 낼 수 있는 **기간별 리포트**로 묶습니다.
 새 측정을 돌리지 않고 이미 있는 산출물만 읽어 Markdown/HTML/JSON 을 만듭니다.
 
@@ -531,6 +535,10 @@ nufi-egress report compliance --audit samples/sla/audit_decisions.jsonl \
 > 스키마는 [`REPORTING.md`](REPORTING.md)(점검항목 커버리지는 §3).
 
 ### 6.11 여러 테넌트를 한 게이트웨이에서 — `--tenant` · `--role`
+
+> ⚠️ **운영 레이어 제외 안내** — 멀티테넌시·RBAC(`--tenant`, `--role`, `--all-tenants`)는
+> 운영 레이어 제외 대상입니다([`ROADMAP.md`](ROADMAP.md) §3). 코드는 남아 있으나 신규
+> 기능·지원 없음.
 
 다수 테넌트를 한 게이트웨이에서 운영할 때, 조회를 **테넌트별로 격리**하고 **읽기전용 역할**을
 분리합니다(기존 동작·차단 규칙은 그대로).

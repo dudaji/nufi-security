@@ -6,6 +6,31 @@
 
 ---
 
+## v0.4.3 — **문서 정합성 강화 — 운영 제외 안내 전파 + CLI 누락 보완 + 릴리스 노트 확장**
+
+### 한 줄 요약
+문서 간 **정합성**을 높였습니다. 운영 레이어 제외 안내가 README 에만 있어 다른 문서를
+보는 사용자가 제외된 기능을 현행으로 오해할 수 있는 문제를 해소하고, CLI 레퍼런스의
+누락·불일치를 교정했습니다.
+
+### 무엇이 달라졌나
+
+| 항목 | 이전 | 이후 |
+|---|---|---|
+| 운영 제외 안내 | README 에만 | DEMO·HANDS_ON·CLI 에도 ⚠️ 표기 |
+| CLI `benchmark` 표기 | 상세 절만 있고 usage·표에서 누락 | usage + 표에 추가 |
+| CLI `nufi` 별칭 | 미언급 | 실행 방법 절에 명시 |
+| v0.4.1 릴리스 노트 | 2줄 스텁 | 전체 형식(비교표·사용법·검증) |
+| HANDS_ON 버전 라벨 | `(v0.0.3)`, `(v0.0.5 신규)` | 제거 (현재 v0.4.x) |
+| README 데모 번호 | `3b`, `3b''`, `3b'''` | `4` ~ `10` 순차 |
+
+### 검증
+
+- 문서 스타일 가드: `check_doc_style.py` rc=0
+- 문서 정합 가드: `test_docs_consistency.py` 12/12 PASS
+
+---
+
 ## v0.4.2 — **게이트웨이가 더 튼튼해졌다 — 타임아웃·지연 추적·방어 파싱 + README 포지셔닝 정렬**
 
 ### 한 줄 요약
@@ -40,8 +65,36 @@ export NUFI_MAX_PROMPT_BYTES=262144   # 프롬프트 크기 제한 (바이트, �
 
 ## v0.4.1 — **Python SDK 파사드 — `from nufi import ...` 한 줄로 시작**
 
-`from nufi import detect, Guard, pseudonymize` 한 줄로 탐지·가명화·정책 평가를
-시작할 수 있는 파사드 패키지(v0.4.1). 상세: [`CHANGELOG.md`](../CHANGELOG.md) [0.4.1] 참고.
+### 한 줄 요약
+게이트웨이 없이, 코드에서 NuFi 엔진을 직접 임포트해 쓸 수 있는 **Python SDK 파사드**를
+구현했습니다. `from nufi import detect, Guard, pseudonymize` 한 줄로 탐지·가명화·정책 평가를
+시작할 수 있습니다.
+
+### 무엇이 달라졌나
+
+| 기능 | 이전 | 이후 |
+|---|---|---|
+| 라이브러리 사용 | `egress_audit`, `enforcement` 등 내부 패키지 직접 임포트 | `from nufi import detect` 한 줄 |
+| 탐지 편의 함수 | 없음 — `DetectionPipeline` 객체 직접 생성 | `detect(text)` 한 줄 (모델 지연 로딩) |
+| 공개 API 정의 | 흩어진 3곳 | `nufi.__all__` 에 stable 15개 심볼 |
+| 임포트 부수효과 | 미보장 | `import nufi` 가 모델·config 로딩 0 (에어갭 안전) |
+
+### 사용법
+
+```python
+from nufi import detect, Guard, pseudonymize
+
+findings = detect("김민수님 계좌번호 110-123-456789")
+token = pseudonymize("KR_PERSON", "김민수")
+result = Guard().inspect(text)
+```
+
+API 전체 목록: [`docs/SDK.md`](SDK.md)
+
+### 검증
+
+- 테스트: `python3 -m pytest tests/test_cmp249_sdk.py` — 26/26 PASS
+- 데모: `./scripts/demo_sdk.sh` — 4/4 PASS
 
 ---
 

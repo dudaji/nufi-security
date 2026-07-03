@@ -151,25 +151,25 @@ API 전체 목록·안정성 계층은 [`docs/SDK.md`](docs/SDK.md), 데모는 `
 nufi-egress coverage --simulate samples/flow_replay.jsonl
 nufi-egress monitor  --simulate samples/flow_bypass_burst.jsonl --threshold 1
 
-# 3b) PII 라우팅 데모 — PII 포함 → 로컬 모델, PII 없음 → 클라우드 허용
+# 4) PII 라우팅 데모 — PII 포함 → 로컬 모델, PII 없음 → 클라우드 허용
 python3 scripts/demo_pii_routing.py           # 매뉴얼: docs/PII_ROUTING.md
 
-# 3b'') Python SDK 데모 — from nufi import ... 탐지·가명화·정책 평가
+# 5) Python SDK 데모 — from nufi import ... 탐지·가명화·정책 평가
 ./scripts/demo_sdk.sh                         # 매뉴얼: docs/SDK.md
 
-# 3b''') 게이트웨이 강건성 데모 — 타임아웃·방어 파싱·지연 추적
+# 6) 게이트웨이 강건성 데모 — 타임아웃·방어 파싱·지연 추적
 ./scripts/demo_resilience.sh                  # 매뉴얼: docs/DEMO.md
 
-# 3b') 컴플라이언스 매핑 — 안내서·망분리 점검항목 대비 통제 커버리지(증빙 자동판정)
+# 7) 컴플라이언스 매핑 — 안내서·망분리 점검항목 대비 통제 커버리지(증빙 자동판정)
 ./scripts/demo_compliance_mapping.sh          # 매뉴얼: docs/REPORTING.md §3 · docs/MANUAL.md §5.4
 
-# 3d) 전체 데모 러너 — 모든 기능 데모를 차례로 실행하고 집계 PASS/FAIL 출력
+# 8) 전체 데모 러너 — 모든 기능 데모를 차례로 실행하고 집계 PASS/FAIL 출력
 ./scripts/demo_all.sh                         # 데모 카탈로그: docs/DEMO.md · 요약: docs/RELEASE_NOTES.md
 
-# 4) 배선 점검 — 5개 항목 자가진단
+# 9) 배선 점검 — 5개 항목 자가진단
 nufi-egress doctor
 
-# 5) 벤치마크 — 재현율(recall)·정밀도(precision)·지연(latency)
+# 10) 벤치마크 — 재현율(recall)·정밀도(precision)·지연(latency)
 python3 scripts/bench.py --ner gazetteer
 ```
 

@@ -14,6 +14,7 @@ python3 -m pip install -r requirements.txt   # 코어: PyYAML·fastapi·uvicorn�
 python3 -m pip install -e .                   # nufi-egress 진입점 설치(선택)
 
 nufi-egress --help            # 전체 서브커맨드
+nufi --help                   # nufi-egress 와 동일(별칭)
 ```
 
 > **표기 규약.** 모든 서브커맨드는 단일 진입점 `nufi-egress <서브커맨드>` 로 실행합니다(주 명령).
@@ -25,15 +26,15 @@ nufi-egress --help            # 전체 서브커맨드
 ```
 usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
                    [--tenant TENANT] [--role {viewer,operator}]
-                   {render,apply,disable,status,feedback,doctor,coverage,monitor,init,audit,targets,flow-tap,policy,report} ...
+                   {render,apply,disable,status,feedback,doctor,coverage,monitor,init,audit,targets,flow-tap,policy,report,benchmark} ...
 ```
 
 | 전역 옵션 | 무엇 | 기본 |
 |---|---|---|
 | `--routing PATH` | `routing.yaml` 경로 | `config/routing.yaml` |
 | `--policy PATH` | `policy.yaml` 경로 | `config/policy.yaml` |
-| `--tenant KEY` | 테넌트 읽기 경계 — 조회를 이 테넌트로 격리(`report`) | 전체(env `NUFI_TENANT`) |
-| `--role {viewer,operator}` | RBAC — `viewer`=조회만, `operator`=조회+정책변경 | `operator`(env `NUFI_ROLE`) |
+| `--tenant KEY` | 테넌트 읽기 경계 — 조회를 이 테넌트로 격리(`report`) ⚠️ 운영 레이어 제외 | 전체(env `NUFI_TENANT`) |
+| `--role {viewer,operator}` | RBAC — `viewer`=조회만, `operator`=조회+정책변경 ⚠️ 운영 레이어 제외 | `operator`(env `NUFI_ROLE`) |
 
 > 테넌트 읽기 격리 + 읽기전용 역할의 동작·범위는 [`MULTITENANCY.md`](MULTITENANCY.md). `viewer` 가
 > `policy bind/snapshot/rollback` 을 시도하면 권한 거부로 `exit 3`.
@@ -54,6 +55,7 @@ usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
 | [`flow-tap`](#flow-tap) | public 목적지 flow tap — 우회 탐지(`--simulate` 리플레이/`--live`) | 라이브는 root/CAP_NET_RAW |
 | [`policy`](#policy) | 정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사 | 불필요 |
 | [`report`](#report) | 기간별 SLA·규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음) | 불필요 |
+| [`benchmark`](#benchmark) | 정확도+가명화 벤치마크 재현(커밋 증거 대조 + 라이브 하니스) | 불필요 |
 
 > **신규 도입 5분 경로:** `init audit-only` → SDK/게이트웨이 배선 → `doctor`(core-3 GREEN 확인) → `status`/감사 로그 관찰 → 준비되면 `apply`. 자세한 결정 트리는 [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md).
 
@@ -416,6 +418,10 @@ nufi-egress policy audit --verify-chain             # 변경 감사 + 변조탐�
 ---
 
 ## `report`
+
+> ⚠️ **`report sla`** 와 관련 플래그(`--alert`, `--webhook`, `--all-tenants`)는 운영 레이어
+> 제외 대상입니다([`ROADMAP.md`](ROADMAP.md) §3). 코드는 남아 있으나 신규 기능·지원 없음.
+> **`report compliance`** 는 코어 증빙 기능으로 그대로 유지됩니다.
 
 이미 측정·적재된 지표를 **기간별(일/주/월) 제출용 리포트**로 묶습니다. 새 측정·새 벤치를
 돌리지 않고 기존 산출물만 읽기 전용으로 재사용해 Markdown/HTML/JSON 을 산출합니다.

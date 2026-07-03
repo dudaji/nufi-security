@@ -4,6 +4,28 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.3] - 2026-07-03
+
+> **문서 품질 강화 (v0.4.3)** — 문서 간 정합성을 높이고 사용자 혼동을 줄인다. 운영 레이어
+> 제외 안내가 README 에만 있어 DEMO·HANDS_ON·CLI 를 보는 사용자가 제외된 기능을 현행으로
+> 오해할 수 있는 문제를 해소하고, CLI 레퍼런스의 누락·불일치를 교정한다.
+
+### Changed
+- **운영 레이어 제외 안내 전파** — README 에만 있던 ops 제외 경고(`report sla`, `--tenant`,
+  `--role`, `--all-tenants`, 멀티테넌시·RBAC)를 [`docs/DEMO.md`](docs/DEMO.md) 카탈로그 표,
+  [`docs/HANDS_ON.md`](docs/HANDS_ON.md) §6.10·§6.11,
+  [`docs/CLI.md`](docs/CLI.md) `report` 절·전역 옵션 표에 동기화. 사용자가 어느 문서를
+  보든 제외 상태를 인지할 수 있다.
+- **CLI.md `benchmark` 서브커맨드 누락 보완** — `benchmark` 가 상세 섹션은 있으나 usage 줄과
+  서브커맨드 표에서 빠져 있던 불일치를 수정.
+- **CLI.md `nufi` 별칭 명시** — `nufi-egress` 와 동일한 `nufi` 별칭을 실행 방법 절에 추가.
+- **v0.4.1 RELEASE_NOTES 확장** — 스텁이던 v0.4.1 릴리스 노트를 v0.4.0·v0.4.2 와 동일한
+  전체 형식(한 줄 요약·비교 표·사용법·검증)으로 확장.
+- **HANDS_ON 버전 라벨 갱신** — 진단 샘플 출력의 `(v0.0.3)`, 정책 절의 `*(v0.0.5 신규)*`
+  등 3개 이상 메이저 버전 뒤처진 라벨 제거.
+- **README 데모 번호 순서 교정** — 데모 목록의 `# 3b`, `# 3b''`, `# 3b'''` 혼란스러운
+  번호를 `# 4` ~ `# 10` 으로 순차 교정.
+
 ## [0.4.2] - 2026-07-03
 
 > **게이트웨이 강건성 + README 포지셔닝 정렬 (v0.4.2)** — 게이트웨이 코어에 탐지 타임아웃·
