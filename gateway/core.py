@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import signal
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -15,6 +16,15 @@ from urllib.parse import urlparse
 from egress_audit import EgressGuard, AuditLogger, MessageStore
 from capture import ContentDumpWriter
 from gateway.router import Router, RouteDecision
+
+# 탐지 파이프라인 타임아웃 (밀리초). 환경변수로 조정 가능.
+_DETECT_TIMEOUT_MS = int(os.environ.get("NUFI_DETECT_TIMEOUT_MS", "5000"))
+# 프롬프트 최대 길이 (바이트). OOM 방어. 초과 시 잘라서 탐지.
+_MAX_PROMPT_BYTES = int(os.environ.get("NUFI_MAX_PROMPT_BYTES", str(512 * 1024)))
+
+
+class DetectionTimeoutError(Exception):
+    """탐지 파이프라인이 타임아웃 내에 완료되지 않았을 때 발생."""
 
 
 @dataclass
@@ -26,14 +36,33 @@ class GatewayResponse:
     body: Dict[str, Any] = field(default_factory=dict)
     blocked_entities: List[str] = field(default_factory=list)
     conversation_id: Optional[str] = None   # in/out 메시지 상관키 (P0)
+    latency_ms: Optional[float] = None      # 요청 처리 지연 (밀리초)
 
 
 def extract_text(messages: List[Dict[str, Any]]) -> str:
-    parts = []
+    parts: list[str] = []
+    total = 0
     for m in messages or []:
+        if not isinstance(m, dict):
+            continue
         c = m.get("content", "")
         if isinstance(c, list):
-            parts.extend(b.get("text", "") for b in c if isinstance(b, dict))
+            for b in c:
+                if isinstance(b, dict):
+                    t = str(b.get("text", ""))
+                    total += len(t.encode("utf-8", errors="replace"))
+                    if total > _MAX_PROMPT_BYTES:
+                        parts.append(t[: _MAX_PROMPT_BYTES // 4])
+                        return "\n".join(parts)
+                    parts.append(t)
+        elif c is None:
+            parts.append("")
+        elif isinstance(c, str):
+            total += len(c.encode("utf-8", errors="replace"))
+            if total > _MAX_PROMPT_BYTES:
+                parts.append(c[: _MAX_PROMPT_BYTES // 4])
+                return "\n".join(parts)
+            parts.append(c)
         else:
             parts.append(str(c))
     return "\n".join(parts)
@@ -152,7 +181,30 @@ class Gateway:
         return GatewayResponse(200, route, "pii_routed", None, resp_body,
                                conversation_id=conv_id)
 
+    def _inspect_with_timeout(self, text: str):
+        """EgressGuard.inspect 에 타임아웃을 건다 (NUFI_DETECT_TIMEOUT_MS).
+
+        타임아웃 초과 시 DetectionTimeoutError 발생 → fail-closed 흐름으로 수렴.
+        SIGALRM 을 사용하며, Windows 등 미지원 환경에서는 타임아웃 없이 실행.
+        """
+        timeout_sec = _DETECT_TIMEOUT_MS / 1000.0
+        if timeout_sec <= 0 or not hasattr(signal, "SIGALRM"):
+            return self.guard.inspect(text)
+
+        def _handler(signum, frame):
+            raise DetectionTimeoutError(
+                f"탐지가 {_DETECT_TIMEOUT_MS}ms 내에 완료되지 않았습니다")
+
+        old = signal.signal(signal.SIGALRM, _handler)
+        signal.setitimer(signal.ITIMER_REAL, timeout_sec)
+        try:
+            return self.guard.inspect(text)
+        finally:
+            signal.setitimer(signal.ITIMER_REAL, 0)
+            signal.signal(signal.SIGALRM, old)
+
     def process(self, body: Dict[str, Any]) -> GatewayResponse:
+        t0 = time.monotonic()
         requested_model = body.get("model", "nufi-default")
         prompt_text = extract_text(body.get("messages", []))
         conv_id = self._conversation_id(body)
@@ -168,6 +220,7 @@ class Gateway:
         if route.is_public and self.router.pii_routing.enabled:
             pii_route = self._try_pii_route(requested_model, prompt_text, conv_id, turn, body)
             if pii_route is not None:
+                pii_route.latency_ms = (time.monotonic() - t0) * 1000
                 return pii_route
 
         # private 경로: 조직 외부로 나가지 않음 → 외부 감사(egress_audit.jsonl)는 없으나,
@@ -179,29 +232,40 @@ class Gateway:
             self._store(conversation_id=conv_id, turn=turn, direction="out",
                         route=route, body=resp_body)
             return GatewayResponse(200, route, "private", None, resp_body,
-                                   conversation_id=conv_id)
+                                   conversation_id=conv_id,
+                                   latency_ms=(time.monotonic() - t0) * 1000)
 
         # public 경로: 송신 직전 탐지(pre_call)
         # M5 §4.2 fail-closed: 탐지 파이프라인 예외/타임아웃 → 해당 요청 차단(열림 폴백 금지).
         try:
-            result = self.guard.inspect(prompt_text)
+            result = self._inspect_with_timeout(prompt_text)
         except Exception as exc:  # noqa: BLE001 — 어떤 탐지 실패든 안전측(차단)으로 수렴
+            elapsed_ms = (time.monotonic() - t0) * 1000
+            is_timeout = isinstance(exc, DetectionTimeoutError)
             meta = {"requested_model": requested_model, "is_fallback": route.is_fallback,
-                    "fail_closed": True, "error": type(exc).__name__}
+                    "fail_closed": True, "error": type(exc).__name__,
+                    "latency_ms": round(elapsed_ms, 1)}
             aid = self.audit.log(model=route.backend, provider=route.provider, is_public=True,
                                  request_body={"model": requested_model, "redacted": True},
-                                 decision_summary={"blocked": True, "fail_closed": True},
+                                 decision_summary={"blocked": True, "fail_closed": True,
+                                                   "timeout": is_timeout},
                                  findings=[], outcome="blocked", extra=meta)
+            reason = ("탐지 타임아웃 — 안전 차단(fail-closed)"
+                      if is_timeout
+                      else "탐지 파이프라인 오류로 안전 차단되었습니다(fail-closed).")
             err_body = {"error": {"type": "egress_fail_closed",
-                                  "message": "탐지 파이프라인 오류로 안전 차단되었습니다(fail-closed).",
+                                  "message": reason,
                                   "reason": type(exc).__name__}}
             self._store(conversation_id=conv_id, turn=turn, direction="out", route=route,
                         body=err_body, inline_decision={"blocked": True, "fail_closed": True})
             return GatewayResponse(403, route, "blocked", aid, err_body, ["FAIL_CLOSED"],
-                                   conversation_id=conv_id)
+                                   conversation_id=conv_id,
+                                   latency_ms=elapsed_ms)
 
+        detect_ms = (time.monotonic() - t0) * 1000
         findings = [_mask_finding(f.to_dict()) for f in result.findings]
-        meta = {"requested_model": requested_model, "is_fallback": route.is_fallback}
+        meta = {"requested_model": requested_model, "is_fallback": route.is_fallback,
+                "latency_ms": round(detect_ms, 1)}
 
         # public in 메시지 저장: 기본 가명화 통과본(body=sanitized), 원문은 retain_raw 정책으로.
         sanitized_in = {"model": requested_model, "text": result.transformed_text,
@@ -226,7 +290,8 @@ class Gateway:
             self._store(conversation_id=conv_id, turn=turn, direction="out", route=route,
                         body=err_body, inline_decision=result.summary)
             return GatewayResponse(403, route, "blocked", aid, err_body, ents,
-                                   conversation_id=conv_id)
+                                   conversation_id=conv_id,
+                                   latency_ms=(time.monotonic() - t0) * 1000)
 
         outcome = "transformed" if result.transformed_text != prompt_text else "forwarded"
         meta["transformed_prompt"] = result.transformed_text if outcome == "transformed" else None
@@ -243,4 +308,5 @@ class Gateway:
         self._store(conversation_id=conv_id, turn=turn, direction="out", route=route,
                     body=resp_body, inline_decision=result.summary)
         return GatewayResponse(200, route, outcome, aid, resp_body,
-                               conversation_id=conv_id)
+                               conversation_id=conv_id,
+                               latency_ms=(time.monotonic() - t0) * 1000)

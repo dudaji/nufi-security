@@ -4,6 +4,35 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.2] - 2026-07-03
+
+> **게이트웨이 강건성 + README 포지셔닝 정렬 (v0.4.2)** — 게이트웨이 코어에 탐지 타임아웃·
+> 프롬프트 크기 제한·요청 지연 추적을 추가해 프로덕션 안정성을 높이고, README 를 로드맵
+> 방향("한국어 PII·규제 증빙 경량 엔진")과 정렬해 첫 방문자가 제품 성격을 한눈에
+> 파악하게 한다.
+
+### Added
+- **탐지 타임아웃(fail-closed)** — `NUFI_DETECT_TIMEOUT_MS` 환경변수(기본 5000ms)로
+  탐지 파이프라인에 제한시간을 건다. 초과 시 안전 차단(fail-closed) — NER 모델 행(hang)이
+  게이트웨이 전체를 멈추지 못하게 한다.
+- **프롬프트 크기 제한** — `NUFI_MAX_PROMPT_BYTES` 환경변수(기본 512KB)로 입력 크기를
+  제한한다. 초과 시 잘라서 탐지하여 OOM 방지.
+- **요청 지연 추적** — `GatewayResponse.latency_ms` 필드 + HTTP 응답 헤더
+  `X-NuFi-Latency-Ms` + 감사 로그 `latency_ms` 기록. 모든 경로(private·public·
+  pii_routed·blocked·fail_closed)에 지연이 포함된다.
+- **방어 파싱** — `extract_text()` 가 비정상 메시지(비-dict 항목·content=None·content
+  비-string)를 안전하게 건너뛴다. 잘못된 입력이 파이프라인 예외를 일으키지 않는다.
+- **강건성 데모** — `scripts/demo_resilience.sh`(5/5 PASS): 지연 추적·방어 파싱·타임아웃
+  fail-closed 검증. `demo_all.sh` 러너·[`docs/DEMO.md`](docs/DEMO.md) 카탈로그 등록.
+- **강건성 테스트** — `tests/test_cmp249_resilience.py`(16/16 PASS): 위 기능 전수 검증.
+
+### Changed
+- **README 포지셔닝 정렬** — 제목·설명·핵심 차별점을 로드맵 방향("한국어 PII·규제 증빙
+  경량 엔진, CLI/SDK only")과 일치시킴. "Egress-Audit Gateway" 단독 브랜딩에서
+  한국어 PII·규제 증빙 특화 엔진으로 전환.
+- **HANDS_ON §7c 실습** — "Part H — 게이트웨이 강건성 설정" 실습 절(타임아웃·크기 제한·
+  지연 확인).
+
 ## [0.4.1] - 2026-07-03
 
 > **Python SDK 파사드 구현 (v0.4.1)** — 로드맵 P2 "Python SDK (경량 임포트 API)"의 구현을

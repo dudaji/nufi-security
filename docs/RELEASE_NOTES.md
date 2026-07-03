@@ -6,6 +6,45 @@
 
 ---
 
+## v0.4.2 — **게이트웨이가 더 튼튼해졌다 — 타임아웃·지연 추적·방어 파싱 + README 포지셔닝 정렬**
+
+### 한 줄 요약
+게이트웨이 코어에 **탐지 타임아웃**(NER 모델이 멈춰도 요청이 안전 차단됨),
+**요청 지연 추적**(모든 응답에 latency_ms), **방어 파싱**(비정상 입력 안전 처리)을
+추가해 프로덕션 안정성을 높였습니다. README 를 로드맵 방향과 정렬했습니다.
+
+### 무엇이 달라졌나
+
+| 기능 | 이전 | 이후 |
+|---|---|---|
+| NER 모델 행(hang) | 게이트웨이 전체 멈춤 | 5초(조정 가능) 후 fail-closed 차단 |
+| 비정상 메시지(content=null 등) | 파이프라인 예외 위험 | 안전하게 건너뜀 |
+| 큰 프롬프트(수 MB) | OOM 위험 | 512KB(조정 가능)까지만 탐지 |
+| 처리 지연 측정 | 없음 | 응답 헤더 `X-NuFi-Latency-Ms` + 감사 로그 |
+| README 첫인상 | "Egress-Audit Gateway" | "한국어 PII·규제 증빙 경량 엔진" |
+
+### 설정
+
+```bash
+export NUFI_DETECT_TIMEOUT_MS=3000    # 탐지 타임아웃 (밀리초, 기본 5000)
+export NUFI_MAX_PROMPT_BYTES=262144   # 프롬프트 크기 제한 (바이트, 기본 512KB)
+```
+
+### 검증
+
+- 테스트: `python3 tests/test_cmp249_resilience.py` — 16/16 PASS
+- 데모: `./scripts/demo_resilience.sh` — 5/5 PASS
+- 기존 테스트: `test_cmp85_p0.py` 4/4 PASS · `test_cmp247_pii_routing.py` 35/35 PASS
+
+---
+
+## v0.4.1 — **Python SDK 파사드 — `from nufi import ...` 한 줄로 시작**
+
+`from nufi import detect, Guard, pseudonymize` 한 줄로 탐지·가명화·정책 평가를
+시작할 수 있는 파사드 패키지(v0.4.1). 상세: [`CHANGELOG.md`](../CHANGELOG.md) [0.4.1] 참고.
+
+---
+
 ## v0.4.0 — **PII 가 있으면 아예 클라우드로 안 보낸다 — 하이브리드 라우팅 + 규제 증빙 48개 통제 완성**
 
 ### ① 한 줄 요약

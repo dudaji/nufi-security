@@ -646,6 +646,42 @@ print(result.decision)       # 정책 판정 (차단/가명화/경고)
 
 ---
 
+## 7c. Part H — 게이트웨이 강건성 설정 *(v0.4.2 신규)*
+
+v0.4.2에서 게이트웨이 코어에 **탐지 타임아웃**, **프롬프트 크기 제한**, **지연 추적**이
+추가되었습니다.
+
+### 환경변수로 조정
+
+```bash
+# 탐지 타임아웃 (밀리초, 기본 5000ms). 초과 시 fail-closed(차단).
+export NUFI_DETECT_TIMEOUT_MS=3000
+
+# 프롬프트 최대 크기 (바이트, 기본 512KB). 초과 시 잘라서 탐지.
+export NUFI_MAX_PROMPT_BYTES=262144   # 256KB
+
+PORT=4000 ./scripts/run_gateway.sh
+```
+
+### 지연 확인
+
+```bash
+# 게이트웨이 응답 헤더에 X-NuFi-Latency-Ms 가 포함됩니다.
+curl -sv localhost:4000/v1/chat/completions \
+  -d '{"model":"nufi-default","messages":[{"role":"user","content":"안녕"}]}' \
+  2>&1 | grep -i x-nufi-latency
+# < X-NuFi-Latency-Ms: 0.3
+```
+
+### 방어 파싱
+
+비정상 요청(content 가 null, 메시지가 dict 가 아닌 경우 등)은 안전하게 처리됩니다.
+큰 프롬프트는 `NUFI_MAX_PROMPT_BYTES` 까지만 탐지하고 나머지는 잘립니다.
+
+데모: `./scripts/demo_resilience.sh` (5/5 PASS).
+
+---
+
 ## 8. 정리 — 치트시트 & 다음 단계
 
 여기까지 했으면 여러분은 **앱(SDK) + 운영(CLI)** 양쪽을 다 손에 익혔습니다.

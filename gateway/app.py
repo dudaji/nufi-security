@@ -28,4 +28,7 @@ def health():
 async def chat_completions(request: Request):
     body = await request.json()
     resp = gateway.process(body)
-    return JSONResponse(status_code=resp.status, content=resp.body)
+    headers = {}
+    if resp.latency_ms is not None:
+        headers["X-NuFi-Latency-Ms"] = str(round(resp.latency_ms, 1))
+    return JSONResponse(status_code=resp.status, content=resp.body, headers=headers)
