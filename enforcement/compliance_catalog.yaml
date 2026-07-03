@@ -37,7 +37,7 @@
 # 종료코드 영향 없음: control coverage 는 **정보성**이다. 미충족 direct 가 있어도
 # report compliance 종료코드는 무결성 게이트(0 정상 / 1 변조)만 따른다.
 # =============================================================================
-version: "1.1"
+version: "1.2"
 
 controls:
   # ========================================================================== #
@@ -101,9 +101,12 @@ controls:
     framework: fsec-ai
     source: "안내서 점검 ⑪·32~35"
     requirement: "실시간 모니터링·정기점검·보고"
-    control: "SLA/리포트(수동 산출)"
-    coverage_type: partial
-    remediation_ref: "P1+ — 모니터링·보고 자동화"
+    control: "감사 결정 모니터링 + 정책 변경 보고(compliance report 산출)"
+    coverage_type: direct
+    eval:
+      all_of:
+        - {type: decisions_total, min: 0}
+        - {type: nonempty, path: "policy_change_audit.records"}
 
   - id: C-14/17
     framework: fsec-ai
@@ -314,6 +317,21 @@ controls:
     control: "범위밖 — 게이트웨이는 처리시점 통제(파기 라이프사이클 비범위)"
     coverage_type: out_of_scope
 
+  - id: PIPA-15
+    framework: pipa
+    source: "개인정보보호법 §15(수집·이용)"
+    requirement: "개인정보 수집·이용 동의 기반 처리"
+    control: "범위밖 — 동의 수집·관리는 절차적 요건(게이트웨이 비범위)"
+    coverage_type: out_of_scope
+
+  - id: PIPA-34
+    framework: pipa
+    source: "개인정보보호법 §34(유출 통지)"
+    requirement: "개인정보 유출 시 정보주체·당국 통지"
+    control: "감사 알림 파이프라인(부분) — 법적 통지 절차·서식 미구현"
+    coverage_type: partial
+    remediation_ref: "P2 — 유출 통지 자동화(법적 서식 연동)"
+
   # ========================================================================== #
   # 신용정보법 (cia) — 개인신용정보 보호
   # ========================================================================== #
@@ -364,13 +382,38 @@ controls:
       actions: [block]
       min: 0
 
-  - id: CIA-19
+  - id: CIA-19-INTEG
     framework: cia
-    source: "신용정보법 §19(전산시스템 안전보호)"
-    requirement: "신용정보전산시스템 안전보호(접근통제·침입탐지·위변조방지)"
-    control: "무결성+RBAC(부분) — 침입탐지(IDS) 미구현"
+    source: "신용정보법 §19(전산시스템 안전보호 — 위변조방지)"
+    requirement: "신용정보전산시스템 위변조방지"
+    control: "감사·변경 해시체인 무결성"
+    coverage_type: direct
+    maps_to: M-2.7
+    eval:
+      type: field_true
+      path: "integrity_ok"
+
+  - id: CIA-19-IDS
+    framework: cia
+    source: "신용정보법 §19(전산시스템 안전보호 — 침입탐지·접근통제)"
+    requirement: "신용정보전산시스템 침입탐지·접근통제"
+    control: "침입탐지(IDS) 미구현 — RBAC(부분)"
     coverage_type: partial
     remediation_ref: "P3 — 침입탐지·자산 RBAC"
+
+  - id: CIA-33-2
+    framework: cia
+    source: "신용정보법 §33-2(전송요구권)"
+    requirement: "개인신용정보 전송요구권(마이데이터)"
+    control: "범위밖 — 데이터 포터빌리티는 게이트웨이 비범위"
+    coverage_type: out_of_scope
+
+  - id: CIA-20-2
+    framework: cia
+    source: "신용정보법 §20-2(관리·보호인력)"
+    requirement: "개인신용정보 관리·보호 인력 지정"
+    control: "범위밖 — 조직·인력 운영은 절차적 요건(게이트웨이 비범위)"
+    coverage_type: out_of_scope
 
   # ========================================================================== #
   # ISMS-P 인증기준 (isms-p)
@@ -454,4 +497,26 @@ controls:
     source: "ISMS-P 2.11·2.12"
     requirement: "사고 예방·대응 / 재해복구"
     control: "범위밖 — 파트너/이연"
+    coverage_type: out_of_scope
+
+  - id: ISMS-2.5
+    framework: isms-p
+    source: "ISMS-P 2.5"
+    requirement: "인증 및 권한관리"
+    control: "세션 RBAC(viewer/operator) — 자산·사용자 인증 미구현"
+    coverage_type: partial
+    remediation_ref: "P1+ — 자산 RBAC·인증 체계"
+
+  - id: ISMS-2.7
+    framework: isms-p
+    source: "ISMS-P 2.7"
+    requirement: "암호화 적용(전송·저장)"
+    control: "범위밖 — TLS 종단은 인프라 레이어(게이트웨이 비범위)"
+    coverage_type: out_of_scope
+
+  - id: ISMS-3.5
+    framework: isms-p
+    source: "ISMS-P 3.5"
+    requirement: "정보주체 권리보호(열람·정정·삭제·처리정지)"
+    control: "범위밖 — 정보주체 권리 이행은 절차적 요건(게이트웨이 비범위)"
     coverage_type: out_of_scope
