@@ -4,6 +4,21 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.8] - 2026-07-04
+
+> **테스트 스위트 수정 — 5 failures + 2 errors 해결 (v0.4.8)** — CMP-247 PII 라우팅
+> 도입 후 발생한 테스트 회귀를 수정한다. 강한 PII(RRN, SECRET)가 PII 라우팅에
+> 가려 차단되지 않던 버그를 수정하고, pytest fixture 오류를 해소한다.
+
+### Fixed
+- **PII 라우팅이 강한 PII 차단을 우회하던 버그** — `_try_pii_route`가 block 대상
+  엔티티(KR_RRN, SECRET 등)까지 로컬 라우팅하여 egress guard의 차단을 건너뛰던
+  문제 수정. 정책상 block 대상 PII가 포함되면 egress guard 흐름으로 양보하도록
+  변경 (`gateway/core.py`, `gateway/litellm_hook.py`).
+- **test_cmp85_p0/p1 fixture 오류** — pytest `tmp` → `tmp_path` fixture 이름 수정.
+- **test_m3_reversible hook 통합 테스트** — PII 라우팅 비활성화로 pseudonymize
+  경로 테스트 복원.
+
 ## [0.4.7] - 2026-07-03
 
 > **인수인계 문서 v0.4.x 동기화 (v0.4.7)** — `HANDOVER/` 인수인계 문서가 v0.2.2 에

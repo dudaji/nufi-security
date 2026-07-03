@@ -154,7 +154,11 @@ class Gateway:
     def _try_pii_route(self, requested_model: str, prompt_text: str,
                        conv_id: str, turn: int,
                        body: Dict[str, Any]) -> Optional[GatewayResponse]:
-        """CMP-247: PII 감지 → 로컬 모델 강제 라우팅. PII 없으면 None 반환."""
+        """CMP-247: PII 감지 → 로컬 모델 강제 라우팅. PII 없으면 None 반환.
+
+        강한 PII(정책상 block 대상)가 포함된 경우에는 PII 라우팅을 건너뛰고
+        일반 egress guard 흐름이 차단하도록 한다(CMP-250).
+        """
         try:
             findings = self.guard.pipeline.analyze(prompt_text)
         except Exception:
@@ -162,6 +166,11 @@ class Gateway:
             return None
         if not findings:
             return None
+        # 강한 PII(block 대상)가 포함되면 egress guard가 차단하도록 양보 (CMP-250)
+        blocking = self.guard.policy.blocking_actions
+        for f in findings:
+            if self.guard.policy.action_for(f.entity_type) in blocking:
+                return None
         entity_types = sorted({f.entity_type for f in findings})
         route = self.router.resolve_for_pii(requested_model, entity_types)
         if route is None:

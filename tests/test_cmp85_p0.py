@@ -54,7 +54,8 @@ def req(model, content, **extra):
     return b
 
 
-def test_p0(tmp):
+def test_p0(tmp_path):
+    tmp = str(tmp_path)
     print("\n== CMP-86 P0 — 메시지 스토어 분리 ==")
     msg_dir = os.path.join(tmp, "messages")
     prof = os.path.join(tmp, "profiles.yaml")

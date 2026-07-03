@@ -149,15 +149,22 @@ class EgressAuditHook(_Base):
         data["metadata"]["pii_routing"] = routing.to_dict()
 
         if routing.routed_to_local:
-            # PII 감지 → 로컬 모델로 강제 치환
-            data["model"] = routing.target_model
-            data["metadata"]["original_model"] = original_model
-            data["metadata"]["egress_outcome"] = "routed_local"
-            self._log_routing(routing, data)
-            logger.info("PII routing: %s → %s (reason=%s, entities=%s)",
-                        original_model, routing.target_model, routing.reason,
-                        [f.entity_type for f in routing.findings])
-            return data
+            # CMP-250: 강한 PII(block 대상)가 포함되면 egress audit이 차단하도록 양보
+            from egress_audit.policy import PolicyEngine
+            policy = PolicyEngine()
+            blocking = policy.blocking_actions
+            has_blocking = any(policy.action_for(f.entity_type) in blocking
+                              for f in routing.findings)
+            if not has_blocking:
+                # PII 감지 → 로컬 모델로 강제 치환
+                data["model"] = routing.target_model
+                data["metadata"]["original_model"] = original_model
+                data["metadata"]["egress_outcome"] = "routed_local"
+                self._log_routing(routing, data)
+                logger.info("PII routing: %s → %s (reason=%s, entities=%s)",
+                            original_model, routing.target_model, routing.reason,
+                            [f.entity_type for f in routing.findings])
+                return data
 
         # --- Phase 2: 클라우드 허용 → 기존 egress audit 적용 ---
         model = data.get("model", "")

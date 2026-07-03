@@ -50,7 +50,8 @@ def req(model, content):
     return {"model": model, "messages": [{"role": "user", "content": content}]}
 
 
-def test_p1(tmp):
+def test_p1(tmp_path):
+    tmp = str(tmp_path)
     print("\n== CMP-87 P1 — 패킷 레이어 캡처 + 우회 flow tap ==")
 
     # --- 캡처 대상: routing.yaml 에서 파생 ---

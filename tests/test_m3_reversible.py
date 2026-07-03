@@ -215,8 +215,12 @@ class _FakeChunk:
 
 def test_hook_streaming_integration():
     from gateway.litellm_hook import EgressAuditHook
+    from gateway.pii_router import PiiRouter, RoutingDecision, ROUTE_REASON_CLEAN
     hook = EgressAuditHook()
     hook.rev = ReversibleEgress(vault=_vault(), ner_backend="gazetteer")
+    # PII 라우팅 비활성화: pseudonymize 경로를 테스트하기 위함 (CMP-250)
+    hook.pii_router.route = lambda text, **kw: RoutingDecision(
+        target_model="", reason=ROUTE_REASON_CLEAN, pii_detected=False, original_model="")
 
     async def run():
         pre = await hook.async_pre_call_hook(
@@ -249,8 +253,12 @@ def test_hook_streaming_integration():
 
 def test_hook_nonstreaming_integration():
     from gateway.litellm_hook import EgressAuditHook
+    from gateway.pii_router import RoutingDecision, ROUTE_REASON_CLEAN
     hook = EgressAuditHook()
     hook.rev = ReversibleEgress(vault=_vault(), ner_backend="gazetteer")
+    # PII 라우팅 비활성화: pseudonymize 경로를 테스트하기 위함 (CMP-250)
+    hook.pii_router.route = lambda text, **kw: RoutingDecision(
+        target_model="", reason=ROUTE_REASON_CLEAN, pii_detected=False, original_model="")
 
     class _Msg:
         def __init__(self, c): self.content = c
