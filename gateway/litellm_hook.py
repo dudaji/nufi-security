@@ -1,21 +1,29 @@
-"""LiteLLM Proxy 콜백 훅 (SPEC M1 권장 구현, 프로덕션 경로).
+"""LiteLLM Proxy 콜백 훅 — PII 기반 하이브리드 라우팅 + 감사 로깅 (CMP-244).
 
 config/litellm_config.yaml 의 `callbacks: gateway.litellm_hook.egress_audit_hook` 로 등록.
 
-- async_pre_call_hook: public 행 요청 송신 직전 EgressGuard 탐지.
-    block → HTTPException(403) 으로 차단. 변환 → 메시지 본문 치환 후 통과.
-- async_log_success_event / async_log_failure_event: public 요청 100% 감사 로깅.
+라우팅 흐름:
+  1. async_pre_call_hook: 요청 텍스트에 PII 감지 실행
+     - PII 감지 → 모델명을 로컬 모델로 치환 (강제 라우팅)
+     - PII 없음 → 클라우드 모델 허용
+  2. public 행 요청은 기존 egress audit 적용 (block/redact/pseudonymize)
+  3. async_log_success_event / async_log_failure_event: 100% 감사 로깅 + 비용 추적
 
 LiteLLM 미설치 환경에서도 import 가 깨지지 않도록 베이스 클래스를 지연 처리한다.
 """
 from __future__ import annotations
 
+import logging
 import os
+import time
 import uuid
 from typing import Any, Optional
 
 from egress_audit import ReversibleEgress, AuditLogger
 from gateway.router import Router
+from gateway.pii_router import PiiRouter, RoutingDecision, CostRecord
+
+logger = logging.getLogger("nufi.litellm_hook")
 
 try:
     from litellm.integrations.custom_logger import CustomLogger as _Base  # type: ignore
@@ -112,12 +120,51 @@ class EgressAuditHook(_Base):
     def __init__(self):
         self.rev = ReversibleEgress(ner_backend=os.environ.get("EGRESS_NER_BACKEND", "auto"))
         self.audit = AuditLogger()
+        self.pii_router = PiiRouter(
+            local_model=os.environ.get("NUFI_LOCAL_MODEL", "nufi-local"),
+            cloud_model=os.environ.get("NUFI_CLOUD_MODEL", "nufi-cloud"),
+            fail_closed=os.environ.get("NUFI_FAIL_CLOSED", "1") != "0",
+        )
+
+    def _log_routing(self, decision: RoutingDecision, data: dict) -> None:
+        """라우팅 결정을 감사 로그에 기록."""
+        self.audit.log(
+            model=decision.target_model,
+            provider="local" if decision.routed_to_local else "cloud",
+            is_public=not decision.routed_to_local,
+            request_body={"model": data.get("model"), "routing": decision.to_dict()},
+            decision_summary=decision.to_dict(),
+            findings=[{"entity_type": f.entity_type, "score": f.score}
+                      for f in decision.findings],
+            outcome="routed_local" if decision.routed_to_local else "routed_cloud",
+        )
 
     async def async_pre_call_hook(self, user_api_key_dict, cache, data: dict, call_type: str):
+        text = _extract_text(data.get("messages"))
+        original_model = data.get("model", "")
+
+        # --- Phase 1: PII 기반 라우팅 결정 ---
+        routing = self.pii_router.route(text, requested_model=original_model)
+        data.setdefault("metadata", {})
+        data["metadata"]["pii_routing"] = routing.to_dict()
+
+        if routing.routed_to_local:
+            # PII 감지 → 로컬 모델로 강제 치환
+            data["model"] = routing.target_model
+            data["metadata"]["original_model"] = original_model
+            data["metadata"]["egress_outcome"] = "routed_local"
+            self._log_routing(routing, data)
+            logger.info("PII routing: %s → %s (reason=%s, entities=%s)",
+                        original_model, routing.target_model, routing.reason,
+                        [f.entity_type for f in routing.findings])
+            return data
+
+        # --- Phase 2: 클라우드 허용 → 기존 egress audit 적용 ---
         model = data.get("model", "")
         if not _is_public(model, data.get("metadata")):
+            self._log_routing(routing, data)
             return data  # private → 통과
-        text = _extract_text(data.get("messages"))
+
         session_id = _session_id(data)
         result = self.rev.pseudonymize(text, session_id)
 
@@ -131,11 +178,9 @@ class EgressAuditHook(_Base):
                 "entities": [a["entity_type"] for a in result.decision.actions],
             })
 
-        data.setdefault("metadata", {})
         # pre→post Vault 핸들 전달(spec §4.1). 동시요청 격리는 session_id 파티션.
         data["metadata"]["egress_vault_ref"] = result.vault_ref
         if result.transformed_text != text:
-            # 변환본으로 마지막 user 메시지 치환(간단화: 단일 user 가정)
             for m in reversed(data.get("messages", [])):
                 if m.get("role") == "user" and isinstance(m.get("content"), str):
                     m["content"] = result.transformed_text
@@ -144,11 +189,36 @@ class EgressAuditHook(_Base):
         else:
             data["metadata"]["egress_outcome"] = "forwarded"
         data["metadata"]["_egress_result"] = result.summary
+        self._log_routing(routing, data)
         return data
 
     async def async_post_call_success_hook(self, data: dict, user_api_key_dict, response):
-        """비스트리밍 원복: 응답 surrogate → 원본 무손실 치환 후 (라운드트립 TTL) purge."""
-        session_id = (data.get("metadata") or {}).get("egress_vault_ref")
+        """비스트리밍 원복 + 비용 추적."""
+        meta = data.get("metadata") or {}
+
+        # 비용 추적
+        model = data.get("model", "")
+        usage = {}
+        if isinstance(response, dict):
+            usage = response.get("usage", {})
+        else:
+            usage_obj = getattr(response, "usage", None)
+            if usage_obj:
+                usage = {"prompt_tokens": getattr(usage_obj, "prompt_tokens", 0),
+                         "completion_tokens": getattr(usage_obj, "completion_tokens", 0)}
+        routing_info = meta.get("pii_routing", {})
+        is_local = routing_info.get("routed_to_local", False)
+        self.pii_router.record_cost(
+            model=model,
+            provider="local" if is_local else "cloud",
+            is_local=is_local,
+            prompt_tokens=usage.get("prompt_tokens", 0),
+            completion_tokens=usage.get("completion_tokens", 0),
+            routing_reason=routing_info.get("reason", ""),
+        )
+
+        # 기존 원복 로직
+        session_id = meta.get("egress_vault_ref")
         if not session_id:
             return response
         _restore_response(self.rev, session_id, response)
@@ -162,7 +232,7 @@ class EgressAuditHook(_Base):
                 yield chunk
             return
         restorer = self.rev.stream_restorer(session_id)
-        prev = None  # 1청크 룩어헤드: 마지막 청크에 flush 잔여를 합쳐 무손실 보장.
+        prev = None
         async for chunk in response:
             txt = _chunk_text(chunk)
             if isinstance(txt, str) and txt:
