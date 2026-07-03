@@ -28,9 +28,11 @@ FLOW = str(SDIR / "flow_bypass.jsonl")
 # 카탈로그
 # --------------------------------------------------------------------------- #
 # 한국 규제 증빙 팩 확장 후 총계(fsec-ai + net-sep + pipa + cia + isms-p).
-EXPECT_DIRECT = 23
-EXPECT_PARTIAL = 9
-EXPECT_OOS = 8
+# v1.2: C-11 partial→direct 승격, CIA-19 → CIA-19-INTEG(direct)+CIA-19-IDS(partial) 분리,
+#        PIPA-15/34·CIA-33-2/20-2·ISMS-2.5/2.7/3.5 신규 추가.
+EXPECT_DIRECT = 25
+EXPECT_PARTIAL = 10
+EXPECT_OOS = 13
 
 
 def test_catalog_has_all_direct_and_partial():
@@ -96,6 +98,18 @@ def test_direct_met_from_real_evidence():
     # 신규 direct 항목 증빙출처 표기(eval 경로).
     assert "pseudonymize=" in items["PIPA-28-2"]["evidence"]
     assert items["PIPA-29-INTEG"]["evidence"] == "integrity_ok=True"
+    # v1.2 승격 항목: C-11 모니터링·보고(partial→direct), CIA-19-INTEG 위변조방지.
+    assert items["C-11"]["status"] == rpt.COV_MET
+    assert "decisions.total=" in items["C-11"]["evidence"]
+    assert "policy_change_audit.records" in items["C-11"]["evidence"]
+    assert items["CIA-19-INTEG"]["status"] == rpt.COV_MET
+    assert items["CIA-19-INTEG"]["evidence"] == "integrity_ok=True"
+    # 증빙 출처(evidence_source) 필드 — 충족 direct 항목에 포함.
+    ev_src = items["C-07"]["evidence_source"]
+    assert ev_src is not None
+    assert "audit_log" in ev_src and ev_src["audit_log"]["records"] > 0
+    # partial/OOS 항목엔 evidence_source 없음.
+    assert items["CIA-19-IDS"]["evidence_source"] is None
 
 
 # --------------------------------------------------------------------------- #
@@ -107,6 +121,8 @@ def _empty_report() -> dict:
         "integrity_ok": False,
         "decisions": {"total": 0, "action_counts": {},
                       "blocked_by_entity": {}, "chain": {"ok": None}},
+        "policy_change_audit": {"log": None, "total": 0, "records": [],
+                                "chain": {"ok": False}},
     }
 
 
@@ -117,7 +133,8 @@ def test_direct_unmet_when_no_evidence():
         and s["direct_unmet"] == EXPECT_DIRECT
     items = {i["id"]: i for i in cc["items"]}
     # 기존 + 신규 한국 규제 direct 항목 모두 증빙 부재 시 미충족.
-    for cid in ("C-07", "M-2.7", "PIPA-23", "PIPA-29-LOG", "CIA-20", "ISMS-3.1"):
+    for cid in ("C-07", "C-11", "M-2.7", "PIPA-23", "PIPA-29-LOG",
+                "CIA-20", "CIA-19-INTEG", "ISMS-3.1"):
         assert items[cid]["status"] == rpt.COV_UNMET, cid
 
 
@@ -127,6 +144,7 @@ def test_partial_and_oos_are_static_na():
     # partial/out_of_scope 는 증빙과 무관하게 정적 n/a(자동판정 비대상).
     assert items["C-12"]["status"] == rpt.COV_NA
     assert items["C-12"]["remediation_ref"]   # 보강 트랙 링크 존재
+    assert items["CIA-19-IDS"]["status"] == rpt.COV_NA
     assert items["OOS-SBOM"]["status"] == rpt.COV_NA
 
 
@@ -167,13 +185,15 @@ def test_by_framework_rollup_counts():
     cc = rpt.build_control_coverage(rpt.build_compliance_report(
         audit_path=AUDIT, change_log_path=CHANGES, flow_paths=[FLOW]))
     bf = cc["summary"]["by_framework"]
-    assert bf["fsec-ai"]["direct"] == 3 and bf["fsec-ai"]["partial"] == 6 \
+    assert bf["fsec-ai"]["direct"] == 4 and bf["fsec-ai"]["partial"] == 5 \
         and bf["fsec-ai"]["out_of_scope"] == 5
     assert bf["net-sep"]["direct"] == 5
-    assert bf["pipa"]["direct"] == 6 and bf["pipa"]["partial"] == 1 \
-        and bf["pipa"]["out_of_scope"] == 1
-    assert bf["cia"]["direct"] == 4 and bf["cia"]["partial"] == 1
-    assert bf["isms-p"]["direct"] == 5 and bf["isms-p"]["out_of_scope"] == 2
+    assert bf["pipa"]["direct"] == 6 and bf["pipa"]["partial"] == 2 \
+        and bf["pipa"]["out_of_scope"] == 2
+    assert bf["cia"]["direct"] == 5 and bf["cia"]["partial"] == 1 \
+        and bf["cia"]["out_of_scope"] == 2
+    assert bf["isms-p"]["direct"] == 5 and bf["isms-p"]["partial"] == 2 \
+        and bf["isms-p"]["out_of_scope"] == 4
     # 소계 합 == 전체 롤업(불변).
     s = cc["summary"]
     for key in ("direct", "partial", "out_of_scope", "direct_met", "direct_unmet"):
@@ -189,8 +209,8 @@ def test_framework_filter_subsets_catalog():
     fws = {i["framework"] for i in cc["items"]}
     assert fws == {"pipa", "cia"}
     assert cc["frameworks_filter"] == ["cia", "pipa"]
-    # 롤업도 필터 기준(pipa direct 6 + cia direct 4 = 10).
-    assert cc["summary"]["direct"] == 10
+    # 롤업도 필터 기준(pipa direct 6 + cia direct 5 = 11).
+    assert cc["summary"]["direct"] == 11
     assert set(cc["summary"]["by_framework"]) == {"pipa", "cia"}
     # 전체보다 항목 수가 적다(부분집합).
     assert len(cc["items"]) < len(full["items"])

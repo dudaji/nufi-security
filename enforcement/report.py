@@ -571,6 +571,41 @@ def _eval_rule(rule: dict, report: dict) -> tuple[bool, str]:
     return False, f"unknown_rule:{rtype}"
 
 
+def _evidence_source(item: dict, report: dict) -> Optional[dict]:
+    """direct 충족 항목에 증빙 출처(로그 경로, 체인 해시, 레코드 수)를 부여한다.
+
+    증빙 품질 강화 — 어떤 로그에서 어떤 체인으로 판정되었는지 추적 가능.
+    """
+    rule = item.get("eval") or {}
+    # 규칙이 참조하는 데이터 소스(경로) 식별.
+    sources: dict = {}
+    # 감사 결정 참조 여부.
+    needs_decisions = any(k in str(rule) for k in ("action_count", "decisions_total",
+                                                    "blocked_by_entity"))
+    needs_chain = "chain_ok" in str(rule) or "integrity_ok" in str(rule)
+    needs_policy = "policy_change_audit" in str(rule)
+    if needs_decisions or needs_chain:
+        chain = _get_path(report, "decisions.chain") or {}
+        sources["audit_log"] = {
+            "records": int(_get_path(report, "decisions.total") or 0),
+            "chain_count": chain.get("count"),
+            "chain_ok": chain.get("ok"),
+        }
+    if needs_chain or "integrity_ok" in str(rule):
+        pca_chain = _get_path(report, "policy_change_audit.chain") or {}
+        sources["change_log"] = {
+            "path": _get_path(report, "policy_change_audit.log"),
+            "records": int(_get_path(report, "policy_change_audit.total") or 0),
+            "chain_ok": pca_chain.get("ok"),
+        }
+    if needs_policy:
+        sources["policy_change_audit"] = {
+            "path": _get_path(report, "policy_change_audit.log"),
+            "records": int(_get_path(report, "policy_change_audit.total") or 0),
+        }
+    return sources if sources else None
+
+
 def evaluate_control(item: dict, report: dict) -> tuple[str, Optional[str]]:
     """카탈로그 항목 1개 → (status, evidence).
 
@@ -628,6 +663,8 @@ def build_control_coverage(report: dict, *, catalog_path: Optional[str] = None,
         _tally(summary, ctype, status)
         _tally(by_framework.setdefault(fw or _FW_UNKNOWN, _empty_rollup()),
                ctype, status)
+        ev_src = (_evidence_source(item, report)
+                  if ctype == COV_DIRECT and status == COV_MET else None)
         items_out.append({
             "id": item.get("id"),
             "framework": fw,
@@ -638,6 +675,7 @@ def build_control_coverage(report: dict, *, catalog_path: Optional[str] = None,
             "coverage_type": ctype,
             "status": status,
             "evidence": evidence,
+            "evidence_source": ev_src,
             "remediation_ref": item.get("remediation_ref"),
         })
     summary["by_framework"] = by_framework

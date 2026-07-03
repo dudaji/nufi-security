@@ -78,6 +78,17 @@ controls:
       type: decisions_total
       min: 0
 
+  - id: C-11
+    framework: fsec-ai
+    source: "안내서 점검 ⑪·32~35"
+    requirement: "실시간 모니터링·정기점검·보고"
+    control: "감사 결정 모니터링 + 정책 변경 보고(compliance report 산출)"
+    coverage_type: direct
+    eval:
+      all_of:
+        - {type: decisions_total, min: 0}
+        - {type: nonempty, path: "policy_change_audit.records"}
+
   # --------------------------------------------------------------------------- #
   # 🟡 partial — 부분충족(정적 라벨 + 보강 트랙)
   # --------------------------------------------------------------------------- #
@@ -96,17 +107,6 @@ controls:
     control: "(미구현)"
     coverage_type: partial
     remediation_ref: "P1 — 테넌트/사용자별 rate limit"
-
-  - id: C-11
-    framework: fsec-ai
-    source: "안내서 점검 ⑪·32~35"
-    requirement: "실시간 모니터링·정기점검·보고"
-    control: "감사 결정 모니터링 + 정책 변경 보고(compliance report 산출)"
-    coverage_type: direct
-    eval:
-      all_of:
-        - {type: decisions_total, min: 0}
-        - {type: nonempty, path: "policy_change_audit.records"}
 
   - id: C-14/17
     framework: fsec-ai
