@@ -6,7 +6,7 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch38) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.16 패치 시리즈 (patch01~patch39) — **문서 풍부화 + SDK 사용성 개선**
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
@@ -40,7 +40,9 @@
 
 - **reports/README 관련 문서 섹션(patch38)** — `docs/reports/README.md` 에 관련 문서 표 신설. 측정 보고서와 REPORTING·SDK·HANDS_ON·goldset 교차링크 완성.
 
-기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch38 절.
+- **docs/README 관련 문서 섹션(patch39)** — `docs/README.md`(문서 지도 인덱스) 에 관련 문서 표 신설. 지도 → 제품·매뉴얼·실습·이력·인수인계 교차링크 완성.
+
+기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch39 절.
 
 ---
 
