@@ -198,3 +198,14 @@ PII 라우팅이 활성화되면 민감 요청이 로컬로 분배되어 `cloud_
 - RouteLLM 분류기 도입 (비용-품질 최적화)
 - 한국어 프롬프트 복잡도 분류
 - 실시간 비용/품질 모니터링 대시보드
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md) | §5 하이브리드 결정트리 — PII 라우팅이 egress 정책 결정과 어떻게 맞물리나 |
+| [`SDK.md`](SDK.md) | PiiRouter·DEFAULT_COST_TABLE advanced 심볼 위치 |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md) | §8 관련 문서 링크 — 전체 컴포넌트 흐름에서 라우팅 위치 |
+| [`ROADMAP.md`](ROADMAP.md) | P3: PII 라우팅 Phase 2 로드맵(RouteLLM·비용 최적화) |
