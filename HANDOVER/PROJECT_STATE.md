@@ -3,7 +3,7 @@
 > 이어받는 사람/AI가 "무엇이 되어 있고, 무엇이 남았고, 어디를 조심해야 하나"를 파악하도록
 > 정리했습니다. 수치의 권위는 `docs/reports/*.json`, 변경 이력의 권위는 `CHANGELOG.md` 입니다.
 
-*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch04 (main, origin 동기화됨)*
+*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch06 (main, origin 동기화됨)*
 
 ---
 
@@ -11,6 +11,8 @@
 
 | 버전 | 테마 | 핵심 내용 |
 |---|---|---|
+| **v0.4.16-patch06** | Finding.__repr__ + examples/README | Finding repr 개선(None 필드 제거·score 포맷), examples/ 인덱스 README 신설 |
+| **v0.4.16-patch05** | 문서 풍부화 | ARCHITECTURE 컴포넌트 표, DEMO SDK 섹션, SDK/MANUAL/INTEGRATION_GUIDE 교차링크, FN §7.6 분석 |
 | **v0.4.16-patch04** | examples 확장 + 문서 보강 | examples 7종 스모크(sdk_file_scan·sdk_compliance_report 추가), 307 테스트, 보고서 인덱스, 잔여 FN §7.6 |
 | **v0.4.16** | KR_PERSON CI 하한 달성 | UNLISTED_SURNAMES 재설계 → person_recall 0.9799, CI 하한 0.9591 ≥ 0.93 ✅ (n=854) |
 | **v0.4.15** | 골드셋 정합 복원 | 미수록 성씨 목록 정합, 전체 테스트 통과 복원 |
@@ -76,6 +78,19 @@
 > **참고 — 의도된 비대칭:** `report sla`/`dashboard`/멀티테넌시 플래그는 README 에서
 > "운영 레이어 제외" 방침에 따라 **의도적으로 전면에 두지 않습니다**. 전체 레퍼런스인
 > `docs/CLI.md` 에는 기술되어야 하므로 위와 같이 CLI.md 에만 보강했습니다.
+
+### patch05~patch06 추가 보강 (2026-07-04)
+
+| 갭 | 심각도 | 조치 |
+|---|---|---|
+| Python SDK 파사드(`nufi/`) 가 ARCHITECTURE.md 컴포넌트 표에 없음 | 낮음 | ✅ ARCHITECTURE.md 컴포넌트 표에 SDK 파사드 행 추가 |
+| DEMO.md 에 `examples/` Python SDK 예시 섹션 없음 | 낮음 | ✅ DEMO.md 에 SDK 예시 7종 + 스모크 실행법 섹션 신설 |
+| INTEGRATION_GUIDE.md 경로 D 실행 예시가 1종뿐 | 낮음 | ✅ 실행 예시 3종으로 확장(library_detect·sdk_file_scan·sdk_compliance_report) |
+| kr-person-error-analysis.md 에 v0.4.16 잔여 FN 분석 없음 | 낮음 | ✅ §7.6 추가 — FN 7건 구조(희귀 단성 ~5, 문맥 미탐지 ~2) |
+| `examples/` 디렉터리에 인덱스 README 없음 | 낮음 | ✅ `examples/README.md` 신설 — 7종 예시 목적·API·실행법·백엔드 설명 |
+| `Finding.__repr__` 가 None 필드 전부 노출해 개발자 가독성 저하 | 낮음 | ✅ 커스텀 `__repr__` 추가 — None 필드 생략, score 2자리, gazetteer 소스 기본 생략 |
+| ROADMAP.md 깨진 링크 2건 | 낮음 | ✅ 수정 — 존재하지 않는 파일→텍스트, 잘못된 보고서 파일명 수정 |
+| docs/reports/README.md 에서 5개 보고서 파일 누락 | 낮음 | ✅ baseline-int8.json, CMP-199, fn-dumps 2종, location-union-skip 인덱스 추가 |
 
 ### 점검 결과 양호(gap 없음)
 
