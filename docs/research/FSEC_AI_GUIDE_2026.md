@@ -99,3 +99,13 @@ NuFi Egress-Audit Gateway = 한국어 PII 탐지·차단·가명화 + 감사 해
 2. **구매 트리거가 격상된다.** "데이터 유출 걱정"에서 **"혁신금융 지정 부가조건(규제) 준수 증빙"**으로. 한국어 PII·온프렘·에어갭이라는 기존 차별점이 그대로 규제 요건과 맞물린다.
 3. **가장 높은 ROI는 증빙 자동화다.** 점검항목·평가기준 대비 NuFi 커버리지를 자동 산출하는 매핑 리포트가 도입 결정·규제 대응 트리거에 직결된다 → 로드맵 P0.
 4. **초점을 흩뜨리는 영역은 명시적으로 거른다.** 판단형 robustness·오염 공격·SBOM·교육·제3자 검증은 NuFi가 freelance하지 않는다.
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`../REPORTING.md`](../REPORTING.md) | 본 분석에서 도출된 fsec-ai 프레임워크 매핑 리포트 API |
+| [`../ROADMAP.md`](../ROADMAP.md) | P0~P3 우선순위 — 본 안내서 분석을 반영한 현행 방향 |
+| [`NUFI_SECURITY_PLANE_CHARTER.md`](NUFI_SECURITY_PLANE_CHARTER.md) | 통합 플랫폼 내 NuFi 소유 범위(4 기둥)와 파트너 분담 경계 |
