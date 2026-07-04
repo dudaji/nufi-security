@@ -137,3 +137,31 @@ JSON 산출물의 `control_coverage.summary` 는 전체 롤업 카운트(`direct
 ```
 
 샘플 픽스처는 `samples/sla/` 에 있으며 `samples/sla/_gen_fixtures.py` 로 재생성할 수 있습니다.
+
+---
+
+## 4. Python SDK API
+
+CLI 없이 코드에서 직접 컴플라이언스 리포트를 생성할 수 있습니다.
+
+```python
+from nufi import compliance_report, render_report, load_catalog
+
+# 한국 규제 5종 통제 커버리지 (48개 통제)
+catalog = load_catalog()
+model = compliance_report(
+    audit_path="samples/sla/audit_decisions.jsonl",
+    change_log_path="samples/sla/policy_changes.jsonl",
+    catalog=catalog,
+)
+
+# Markdown/HTML/JSON 렌더
+md = render_report(model, fmt="md")
+print(md)
+
+# 프레임워크별 롤업
+for fw, counts in model.control_coverage.by_framework.items():
+    print(f"{fw}: {counts.direct_met}/{counts.direct_total} direct 충족")
+```
+
+재현 예제: [`examples/sdk_compliance_report.py`](../examples/sdk_compliance_report.py).
