@@ -4,6 +4,42 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch29)
+
+> **v0.4.16-patch29 — CHANGELOG·RELEASE_NOTES·HANDOVER patch29 기준 현행화**
+> patch26~28 항목 추가. RELEASE_NOTES·HANDOVER patch29 갱신. VERSION 변경 없음.
+
+### Changed (문서)
+- **CHANGELOG.md** — patch26·27·28 항목 추가.
+- **docs/RELEASE_NOTES.md** — 패치 시리즈 patch29로 확장.
+- **HANDOVER/PROJECT_STATE.md** — patch26~29 버전 이력 추가, 대상 patch29.
+- **HANDOVER/PROJECT_OVERVIEW.md** — 패치 번호 patch25→patch29.
+- **HANDOVER/README.md** — 대상 버전 patch25→patch29.
+
+## [0.4.16] - 2026-07-04 (patch28)
+
+> **v0.4.16-patch28 — INTEGRATION_GUIDE.md 관련 문서 섹션 신설**
+> PRESETS·CLI·SDK·HANDS_ON·PII_ROUTING·OPS_RULE_RELOAD 교차링크. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/INTEGRATION_GUIDE.md** — 관련 문서 표 신설: PRESETS·CLI·SDK·HANDS_ON·PII_ROUTING·OPS_RULE_RELOAD 6종.
+
+## [0.4.16] - 2026-07-04 (patch27)
+
+> **v0.4.16-patch27 — docs/README.md history/README·research/README 진입점 링크 추가**
+> 설계·명세 섹션에 history/README.md 링크, 조사·전략 섹션에 research/README.md 링크. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/README.md** — history/ 섹션에 `history/README.md` 진입점 링크 추가. research/ 섹션에 `research/README.md` 진입점 링크 추가.
+
+## [0.4.16] - 2026-07-04 (patch26)
+
+> **v0.4.16-patch26 — examples/README.md 관련 문서 섹션 신설**
+> docs/SDK.md·HANDS_ON·REPORTING·DEMO 교차링크. VERSION 변경 없음.
+
+### Changed (문서)
+- **examples/README.md** — 관련 문서 표 신설: docs/SDK.md·docs/HANDS_ON.md·docs/REPORTING.md·docs/DEMO.md 4종.
+
 ## [0.4.16] - 2026-07-04 (patch25)
 
 > **v0.4.16-patch25 — CHANGELOG·RELEASE_NOTES·HANDOVER patch25 기준 현행화**

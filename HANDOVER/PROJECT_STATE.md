@@ -3,7 +3,7 @@
 > 이어받는 사람/AI가 "무엇이 되어 있고, 무엇이 남았고, 어디를 조심해야 하나"를 파악하도록
 > 정리했습니다. 수치의 권위는 `docs/reports/*.json`, 변경 이력의 권위는 `CHANGELOG.md` 입니다.
 
-*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch25 (main, origin 동기화됨)*
+*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch29 (main, origin 동기화됨)*
 
 ---
 
@@ -11,6 +11,10 @@
 
 | 버전 | 테마 | 핵심 내용 |
 |---|---|---|
+| **v0.4.16-patch29** | CHANGELOG·HANDOVER 현행화 | patch26~29 이력 기록, RELEASE_NOTES 확장 |
+| **v0.4.16-patch28** | INTEGRATION_GUIDE 관련 문서 | PRESETS·CLI·SDK·HANDS_ON·PII_ROUTING·OPS_RULE_RELOAD 교차링크 |
+| **v0.4.16-patch27** | docs/README 진입점 링크 | history/README·research/README 진입점 추가 |
+| **v0.4.16-patch26** | examples/README 관련 문서 | SDK·HANDS_ON·REPORTING·DEMO 교차링크 |
 | **v0.4.16-patch25** | CHANGELOG·HANDOVER 현행화 | patch23~25 이력 기록, RELEASE_NOTES 확장 |
 | **v0.4.16-patch24** | DEMO·ROADMAP 관련 문서 | HANDS_ON·examples·CLI·INTEGRATION_GUIDE·REPORTING·PII_ROUTING 교차링크 |
 | **v0.4.16-patch23** | REPORTING 관련 문서 | SDK·CLI·examples·OPS·SECURITY·research 교차링크 |
