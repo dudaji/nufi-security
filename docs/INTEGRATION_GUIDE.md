@@ -63,6 +63,7 @@ NuFi 는 **하나의 탐지·정책·감사 코어(`egress_audit`)** 를 세 가
 | 파이썬 앱이 이미 `openai` 패키지로 호출 중 | **A) thin SDK** | import 1줄 + 생성 1줄 교체로 끝. 서버 기동도 선택. |
 | 여러 언어·서비스가 한 엔드포인트로 모임 / 비파이썬 | **B) 게이트웨이** | OpenAI 호환 HTTP 엔드포인트 1개를 앞단에 둠. 언어 무관. |
 | 이미 **LiteLLM Proxy** 로 멀티프로바이더 운영 중 | **C) LiteLLM 훅** | 기존 프록시에 콜백만 등록. 라우팅·키관리는 LiteLLM 이 유지. |
+| LLM 없이 텍스트·파일의 PII 탐지·가명화만 필요 | **D) 직접 라이브러리** | `from nufi import detect` 한 줄. 게이트웨이·서버 불필요. |
 
 > **Claude(Anthropic)로 붙이려면 → 경로 C(LiteLLM 훅) 권장.** 실 멀티프로바이더 egress 는 LiteLLM 이
 > 라우팅·키관리를 맡는 경로 C 가 가장 매끄럽습니다 — [`config/litellm_config.yaml`](../config/litellm_config.yaml)
@@ -149,6 +150,40 @@ curl -fsS http://localhost:4000/health      # {"status":"ok",...}
 `async_pre_call_hook` 에서 동일한 `EgressGuard` 를 호출하도록 콜백만 등록합니다.
 구현은 `gateway/litellm_hook.py`, 설정은 `config/litellm_config.yaml` 입니다(`litellm` 설치 시 활성화).
 이 경로는 **권장 프로덕션 경로**이며 standalone 게이트웨이와 동일한 탐지·정책·감사 코어를 공유합니다.
+
+### D) 직접 라이브러리 — LLM 없이 PII 탐지·가명화만
+
+LLM 호출 없이 텍스트·파일에서 한국어 개인정보(PII)를 탐지하거나 가명화하기만 하면
+`from nufi import detect` 한 줄로 시작합니다. 게이트웨이·서버 기동 불필요.
+
+```python
+from nufi import detect, pseudonymize, mask, Guard, scan_file, batch_detect
+
+# 텍스트에서 PII 탐지 (한 줄)
+findings = detect("고객 홍길동님의 주민번호 798326-3487729를 확인해 주세요.")
+for f in findings:
+    print(f"{f.entity_type}: {f.text}")   # KR_PERSON: 홍길동, KR_RRN: 798326-3487729
+
+# 비가역 토큰화·마스킹
+token = pseudonymize("KR_PERSON", "홍길동")    # <KR_PERSON_3e13a6b76a>
+masked = mask("798326-3487729", keep_tail=4)  # ******-***7729
+
+# 파일 단위 탐지
+findings = scan_file("고객데이터.txt")
+
+# 여러 텍스트 일괄 탐지
+all_findings = batch_detect(["텍스트1", "텍스트2"])
+
+# 정책 평가 ("이 텍스트를 외부로 보내도 되나?")
+result = Guard().inspect(text)
+if result.blocked:
+    print("차단됨:", [a["entity_type"] for a in result.decision.actions])
+```
+
+전체 API 목록: [`SDK.md`](SDK.md). 실행 가능한 예시: `python3 examples/library_detect.py`.
+
+> **언제 경로 D 를 고르나?** 배치 파이프라인·데이터 정제·파일 스캔 등 LLM 없이 PII 처리만 필요한 경우.
+> LLM 게이트웨이(경로 A/B/C)와 달리 서버 기동이 없어 스크립트·CI 파이프라인에 바로 삽입됩니다.
 
 ---
 
