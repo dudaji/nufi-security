@@ -4,6 +4,34 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch22)
+
+> **v0.4.16-patch22 — CHANGELOG·RELEASE_NOTES·HANDOVER patch22 기준 현행화**
+> patch20·21 항목 추가. RELEASE_NOTES 패치 시리즈 patch22로 확장. VERSION 변경 없음.
+
+### Changed (문서)
+- **CHANGELOG.md** — patch20·21 항목 추가.
+- **docs/RELEASE_NOTES.md** — 패치 시리즈 patch22로 확장.
+- **HANDOVER/PROJECT_STATE.md** — patch20~22 버전 이력 추가, 대상 patch22.
+- **HANDOVER/PROJECT_OVERVIEW.md** — 패치 번호 patch19→patch22.
+- **HANDOVER/README.md** — 대상 버전 patch19→patch22.
+
+## [0.4.16] - 2026-07-04 (patch21)
+
+> **v0.4.16-patch21 — PII_ROUTING.md 관련 문서 섹션 신설**
+> INTEGRATION_GUIDE·SDK·ARCHITECTURE·ROADMAP 교차링크. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/PII_ROUTING.md** — 관련 문서 표 신설: INTEGRATION_GUIDE·SDK·ARCHITECTURE·ROADMAP 4종.
+
+## [0.4.16] - 2026-07-04 (patch20)
+
+> **v0.4.16-patch20 — SDK.md 관련 문서 섹션 신설**
+> examples·HANDS_ON·INTEGRATION_GUIDE·REPORTING·PII_ROUTING·CLI 교차링크. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/SDK.md** — 관련 문서 표 신설: examples/README.md·HANDS_ON·INTEGRATION_GUIDE·REPORTING·PII_ROUTING·CLI 6종.
+
 ## [0.4.16] - 2026-07-04 (patch19)
 
 > **v0.4.16-patch19 — docs/history/README.md 신설 · HANDOVER patch19 기준 현행화**
