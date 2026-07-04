@@ -171,6 +171,59 @@ for fw, counts in model.control_coverage.by_framework.items():
 
 ---
 
+## 5. 감사관 제출 치트시트
+
+NuFi 를 도입한 조직이 한국 규제 감사(개인정보보호위원회·금융위원회·과기부)에 대응할 때의 표준 흐름입니다.
+
+```bash
+# 1) 게이트웨이가 일정 기간 운영한 감사 로그 확인
+ls logs/egress_audit.jsonl logs/policy_changes.jsonl
+
+# 2) 특정 규제만 제출할 경우 (예: 개인정보보호법만)
+nufi-egress report compliance \
+  --audit logs/egress_audit.jsonl \
+  --change-log logs/policy_changes.jsonl \
+  --framework pipa \
+  --customer "회사명" --format md --out reports/pipa_audit.md
+
+# 3) 전체 5종 한국 규제 제출용 (JSON + MD 동시 생성)
+nufi-egress report compliance \
+  --audit logs/egress_audit.jsonl \
+  --change-log logs/policy_changes.jsonl \
+  --controls --format json --out reports/all_controls.json
+
+# 4) 무결성 게이트 확인 (exit 0 = 정상, exit 1 = 변조 탐지)
+echo "종료코드: $?"
+
+# 5) 커버리지 요약 확인 (Python)
+python3 -c "
+import json
+with open('reports/all_controls.json') as f:
+    r = json.load(f)
+summary = r['control_coverage']['summary']
+print(f'직접충족(direct): {summary[\"direct_met\"]}/{summary[\"direct_total\"]}')
+print(f'부분충족(partial): {summary[\"partial\"]}')
+print(f'범위밖(oos): {summary[\"out_of_scope\"]}')
+for fw, cnt in r['control_coverage']['by_framework'].items():
+    print(f'  {fw}: {cnt[\"direct_met\"]}/{cnt[\"direct_total\"]} direct')
+"
+```
+
+### 규제별 제출 대응표
+
+| 감사 요청 기관 | 관련 프레임워크 | `--framework` 인자 |
+|---|---|---|
+| 금융보안원 (AI 보안 안내서) | fsec-ai | `--framework fsec-ai` |
+| 금융위원회 (망분리) | net-sep | `--framework net-sep` |
+| 개인정보보호위원회 | pipa | `--framework pipa` |
+| 금융위원회 (신용정보법) | cia | `--framework cia` |
+| 과기부·KISA (ISMS-P) | isms-p | `--framework isms-p` |
+| 전체 한국 규제 제출 | 모두 | (인자 생략) |
+
+> 무결성 게이트(종료코드 0/1)가 실패하면 해시체인이 변조된 것입니다. 해당 리포트는 제출을 중단하고 사고 대응 절차를 밟으세요.
+
+---
+
 ## 관련 문서
 
 | 문서 | 역할 |
