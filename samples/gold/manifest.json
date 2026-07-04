@@ -88,6 +88,6 @@
     "test_pct": 0.6,
     "stratified": true
   },
-  "content_hash": "sha256:80415b5533ccbe8122a013168df5cbd11cb8be8b323eb8d360a727e36a61688b",
+  "content_hash": "sha256:3c91b35bee69645b3d8f7421126b7ab2608a7693cfc4109dd0a8ae435b702bcd",
   "note": "test 셋은 튜닝 중 열람 금지(누수 방지). person_unlisted_ratio ≥ 0.5 보장. content_hash 로 결정적 재현 검증(goldset/generate.py --verify)."
 }

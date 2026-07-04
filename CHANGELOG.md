@@ -4,6 +4,23 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.15] - 2026-07-04
+
+> **v0.4.15 릴리스 — 테스트 전면 통과 + 골드셋 미수록 성씨 정합 (CMP-267)**
+> CMP-262 사전 확장으로 기존 UNLISTED_SURNAMES 전원이 gazetteer에 수록됨.
+> 신규 미수록 성씨로 교체하고 골드셋·매니페스트·가명화 리포트 재생성.
+
+### Fixed
+- **UNLISTED_SURNAMES CMP-262 정합 (CMP-267)** — CMP-262 사전 3차 확장 후
+  기존 미수록 성씨(율·겸·효 등)가 모두 gazetteer에 수록됨. 신규 미수록 성씨
+  15단성 + 8복성으로 교체. `test_leak_prevention_person_unlisted` 통과 복원.
+- **골드셋 재생성** — test n=818→764 (zz_kr_person_ci_expand 제거),
+  manifest·dev/test JSONL·pseudonymize-quality 갱신.
+- **docs 정확도 수치 갱신** — n=818 벤치마크 기준으로 README·docs 갱신.
+
+### Changed
+- **VERSION** — `0.4.14` → `0.4.15`.
+
 ## [0.4.14] - 2026-07-04
 
 > **v0.4.14 릴리스 — 확장 골드셋 CI 확정 (n=818 전체 벤치마크)** — CMP-265·CMP-266

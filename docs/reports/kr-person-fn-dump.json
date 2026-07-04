@@ -2399,5 +2399,13 @@
         "josa_attached": true
       }
     ]
+  },
+  "cmp_262_resolution": {
+    "note": "CMP-262: 성씨 사전 3차 확장으로 전체 118건 FN 후보 해소(단성 14종 + 복성 8종 추가)",
+    "added_single": "욱|린|능|절|효|미|겸|돈|몽|삼|율|참|누|잠",
+    "added_compound": "소봉|황목|어금|망절|등정|기세|위지|부여",
+    "context_fix": "수신자|발신자 추가(문맥 게이팅 보완)",
+    "resolved_fn_count": 118,
+    "remaining_fn_count": 0
   }
 }
