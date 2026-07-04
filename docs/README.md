@@ -95,7 +95,7 @@
 기밀 1차 탐지(키워드/표식 + EDM) ──✅ (기밀 탐지 구현 노트)
 Python SDK (nufi 파사드 패키지) ──✅ v0.4.1 (P2 완료)
    · from nufi import detect, Guard, pseudonymize, batch_detect, scan_file
-   · examples/library_detect.py — 게이트웨이 없는 직접 임포트 예시
+   · examples/library_detect.py · sdk_file_scan.py · sdk_compliance_report.py — 독립 실행 SDK 예시 7종
 벤치·하드닝 + KoELECTRA/INT8 실측 ──✅ v0.4.16 (P0 완료)
    · 한국어 개인정보 재현율 0.9908 (12개 클래스 전부 CI95 하한 ≥ 0.90)
    · KR_PERSON recall 0.9799, Wilson CI 하한 0.9591 ≥ 0.93 게이트 ✅
