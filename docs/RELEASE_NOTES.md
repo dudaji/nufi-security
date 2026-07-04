@@ -6,7 +6,7 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch22) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.16 패치 시리즈 (patch01~patch25) — **문서 풍부화 + SDK 사용성 개선**
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
@@ -23,9 +23,9 @@
 - **교차링크 전반 보강(patch14~19)** — `INTEGRATION_GUIDE.md`·`PRESETS.md`·`OPS_RULE_RELOAD.md`·`OPS_POLICY_AT_SCALE.md`·`SECURITY_RETAIN_RAW_KEYROTATION.md` 에 관련 문서 표 신설. `MANUAL.md` SDK 예시 7종 인덱스 링크.
 - **디렉터리 README 신설(patch18~19)** — `docs/research/README.md`(조사·전략 문서 3종 인덱스), `docs/history/README.md`(역사적 스냅샷 6종 인덱스) 신설.
 
-- **관련 문서 섹션 전반 보강(patch20~21)** — `SDK.md`·`PII_ROUTING.md` 에 관련 문서 표 신설(6종·4종).
+- **관련 문서 섹션 전반 보강(patch20~24)** — `SDK.md`·`PII_ROUTING.md`·`REPORTING.md`·`DEMO.md`·`ROADMAP.md` 에 관련 문서 표 신설. 문서간 교차링크 체계 완성.
 
-기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch22 절.
+기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch25 절.
 
 ---
 

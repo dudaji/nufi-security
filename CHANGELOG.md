@@ -4,6 +4,35 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch25)
+
+> **v0.4.16-patch25 — CHANGELOG·RELEASE_NOTES·HANDOVER patch25 기준 현행화**
+> patch23·24 항목 추가. RELEASE_NOTES·HANDOVER patch25 기준 갱신. VERSION 변경 없음.
+
+### Changed (문서)
+- **CHANGELOG.md** — patch23·24 항목 추가.
+- **docs/RELEASE_NOTES.md** — 패치 시리즈 patch25로 확장.
+- **HANDOVER/PROJECT_STATE.md** — patch23~25 버전 이력 추가, 대상 patch25.
+- **HANDOVER/PROJECT_OVERVIEW.md** — 패치 번호 patch22→patch25.
+- **HANDOVER/README.md** — 대상 버전 patch22→patch25.
+
+## [0.4.16] - 2026-07-04 (patch24)
+
+> **v0.4.16-patch24 — DEMO.md·ROADMAP.md 관련 문서 섹션 신설**
+> DEMO: HANDS_ON·examples·CLI·INTEGRATION_GUIDE·REPORTING·PII_ROUTING 링크. ROADMAP: RELEASE_NOTES·CHANGELOG·REPORTING·SDK·PII_ROUTING·research 링크. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/DEMO.md** — 관련 문서 표 신설: HANDS_ON·examples/README.md·CLI·INTEGRATION_GUIDE·REPORTING·PII_ROUTING 6종.
+- **docs/ROADMAP.md** — 관련 문서 표 신설: RELEASE_NOTES·CHANGELOG·REPORTING·SDK·PII_ROUTING·research/SOLUTION_FOCUS_OPTIONS 6종.
+
+## [0.4.16] - 2026-07-04 (patch23)
+
+> **v0.4.16-patch23 — REPORTING.md 관련 문서 섹션 신설**
+> SDK·CLI·examples·OPS·SECURITY·research 교차링크. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/REPORTING.md** — 관련 문서 표 신설: SDK·CLI·examples/sdk_compliance_report·OPS_POLICY_AT_SCALE·SECURITY_RETAIN_RAW_KEYROTATION·research/FSEC_AI_GUIDE_2026 6종.
+
 ## [0.4.16] - 2026-07-04 (patch22)
 
 > **v0.4.16-patch22 — CHANGELOG·RELEASE_NOTES·HANDOVER patch22 기준 현행화**
