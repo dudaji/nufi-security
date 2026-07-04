@@ -24,12 +24,13 @@
 ### 1.2 갭 분류
 
 **갭 종류 A — 실질 정확도 갭 (recall < 1.0):**
-- KR_PERSON: recall 0.9516, 미수록 인명(unlisted) recall 0.8696. FN 9/186건은 희성·복성에 집중.
+- KR_PERSON: recall 0.9712, 미수록 인명(unlisted) recall 0.9072. CI 하한 0.946 ≥ 0.93 달성. FN 9/312건은 희성·복성에 집중.
 
 **갭 종류 B — 통계적 신뢰구간 갭 (recall=1.0이나 CI 하한 < 0.90):**
-- 체크섬 엔터티(RRN, FOREIGNER_REG, BRN, PASSPORT, DRIVER_LICENSE, CREDIT_CARD): 표본 9~18건 → Wilson CI 하한 0.70~0.82. recall 100%이므로 표본 확대만으로 CI 좁힘 가능.
-- KR_PHONE (n=15), EMAIL (n=9): 동일 구조.
-- KR_ACCOUNT (n=36), SECRET (n=36): CI 하한 0.9036 ≥ 0.90 달성 (CMP-241).
+- ✅ 전부 해소됨 (v0.4.11~v0.4.13 골드셋 확장으로 n≥35, CI 하한 ≥0.90 달성).
+- 체크섬 엔터티(RRN, FOREIGNER_REG, BRN, PASSPORT, DRIVER_LICENSE, CREDIT_CARD): n=35, CI 하한 0.9011 (CMP-263).
+- KR_PHONE (n=36), EMAIL (n=36): CI 하한 0.9036 (CMP-240).
+- KR_ACCOUNT (n=36), SECRET (n=36): CI 하한 0.9036 (CMP-241).
 
 ## 2. 우선순위 분석 및 첫 슬라이스 선정
 
@@ -103,11 +104,8 @@ Wilson CI 하한 ≥ 0.93 을 만족하려면 (recall=0.95 가정):
 
 ### 3.3 CI 하한 상향의 증빙 효과
 
-현재 증빙 리포트가 인용할 수 있는 수치:
-- "KR_PERSON recall 95.16%, CI 하한 91.06%"
-
-P0 슬라이스 완료 후:
-- "KR_PERSON recall ≥96%, CI 하한 ≥93%" → **증빙 신뢰도 상향**
+현재 증빙 리포트가 인용하는 수치 (v0.4.13, n=818):
+- "KR_PERSON recall 97.12%, CI 하한 94.61%" → **증빙 신뢰도 상향 달성**
 - compliance_catalog.yaml의 CIA-PII 통제가 더 강한 수치를 자동 인용
 
 ## 4. 금융 고유식별 엔터티 확장 후보 분석
@@ -116,7 +114,7 @@ P0 슬라이스 완료 후:
 
 | 금융 신호 | 엔터티 클래스 | 법적 근거 | 현황 |
 |----------|-------------|----------|------|
-| 고객명 | KR_PERSON | 신용정보법 식별정보 | recall 0.95, P0 대상 |
+| 고객명 | KR_PERSON | 신용정보법 식별정보 | recall 0.9712, CI 하한 0.946 ✅ |
 | 주민등록번호 | KR_RRN | 신용정보법 고유식별번호 | recall 1.0 |
 | 외국인등록번호 | KR_FOREIGNER_REG | 신용정보법 외국인 | recall 1.0 |
 | 계좌번호 | KR_ACCOUNT | 신용정보법 신용거래정보 | recall 1.0, {2,8} 확장 완료 |
@@ -157,6 +155,6 @@ P0 완료 시 `report compliance --controls` 의 CIA-PII 통제가 "KR_PERSON CI
 
 ---
 
-측정 근거: `docs/reports/recall-int8.json` (v0.3.0, onnx-int8, test split)
+측정 근거: `docs/reports/recall-int8.json` (v0.4.13, onnx-int8, test split, n=818)
 오차 분석: `docs/reports/kr-person-error-analysis.md`
 신용정보법 커버리지: `docs/reports/CMP-199-credit-coverage.json`
