@@ -73,6 +73,43 @@ python3 goldset/generate.py --verify
   구성합니다. 사전 백엔드가 구조적으로 못 잡으므로 사전 과적합을 배제하고 NER 백엔드의 필요를 실측합니다.
 - **결정성** — 고정 시드 + `content_hash`. 동일 실행 → 동일 산출 → 동일 해시.
 
+## 프로그래밍 방식 로드
+
+```python
+import json, pathlib
+
+gold_dir = pathlib.Path("samples/gold")
+
+def load_split(split: str):
+    """split = 'dev' 또는 'test'"""
+    with open(gold_dir / f"{split}.jsonl", encoding="utf-8") as f:
+        return [json.loads(line) for line in f if line.strip()]
+
+test_rows = load_split("test")   # 854행
+
+# 양성 표본(expect 비어있지 않음)
+positive = [r for r in test_rows if r["expect"]]
+
+# 음성 표본(benign)
+negative = [r for r in test_rows if not r["expect"]]
+
+# gazetteer 미수록 성씨 슬라이스 (KR_PERSON 누수방지)
+unlisted = [r for r in positive if r.get("gazetteer_unlisted")]
+
+# 특정 클래스만 필터
+rrn_rows = [r for r in positive if "KR_RRN" in r["expect"]]
+```
+
+`manifest.json` → `class_counts` 로 분할별 행 수를 검증할 수 있습니다:
+
+```python
+with open(gold_dir / "manifest.json", encoding="utf-8") as f:
+    manifest = json.load(f)
+
+print(manifest["class_counts"])   # {"KR_RRN": {"dev": 22, "test": 35}, ...}
+print(manifest["content_hash"])   # SHA-256 (재현 일치 검증용)
+```
+
 ## 인용
 
 ```
