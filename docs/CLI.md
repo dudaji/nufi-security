@@ -543,4 +543,4 @@ python3 scripts/demo_pii_routing.py    # 4 시나리오 PASS, LiteLLM 불필요
 
 ---
 
-*작성: 2026-06-28 — v0.0.2 기준. 통합 CLI(`enforcement/cli.py`) 표면을 `--help` 실측으로 기술. 단독 진입점(`enforcement.doctor`·`egress_audit.init_cli`)은 동치로 병기. v0.4.9 — PII 라우팅 설정 섹션 추가. v0.4.11 — RBAC/멀티테넌시·SLA 리포팅 제거.*
+*작성: 2026-06-28 — v0.0.2 기준. 통합 CLI(`enforcement/cli.py`) 표면을 `--help` 실측으로 기술. 단독 진입점(`enforcement.doctor`·`egress_audit.init_cli`)은 동치로 병기. v0.4.9 — PII 라우팅 설정 섹션 추가. v0.4.11 — RBAC/멀티테넌시·SLA 리포팅 제거. v0.4.16 — KR_PERSON recall 0.9799, CI 하한 0.9591.*
