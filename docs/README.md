@@ -116,3 +116,15 @@ Python SDK (nufi 파사드 패키지) ──✅ v0.4.1 (P2 완료)
    · INT8 512자 지연 p95 41ms · 하드닝 12/12
 후속 ──🔜 NER 베이스 모델 격상 · 프로덕션 온프렘 지연 재측정
 ```
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`../README.md`](../README.md) | 제품 개요 + 빠른 시작 — 이 지도의 출발점 |
+| [`MANUAL.md`](MANUAL.md) | 한 번에 정주행하는 운영자 매뉴얼 |
+| [`HANDS_ON.md`](HANDS_ON.md) | 토이 프로젝트로 감 잡는 입문 실습 |
+| [`../CHANGELOG.md`](../CHANGELOG.md) | 기술 변경 이력 — 문서 지도 갱신의 권위 |
+| [`../HANDOVER/PROJECT_OVERVIEW.md`](../HANDOVER/PROJECT_OVERVIEW.md) | 이어받는 사람을 위한 코드·문서 지도 + 현재 상태 |
