@@ -338,6 +338,58 @@ export NUFI_MAX_PROMPT_BYTES=262144
 
 1-명령 데모: [`../scripts/demo_resilience.sh`](../scripts/demo_resilience.sh) (5/5 PASS).
 
+### 5.7 환경변수 레퍼런스
+
+게이트웨이·탐지·감사·집행에 쓰이는 **전체 환경변수** 통합 테이블입니다.
+
+#### 게이트웨이 / 탐지
+
+| 변수명 | 기본값 | 소스 모듈 | 설명 | 보안 영향 |
+|---|---|---|---|---|
+| `EGRESS_PRIVATE_DOWN` | `0` | `gateway/core.py` | 사내 LLM 불가 시뮬레이션. `1`=외부 폴백 강제 (데모용) | 프로덕션에서 `1` 사용 금지 — 전체 트래픽이 외부로 나감 |
+| `EGRESS_NER_BACKEND` | `auto` | `gateway/core.py` | NER 백엔드 선택: `gazetteer`(사전 기반)·`transformers`(모델)·`auto` | `gazetteer`는 에어갭 안전, `auto`는 모델 다운로드 시도 가능 |
+| `NUFI_DETECT_TIMEOUT_MS` | `5000` | `gateway/core.py` | NER 탐지 타임아웃 (밀리초). 초과 시 fail-closed 차단 | 짧으면 안전(차단) 쪽, 길면 지연 증가 |
+| `NUFI_MAX_PROMPT_BYTES` | `524288` | `gateway/core.py` | 탐지 대상 프롬프트 최대 크기 (바이트). 초과분은 잘라서 탐지 | 너무 크면 탐지 지연 증가 |
+| `NUFI_LOCAL_MODEL` | `nufi-local` | `gateway/litellm_hook.py` | PII 라우팅 시 PII 포함 요청을 보낼 로컬 모델명 | — |
+| `NUFI_CLOUD_MODEL` | `nufi-cloud` | `gateway/litellm_hook.py` | PII 없는 클린 요청을 보낼 클라우드 모델명 | — |
+| `NUFI_FAIL_CLOSED` | `1` | `gateway/litellm_hook.py` | PII 감지 오류 시 로컬 폴백. `0`=비활성(클라우드 허용) | `0`으로 끄면 감지 실패 시 PII가 외부로 유출될 수 있음 |
+
+#### 감사 / 로깅
+
+| 변수명 | 기본값 | 소스 모듈 | 설명 | 보안 영향 |
+|---|---|---|---|---|
+| `EGRESS_AUDIT_LOG` | `logs/egress_audit.jsonl` | `egress_audit/audit.py` | 감사 로그 파일 경로 | 접근 제어 필수 — 외부 전송 전문 포함 가능 |
+| `EGRESS_AUDIT_HASH_CHAIN` | `0` | `egress_audit/audit.py` | 해시체인 활성화. `1`=변조탐지 해시체인 기록 | 프로덕션에서 `1` 권장 — 변조 탐지 기반 |
+| `EGRESS_AUDIT_PROFILES` | `config/audit_profiles.yaml` | `egress_audit/audit_bot.py` | 감사 프로파일 YAML 경로 (봇·메시지 스토어 공용) | — |
+| `EGRESS_MESSAGE_STORE_DIR` | `logs/messages` | `egress_audit/message_store.py` | 메시지 스토어 디렉터리 (private/public 분리 저장) | 원문 보존 시 접근 제어·디스크 암호화 필수 |
+| `EGRESS_ENFORCEMENT_LOG` | `logs/enforcement.jsonl` | `egress_audit/enforcement.py` | 집행(차단/허용) 로그 경로 | — |
+| `EGRESS_FLOW_DIR` | `logs/flows` | `enforcement/report.py` | 플로우 로그 디렉터리 (`coverage`/`report` 입력) | — |
+| `EGRESS_PACKET_DIR` | `logs/packets` | `capture/flow_tap.py`, `capture/content_dump.py` | 패킷 캡처·콘텐츠 덤프 저장 디렉터리 | 원문 패킷 포함 — 접근 제어 필수 |
+
+#### 암호화 / 키
+
+| 변수명 | 기본값 | 소스 모듈 | 설명 | 보안 영향 |
+|---|---|---|---|---|
+| `EGRESS_VAULT_KEK` | *(없음, 필수)* | `egress_audit/vault.py` | Vault AES-256-GCM KEK (32바이트, hex64 또는 base64) | 🔴 **필수** — 미설정 시 가명화 원복 불가. 디스크 미저장, keyring/비밀관리자 주입 |
+| `EGRESS_PSEUDO_KEY` | `nufi-egress-poc-key` | `egress_audit/pseudonymize.py` | 가명화 결정적 대체값 생성 키 | 🔴 **프로덕션에서 반드시 변경** — 기본값은 PoC용 |
+| `EGRESS_EDM_SALT` | `nufi-edm-poc-salt` | `egress_audit/edm.py` | EDM 해시 salt | 🔴 **프로덕션에서 반드시 변경** — 기본값은 PoC용 |
+
+#### 집행 / 운영
+
+| 변수명 | 기본값 | 소스 모듈 | 설명 | 보안 영향 |
+|---|---|---|---|---|
+| `NUFI_EGRESS_PRIVILEGED` | *(없음)* | `enforcement/applier.py` | nftables 권한 모드. `1`=활성 | `1` 시 nftables 규칙 직접 적용 — root 권한 필요 |
+| `NUFI_ACTOR` | *(현재 사용자)* | `enforcement/cli.py` | 정책 변경 주체 이름 (감사 로그에 기록) | — |
+| `NUFI_NER_PROC_START` | `spawn` | `egress_audit/detectors/_proc_pool.py` | NER 프로세스 풀 시작 방식 (`spawn`/`forkserver`) | `fork`는 GIL 이슈 — `spawn` 또는 `forkserver` 권장 |
+| `NUFI_NER_INFER_WORKERS` | `cores // K` | `egress_audit/detectors/_infer_pool.py` | NER 동시 추론 허용 수 W | — |
+| `NUFI_NER_INTRA_OP_THREADS` | `1` | `egress_audit/detectors/_infer_pool.py` | NER 세션당 intra-op 스레드 캡 K | — |
+
+#### 배포
+
+| 변수명 | 기본값 | 소스 모듈 | 설명 | 보안 영향 |
+|---|---|---|---|---|
+| `NUFI_TAG` | `0.0.2-dev` | `deploy/docker-compose.yml` | Docker 이미지 태그 | — |
+
 ---
 
 ## §6 보안 운영
