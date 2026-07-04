@@ -4,6 +4,22 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.12] - 2026-07-04
+
+> **v0.4.12 릴리스 — KR_ACCOUNT·SECRET CI 하한 마감 (CMP-241)** — CMP-241 결과물
+> 패키징. KR_ACCOUNT·SECRET 골드셋 표본 확대 + CI 하한 ≥0.90 달성.
+
+### Added
+- **KR_ACCOUNT·SECRET 골드셋 표본 확대 (CMP-241)** — KR_ACCOUNT·SECRET 각 20건
+  추가(test n=24→36). Wilson CI 하한 0.862→0.904, ≥0.90 게이트 통과.
+  전체 골드셋 882→1144건.
+- **bench_m5.py CI 게이트 추가** — `account_recall_ci_low`·`secret_recall_ci_low`
+  ≥0.90 수용 게이트 추가.
+
+### Changed
+- **CMP-172 갭 분석 보고서 업데이트** — P3 항목(KR_ACCOUNT·SECRET) 완료 마킹.
+- **VERSION** — `0.4.11` → `0.4.12`.
+
 ## [0.4.11] - 2026-07-04
 
 > **v0.4.11 릴리스 — 문서 풍부화 + 정확도 골드셋 확대** — CMP-256 자율 연장 결과물 패키징.
