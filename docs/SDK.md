@@ -132,6 +132,34 @@ decision = policy.apply(text, findings)   # Decision(blocked, actions, redacted_
 - `Guard` = 현행 `EgressGuard` 의 공개 별칭(탐지+정책 결합 진입점).
 - `PolicyEngine`, `Decision`, `GuardResult` = 그대로 재노출.
 
+#### GuardResult 필드
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `blocked` | `bool` | 차단 여부 — `True` 이면 외부 전송을 막아야 함 |
+| `decision` | `Decision` | 정책 결정 상세 (아래 참조) |
+| `findings` | `list[Finding]` | 탐지된 PII/비밀 목록 |
+| `.transformed_text` | `str` (property) | 가명화/마스킹 처리된 텍스트 (`decision.transformed_text` 위임) |
+| `.summary` | `dict` (property) | `{blocked, action_counts, finding_count}` 요약 |
+
+#### Decision 필드
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `blocked` | `bool` | 차단 여부 |
+| `actions` | `list[dict]` | 엔티티별 정책 결정 — 각 항목: `{entity_type, action, text}` |
+| `transformed_text` | `str` | 가명화·마스킹 처리 완료된 텍스트 (차단 시 원문) |
+| `findings` | `list[dict]` | 정책 적용에 사용된 finding 목록(내부 표현) |
+
+```python
+result = Guard().inspect("주민번호 900101-1234567 분석 요청")
+print(result.blocked)                     # True
+print(result.summary)
+# {'blocked': True, 'action_counts': {'block': 1}, 'finding_count': 1}
+for action in result.decision.actions:
+    print(action["entity_type"], action["action"])  # KR_RRN block
+```
+
 ### 2.5 증빙 리포트 (Compliance / evidence report)
 
 ```python
