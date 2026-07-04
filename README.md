@@ -237,13 +237,13 @@ python3 scripts/bench.py --ner gazetteer
 
 | 지표 | 값 | 목표 |
 |---|---|---|
-| 한국어 개인정보 재현율 (recall, 전체) | **0.9801** [신뢰구간 0.9648–0.9889] | ≥ 0.90 ✅ |
-| 인명(KR_PERSON) 재현율 (recall) | **0.9651** [Wilson CI 하한 0.935] | ≥ 0.93 ✅ |
+| 한국어 개인정보 재현율 (recall, 전체) | **0.9876** [신뢰구간 0.9767–0.9935] | ≥ 0.90 ✅ |
+| 인명(KR_PERSON) 재현율 (recall) | **0.9712** [Wilson CI 하한 0.946] | ≥ 0.93 ✅ |
 | 주소(KR_LOCATION) 재현율 (recall) | **1.000** [Wilson 신뢰구간 하한 0.9417] | ≥ 0.90 ✅ |
 | 강한 개인정보 / 비밀 재현율 | **1.000** | — |
-| 정밀도 (precision) | **0.9948** | — |
+| 정밀도 (precision) | **1.000** | — |
 | 오탐 (benign false-positive) | **0 / 90** | 낮을수록 ✅ |
-| 인라인 지연 (latency p95, 512자, 단일 동시성) | **41 ms** (CPU) | ≤ 150 ms ✅ |
+| 인라인 지연 (latency p95, 512자, 단일 동시성) | **25 ms** (CPU) | ≤ 150 ms ✅ |
 
 - **재현율(recall)** = 실제 개인정보 중 잡아낸 비율, **정밀도(precision)** = 잡아냈다고
   한 것 중 진짜인 비율, **p95** = 100건 중 95건이 이 시간 안에 처리됨.
@@ -305,7 +305,7 @@ python3 scripts/bench.py --ner gazetteer
 알려진 한계:
 
 - 한국어 인명(KR_PERSON) 재현율은 규칙∪NER 유니온과 골드셋 확장으로
-  **0.9651**(Wilson CI 하한 **0.935** ≥ 목표 0.93)을 달성했습니다. 잔여 FN 은
+  **0.9712**(Wilson CI 하한 **0.946** ≥ 목표 0.93)을 달성했습니다. 잔여 FN 은
   사전 미수록 희성·복성에 집중되며, 원인 분석은
   [`docs/reports/kr-person-error-analysis.md`](docs/reports/kr-person-error-analysis.md)
   에 있습니다.

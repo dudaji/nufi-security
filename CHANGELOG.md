@@ -4,6 +4,21 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.14] - 2026-07-04
+
+> **v0.4.14 릴리스 — 확장 골드셋 CI 확정 (n=818 전체 벤치마크)** — CMP-265·CMP-266
+> 결과물 패키징. 골드셋 764→818건 확장(KR_PERSON 극희성 54건), recall-int8.json 갱신.
+
+### Added
+- **KR_PERSON 극희성 골드셋 확장 (CMP-265)** — 극희성 단성 14 + 복합 성씨 8종 추가,
+  테스트 표본 28건(unlisted) + 기존 성씨 26건 = 54건 확장. test n=764→818.
+- **극희성 성씨 사전 확장 (CMP-262 후속)** — ner.py 단성 ~78→~92, 복합 성씨 +8종.
+
+### Changed
+- **recall-int8.json 갱신** — n_rows 554→818, person_recall 0.9651→0.9712,
+  person_ci_low 0.935→0.9461. 전 게이트 통과.
+- **VERSION** — `0.4.13` → `0.4.14`.
+
 ## [0.4.13] - 2026-07-04
 
 > **v0.4.13 릴리스 — 체크섬 골드셋 + KR_PERSON CI 강화 (CMP-263)** — CMP-239·CMP-262
