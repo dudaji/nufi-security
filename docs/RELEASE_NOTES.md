@@ -6,6 +6,23 @@
 
 ---
 
+## v0.4.11 — **문서 풍부화 + 정확도 골드셋 확대**
+
+### 한 줄 요약
+운영자 매뉴얼 업그레이드 가이드를 실제 내용으로 채우고, SDK/아키텍처/PII 라우팅 문서를
+정리했으며, KR_PHONE·EMAIL 골드셋 표본을 확대하여 Wilson CI 하한 ≥0.90 을 달성했습니다.
+
+### 주요 변경
+- **MANUAL.md §8 업그레이드 가이드** — 버전별 마이그레이션 절차·롤백 방법 완비
+- **SDK.md·ARCHITECTURE.md·PII_ROUTING.md** — 레퍼런스 정리·버전 통일·비용추적 추가
+- **골드셋 882건** — KR_PHONE 60건, EMAIL 60건으로 확대 → CI 하한 0.90+ 통과
+
+### 검증
+- `python3 goldset/generate.py --verify` — VERIFY OK (content_hash 일치)
+- `pytest` — 297 passed, 3 skipped
+
+---
+
 ## v0.4.6 — **SDK 편의 함수 — 파일·일괄 PII 탐지를 한 줄로**
 
 ### 한 줄 요약

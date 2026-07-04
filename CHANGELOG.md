@@ -4,6 +4,21 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.11] - 2026-07-04
+
+> **v0.4.11 릴리스 — 문서 풍부화 + 정확도 골드셋 확대** — CMP-256 자율 연장 결과물 패키징.
+
+### Added
+- **KR_PHONE·EMAIL 골드셋 표본 확대 (CMP-239, CMP-240)** — KR_PHONE 25→60(+35),
+  EMAIL 15→60(+45). Wilson CI 하한 ≥0.90 달성. 전체 골드셋 882건.
+
+### Changed
+- **MANUAL.md §8 업그레이드 가이드 (CMP-258)** — 골격을 실제 내용(버전별 마이그레이션
+  절차·주의사항·롤백 방법)으로 채움.
+- **SDK.md 정리 + ARCHITECTURE.md 버전 명확화 + PII_ROUTING.md 비용추적 (CMP-259)** —
+  SDK 레퍼런스 정리, 아키텍처 문서 버전 표기 통일, PII 라우팅 비용추적 섹션 추가.
+- **VERSION** — `0.4.10` → `0.4.11`.
+
 ## [0.4.10] - 2026-07-04
 
 > **v0.4.10 릴리스 마감 — 최종 상태 정리 + 보드 리뷰용 요약 (v0.4.10)** — 02:00 KST
