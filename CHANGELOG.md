@@ -4,6 +4,18 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch10)
+
+> **v0.4.16-patch10 — 문서 풍부화 3차 (REPORTING·ARCHITECTURE·test docstring)**
+> REPORTING.md Python SDK API §4 추가. ARCHITECTURE.md §8에 SDK·REPORTING·PII_ROUTING 링크.
+> test_examples_smoke.py 도큐스트링 7종으로 업데이트. HANDS_ON.md 다음 단계에 REPORTING 링크. VERSION 변경 없음.
+
+### Changed / Added (모두 문서·테스트 문서)
+- **docs/REPORTING.md** — Python SDK API 섹션(`§4`) 신설: `compliance_report`·`render_report`·`load_catalog` 코드 스니펫 + `examples/sdk_compliance_report.py` 링크.
+- **docs/ARCHITECTURE.md** — §8 관련 문서에 SDK·REPORTING·PII_ROUTING 링크 추가.
+- **tests/test_examples_smoke.py** — 도큐스트링에 예시 6·7번(sdk_file_scan·sdk_compliance_report) 추가, 실행 명령 `gazetteer` 백엔드로 정정.
+- **docs/HANDS_ON.md** — 다음 단계에 REPORTING.md 링크 추가.
+
 ## [0.4.16] - 2026-07-04 (patch09)
 
 > **v0.4.16-patch09 — 문서 풍부화 연속 (RELEASE_NOTES·ROADMAP·SDK·INTEGRATION_GUIDE·HANDS_ON·README)**
