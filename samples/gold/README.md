@@ -42,23 +42,24 @@ python3 goldset/generate.py --verify
 
 ## 클래스 커버리지
 
-`manifest.json` → `class_counts` 가 권위값입니다(아래는 시드 `20260625` 기준 스냅샷).
+`manifest.json` → `class_counts` 가 권위값입니다(아래는 시드 `20260625`, v0.4.16 기준).
 
 | 클래스 | 총 | dev | test | 비고 |
 |--------|----|-----|------|------|
-| **KR_RRN** | 30 | 12 | 18 | Must · 체크섬 유효 |
-| **KR_FOREIGNER_REG** | 20 | 8 | 12 | Must · 체크섬 유효(성별자리 5–8) |
-| **KR_BRN** | 20 | 8 | 12 | Must · 체크섬 유효 |
-| **KR_PASSPORT** | 15 | 6 | 9 | Must · 구조형 |
-| **KR_DRIVER_LICENSE** | 15 | 6 | 9 | Must · 구조형 |
-| **KR_ACCOUNT** | 20 | 8 | 12 | Must · 구조형 |
-| **CREDIT_CARD** | 20 | 8 | 12 | Must · Luhn 유효 |
-| KR_PHONE | 25 | — | — | 강한 PII |
-| EMAIL | 15 | — | — | 강한 PII |
-| KR_PERSON | 210 | — | — | NER · 미수록 성씨 ≥50% |
-| KR_LOCATION | 40 | — | — | NER · gazetteer 가용/미수록 혼합 |
-| SECRET | 40 | — | — | 비밀키/토큰 패턴 |
+| **KR_RRN** | 57 | 22 | 35 | Must · 체크섬 유효 |
+| **KR_FOREIGNER_REG** | 57 | 22 | 35 | Must · 체크섬 유효(성별자리 5–8) |
+| **KR_BRN** | 57 | 22 | 35 | Must · 체크섬 유효 |
+| **KR_PASSPORT** | 57 | 22 | 35 | Must · 구조형 |
+| **KR_DRIVER_LICENSE** | 57 | 22 | 35 | Must · 구조형 |
+| **KR_ACCOUNT** | 60 | 24 | 36 | Must · 구조형 |
+| **CREDIT_CARD** | 57 | 22 | 35 | Must · Luhn 유효 |
+| KR_PHONE | 60 | 24 | 36 | 강한 PII |
+| EMAIL | 60 | 24 | 36 | 강한 PII |
+| KR_PERSON | 580 | 232 | 348 | NER · 미수록 성씨 56.2% (118/210 기본) |
+| KR_LOCATION | 102 | 40 | 62 | NER · gazetteer 가용/미수록 혼합 |
+| SECRET | 60 | 24 | 36 | 비밀키/토큰 패턴 |
 | benign / benign_hard | 120 / 30 | — | — | 음성 · 하드네거티브 포함(precision 분모) |
+| **합계** | **1,414** | **560** | **854** | |
 
 **Must 7종**(체크섬/구조형 강한 PII)은 dev·test 양쪽에 충분 표본(dev ≥ 5, test ≥ 8)을 보장하며
 `manifest.json` → `must_coverage` 에 분할별 표본 수가 기록됩니다.
