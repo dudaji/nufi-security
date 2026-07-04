@@ -522,6 +522,45 @@ def build():
                      "expect": ["EMAIL"], "spans": [_span(p, v, "EMAIL")],
                      "source": "synth", "_cls": "zz_email_ext"})
 
+    # --- CMP-241: KR_ACCOUNT 표본 확장 — Wilson CI 하한 ≥0.90 ---
+    # 기존 KR_ACCOUNT 40건(test 24)은 recall 1.0 이어도 Wilson CI 하한 0.862.
+    # 20건 추가(test 12 추가 → 총 test 36) → CI 하한 0.904 ≥ 0.90 달성.
+    # 표준 계좌(3 포맷) + 확장 신용계좌(4 포맷) 교대로 포맷 다양성 유지.
+    #
+    # sealed 보존: 독립 rng(SEED+59) + sort-last _cls("zz_kr_account_ext") append.
+    ae_rng = random.Random(SEED + 59)
+    _AE_CTX = [
+        "급여 이체 계좌 {v} 등록 완료했습니다.",
+        "보험금 수령 계좌 {v} 확인해 주세요.",
+        "적금 만기 해지 계좌 {v} 로 입금됩니다.",
+        "월세 자동이체 계좌 {v} 설정했습니다.",
+        "장학금 지급 계좌 {v} 제출 바랍니다.",
+    ]
+    ae_id = 0
+    for _ in range(20):
+        v = make_account(ae_rng) if ae_id % 2 == 0 else make_credit_account(ae_rng)
+        p = _AE_CTX[ae_id % len(_AE_CTX)].format(v=v)
+        ae_id += 1
+        rows.append({"id": f"zz_kr_account_ext-{ae_id:04d}", "prompt": p,
+                     "expect": ["KR_ACCOUNT"], "spans": [_span(p, v, "KR_ACCOUNT")],
+                     "source": "synth", "_cls": "zz_kr_account_ext"})
+
+    # --- CMP-241: SECRET 표본 확장 — Wilson CI 하한 ≥0.90 ---
+    # 기존 SECRET 40건(test 24)은 recall 1.0 이어도 Wilson CI 하한 0.862.
+    # 20건 추가(test 12 추가 → 총 test 36) → CI 하한 0.904 ≥ 0.90 달성.
+    # make_secret() 재사용으로 9종 시크릿 분포 유지.
+    #
+    # sealed 보존: 독립 rng(SEED+61) + sort-last _cls("zz_secret_ext") append.
+    se_rng = random.Random(SEED + 61)
+    se_id = 0
+    for _ in range(20):
+        v, tmpl = make_secret(se_rng)
+        p = tmpl.format(v=v)
+        se_id += 1
+        rows.append({"id": f"zz_secret_ext-{se_id:04d}", "prompt": p,
+                     "expect": ["SECRET"], "spans": [_span(p, v, "SECRET")],
+                     "source": "synth", "_cls": "zz_secret_ext"})
+
     return rows
 
 
