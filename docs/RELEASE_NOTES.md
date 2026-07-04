@@ -6,19 +6,22 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch08) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.16 패치 시리즈 (patch01~patch11) — **문서 풍부화 + SDK 사용성 개선**
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
 ### 무엇이 추가됐나
 - **Python SDK 예시 7종 완성** — `sdk_file_scan.py`(파일 PII 탐지), `sdk_compliance_report.py`(규제 커버리지 출력) 신규. 예시 인덱스 `examples/README.md` 신설.
 - **`Finding.__repr__` 개선** — 개발자 REPL/로그에서 None 필드 제거, score 소수점 2자리, 기본 source 생략으로 가독성 향상.
-- **문서 교차링크 강화** — ARCHITECTURE·DEMO·INTEGRATION_GUIDE·SDK·MANUAL·CLI 에 SDK 예시 교차링크 추가.
+- **문서 교차링크 강화** — ARCHITECTURE·DEMO·INTEGRATION_GUIDE·SDK·MANUAL·CLI·HANDS_ON 에 SDK 예시 교차링크 추가. ARCHITECTURE.md §8에 SDK·REPORTING·PII_ROUTING 링크.
+- **REPORTING.md Python SDK §4 추가** — `compliance_report`·`render_report`·`load_catalog` 코드 스니펫 신설.
 - **골드셋 README 프로그래밍 가이드** — `samples/gold/README.md` 에 Python 로드·필터링·manifest 검증 코드 스니펫 추가.
+- **ROADMAP 완료 상태 업데이트** — P1(한국 규제 증빙 48개 통제 완료)·P2(SDK v0.4.6·patch 확장) 정확히 기록.
 - **보고서 인덱스 정비 + 링크 수정** — `docs/reports/README.md` 누락 파일 5건 추가, ROADMAP.md 깨진 링크 2건 수정.
-- **HANDOVER 현행화** — `PROJECT_STATE.md`·`PROJECT_OVERVIEW.md` patch06 기준 갱신 + 갭 점검 결과 기록.
+- **research/ 문서 인덱스** — `docs/README.md` 에 research/ 조사·전략 문서 섹션 추가.
+- **HANDOVER 전반 현행화** — `PROJECT_STATE.md`·`PROJECT_OVERVIEW.md`·`README.md` patch10 기준 갱신 + 갭 점검 결과 기록.
 
-기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch08 절.
+기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch11 절.
 
 ---
 
