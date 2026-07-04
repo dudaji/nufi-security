@@ -99,15 +99,22 @@ def test_checksum_identifiers_valid(built):
     def _val(cls):
         return [s[2] and r["prompt"][s[0]:s[1]] for r in by_cls[cls] for s in r["spans"]]
 
-    for r in by_cls["KR_RRN"] + by_cls["KR_FOREIGNER_REG"]:
-        v = r["prompt"][r["spans"][0][0]:r["spans"][0][1]]
-        assert ck.validate_rrn(v), f"RRN 체크섬 무효: {v}"
-    for r in by_cls["KR_BRN"]:
-        v = r["prompt"][r["spans"][0][0]:r["spans"][0][1]]
-        assert ck.validate_brn(v), f"BRN 체크섬 무효: {v}"
-    for r in by_cls["CREDIT_CARD"]:
-        v = r["prompt"][r["spans"][0][0]:r["spans"][0][1]]
-        assert ck.validate_luhn(v.replace("-", "")), f"카드 Luhn 무효: {v}"
+    rrn_cls = [c for c in by_cls if c in ("KR_RRN", "KR_FOREIGNER_REG")
+               or c.startswith("zz_kr_rrn") or c.startswith("zz_kr_foreigner_reg")]
+    for c in rrn_cls:
+        for r in by_cls[c]:
+            v = r["prompt"][r["spans"][0][0]:r["spans"][0][1]]
+            assert ck.validate_rrn(v), f"RRN 체크섬 무효 ({c}): {v}"
+    brn_cls = [c for c in by_cls if c in ("KR_BRN",) or c.startswith("zz_kr_brn")]
+    for c in brn_cls:
+        for r in by_cls[c]:
+            v = r["prompt"][r["spans"][0][0]:r["spans"][0][1]]
+            assert ck.validate_brn(v), f"BRN 체크섬 무효 ({c}): {v}"
+    card_cls = [c for c in by_cls if c in ("CREDIT_CARD",) or c.startswith("zz_credit_card")]
+    for c in card_cls:
+        for r in by_cls[c]:
+            v = r["prompt"][r["spans"][0][0]:r["spans"][0][1]]
+            assert ck.validate_luhn(v.replace("-", "")), f"카드 Luhn 무효 ({c}): {v}"
 
 
 def test_spans_exact(built):

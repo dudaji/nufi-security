@@ -561,6 +561,64 @@ def build():
                      "expect": ["SECRET"], "spans": [_span(p, v, "SECRET")],
                      "source": "synth", "_cls": "zz_secret_ext"})
 
+    # --- CMP-239: 체크섬 엔터티 골드셋 표본 확대 — Wilson CI 하한 ≥0.90 ---
+    # recall=1.0인 체크섬/구조 엔터티의 test 표본이 부족해 Wilson CI 하한이 0.70~0.82.
+    # 각 엔터티의 test 표본을 ≥35로 확대하여 CI 하한 ≥0.90 달성(≥0.9011).
+    #   KR_RRN:            test 18+17=35, KR_FOREIGNER_REG: test 12+23=35,
+    #   KR_BRN:            test 12+23=35, KR_PASSPORT:      test 9+26=35,
+    #   KR_DRIVER_LICENSE: test 9+26=35,  CREDIT_CARD:      test 12+23=35.
+    # sealed 보존(CMP-199/CMP-225/CMP-236 선례): 독립 rng(SEED+67) + sort-last
+    # _cls("zz_*_expand") append → 기존 sealed 행 바이트 불변.
+    ck_rng = random.Random(SEED + 67)
+    _CK_EXPAND = [
+        ("KR_RRN", 27, lambda r: make_rrn(r, r.randint(1, 4)),
+         ["주민등록번호 {v} 조회 부탁드립니다.",
+          "본인확인용 주민번호 {v} 입력해 주세요.",
+          "주민번호 {v} 로 실명인증 진행합니다.",
+          "고객 주민등록번호 {v} 대조 완료.",
+          "{v} 주민번호 기준 보험료 산정."]),
+        ("KR_FOREIGNER_REG", 37, lambda r: make_rrn(r, r.randint(5, 8)),
+         ["외국인등록번호 {v} 체류자격 확인.",
+          "등록번호 {v} 기준 비자 연장 심사 중.",
+          "외국인 {v} 건강보험 가입 안내.",
+          "체류 외국인 등록번호 {v} 변경 신청.",
+          "{v} 외국인등록증 재발급 접수."]),
+        ("KR_BRN", 37, lambda r: make_brn(r),
+         ["사업자번호 {v} 휴폐업 조회.",
+          "거래처 사업자등록번호 {v} 확인합니다.",
+          "{v} 사업자 세금계산서 발행 요청.",
+          "사업자번호 {v} 적격심사 진행 중.",
+          "신규 거래처 {v} 등록 완료."]),
+        ("KR_PASSPORT", 42, lambda r: make_passport(r),
+         ["여권번호 {v} 출입국 기록 조회.",
+          "여권 {v} 유효기간 만료 안내.",
+          "{v} 여권 분실 신고 접수.",
+          "비자 신청 여권번호 {v} 확인.",
+          "여권번호 {v} 로 예약 조회합니다."]),
+        ("KR_DRIVER_LICENSE", 42, lambda r: make_license(r),
+         ["면허번호 {v} 적성검사 안내.",
+          "운전면허 {v} 갱신 기한 확인.",
+          "{v} 면허 벌점 조회 결과.",
+          "렌터카 면허번호 {v} 등록.",
+          "면허번호 {v} 국제면허 발급 신청."]),
+        ("CREDIT_CARD", 37, lambda r: make_card(r),
+         ["카드번호 {v} 분실 신고.",
+          "결제 카드 {v} 한도 조회.",
+          "{v} 카드 해외결제 차단 요청.",
+          "신용카드 {v} 포인트 조회.",
+          "카드번호 {v} 자동결제 등록."]),
+    ]
+    for cls, count, gen, templates in _CK_EXPAND:
+        ck_cls = f"zz_{cls.lower()}_expand"
+        ck_id = 0
+        for _ in range(count):
+            v = gen(ck_rng)
+            p = templates[ck_id % len(templates)].format(v=v)
+            ck_id += 1
+            rows.append({"id": f"{ck_cls}-{ck_id:04d}", "prompt": p,
+                         "expect": [cls], "spans": [_span(p, v, cls)],
+                         "source": "synth", "_cls": ck_cls})
+
     return rows
 
 

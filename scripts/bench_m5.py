@@ -306,14 +306,22 @@ def main():
         person_ci_low = sc["per_class"].get("KR_PERSON", {}).get("ci95", [0.0, 0.0])[0]
         sc["person_recall_ci_low"] = person_ci_low
         person_ci_target = 0.90
+        # CMP-241: KR_ACCOUNT·SECRET CI 하한 게이트 (표본 확장 후 ≥0.90).
+        account_ci_low = sc["per_class"].get("KR_ACCOUNT", {}).get("ci95", [0.0, 0.0])[0]
+        secret_ci_low = sc["per_class"].get("SECRET", {}).get("ci95", [0.0, 0.0])[0]
+        sc["account_recall_ci_low"] = account_ci_low
+        sc["secret_recall_ci_low"] = secret_ci_low
+        ci_low_target = 0.90
         chk = {
             "pii_recall>=0.90": sc["pii_recall"] >= TARGETS["pii_recall"],
             "pii_precision>=0.85": sc["pii_precision"] >= TARGETS["pii_precision"],
             "strong_recall>=0.98": sc["strong_recall"] >= TARGETS["strong_recall"],
             "person_recall>=0.85": sc["person_recall"] >= TARGETS["person_recall"],
             f"person_recall_ci_low>={person_ci_target}": person_ci_low >= person_ci_target,
+            f"account_recall_ci_low>={ci_low_target}": account_ci_low >= ci_low_target,
             "location_recall>=0.85": sc["location_recall"] >= TARGETS["location_recall"],
             "secret_recall>=0.90": sc["secret_recall"] >= TARGETS["secret_recall"],
+            f"secret_recall_ci_low>={ci_low_target}": secret_ci_low >= ci_low_target,
             "benign_false_block<=0.02": sc["benign_false_block"] <= TARGETS["benign_false_block"],
         }
         report["acceptance"] = chk

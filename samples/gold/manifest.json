@@ -3,8 +3,8 @@
   "seed": 20260625,
   "source": "synth",
   "license": "CC0-1.0",
-  "total": 922,
-  "positives": 772,
+  "total": 1144,
+  "positives": 994,
   "negatives": 150,
   "class_counts": {
     "KR_RRN": 30,
@@ -27,10 +27,16 @@
     "zz_kr_phone_ext": 35,
     "zz_email_ext": 45,
     "zz_kr_account_ext": 20,
-    "zz_secret_ext": 20
+    "zz_secret_ext": 20,
+    "zz_kr_rrn_expand": 27,
+    "zz_kr_foreigner_reg_expand": 37,
+    "zz_kr_brn_expand": 37,
+    "zz_kr_passport_expand": 42,
+    "zz_kr_driver_license_expand": 42,
+    "zz_credit_card_expand": 37
   },
-  "dev_size": 368,
-  "test_size": 554,
+  "dev_size": 452,
+  "test_size": 692,
   "must_classes": [
     "KR_RRN",
     "KR_FOREIGNER_REG",
@@ -81,6 +87,6 @@
     "test_pct": 0.6,
     "stratified": true
   },
-  "content_hash": "sha256:7593f64ff87782816939353ca5e4149f2f428a2226d3864e36422dc027068c1e",
+  "content_hash": "sha256:04bd4df8d5f2902b2bd0bb34db6272865539d1ab973ee771fa6dd2eb2b032acd",
   "note": "test 셋은 튜닝 중 열람 금지(누수 방지). person_unlisted_ratio ≥ 0.5 보장. content_hash 로 결정적 재현 검증(goldset/generate.py --verify)."
 }
