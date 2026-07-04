@@ -11,6 +11,11 @@
 | [`kr-location-union.json`](kr-location-union.json) | KR_LOCATION 모델∪규칙 유니온 상세 (live onnx-int8, n=62) | ✅ 현행 |
 | [`pseudonymize-quality.json`](pseudonymize-quality.json) | 가명화 품질 하니스 결과 | ✅ 현행 |
 | [`load-p95.json`](load-p95.json) | 온프렘 부하 p95 (c=1: 41ms, c=2: 67ms) | ✅ 현행 |
+| [`baseline-int8.json`](baseline-int8.json) | 공개 골드셋(I1) 베이스라인 (onnx-int8, 정보성) | 참고 |
+| [`CMP-199-credit-coverage.json`](CMP-199-credit-coverage.json) | 신용정보 엔터티 클래스 커버리지 측정 | 참고 |
+| [`kr-location-fn-dump.json`](kr-location-fn-dump.json) | KR_LOCATION FN 목록 덤프 (오차 분석용 원자료) | 역사적 |
+| [`kr-location-union-onnx-skip.json`](kr-location-union-onnx-skip.json) | KR_LOCATION 유니온 ONNX 스킵 케이스 기록 | 역사적 |
+| [`kr-person-fn-dump.json`](kr-person-fn-dump.json) | KR_PERSON FN 목록 덤프 (오차 분석용 원자료) | 역사적 |
 
 ## 분석 보고서
 
