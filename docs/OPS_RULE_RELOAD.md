@@ -85,3 +85,14 @@ result = guard.inspect(text)          # 항상 현재 검증된 룰셋으로 결
 | 재기동 없이 룰 1건 변경 적용(드라이런 diff) | `test_hot_reload_applies_single_rule_change_without_restart` |
 | 잘못된 룰 fail-closed 거부 + 직전 유지 | `test_invalid_regex_fail_closed_keeps_previous`, `test_unknown_policy_action_rejected` |
 | retain_raw 보존/삭제 + 키 회전 문서화 + 오설정 방지 1건 | `docs/SECURITY_RETAIN_RAW_KEYROTATION.md`, `test_misconfig_prevention_retain_raw_and_kek_rotation` |
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`PRESETS.md`](PRESETS.md) | 핫리로드의 출발점: `nufi init <preset>` 으로 config 초기 구체화 |
+| [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) | 단건 리로드 위에 다중 프로파일·버전관리·롤백 축 추가 |
+| [`SECURITY_RETAIN_RAW_KEYROTATION.md`](SECURITY_RETAIN_RAW_KEYROTATION.md) | retain_raw 보존·TTL·삭제 + Vault 키 회전 운영 절차 |
+| [`CLI.md`](CLI.md) | `nufi-egress policy` 전체 플래그·종료코드 레퍼런스 |

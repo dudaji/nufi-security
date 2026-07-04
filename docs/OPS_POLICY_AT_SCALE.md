@@ -93,3 +93,14 @@ nufi-egress policy audit --verify-chain     # 체인 BROKEN 이면 exit 1(변조
 
 멀티테넌시·권한관리(RBAC)·테넌트 격리는 본 MVP 범위 밖이다. 묶기는 라우팅 키 단위의
 정책 선택일 뿐 테넌트 간 데이터/권한 격리를 제공하지 않는다.
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`OPS_RULE_RELOAD.md`](OPS_RULE_RELOAD.md) | 단건 룰 무재기동 리로드 (본 기능의 기반 메커니즘) |
+| [`PRESETS.md`](PRESETS.md) | 프로파일 정책 파일 구체화: `nufi init <preset> --out <dir>` |
+| [`CLI.md`](CLI.md) | `nufi-egress policy list/bind/snapshot/rollback/audit/inspect` 전체 레퍼런스 |
+| [`REPORTING.md`](REPORTING.md) | 정책 변경 감사 로그를 컴플라이언스 리포트로 연결 |
