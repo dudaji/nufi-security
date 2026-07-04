@@ -689,7 +689,7 @@ python3 goldset/generate.py --verify
 # → VERIFY OK  content_hash=<해시>  (불일치 시 MISMATCH 출력)
 ```
 
-### 단위 테스트 + 문서 정합 (305개, ~35초)
+### 단위 테스트 + 문서 정합 (306개, ~45초)
 
 ```bash
 python3 -m pytest tests/ -q
