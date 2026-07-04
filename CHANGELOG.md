@@ -4,6 +4,14 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch38)
+
+> **v0.4.16-patch38 — reports/README 관련 문서 섹션 신설**
+> docs/reports/README.md 에 관련 문서 표 추가. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/reports/README.md** — 관련 문서 섹션 신설(REPORTING·HANDS_ON·SDK·goldset README).
+
 ## [0.4.16] - 2026-07-04 (patch37)
 
 > **v0.4.16-patch37 — RELEASE_CHECKLIST 관련 문서 섹션 신설**
