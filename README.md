@@ -140,7 +140,7 @@ API 전체 목록·안정성 계층은 [`docs/SDK.md`](docs/SDK.md), 데모는 `
 | **내부 구조·다이어그램** 보기 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
 | **온프렘/에어갭 설치** | [`deploy/README.md`](deploy/README.md) · [`deploy/airgap/INSTALL.md`](deploy/airgap/INSTALL.md) |
 | **Python SDK (라이브러리 임포트 API)** — `from nufi import detect, Guard, ...` | [`docs/SDK.md`](docs/SDK.md) · 데모 `./scripts/demo_sdk.sh` |
-| **SDK 한 줄 통합 예제** | [`examples/`](examples/) |
+| **SDK 한 줄 통합 예제** — 게이트웨이 없이 라이브러리 직접 임포트 (`detect` · `pseudonymize` · `Guard`) | [`examples/library_detect.py`](examples/library_detect.py) · [`examples/`](examples/) |
 
 > **⚠️ 운영(ops) 레이어 제외 안내** — 방향 재설정([`docs/ROADMAP.md`](docs/ROADMAP.md) §3)에 따라
 > 아래 운영 기능은 **유지보수 없이 제외**되었습니다(코드는 당분간 남아 있으나 신규 기능·지원 없음,
