@@ -42,112 +42,112 @@
 {"id": "KR_FOREIGNER_REG-0044", "prompt": "외국인등록번호 478017-7738309 비자 연장 건입니다.", "expect": ["KR_FOREIGNER_REG"], "spans": [[8, 22, "KR_FOREIGNER_REG"]], "source": "synth"}
 {"id": "KR_FOREIGNER_REG-0045", "prompt": "외국인등록번호 531883-8127161 비자 연장 건입니다.", "expect": ["KR_FOREIGNER_REG"], "spans": [[8, 22, "KR_FOREIGNER_REG"]], "source": "synth"}
 {"id": "KR_FOREIGNER_REG-0047", "prompt": "외국인등록번호 812192-8751018 비자 연장 건입니다.", "expect": ["KR_FOREIGNER_REG"], "spans": [[8, 22, "KR_FOREIGNER_REG"]], "source": "synth"}
-{"id": "KR_LOCATION-0391", "prompt": "강남구 역삼동 지점 오픈 일정 알려줘.", "expect": ["KR_LOCATION"], "spans": [[0, 7, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_LOCATION-0391", "prompt": "용인시 기흥구 인근 맛집 추천해줘.", "expect": ["KR_LOCATION"], "spans": [[0, 7, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": false}
 {"id": "KR_LOCATION-0396", "prompt": "포항시 인근 맛집 추천해줘.", "expect": ["KR_LOCATION"], "spans": [[0, 3, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_LOCATION-0397", "prompt": "용인시 기흥구 지점 오픈 일정 알려줘.", "expect": ["KR_LOCATION"], "spans": [[0, 7, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_LOCATION-0398", "prompt": "배송지를 세종특별자치시로 변경해 주세요.", "expect": ["KR_LOCATION"], "spans": [[5, 12, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_LOCATION-0404", "prompt": "이번 워크숍은 세종특별자치시에서 진행됩니다.", "expect": ["KR_LOCATION"], "spans": [[8, 15, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_LOCATION-0408", "prompt": "용인시 기흥구 지점 오픈 일정 알려줘.", "expect": ["KR_LOCATION"], "spans": [[0, 7, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_LOCATION-0409", "prompt": "제주특별자치도 지점 오픈 일정 알려줘.", "expect": ["KR_LOCATION"], "spans": [[0, 7, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_LOCATION-0410", "prompt": "배송지를 강남구 역삼동로 변경해 주세요.", "expect": ["KR_LOCATION"], "spans": [[5, 12, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_LOCATION-0416", "prompt": "배송지를 판교테크노밸리로 변경해 주세요.", "expect": ["KR_LOCATION"], "spans": [[5, 12, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_LOCATION-0417", "prompt": "이번 워크숍은 코엑스몰에서 진행됩니다.", "expect": ["KR_LOCATION"], "spans": [[8, 12, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_LOCATION-0418", "prompt": "롯데월드타워 지점 오픈 일정 알려줘.", "expect": ["KR_LOCATION"], "spans": [[0, 6, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_LOCATION-0419", "prompt": "배송지를 롯데월드타워로 변경해 주세요.", "expect": ["KR_LOCATION"], "spans": [[5, 11, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_LOCATION-0420", "prompt": "여의도 IFC 인근 맛집 추천해줘.", "expect": ["KR_LOCATION"], "spans": [[0, 7, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_LOCATION-0424", "prompt": "동대문디자인플라자 인근 맛집 추천해줘.", "expect": ["KR_LOCATION"], "spans": [[0, 9, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_LOCATION-0425", "prompt": "배송지를 광교호수공원로 변경해 주세요.", "expect": ["KR_LOCATION"], "spans": [[5, 11, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_LOCATION-0428", "prompt": "스타필드 하남 인근 맛집 추천해줘.", "expect": ["KR_LOCATION"], "spans": [[0, 7, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_LOCATION-0397", "prompt": "부산광역시 인근 맛집 추천해줘.", "expect": ["KR_LOCATION"], "spans": [[0, 5, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_LOCATION-0398", "prompt": "서울특별시 인근 맛집 추천해줘.", "expect": ["KR_LOCATION"], "spans": [[0, 5, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_LOCATION-0404", "prompt": "제주특별자치도 지점 오픈 일정 알려줘.", "expect": ["KR_LOCATION"], "spans": [[0, 7, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_LOCATION-0408", "prompt": "이번 워크숍은 서울특별시에서 진행됩니다.", "expect": ["KR_LOCATION"], "spans": [[8, 13, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_LOCATION-0409", "prompt": "배송지를 서울특별시로 변경해 주세요.", "expect": ["KR_LOCATION"], "spans": [[5, 10, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_LOCATION-0410", "prompt": "강남구 역삼동 지점 오픈 일정 알려줘.", "expect": ["KR_LOCATION"], "spans": [[0, 7, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_LOCATION-0416", "prompt": "배송지를 롯데월드타워로 변경해 주세요.", "expect": ["KR_LOCATION"], "spans": [[5, 11, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_LOCATION-0417", "prompt": "여의도 IFC 인근 맛집 추천해줘.", "expect": ["KR_LOCATION"], "spans": [[0, 7, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_LOCATION-0418", "prompt": "판교테크노밸리 인근 맛집 추천해줘.", "expect": ["KR_LOCATION"], "spans": [[0, 7, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_LOCATION-0419", "prompt": "배송지를 광교호수공원로 변경해 주세요.", "expect": ["KR_LOCATION"], "spans": [[5, 11, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_LOCATION-0420", "prompt": "송도국제도시 지점 오픈 일정 알려줘.", "expect": ["KR_LOCATION"], "spans": [[0, 6, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_LOCATION-0424", "prompt": "센텀시티 지점 오픈 일정 알려줘.", "expect": ["KR_LOCATION"], "spans": [[0, 4, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_LOCATION-0425", "prompt": "스타필드 하남 인근 맛집 추천해줘.", "expect": ["KR_LOCATION"], "spans": [[0, 7, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_LOCATION-0428", "prompt": "배송지를 스타필드 하남로 변경해 주세요.", "expect": ["KR_LOCATION"], "spans": [[5, 12, "KR_LOCATION"]], "source": "synth", "gazetteer_unlisted": true}
 {"id": "KR_PASSPORT-0071", "prompt": "여권번호 M02769909 항공권 발권 부탁드립니다.", "expect": ["KR_PASSPORT"], "spans": [[5, 14, "KR_PASSPORT"]], "source": "synth"}
 {"id": "KR_PASSPORT-0073", "prompt": "여권번호 S13878767 항공권 발권 부탁드립니다.", "expect": ["KR_PASSPORT"], "spans": [[5, 14, "KR_PASSPORT"]], "source": "synth"}
 {"id": "KR_PASSPORT-0074", "prompt": "여권번호 O41445364 항공권 발권 부탁드립니다.", "expect": ["KR_PASSPORT"], "spans": [[5, 14, "KR_PASSPORT"]], "source": "synth"}
 {"id": "KR_PASSPORT-0077", "prompt": "여권번호 O22281543 항공권 발권 부탁드립니다.", "expect": ["KR_PASSPORT"], "spans": [[5, 14, "KR_PASSPORT"]], "source": "synth"}
 {"id": "KR_PASSPORT-0079", "prompt": "여권번호 S80094466 항공권 발권 부탁드립니다.", "expect": ["KR_PASSPORT"], "spans": [[5, 14, "KR_PASSPORT"]], "source": "synth"}
 {"id": "KR_PASSPORT-0084", "prompt": "여권번호 S21219597 항공권 발권 부탁드립니다.", "expect": ["KR_PASSPORT"], "spans": [[5, 14, "KR_PASSPORT"]], "source": "synth"}
-{"id": "KR_PERSON-0182", "prompt": "고객 돈서윤님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0184", "prompt": "좌재윤 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0186", "prompt": "수신자 삼유나 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0187", "prompt": "가입 신청자 기세수빈님 서류 누락 안내 바랍니다.", "expect": ["KR_PERSON"], "spans": [[7, 11, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0189", "prompt": "기세재윤 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0191", "prompt": "가입 신청자 박지원님 서류 누락 안내 바랍니다.", "expect": ["KR_PERSON"], "spans": [[7, 10, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0193", "prompt": "환자 빈하준님 진료 예약을 변경하고 싶습니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0198", "prompt": "가입 신청자 겸준호님 서류 누락 안내 바랍니다.", "expect": ["KR_PERSON"], "spans": [[7, 10, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0199", "prompt": "가입 신청자 누윤서님 서류 누락 안내 바랍니다.", "expect": ["KR_PERSON"], "spans": [[7, 10, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0200", "prompt": "동지율 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0203", "prompt": "수신자 삼은지 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0204", "prompt": "가입 신청자 오유나님 서류 누락 안내 바랍니다.", "expect": ["KR_PERSON"], "spans": [[7, 10, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0206", "prompt": "윤민수 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0208", "prompt": "수신자 좌지원 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0212", "prompt": "예금주 사공윤서 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0214", "prompt": "고객 잠시우님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0216", "prompt": "고객 황목예린님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0217", "prompt": "가입 신청자 돈은지님 서류 누락 안내 바랍니다.", "expect": ["KR_PERSON"], "spans": [[7, 10, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0218", "prompt": "누예준 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0220", "prompt": "예금주 효예나 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0223", "prompt": "예금주 욱준서 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0225", "prompt": "삼건우 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0226", "prompt": "환자 강지안님 진료 예약을 변경하고 싶습니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0230", "prompt": "담당자 동현서에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0233", "prompt": "환자 선우서준님 진료 예약을 변경하고 싶습니다.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0237", "prompt": "이시우 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0242", "prompt": "승주원 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0247", "prompt": "고객 부여유나님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0248", "prompt": "예금주 독고지훈 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0249", "prompt": "등정유나 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0254", "prompt": "옹서준 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0255", "prompt": "수신자 잠시우 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0260", "prompt": "망절은지 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0262", "prompt": "삼수빈 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0265", "prompt": "이현서 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0266", "prompt": "어금하은 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0268", "prompt": "환자 위지주원님 진료 예약을 변경하고 싶습니다.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0271", "prompt": "수신자 화건우 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0272", "prompt": "예금주 봉민준 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0275", "prompt": "담당자 기세하린에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0284", "prompt": "가입 신청자 율하은님 서류 누락 안내 바랍니다.", "expect": ["KR_PERSON"], "spans": [[7, 10, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0285", "prompt": "고객 음서준님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0286", "prompt": "수신자 모준호 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0287", "prompt": "수신자 겸지안 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0294", "prompt": "환자 위지민재님 진료 예약을 변경하고 싶습니다.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0296", "prompt": "탁현우 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0299", "prompt": "어성민 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0300", "prompt": "고객 제갈다은님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0303", "prompt": "수신자 몽민재 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0307", "prompt": "미주원 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0308", "prompt": "담당자 누서윤에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0310", "prompt": "좌지호 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0311", "prompt": "담당자 이현서에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0312", "prompt": "가입 신청자 좌민준님 서류 누락 안내 바랍니다.", "expect": ["KR_PERSON"], "spans": [[7, 10, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0313", "prompt": "환자 장유나님 진료 예약을 변경하고 싶습니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0316", "prompt": "효지율 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0317", "prompt": "조다인 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0319", "prompt": "고객 어금하준님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0320", "prompt": "등정다은 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0325", "prompt": "갈지호 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0326", "prompt": "고객 몽성민님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0327", "prompt": "예금주 신유진 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0328", "prompt": "예금주 참민재 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0329", "prompt": "예금주 부여다은 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0331", "prompt": "고객 사공예린님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0336", "prompt": "환자 기세민재님 진료 예약을 변경하고 싶습니다.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0346", "prompt": "담당자 참민수에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0348", "prompt": "가입 신청자 동방지훈님 서류 누락 안내 바랍니다.", "expect": ["KR_PERSON"], "spans": [[7, 11, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0352", "prompt": "수신자 능수아 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0353", "prompt": "최유진 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0355", "prompt": "예금주 빈예린 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0359", "prompt": "기세시우 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0361", "prompt": "담당자 몽서윤에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0365", "prompt": "환자 잠민수님 진료 예약을 변경하고 싶습니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0368", "prompt": "수신자 돈채원 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0369", "prompt": "예금주 어금지율 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0374", "prompt": "욱민재 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0376", "prompt": "수신자 효건우 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0377", "prompt": "수신자 겸유진 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0378", "prompt": "수신자 율하린 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0380", "prompt": "수신자 효서윤 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0384", "prompt": "담당자 황목예린에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
-{"id": "KR_PERSON-0385", "prompt": "담당자 옹민준에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "KR_PERSON-0387", "prompt": "담당자 미준서에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0182", "prompt": "솔도윤 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0184", "prompt": "가입 신청자 율다인님 서류 누락 안내 바랍니다.", "expect": ["KR_PERSON"], "spans": [[7, 10, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0186", "prompt": "환자 헌현서님 진료 예약을 변경하고 싶습니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0187", "prompt": "고객 솔서윤님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0189", "prompt": "예금주 뫼예나 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0191", "prompt": "가입 신청자 동방소율님 서류 누락 안내 바랍니다.", "expect": ["KR_PERSON"], "spans": [[7, 11, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0193", "prompt": "정다인 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0198", "prompt": "수신자 벽지원 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0199", "prompt": "옥다은 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0200", "prompt": "앵두현서 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0203", "prompt": "고객 최지훈님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0204", "prompt": "쿤지우 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0206", "prompt": "오서연 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0208", "prompt": "환자 경지안님 진료 예약을 변경하고 싶습니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0212", "prompt": "예금주 쥐벽지우 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0214", "prompt": "가입 신청자 갈지안님 서류 누락 안내 바랍니다.", "expect": ["KR_PERSON"], "spans": [[7, 10, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0216", "prompt": "예금주 달곤은지 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0217", "prompt": "담당자 동서윤에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0218", "prompt": "곤유나 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0220", "prompt": "쿤성민 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0223", "prompt": "담당자 선우지율에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0225", "prompt": "고객 뫼시우님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0226", "prompt": "환자 승민재님 진료 예약을 변경하고 싶습니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0230", "prompt": "신재윤 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0233", "prompt": "고객 쥐도현님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0237", "prompt": "쿤서윤 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0242", "prompt": "쥐지훈 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0247", "prompt": "참하준 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0248", "prompt": "수신자 앵건우 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0249", "prompt": "수신자 복지율 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0254", "prompt": "예금주 옻준서 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0255", "prompt": "예금주 릉예린 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0260", "prompt": "담당자 곤소율에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0262", "prompt": "늠릉지안 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0265", "prompt": "부여채원 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0266", "prompt": "잠성민 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0268", "prompt": "환자 솔뫼다은님 진료 예약을 변경하고 싶습니다.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0271", "prompt": "수신자 옻나주원 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0272", "prompt": "예금주 화성민 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0275", "prompt": "담당자 서문민재에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0284", "prompt": "가입 신청자 쿤도현님 서류 누락 안내 바랍니다.", "expect": ["KR_PERSON"], "spans": [[7, 10, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0285", "prompt": "고객 욱예준님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0286", "prompt": "수신자 쥐지호 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0287", "prompt": "수신자 달곤도현 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0294", "prompt": "환자 옥서연님 진료 예약을 변경하고 싶습니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0296", "prompt": "벽송예린 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0299", "prompt": "딜서연 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0300", "prompt": "고객 쿤민재님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0303", "prompt": "수신자 옥준호 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0307", "prompt": "제갈유나 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0308", "prompt": "담당자 늠릉서윤에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0310", "prompt": "동방지훈 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0311", "prompt": "담당자 황보하준에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0312", "prompt": "가입 신청자 한윤서님 서류 누락 안내 바랍니다.", "expect": ["KR_PERSON"], "spans": [[7, 10, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0313", "prompt": "환자 벽서준님 진료 예약을 변경하고 싶습니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0316", "prompt": "경서윤 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0317", "prompt": "곤하준 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0319", "prompt": "고객 솔뫼민수님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0320", "prompt": "견준호 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0325", "prompt": "랑서윤 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0326", "prompt": "고객 선우준호님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0327", "prompt": "예금주 옻준서 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0328", "prompt": "예금주 쿤준호 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0329", "prompt": "예금주 랑지율 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0331", "prompt": "고객 승유진님의 계정 본인확인을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0336", "prompt": "환자 헌하준님 진료 예약을 변경하고 싶습니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0346", "prompt": "담당자 탑민재에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0348", "prompt": "가입 신청자 늠릉다은님 서류 누락 안내 바랍니다.", "expect": ["KR_PERSON"], "spans": [[7, 11, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0352", "prompt": "수신자 누예린 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0353", "prompt": "솔하은 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0355", "prompt": "예금주 탑곤예준 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0359", "prompt": "옥예나 선생님 강의 자료 공유드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0361", "prompt": "담당자 망절하은에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0365", "prompt": "환자 랑예준님 진료 예약을 변경하고 싶습니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0368", "prompt": "수신자 옻유진 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0369", "prompt": "예금주 복민재 명의로 이체 처리되었습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0374", "prompt": "솔채원 부장 보고서 검토 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0376", "prompt": "수신자 사공재윤 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0377", "prompt": "수신자 솔뫼태윤 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0378", "prompt": "수신자 몽도윤 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0380", "prompt": "수신자 신다인 앞으로 등기우편 발송했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0384", "prompt": "담당자 돈지훈에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "KR_PERSON-0385", "prompt": "담당자 벽송수빈에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
+{"id": "KR_PERSON-0387", "prompt": "담당자 탑서윤에게 견적서를 전달했어요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": true}
 {"id": "KR_PHONE-0146", "prompt": "연락처 016-3865-0157 로 안내 문자 보내주세요.", "expect": ["KR_PHONE"], "spans": [[4, 17, "KR_PHONE"]], "source": "synth"}
 {"id": "KR_PHONE-0150", "prompt": "연락처 031-416-7235 로 안내 문자 보내주세요.", "expect": ["KR_PHONE"], "spans": [[4, 16, "KR_PHONE"]], "source": "synth"}
 {"id": "KR_PHONE-0151", "prompt": "연락처 010 9261 8041 로 안내 문자 보내주세요.", "expect": ["KR_PHONE"], "spans": [[4, 17, "KR_PHONE"]], "source": "synth"}
@@ -170,22 +170,22 @@
 {"id": "KR_RRN-0023", "prompt": "주민등록번호 721699-3879682 본인확인 처리 바랍니다.", "expect": ["KR_RRN"], "spans": [[7, 21, "KR_RRN"]], "source": "synth"}
 {"id": "KR_RRN-0025", "prompt": "주민등록번호 986611-3201891 본인확인 처리 바랍니다.", "expect": ["KR_RRN"], "spans": [[7, 21, "KR_RRN"]], "source": "synth"}
 {"id": "KR_RRN-0030", "prompt": "주민등록번호 086532-4410246 본인확인 처리 바랍니다.", "expect": ["KR_RRN"], "spans": [[7, 21, "KR_RRN"]], "source": "synth"}
-{"id": "SECRET-0432", "prompt": "오픈AI 키 sk-VXXzN5uvyICwLEI6zrM0ragIQcQ4LNLT 확인.", "expect": ["SECRET"], "spans": [[7, 42, "SECRET"]], "source": "synth"}
+{"id": "SECRET-0432", "prompt": "지도 API 키 AIzaEI6zrM0ragIQcQ4LNLT1qy8zEKZ7WMSLJdJ 노출됐어.", "expect": ["SECRET"], "spans": [[9, 48, "SECRET"]], "source": "synth"}
 {"id": "SECRET-0433", "prompt": "aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY", "expect": ["SECRET"], "spans": [[0, 62, "SECRET"]], "source": "synth"}
 {"id": "SECRET-0436", "prompt": "aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY", "expect": ["SECRET"], "spans": [[0, 62, "SECRET"]], "source": "synth"}
-{"id": "SECRET-0439", "prompt": "깃헙 PAT ghp_ZrjOFi4mN1qhCFhotX3k63uJkqmx24vDkUX0 가 코드에 남아있음.", "expect": ["SECRET"], "spans": [[7, 47, "SECRET"]], "source": "synth"}
-{"id": "SECRET-0442", "prompt": "세션 JWT eyJ2Z2Sta3VpjPkUp7u.eyJzsYqcO5Ohxka05tgeeu8.UhoUty5vjIDPAGWKpVsuIuHT 디코딩해줘.", "expect": ["SECRET"], "spans": [[7, 75, "SECRET"]], "source": "synth"}
-{"id": "SECRET-0445", "prompt": "aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY", "expect": ["SECRET"], "spans": [[0, 62, "SECRET"]], "source": "synth"}
-{"id": "SECRET-0446", "prompt": "세션 JWT eyJU0izNE2GW5PYfIdv.eyJG8Wq7aEqbJGAXMjmSPKR.0thblxYGYKIHqw1OmO3xbLut 디코딩해줘.", "expect": ["SECRET"], "spans": [[7, 75, "SECRET"]], "source": "synth"}
-{"id": "SECRET-0452", "prompt": "aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY", "expect": ["SECRET"], "spans": [[0, 62, "SECRET"]], "source": "synth"}
-{"id": "SECRET-0453", "prompt": "깃헙 PAT ghp_ndjzUYtNHIDaeoQSmck1W3IFHbLdfqSLPW3D 가 코드에 남아있음.", "expect": ["SECRET"], "spans": [[7, 47, "SECRET"]], "source": "synth"}
-{"id": "SECRET-0456", "prompt": "슬랙 토큰 xoxb-Z4krN30w1KVRIjy4BxL7Pogx 회수 필요.", "expect": ["SECRET"], "spans": [[6, 35, "SECRET"]], "source": "synth"}
-{"id": "SECRET-0457", "prompt": "설정파일에 api_key=\"Yhd2WWou8TGN7gOiwVJ5\" 박혀있음.", "expect": ["SECRET"], "spans": [[6, 36, "SECRET"]], "source": "synth"}
-{"id": "SECRET-0461", "prompt": "설정파일에 api_key=\"hDeW1Z906V1hj0LtFT5U\" 박혀있음.", "expect": ["SECRET"], "spans": [[6, 36, "SECRET"]], "source": "synth"}
-{"id": "SECRET-0463", "prompt": "오픈AI 키 sk-S48KY6aRDizWpsdJjAmEd8cKiyMDgd55 확인.", "expect": ["SECRET"], "spans": [[7, 42, "SECRET"]], "source": "synth"}
-{"id": "SECRET-0464", "prompt": "설정파일에 api_key=\"9YnTZGTOAfz3vP8obrnB\" 박혀있음.", "expect": ["SECRET"], "spans": [[6, 36, "SECRET"]], "source": "synth"}
-{"id": "SECRET-0465", "prompt": "배포 키 AKIAIOSFODNN7EXAMPLE 검토 바랍니다.", "expect": ["SECRET"], "spans": [[5, 25, "SECRET"]], "source": "synth"}
-{"id": "SECRET-0467", "prompt": "설정파일에 api_key=\"9un2K51utChORtGMSfAv\" 박혀있음.", "expect": ["SECRET"], "spans": [[6, 36, "SECRET"]], "source": "synth"}
+{"id": "SECRET-0439", "prompt": "설정파일에 api_key=\"9f7N0BClGgTgjtdw7sLD\" 박혀있음.", "expect": ["SECRET"], "spans": [[6, 36, "SECRET"]], "source": "synth"}
+{"id": "SECRET-0442", "prompt": "배포 키 AKIAIOSFODNN7EXAMPLE 검토 바랍니다.", "expect": ["SECRET"], "spans": [[5, 25, "SECRET"]], "source": "synth"}
+{"id": "SECRET-0445", "prompt": "앤트로픽 키 sk-ant-OEaZpMIuCO0tMNWU5wxXBMWj64xr 점검.", "expect": ["SECRET"], "spans": [[7, 42, "SECRET"]], "source": "synth"}
+{"id": "SECRET-0446", "prompt": "aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY", "expect": ["SECRET"], "spans": [[0, 62, "SECRET"]], "source": "synth"}
+{"id": "SECRET-0452", "prompt": "지도 API 키 AIza4hgEBNwEThWCfGyM55OIz9E4i2Ol6tmRlhN 노출됐어.", "expect": ["SECRET"], "spans": [[9, 48, "SECRET"]], "source": "synth"}
+{"id": "SECRET-0453", "prompt": "aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY", "expect": ["SECRET"], "spans": [[0, 62, "SECRET"]], "source": "synth"}
+{"id": "SECRET-0456", "prompt": "깃헙 PAT ghp_NMPmvcWnm8QTQFNG8zv3tlz5HdMuTQ9Bx6RJ 가 코드에 남아있음.", "expect": ["SECRET"], "spans": [[7, 47, "SECRET"]], "source": "synth"}
+{"id": "SECRET-0457", "prompt": "슬랙 토큰 xoxb-Z4krN30w1KVRIjy4BxL7Pogx 회수 필요.", "expect": ["SECRET"], "spans": [[6, 35, "SECRET"]], "source": "synth"}
+{"id": "SECRET-0461", "prompt": "깃헙 PAT ghp_L1m0lJRCn7sDuD7JHEtzhkJ4UzfoqTDkNWwM 가 코드에 남아있음.", "expect": ["SECRET"], "spans": [[7, 47, "SECRET"]], "source": "synth"}
+{"id": "SECRET-0463", "prompt": "aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY", "expect": ["SECRET"], "spans": [[0, 62, "SECRET"]], "source": "synth"}
+{"id": "SECRET-0464", "prompt": "오픈AI 키 sk-S48KY6aRDizWpsdJjAmEd8cKiyMDgd55 확인.", "expect": ["SECRET"], "spans": [[7, 42, "SECRET"]], "source": "synth"}
+{"id": "SECRET-0465", "prompt": "설정파일에 api_key=\"9YnTZGTOAfz3vP8obrnB\" 박혀있음.", "expect": ["SECRET"], "spans": [[6, 36, "SECRET"]], "source": "synth"}
+{"id": "SECRET-0467", "prompt": "지도 API 키 AIzaVGBlR24nGJMNa4N2te9gRDfN1wK5Lqrbaax 노출됐어.", "expect": ["SECRET"], "spans": [[9, 48, "SECRET"]], "source": "synth"}
 {"id": "benign-0473", "prompt": "제품 출시일은 다음 달 셋째 주로 확정되었습니다.", "expect": [], "spans": [], "source": "synth"}
 {"id": "benign-0479", "prompt": "내일 점심 메뉴 추천 좀 해줄래?", "expect": [], "spans": [], "source": "synth"}
 {"id": "benign-0490", "prompt": "Docker 컨테이너 메모리 제한을 거는 방법 알려줘. (#19)", "expect": [], "spans": [], "source": "synth"}
