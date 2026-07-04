@@ -4,6 +4,15 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch13)
+
+> **v0.4.16-patch13 — MANUAL.md 정확도 수치 정정 + RELEASE_NOTES 패치 시리즈 patch11 확장**
+> MANUAL.md §3 탐지 정확도 0.977→0.9908 현행화. RELEASE_NOTES 패치 시리즈 항목 상세화. VERSION 변경 없음.
+
+### Changed (모두 문서)
+- **docs/MANUAL.md** — §3 탐지 정확도 수치 0.977→0.9908(v0.4.16 기준), KR_PERSON 0.9799 함께 명시.
+- **docs/RELEASE_NOTES.md** — 패치 시리즈 항목 확장: research/ 섹션·REPORTING SDK §4·HANDS_ON Part I 링크·ARCHITECTURE 갱신 이력 포함.
+
 ## [0.4.16] - 2026-07-04 (patch12)
 
 > **v0.4.16-patch12 — 문서 풍부화 4차 (HANDOVER·RELEASE_NOTES·research 인덱스·ARCHITECTURE 갱신)**
