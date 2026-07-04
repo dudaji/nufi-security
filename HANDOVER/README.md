@@ -59,4 +59,4 @@
 [`AGENT_OPERATING_MODEL.md`](AGENT_OPERATING_MODEL.md) 에 그 내용을 **요약·재수록**했습니다.
 둘이 충돌하면 **원본 `GOVERNANCE.md` 가 우선**합니다(개정은 보드 지시로만).
 
-*최종 갱신: 2026-07-04 · 대상 버전: v0.4.16-patch10*
+*최종 갱신: 2026-07-04 · 대상 버전: v0.4.16-patch19*

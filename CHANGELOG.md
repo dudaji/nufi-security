@@ -4,6 +4,42 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch19)
+
+> **v0.4.16-patch19 — docs/history/README.md 신설 · HANDOVER patch19 기준 현행화**
+> 역사적 스냅샷 6종 인덱스·열람 가이드. HANDOVER 전반 patch19 기준 갱신. VERSION 변경 없음.
+
+### Added / Changed (모두 문서)
+- **docs/history/README.md** — 역사적 스냅샷 6종(SPEC·SPEC_EGRESS_ENFORCEMENT·SPEC_M4·IMPL_M4·DEMO_v0.0.3·DEMO_v0.0.5) 인덱스 + 언제 읽나 안내 + 관련 living 문서 표.
+- **HANDOVER/README.md** — 대상 버전 patch19 갱신.
+- **HANDOVER/PROJECT_STATE.md** — patch16~19 버전 이력 항목 추가, 대상 patch19.
+- **HANDOVER/PROJECT_OVERVIEW.md** — 패치 번호 patch15→patch19.
+
+## [0.4.16] - 2026-07-04 (patch18)
+
+> **v0.4.16-patch18 — docs/research/README.md 신설**
+> 조사·전략 문서 3종(FSEC_AI_GUIDE_2026·NUFI_SECURITY_PLANE_CHARTER·SOLUTION_FOCUS_OPTIONS) 인덱스·배경 설명. VERSION 변경 없음.
+
+### Added (문서)
+- **docs/research/README.md** — 조사·전략 문서 3종 인덱스 + 각 문서 배경·읽는 시점 안내 + 관련 living 문서 표.
+
+## [0.4.16] - 2026-07-04 (patch17)
+
+> **v0.4.16-patch17 — SECURITY_RETAIN_RAW_KEYROTATION 관련 문서 섹션 신설**
+> OPS_RULE_RELOAD·PRESETS·REPORTING 교차링크. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/SECURITY_RETAIN_RAW_KEYROTATION.md** — 관련 문서 표 신설: OPS_RULE_RELOAD·PRESETS·REPORTING 3종.
+
+## [0.4.16] - 2026-07-04 (patch16)
+
+> **v0.4.16-patch16 — OPS_RULE_RELOAD·OPS_POLICY_AT_SCALE 관련 문서 섹션 신설**
+> 교차링크 보강. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/OPS_RULE_RELOAD.md** — 관련 문서 표 신설: PRESETS·OPS_POLICY_AT_SCALE·SECURITY_RETAIN_RAW_KEYROTATION·CLI 4종.
+- **docs/OPS_POLICY_AT_SCALE.md** — 관련 문서 표 신설: OPS_RULE_RELOAD·PRESETS·CLI·REPORTING 4종.
+
 ## [0.4.16] - 2026-07-04 (patch15)
 
 > **v0.4.16-patch15 — 교차링크 보강 (INTEGRATION_GUIDE·PRESETS)**

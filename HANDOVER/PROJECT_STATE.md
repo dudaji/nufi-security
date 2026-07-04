@@ -3,7 +3,7 @@
 > 이어받는 사람/AI가 "무엇이 되어 있고, 무엇이 남았고, 어디를 조심해야 하나"를 파악하도록
 > 정리했습니다. 수치의 권위는 `docs/reports/*.json`, 변경 이력의 권위는 `CHANGELOG.md` 입니다.
 
-*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch15 (main, origin 동기화됨)*
+*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch19 (main, origin 동기화됨)*
 
 ---
 
@@ -11,6 +11,10 @@
 
 | 버전 | 테마 | 핵심 내용 |
 |---|---|---|
+| **v0.4.16-patch19** | history/README 신설 | 역사적 스냅샷 6종 인덱스·열람 가이드 |
+| **v0.4.16-patch18** | research/README 신설 | 조사·전략 문서 3종 인덱스·배경 설명 |
+| **v0.4.16-patch17** | SECURITY_RETAIN_RAW 링크 | 관련 문서 섹션(OPS_RULE_RELOAD·PRESETS·REPORTING) 신설 |
+| **v0.4.16-patch16** | OPS 관련 문서 섹션 | OPS_RULE_RELOAD·OPS_POLICY_AT_SCALE 관련 문서 표 신설 |
 | **v0.4.16-patch15** | 교차링크 보강 | INTEGRATION_GUIDE §5 PII_ROUTING 링크, PRESETS 관련 문서 섹션 신설 |
 | **v0.4.16-patch14** | MANUAL SDK 링크 | MANUAL.md SDK 예시 examples/README.md(7종) 인덱스 링크 |
 | **v0.4.16-patch13** | MANUAL 정확도 정정 | MANUAL.md §3 0.977→0.9908 현행화, RELEASE_NOTES 패치 시리즈 확장 |
