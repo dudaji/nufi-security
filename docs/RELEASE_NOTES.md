@@ -29,10 +29,29 @@
 | 골드셋 n | 818 | **854** |
 | 수용 기준 통과 | ✗ | **✅** |
 
+### 클래스별 재현율 (onnx-int8, split=test)
+
+| 클래스 | 재현율 | Wilson CI95 하한 | n |
+|---|---:|---:|---:|
+| KR_PERSON | 0.9799 | **0.9591** ✅ | 348 |
+| KR_LOCATION | 1.0000 | 0.9417 ✅ | 62 |
+| KR_RRN | 1.0000 | 0.9011 ✅ | 35 |
+| KR_FOREIGNER_REG | 1.0000 | 0.9011 ✅ | 35 |
+| KR_PASSPORT | 1.0000 | 0.9011 ✅ | 35 |
+| KR_DRIVER_LICENSE | 1.0000 | 0.9011 ✅ | 35 |
+| KR_ACCOUNT | 1.0000 | 0.9036 ✅ | 36 |
+| KR_BRN | 1.0000 | 0.9011 ✅ | 35 |
+| KR_PHONE | 1.0000 | 0.9036 ✅ | 36 |
+| CREDIT_CARD | 1.0000 | 0.9011 ✅ | 35 |
+| EMAIL | 1.0000 | 0.9036 ✅ | 36 |
+| SECRET | 1.0000 | 0.9036 ✅ | 36 |
+
+**12개 클래스 전부 Wilson CI95 하한 ≥ 0.90 달성.**
+
 ### 참고
 - 성능 측정: `docs/reports/recall-int8.json`
 - 골드셋 정합 검증: `python3 goldset/generate.py --verify`
-- 전체 테스트: `pytest` — 300 passed
+- 전체 테스트: `pytest` — 301 passed (v0.4.16 + examples 스모크 테스트)
 
 ---
 
