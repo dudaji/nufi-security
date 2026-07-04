@@ -4,6 +4,14 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch40)
+
+> **v0.4.16-patch40 — PROJECT_STATE 교차링크 보강 이력 현행화**
+> HANDOVER/PROJECT_STATE.md 에 patch14~39 교차링크 전반 보강 이력 추가. VERSION 변경 없음.
+
+### Changed (문서)
+- **HANDOVER/PROJECT_STATE.md** — §4 갭 점검에 patch14~39 교차링크 보강 표 추가(16개 파일·영역 커버).
+
 ## [0.4.16] - 2026-07-04 (patch39)
 
 > **v0.4.16-patch39 — docs/README.md 관련 문서 섹션 신설**

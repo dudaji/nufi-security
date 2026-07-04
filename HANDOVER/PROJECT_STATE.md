@@ -3,7 +3,7 @@
 > 이어받는 사람/AI가 "무엇이 되어 있고, 무엇이 남았고, 어디를 조심해야 하나"를 파악하도록
 > 정리했습니다. 수치의 권위는 `docs/reports/*.json`, 변경 이력의 권위는 `CHANGELOG.md` 입니다.
 
-*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch39 (main, origin 동기화됨)*
+*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch40 (main, origin 동기화됨)*
 
 ---
 
@@ -11,6 +11,7 @@
 
 | 버전 | 테마 | 핵심 내용 |
 |---|---|---|
+| **v0.4.16-patch40** | PROJECT_STATE 이력 현행화 | §4 갭 점검에 patch14~39 교차링크 보강 이력 16항목 추가 |
 | **v0.4.16-patch39** | docs/README 관련 문서 | docs/README.md 관련 문서 섹션 신설 |
 | **v0.4.16-patch38** | reports/README 관련 문서 | docs/reports/README.md 관련 문서 섹션 신설 |
 | **v0.4.16-patch37** | RELEASE_CHECKLIST 관련 문서 | RELEASE_CHECKLIST.md 관련 문서 섹션 신설 |

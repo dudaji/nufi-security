@@ -6,7 +6,7 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch39) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.16 패치 시리즈 (patch01~patch40) — **문서 풍부화 + SDK 사용성 개선**
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
@@ -42,7 +42,9 @@
 
 - **docs/README 관련 문서 섹션(patch39)** — `docs/README.md`(문서 지도 인덱스) 에 관련 문서 표 신설. 지도 → 제품·매뉴얼·실습·이력·인수인계 교차링크 완성.
 
-기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch39 절.
+- **PROJECT_STATE 교차링크 이력 현행화(patch40)** — `HANDOVER/PROJECT_STATE.md` §4 갭 점검에 patch14~39 에 걸친 교차링크 전반 보강 16개 항목 표 추가.
+
+기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch40 절.
 
 ---
 
