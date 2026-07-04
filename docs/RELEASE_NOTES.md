@@ -6,7 +6,7 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch42) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.16 패치 시리즈 (patch01~patch43) — **문서 풍부화 + SDK 사용성 개선**
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
@@ -48,7 +48,9 @@
 
 - **REPORTING 프레임워크별 커버리지 수치 표(patch42)** — 5종 규제(fsec-ai·net-sep·pipa·cia·isms-p) 48개 통제의 direct(25)/partial(11)/oos(12) 수치를 프레임워크별 표로 명시화. `net-sep` 5/5 direct 강조.
 
-기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch42 절.
+- **MANUAL §3 PII 클래스 12종 표(patch43)** — 매뉴얼 §3 핵심 개념에 탐지 대상 PII 클래스 전체 목록(클래스명·설명·탐지 방식·강한/약한 구분) 추가.
+
+기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch43 절.
 
 ---
 

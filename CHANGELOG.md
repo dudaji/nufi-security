@@ -4,6 +4,14 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch43)
+
+> **v0.4.16-patch43 — MANUAL.md §3 탐지 대상 PII 클래스 12종 표 추가**
+> 핵심 개념 섹션에 탐지 가능한 PII 엔티티 클래스 목록(클래스명·설명·탐지 방식·강한/약한 PII 구분) 표 추가. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/MANUAL.md** — §3 핵심 개념에 "탐지 대상 PII 클래스 (12종)" 표 추가(KR_RRN·KR_FOREIGNER_REG·KR_BRN·KR_PASSPORT·KR_DRIVER_LICENSE·KR_ACCOUNT·CREDIT_CARD·KR_PHONE·EMAIL·KR_PERSON·KR_LOCATION·SECRET + 강한/약한 PII 분류 주석).
+
 ## [0.4.16] - 2026-07-04 (patch42)
 
 > **v0.4.16-patch42 — REPORTING.md 프레임워크별 커버리지 수치 표 추가**
