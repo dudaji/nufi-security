@@ -92,7 +92,13 @@
         └ 우회 차단(nftables) ──✅ 설계 → 빌드
 가역 가명화/원복 + 매핑 Vault ──✅ (egress_audit/pseudonymize.py)
 기밀 1차 탐지(키워드/표식 + EDM) ──✅ (기밀 탐지 구현 노트)
-벤치·하드닝 + KoELECTRA/INT8 실측 ──✅
-   · 한국어 개인정보 재현율 0.9908 ≥ 0.90 · INT8 512자 지연 p95 41ms · 하드닝 12/12
+Python SDK (nufi 파사드 패키지) ──✅ v0.4.1 (P2 완료)
+   · from nufi import detect, Guard, pseudonymize, batch_detect, scan_file
+   · examples/library_detect.py — 게이트웨이 없는 직접 임포트 예시
+벤치·하드닝 + KoELECTRA/INT8 실측 ──✅ v0.4.16 (P0 완료)
+   · 한국어 개인정보 재현율 0.9908 (12개 클래스 전부 CI95 하한 ≥ 0.90)
+   · KR_PERSON recall 0.9799, Wilson CI 하한 0.9591 ≥ 0.93 게이트 ✅
+   · 골드셋 n=854 (dev=560/test=854), 301 테스트, 11/11 데모 PASS
+   · INT8 512자 지연 p95 41ms · 하드닝 12/12
 후속 ──🔜 NER 베이스 모델 격상 · 프로덕션 온프렘 지연 재측정
 ```
