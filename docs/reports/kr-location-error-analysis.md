@@ -1,4 +1,9 @@
-# KR_LOCATION 오차 분석 — false-negative 덤프·분류 (v0.2.0 주소 정확도 착수 단계)
+# KR_LOCATION 오차 분석 — false-negative 덤프·분류 (v0.2.0 주소 정확도 착수 단계) — 역사적 문서
+
+> **⚠️ 역사적 문서 — 이 분석이 권고한 P2/P3 대응은 v0.2.0 에서 완료되었습니다.**
+> P2 규칙확장 + P3 유니온(model ∪ rules) 적용 후 KR_LOCATION 재현율은 0.7917→1.0
+> (CI95 하한 0.9417 ≥ 0.90 게이트 통과)으로 개선되었습니다.
+> 현행 측정값: `docs/reports/recall-int8.json` (location_recall=1.0, n=62, v0.4.16).
 
 목적: 골드셋의 `KR_LOCATION` false-negative(놓친 케이스)를 **전량 덤프·분류**해,
 후속 대응단계(P2 규칙확장 / P3 유니온 / P4 조건부 미세조정)의 우선순위를 데이터로
