@@ -4,6 +4,18 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch04)
+
+> **v0.4.16-patch04 — compliance 예시 추가 + 스모크 7건 (307건)**
+> sdk_compliance_report.py 예시 신규 추가, 스모크 테스트 6→7건. VERSION 변경 없음.
+
+### Added
+- **`examples/sdk_compliance_report.py`** — `compliance_report`·`render_report`·`load_catalog` 사용 예시. 한국 규제 5종(금융 AI 안내서·망분리·PIPA·CIA·ISMS-P) 충족 현황을 출력.
+- **`test_examples_smoke.py` sdk_compliance_report 추가** — 스모크 테스트 6→7종, 전체 테스트 306→307건.
+
+### Fixed
+- **각 문서 테스트 수 306→307 정정** — RELEASE_NOTES·HANDS_ON·RELEASE_CHECKLIST·docs/README·HANDOVER.
+
 ## [0.4.16] - 2026-07-04 (patch03)
 
 > **v0.4.16-patch03 — examples 확장 + 문서 링크·수치 정합 (306건)**

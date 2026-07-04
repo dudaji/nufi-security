@@ -122,6 +122,20 @@ if proc6.returncode == 0:
         "stdout에 탐지 결과 없음" if ("KR_RRN" not in proc6.stdout and "KR_PERSON" not in proc6.stdout) else "",
     )
 
+# 7. sdk_compliance_report.py
+proc7 = _run_example("sdk_compliance_report.py")
+check(
+    "sdk_compliance_report.py exit 0",
+    proc7.returncode == 0,
+    f"rc={proc7.returncode}" + (f" stderr={proc7.stderr[:200]}" if proc7.returncode != 0 else ""),
+)
+if proc7.returncode == 0:
+    check(
+        "sdk_compliance_report.py 카탈로그 출력 포함",
+        "통제" in proc7.stdout and ("충족" in proc7.stdout or "ISMS" in proc7.stdout),
+        "stdout에 통제 커버리지 없음",
+    )
+
 # 결과 집계
 print()
 passed = sum(1 for _, ok, _ in results if ok)
@@ -211,3 +225,17 @@ def test_sdk_file_scan_runs():
     )
     assert result.returncode == 0, f"exit {result.returncode}: {result.stderr[:300]}"
     assert "KR_RRN" in result.stdout or "KR_PERSON" in result.stdout
+
+
+def test_sdk_compliance_report_runs():
+    """examples/sdk_compliance_report.py 가 오류 없이 실행되고 통제 커버리지를 출력한다."""
+    env = {**_os.environ, "EGRESS_NER_BACKEND": "gazetteer"}
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "examples" / "sdk_compliance_report.py")],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert result.returncode == 0, f"exit {result.returncode}: {result.stderr[:300]}"
+    assert "통제" in result.stdout
+    assert "충족" in result.stdout or "ISMS" in result.stdout

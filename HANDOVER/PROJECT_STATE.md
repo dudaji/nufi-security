@@ -81,7 +81,7 @@
 
 모든 공개 정확도·지연 수치 (v0.4.16: pii_recall=0.9908, KR_PERSON 0.9799/CI하한 0.9591,
 KR_LOCATION 1.0/CI하한 0.9417, p95 41ms, benign_fp=0) 가 커밋된 리포트 JSON 과 일치하며,
-`scripts/check_docs.py` 회귀 가드가 향후 드리프트를 기계로 막습니다. 306 테스트 · 11/11 데모 PASS.
+`scripts/check_docs.py` 회귀 가드가 향후 드리프트를 기계로 막습니다. 307 테스트 · 11/11 데모 PASS.
 
 ## 5. 이어받는 사람이 가장 먼저 볼 것
 
