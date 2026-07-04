@@ -70,7 +70,7 @@
 | v0.4.15 | UNLISTED_SURNAMES 미수록 성씨 정합 (골드셋 재생성) | `demo_accuracy.sh` | `HANDS_ON.md` | ✅ | ✅ |
 | v0.4.16 | UNLISTED_SURNAMES 재설계 → person_recall 0.9799, CI 하한 0.9591 (n=854) | `demo_accuracy.sh`(3/3 PASS) | `HANDS_ON.md#part-j`·`DEMO.md` | ✅ | ✅ |
 
-> **v0.4.16 릴리스 범위:** ✅ UNLISTED_SURNAMES 합성 음절 → 실증 탐지 성씨 전환. ✅ zz_kr_person_ci_expand(150행) 복원으로 n=854 확보. ✅ Wilson CI 하한 0.9591 달성(≥0.93 게이트 통과). ✅ 300 테스트 통과 · 11/11 데모 PASS. ✅ `examples/library_detect.py` + INTEGRATION_GUIDE 경로 D 추가. ✅ RELEASE_NOTES·ARCHITECTURE·gap-analysis·kr-person-error-analysis·goldset README 현행화.
+> **v0.4.16 릴리스 범위:** ✅ UNLISTED_SURNAMES 합성 음절 → 실증 탐지 성씨 전환. ✅ zz_kr_person_ci_expand(150행) 복원으로 n=854 확보. ✅ Wilson CI 하한 0.9591 달성(≥0.93 게이트 통과). ✅ 305 테스트 통과 · 11/11 데모 PASS. ✅ `examples/library_detect.py` + INTEGRATION_GUIDE 경로 D 추가. ✅ RELEASE_NOTES·ARCHITECTURE·gap-analysis·kr-person-error-analysis·goldset README 현행화.
 
 > **v0.0.3 릴리스 범위:** ✅ ① O1/O2 전용 1-명령 `demo_*.sh` + DEMO 재현 문서. ✅ ② O3 = 이후 릴리스로 이연. ✅ ③ 릴리스 메커닉: VERSION 0.0.3 · CHANGELOG `[0.0.3]` · tag `v0.0.3` + origin push.
 
