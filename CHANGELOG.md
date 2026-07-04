@@ -4,6 +4,22 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch05)
+
+> **v0.4.16-patch05 — 문서 풍부화 (ARCHITECTURE·DEMO·SDK·MANUAL·reports·HANDOVER)**
+> ARCHITECTURE.md 컴포넌트 표 보강, DEMO.md Python SDK 예시 섹션 신설, SDK/MANUAL/INTEGRATION_GUIDE 교차링크 보강, kr-person FN §7.6(잔여 7건 분석), HANDOVER 현행화. VERSION 변경 없음.
+
+### Changed / Added (모두 문서)
+- **ARCHITECTURE.md** — 컴포넌트 표에 Python SDK 파사드(`nufi/`) 행 추가.
+- **DEMO.md** — `examples/` Python SDK 예시 7종 섹션 신설 (스모크 실행법 포함).
+- **SDK.md** — §2.5에 `examples/sdk_compliance_report.py` 재현 예제 링크.
+- **MANUAL.md** — SDK 섹션에 `sdk_file_scan`·`sdk_compliance_report` 예시 링크.
+- **INTEGRATION_GUIDE.md** — 경로 D 실행 예시 3종으로 확장.
+- **docs/README.md** — Python SDK 예시 7종으로 업데이트.
+- **kr-person-error-analysis.md §7.6** — v0.4.16 잔여 FN 7건 구조 분석 추가.
+- **HANDOVER/PROJECT_STATE.md** — v0.4.16-patch04 기준 현행화.
+- **HANDOVER/PROJECT_OVERVIEW.md** — patch04, 예시 3종 명시.
+
 ## [0.4.16] - 2026-07-04 (patch04)
 
 > **v0.4.16-patch04 — compliance 예시 추가 + 스모크 7건 (307건)**
