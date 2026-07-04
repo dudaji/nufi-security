@@ -37,6 +37,13 @@ class Finding:
     confidence: Optional[float] = None
     match_meta: Optional[dict] = None
 
+    def __repr__(self) -> str:
+        parts = [f"entity_type={self.entity_type!r}", f"text={self.text!r}",
+                 f"start={self.start}", f"end={self.end}", f"score={self.score:.2f}"]
+        if self.source != "ner:gazetteer":
+            parts.append(f"source={self.source!r}")
+        return f"Finding({', '.join(parts)})"
+
     def to_dict(self) -> dict:
         d = asdict(self)
         # 기밀 finding: 매치 원문 비기록(§4.2) — text 제거, class 키로 노출.
