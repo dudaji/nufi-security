@@ -482,20 +482,145 @@ nufi-egress monitor                                         # 우회를 실시�
 
 ## §8 업그레이드 & 마이그레이션
 
-> 이 절은 **골격(skeleton)** 입니다. 버전 간 업그레이드는 현재 **호환 가능한 패치 흐름**이라
-> 특별한 마이그레이션 단계가 없으며, 정식 업그레이드 가이드는 후속 버전에서 채웁니다.
+이 절은 NuFi 게이트웨이의 **버전 업그레이드 절차**, **config 키 변경 이력**, **에어갭 번들
+재생성**, **v0.3.x → v0.4.x 마이그레이션** 을 안내합니다.
 
-당장의 업그레이드 원칙은 다음과 같습니다.
+### 8.1 업그레이드 원칙
 
 - **무엇이 바뀌었나** — 버전별 변경 이력은 [`../CHANGELOG.md`](../CHANGELOG.md), 사람 친화
   릴리스 노트는 [`RELEASE_NOTES.md`](RELEASE_NOTES.md) 가 권위입니다. 업그레이드 전 해당
   버전 절을 먼저 읽으세요.
 - **무중단 룰 변경** — 정책·룰 변경은 재기동 없이 핫리로드로 적용됩니다([§7.2](#7-트러블슈팅--faq)).
-- **에어갭** — 폐쇄망은 새 번들을 만들어 전송·로드합니다([§1.4](#1-설치--사전요건)).
 - **롤백** — 정책 수준 되돌리기는 [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) 의
   버전/무재기동 되돌리기를 사용합니다.
 
-> 스키마·설정 비호환 변경이 생기면 이 절에 단계별 마이그레이션 절차를 추가합니다.
+### 8.2 Config 키 변경 이력
+
+아래 표는 버전별로 추가·변경·제거된 설정 키를 정리합니다. 업그레이드 시 기존 config 파일이
+새 키를 포함하는지 확인하세요.
+
+| 버전 | 파일 | 키 | 변경 | 설명 |
+|---|---|---|---|---|
+| v0.4.0 | `config/routing.yaml` | `pii_routing` (섹션) | **신규** | PII 감지 시 로컬 모델 강제 라우팅. `enabled`, `local_backend`, `entity_types` 하위 키 |
+| v0.4.0 | `config/routing.yaml` | `pii_routing.enabled` | **신규** | PII 라우팅 활성화 (`true`/`false`, 기본 `true`) |
+| v0.4.0 | `config/routing.yaml` | `pii_routing.local_backend` | **신규** | PII 포함 요청을 보낼 로컬 백엔드 이름 (기본 `private-llm`) |
+| v0.4.0 | `config/routing.yaml` | `pii_routing.entity_types` | **신규** | 라우팅 대상 엔티티 타입 리스트 (빈 리스트 = 모든 PII) |
+| v0.4.0 | `config/routing.yaml` | `policy_profiles` | **신규** | 다중 정책 프로파일 정의 |
+| v0.4.0 | `config/routing.yaml` | `policy_default_profile` | **신규** | 묶이지 않은 경로의 기본 프로파일 |
+| v0.4.0 | `config/routing.yaml` | `policy_bindings` | **신규** | 경로→프로파일 선언적 묶기 |
+| v0.4.2 | 환경변수 | `NUFI_DETECT_TIMEOUT_MS` | **신규** | 탐지 타임아웃 밀리초 (기본 5000, 초과 시 fail-closed 차단) |
+| v0.4.2 | 환경변수 | `NUFI_MAX_PROMPT_BYTES` | **신규** | 프롬프트 최대 크기 바이트 (기본 524288) |
+| v0.4.10 | CLI | `--tenant`, `--role`, `--all-tenants` | **제거** | RBAC/멀티테넌시 제거에 따라 삭제 |
+| v0.4.10 | CLI | `report sla` | **제거** | SLA 리포팅 서브커맨드 삭제 |
+
+> 기존 config 파일에 없는 신규 키는 **기본값으로 동작**합니다. 명시적으로 설정하지 않아도
+> 게이트웨이는 정상 기동됩니다.
+
+### 8.3 인플레이스 게이트웨이 업그레이드 절차
+
+소스 직접 실행(경로 A)·컨테이너(경로 B) 환경에서의 인플레이스(in-place) 업그레이드 절차입니다.
+
+#### 경로 A — 소스 직접 실행
+
+```bash
+# 1. 현재 버전 확인
+cat VERSION
+
+# 2. 소스 갱신
+git pull origin main          # 또는 릴리스 태그 checkout
+
+# 3. 의존성 갱신
+pip install -r requirements.txt
+
+# 4. 배선 자가진단
+nufi-egress doctor
+
+# 5. 정책 핫리로드 (재기동 불필요)
+nufi-egress policy apply      # 변경된 정책이 있을 경우
+```
+
+> 게이트웨이 프로세스 재기동이 필요한 경우(코어 코드 변경 시)는 `systemctl restart nufi-gateway`
+> 또는 프로세스를 다시 시작합니다. **정책·룰 변경만** 이면 핫리로드로 충분합니다.
+
+#### 경로 B — Docker Compose
+
+```bash
+# 1. 이미지 재빌드 + 롤링 재기동
+docker compose -f deploy/docker-compose.yml up -d --build
+
+# 2. 헬스체크
+curl -fsS http://localhost:4000/health
+
+# 3. 배선 확인
+docker compose -f deploy/docker-compose.yml exec gateway nufi-egress doctor
+```
+
+### 8.4 에어갭 번들 재생성 안내
+
+폐쇄망(에어갭) 환경은 **새 번들을 생성 → 물리 전송 → 로드**하는 흐름으로 업그레이드합니다.
+전체 절차의 권위는 [`../deploy/airgap/INSTALL.md`](../deploy/airgap/INSTALL.md) 입니다.
+
+```bash
+# (연결된 빌드 호스트) — 새 버전의 번들 재생성
+git pull origin main                         # 새 버전 소스 확보
+bash deploy/airgap/build-bundle.sh           # 경량 번들
+bash deploy/airgap/build-bundle.sh --heavy   # 무거운 NER 백엔드 포함 시
+
+# 산출물: dist/nufi-egress-audit-<tag>[-heavy]-airgap.tar.gz
+# USB/단방향 전송으로 에어갭 호스트에 전달
+
+# (에어갭 호스트) — 기존 컨테이너 정지 + 새 번들 로드 + 기동
+docker compose -f deploy/docker-compose.yml down
+tar -xzf nufi-egress-audit-<new-tag>-airgap.tar.gz -C nufi
+cd nufi && bash load-bundle.sh               # docker load + sha256 무결성 검증
+docker compose -f deploy/docker-compose.yml up -d
+curl -fsS http://localhost:4000/health       # 헬스체크
+```
+
+> `load-bundle.sh` 는 `MANIFEST.txt` 의 sha256 해시를 대조해 전송 중 변조를 검출합니다.
+> 검증 실패 시 스크립트가 중단되며 번들 재전송이 필요합니다.
+
+### 8.5 v0.3.x → v0.4.x 마이그레이션 노트
+
+v0.4.0 은 **두 가지 주요 변경**을 도입합니다: PII 기반 하이브리드 라우팅 추가와 운영 레이어
+(RBAC/멀티테넌시·SLA 리포팅) 제거.
+
+#### 추가된 것 — PII 라우팅
+
+`config/routing.yaml` 에 `pii_routing` 섹션이 추가됩니다. 기본값(`enabled: true`)으로 PII 가
+포함된 요청은 자동으로 로컬 모델로 전환됩니다. 기존 동작(egress 감사만)을 유지하려면:
+
+```yaml
+# config/routing.yaml 에 추가
+pii_routing:
+  enabled: false
+```
+
+#### 제거된 것 — RBAC/멀티테넌시 + SLA 리포팅
+
+v0.3.x 에서 사용하던 아래 기능이 **완전히 제거**되었습니다:
+
+| 제거 항목 | 영향 | 대응 |
+|---|---|---|
+| `--tenant` / `--role` / `--all-tenants` CLI 플래그 | CLI 호출에서 해당 플래그 사용 시 에러 | 스크립트·자동화에서 해당 플래그 제거 |
+| `report sla` 서브커맨드 | SLA 리포트 생성 불가 | 외부 모니터링 도구로 대체하거나 제거 |
+| `enforcement/access.py` (접근 제어 모듈) | 테넌트별 접근 분리 없음 | 단일 테넌트 운영 (네트워크/인프라 수준 분리 권장) |
+| `docs/MULTITENANCY.md` | 문서 삭제 | 해당 없음 |
+| 종료코드 3 (AccessDenied) | 더 이상 발생하지 않음 | 종료코드 3 을 처리하던 스크립트에서 분기 제거 |
+
+#### 마이그레이션 체크리스트
+
+```text
+□ config/routing.yaml 에 pii_routing 섹션 존재 확인 (없으면 기본값 적용됨)
+□ 자동화 스크립트에서 --tenant / --role / --all-tenants 플래그 제거
+□ report sla 호출부 제거 또는 대체
+□ 종료코드 3 분기 제거
+□ nufi-egress doctor 로 배선 확인
+□ (에어갭) 새 번들 생성 + 전송 + 로드
+```
+
+> 코어 기능(PII 탐지·가명화·감사 로그·정책 집행·컴플라이언스 매핑)은 **변경 없이 호환**됩니다.
+> config 파일 형식(`version: 1`)도 유지됩니다.
 
 ---
 
