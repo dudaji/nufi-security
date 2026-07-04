@@ -553,4 +553,16 @@ python3 scripts/demo_pii_routing.py    # 4 시나리오 PASS, LiteLLM 불필요
 
 ---
 
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`HANDS_ON.md`](HANDS_ON.md) | 입문 실습 — CLI 명령을 직접 실행해 보는 가이드 |
+| [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md) | LiteLLM·게이트웨이 배선 및 실서비스 통합 |
+| [`PRESETS.md`](PRESETS.md) | 정책 프리셋 — 차단/가명화 동작 diff |
+| [`OPS_RULE_RELOAD.md`](OPS_RULE_RELOAD.md) | 룰 핫리로드(무중단 적용) 운영 절차 |
+| [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) | 대규모 정책 운영 자동화 |
+| [`REPORTING.md`](REPORTING.md) | 한국 규제 5종 48개 통제 컴플라이언스 리포트 |
+| [`DEMO.md`](DEMO.md) | 전체 기능 데모 카탈로그 |
+
 *작성: 2026-06-28 — v0.0.2 기준. 통합 CLI(`enforcement/cli.py`) 표면을 `--help` 실측으로 기술. 단독 진입점(`enforcement.doctor`·`egress_audit.init_cli`)은 동치로 병기. v0.4.9 — PII 라우팅 설정 섹션 추가. v0.4.11 — RBAC/멀티테넌시·SLA 리포팅 제거. v0.4.16 — KR_PERSON recall 0.9799, CI 하한 0.9591.*

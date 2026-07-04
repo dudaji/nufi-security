@@ -795,3 +795,17 @@ findings=`logs/audit_findings.jsonl` · flow 캡처=`logs/packets/…` · enforc
 - **규정준수 리포팅** — 한국 규제 5종 48개 통제 증빙 출력: [`REPORTING.md`](REPORTING.md)
 
 > 막히면 `nufi-egress doctor` 부터. 5체크가 무엇이 안 물렸는지(config/도달성/게이트웨이/우회/카나리) 짚어 줍니다.
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md) | 실서비스 배선 — LiteLLM Proxy·게이트웨이 배포 상세 |
+| [`PRESETS.md`](PRESETS.md) | 정책 프리셋 — 차단/가명화 동작 diff·fail-closed 보증 |
+| [`CLI.md`](CLI.md) | 모든 서브커맨드 플래그·종료코드 레퍼런스 |
+| [`SDK.md`](SDK.md) | Python SDK API — `detect`·`Guard`·`scan_file`·`compliance_report` |
+| [`REPORTING.md`](REPORTING.md) | 한국 규제 5종 48개 통제 컴플라이언스 리포트 출력 |
+| [`DEMO.md`](DEMO.md) | 전체 기능 데모 카탈로그·1-명령 PASS/FAIL |
+| [`examples/README.md`](../examples/README.md) | Python SDK 예시 7종 인덱스 |
