@@ -264,3 +264,16 @@ all_findings = batch_detect(["텍스트1", "텍스트2", "텍스트3"])
 - **OKR 연결:** 본 SDK 표면 → 회사 Objective/KR 매핑(goalId)은 리더십 정합 필요.
 - **버전 라인:** v0.1.0 포함 여부·릴리스 시점은 보드 명령 사항(예약 매터).
 - **고급 계층 정리:** advanced 로 분류한 심볼의 장기 폐기 여부는 차기 결정.
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`examples/README.md`](../examples/README.md) | 독립 실행 예시 7종 인덱스 — 각 API 의 실행 가능한 코드 |
+| [`HANDS_ON.md`](HANDS_ON.md) | Part G·H·I·J — SDK 실습(탐지·가명화·편의함수·벤치마크) |
+| [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md) | 경로 D: Python SDK 직접 임포트로 통합하는 절차 |
+| [`REPORTING.md`](REPORTING.md) | §4 Python SDK API: `compliance_report`·`render_report`·`load_catalog` |
+| [`PII_ROUTING.md`](PII_ROUTING.md) | PII 기반 라우팅 — `PiiRouter`·`DEFAULT_COST_TABLE` (advanced 심볼) |
+| [`CLI.md`](CLI.md) | §3 CLI ↔ SDK 동등 명령 (nufi-egress 서브커맨드 전체 레퍼런스) |
