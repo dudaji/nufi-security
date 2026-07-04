@@ -4,6 +4,30 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch01)
+
+> **v0.4.16-patch01 — 문서 보강 + examples 스모크 테스트 (303건)**
+> v0.4.16 릴리스 직후 문서 정합성·풍부도 보강 패치. VERSION 변경 없음(라이브러리 API 미변경).
+
+### Added
+- **examples 스모크 테스트 (test_examples_smoke.py)** — `library_detect.py`·`sdk_quickstart.py`·`sdk_block_and_audit.py` exit 0·출력 검증. 전체 테스트 300→303건.
+- **README 클래스별 재현율 표** — 12개 엔터티 전부 Wilson CI95 하한 포함 (v0.4.16, n=854).
+- **RELEASE_NOTES v0.4.16 클래스별 재현율 표** — 동일 내용 릴리스 노트에 추가.
+- **RELEASE_CHECKLIST 적용 현황** — v0.4.1~v0.4.16 릴리스 이력 표 추가.
+
+### Changed
+- **ROADMAP** — P0(v0.4.16)·P2(v0.4.1) 완료 ✅ 표기.
+- **docs/README.md 진척 한눈에** — Python SDK·골드셋·테스트 수 v0.4.16 현행화.
+- **SDK.md** — 정확도 게이트 CI 하한 0.85→0.93 갱신.
+- **HANDS_ON.md** — 테스트 수 300→303 갱신, examples 스모크 테스트 그룹 추가.
+- **MANUAL.md** — library_detect.py 직접 링크 추가.
+- **README.md** — library_detect.py 직접 링크 추가.
+- **kr-location-union.json** — v0.4.16 live onnx-int8 측정값으로 갱신 (n=62).
+
+### Fixed (문서 정합)
+- **accuracy-integrity-audit.md** — 역사적 문서 헤더 + v0.4.16 현행 포인터 추가.
+- **kr-location-error-analysis.md** — 역사적 문서 헤더 + P2/P3 완료 포인터 추가.
+
 ## [0.4.16] - 2026-07-04
 
 > **v0.4.16 릴리스 — 골드셋 UNLISTED_SURNAMES 재설계 + person_recall 0.9799 (CMP-268)**
