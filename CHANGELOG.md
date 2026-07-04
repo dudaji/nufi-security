@@ -4,6 +4,24 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04
+
+> **v0.4.16 릴리스 — 골드셋 UNLISTED_SURNAMES 재설계 + person_recall 0.9799 (CMP-268)**
+> CMP-267 합성 음절 UNLISTED_SURNAMES → ONNX 탐지 실증 성씨로 전면 교체.
+> zz_kr_person_ci_expand(150행) + 컨텍스트 님 보완으로 CI 게이트 통과 복원.
+
+### Fixed
+- **UNLISTED_SURNAMES 재설계 (CMP-268)** — CMP-267 합성 음절(곤·랑·덕 등)이
+  ONNX NER 미탐지 → person_recall 0.97→0.67 급락. 실증 탐지 성씨(목·요·예·재 등
+  단성 9 + 복성 14)로 전면 교체. 컨텍스트 3종에 님 추가(수신자/담당자/예금주).
+- **zz_kr_person_ci_expand 복원** — 150행 추가로 n 258→854, CI 하한 0.9591 달성.
+- **벤치마크 갱신** — n=854, pii_recall=0.9908, person_recall=0.9799,
+  person_recall_ci_low=0.9591, span_precision=0.9066, acceptance_pass=True.
+- **README·docs 정확도 수치 갱신** — span precision 1.000→0.9066 반영.
+
+### Changed
+- **VERSION** — `0.4.15` → `0.4.16`.
+
 ## [0.4.15] - 2026-07-04
 
 > **v0.4.15 릴리스 — 테스트 전면 통과 + 골드셋 미수록 성씨 정합 (CMP-267)**
