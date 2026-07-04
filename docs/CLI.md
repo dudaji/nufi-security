@@ -539,6 +539,16 @@ python3 scripts/demo_pii_routing.py    # 4 시나리오 PASS, LiteLLM 불필요
 | `./scripts/demo_audit_separation.sh` | 차등 감사 통합 데모(6시나리오, root 불필요) | [`DEMO.md`](DEMO.md) |
 | `./scripts/demo_all.sh` | 전체 기능 데모 러너 — 집계 PASS/FAIL | [`DEMO.md`](DEMO.md) |
 
+**Python SDK 예시 스크립트** (게이트웨이 없이 바로 실행):
+
+| 명령 | 무엇 | 주요 API |
+|---|---|---|
+| `EGRESS_NER_BACKEND=gazetteer python3 examples/library_detect.py` | 탐지·가명화·Guard·batch_detect 기본 | `detect`, `Guard`, `pseudonymize` |
+| `EGRESS_NER_BACKEND=gazetteer python3 examples/sdk_file_scan.py` | 파일 단위 PII 탐지·정책 평가 | `scan_file`, `guard_file`, `batch_detect` |
+| `EGRESS_NER_BACKEND=gazetteer python3 examples/sdk_compliance_report.py` | 한국 규제 5종 통제 커버리지 출력 | `compliance_report`, `render_report` |
+
+전체 예시 목록: [`examples/README.md`](../examples/README.md).
+
 > 레거시 모듈 진입점(`python3 -m capture.targets`·`python3 -m capture.flow_tap`·`python3 -m egress_audit.audit_bot`)은 하위호환으로 유지되나, 신규 사용은 위 통합 CLI 서브커맨드(`targets`·`flow-tap`·`audit`)를 권장합니다.
 
 ---
