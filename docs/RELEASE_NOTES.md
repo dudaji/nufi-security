@@ -51,7 +51,7 @@
 ### 참고
 - 성능 측정: `docs/reports/recall-int8.json`
 - 골드셋 정합 검증: `python3 goldset/generate.py --verify`
-- 전체 테스트: `pytest` — 301 passed (v0.4.16 + examples 스모크 테스트)
+- 전체 테스트: `pytest` — 303 passed (v0.4.16 + examples/ 스모크 테스트 3건)
 
 ---
 
