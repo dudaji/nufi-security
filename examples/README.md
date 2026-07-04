@@ -38,3 +38,14 @@ EGRESS_NER_BACKEND=gazetteer python3 -m pytest tests/test_examples_smoke.py -v
 
 `gazetteer` 백엔드로 실행하면 외부 네트워크·모델 파일 없이 모든 예시가 실행됩니다.
 프로덕션 정확도(pii_recall 0.9908, person_recall 0.9799)는 `onnx-int8` 백엔드에서 달성됩니다.
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`docs/SDK.md`](../docs/SDK.md) | SDK 전체 API 표면·안정성 계층·CLI↔SDK 동등 매핑 |
+| [`docs/HANDS_ON.md`](../docs/HANDS_ON.md) | Part G·I — 예시를 실습 맥락에서 정주행 |
+| [`docs/REPORTING.md`](../docs/REPORTING.md) | `sdk_compliance_report.py` 배경: 컴플라이언스 리포팅 API |
+| [`docs/DEMO.md`](../docs/DEMO.md) | 셸 데모(`scripts/demo_*.sh`) 카탈로그 — 예시와 달리 서버 경유 시나리오 |
