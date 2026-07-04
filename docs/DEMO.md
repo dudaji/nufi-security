@@ -41,6 +41,27 @@ python3 -m pip install -r requirements.txt   # PyYAML·fastapi·uvicorn·httpx
 > 있을 때 호출하는 하위 데모다. 권한이 없으면 차등 감사 데모가 정직하게 SIMULATED 로
 > 폴백하므로, 일반 실행에는 추가 권한이 필요 없다.
 
+## Python SDK 예시 (`examples/`)
+
+셸 데모(`scripts/demo_*.sh`)와 달리, `examples/` 는 **Python 코드 안에서 SDK 를 직접
+임포트해 쓰는 방법**을 보여주는 독립 실행 스크립트다. `test_examples_smoke.py` 가 전체를
+자동 검증한다(스모크 7종).
+
+| 파일 | 목적 |
+|---|---|
+| [`library_detect.py`](../examples/library_detect.py) | `detect`·`Detector`·`pseudonymize`·`mask`·`Guard`·`batch_detect` 기본 사용 |
+| [`sdk_quickstart.py`](../examples/sdk_quickstart.py) | `NuFi()` 한 줄로 OpenAI 호출을 NuFi 경유로 전환 |
+| [`sdk_block_and_audit.py`](../examples/sdk_block_and_audit.py) | 민감정보 요청 차단(403) + 감사 레코드 검증 |
+| [`sdk_reversible_roundtrip.py`](../examples/sdk_reversible_roundtrip.py) | 가역 가명화 — 원문→가명→복원 라운드트립 |
+| [`sdk_streaming.py`](../examples/sdk_streaming.py) | 스트리밍 응답 경유 |
+| [`sdk_file_scan.py`](../examples/sdk_file_scan.py) | `scan_file`·`guard_file`·`batch_detect` 파일 단위 탐지·평가 |
+| [`sdk_compliance_report.py`](../examples/sdk_compliance_report.py) | `compliance_report`·`render_report`·`load_catalog` — 한국 규제 5종 통제 커버리지 출력 |
+
+```bash
+# 전체 예시 한 번에 검증 (스모크)
+EGRESS_NER_BACKEND=gazetteer python3 -m pytest tests/test_examples_smoke.py -v
+```
+
 ---
 
 ## 부록 — 게이트웨이 e2e 상세(`demo.sh`)
