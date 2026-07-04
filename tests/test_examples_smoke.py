@@ -4,6 +4,8 @@
   1. examples/library_detect.py — 오류 없이 실행 완료 (exit 0), KR_RRN·KR_PERSON 탐지.
   2. examples/sdk_quickstart.py — 오류 없이 실행 완료 (exit 0).
   3. examples/sdk_block_and_audit.py — 오류 없이 실행 완료 (exit 0), 403 차단 확인.
+  4. examples/sdk_reversible_roundtrip.py — 오류 없이 실행 완료 (exit 0), 가역 라운드트립 확인.
+  5. examples/sdk_streaming.py — 오류 없이 실행 완료 (exit 0).
 
 실행: python3 tests/test_examples_smoke.py  (FAIL → exit 1)
 """
@@ -84,6 +86,28 @@ if proc3.returncode == 0:
         "stdout에 차단 신호 없음" if ("403" not in proc3.stdout and "차단" not in proc3.stdout) else "",
     )
 
+# 4. sdk_reversible_roundtrip.py
+proc4 = _run_example("sdk_reversible_roundtrip.py")
+check(
+    "sdk_reversible_roundtrip.py exit 0",
+    proc4.returncode == 0,
+    f"rc={proc4.returncode}" + (f" stderr={proc4.stderr[:200]}" if proc4.returncode != 0 else ""),
+)
+if proc4.returncode == 0:
+    check(
+        "sdk_reversible_roundtrip.py 라운드트립 확인",
+        "OK" in proc4.stdout or "라운드트립" in proc4.stdout,
+        "stdout에 OK 없음" if ("OK" not in proc4.stdout and "라운드트립" not in proc4.stdout) else "",
+    )
+
+# 5. sdk_streaming.py
+proc5 = _run_example("sdk_streaming.py")
+check(
+    "sdk_streaming.py exit 0",
+    proc5.returncode == 0,
+    f"rc={proc5.returncode}" + (f" stderr={proc5.stderr[:200]}" if proc5.returncode != 0 else ""),
+)
+
 # 결과 집계
 print()
 passed = sum(1 for _, ok, _ in results if ok)
@@ -135,3 +159,28 @@ def test_sdk_block_and_audit_runs():
     )
     assert result.returncode == 0, f"exit {result.returncode}: {result.stderr[:300]}"
     assert "403" in result.stdout or "차단" in result.stdout
+
+
+def test_sdk_reversible_roundtrip_runs():
+    """examples/sdk_reversible_roundtrip.py 가 오류 없이 실행되고 가역 라운드트립을 확인."""
+    env = {**_os.environ, "EGRESS_NER_BACKEND": "gazetteer"}
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "examples" / "sdk_reversible_roundtrip.py")],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert result.returncode == 0, f"exit {result.returncode}: {result.stderr[:300]}"
+    assert "OK" in result.stdout or "라운드트립" in result.stdout
+
+
+def test_sdk_streaming_runs():
+    """examples/sdk_streaming.py 가 오류 없이 실행되는지 검증."""
+    env = {**_os.environ, "EGRESS_NER_BACKEND": "gazetteer"}
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "examples" / "sdk_streaming.py")],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert result.returncode == 0, f"exit {result.returncode}: {result.stderr[:300]}"
