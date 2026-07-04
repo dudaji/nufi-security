@@ -169,8 +169,8 @@ quality = run_pseudonymize_benchmark()    # {scores, acceptance, acceptance_pass
 
 - `run_benchmarks(only=None)` = 정확도(`evaluate_accuracy_gate`) + 가명화
   (`run_pseudonymize_benchmark`) 통합 리포트. `overall_pass` 는 CLI 종료코드(0/1)와 동치.
-- **정확도 게이트**: KR_PERSON Wilson CI 하한 ≥ 0.85, 온프렘 p95(c≤2) ≤ 목표. I1 공개
-  골드셋 baseline 은 정보성(게이트 미산입). 산출물 누락 시 해당 게이트 fail + `missing` 기록.
+- **정확도 게이트**: KR_PERSON Wilson CI 하한 ≥ 0.93(v0.4.16: 0.9591 ✅), 온프렘 p95(c≤2) ≤ 목표.
+  I1 공개 골드셋 baseline 은 정보성(게이트 미산입). 산출물 누락 시 해당 게이트 fail + `missing` 기록.
 - **주소(KR_LOCATION, v0.2.0)**: 규칙 확장 + 모델∪규칙 유니온으로 재현율 **1.0**
   (Wilson CI 하한 **0.9417** test · 0.9124 dev), 무해 입력 오탐 0, 전체 PII 정밀도 ~0.99.
   유니온 확인 도구 `scripts/union_check.py --mode location`.
