@@ -4,6 +4,14 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch50)
+
+> **v0.4.16-patch50 — REPORTING §5 감사관 제출 치트시트 추가**
+> 한국 규제 감사(금융보안원·금융위원회·개인정보보호위원회·과기부) 대응 시 표준 CLI 흐름과 규제별 프레임워크 대응표 추가. 무결성 게이트 실패 대응 지침 명시. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/REPORTING.md** — §5 신설(감사관 제출 치트시트): 5-단계 CLI 흐름, Python 커버리지 요약 스니펫, 규제별 `--framework` 인자 대응표(6행).
+
 ## [0.4.16] - 2026-07-04 (patch49)
 
 > **v0.4.16-patch49 — MANUAL §3 감사 로그 JSONL 레코드 스키마 문서화**

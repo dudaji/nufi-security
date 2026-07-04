@@ -6,7 +6,7 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch49) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.16 패치 시리즈 (patch01~patch50) — **문서 풍부화 + SDK 사용성 개선**
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
@@ -75,7 +75,9 @@
 
 - **MANUAL §3 감사 로그 JSONL 스키마(patch49)** — `logs/egress_audit.jsonl` 레코드 필드 표(12개 필드)와 실제 JSON 예시 추가. 원문 PII 마스킹 방식(`len=...:sha256=...`) 명시.
 
-기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch49 절.
+- **REPORTING §5 감사관 제출 치트시트(patch50)** — 한국 규제 감사(금융보안원·금융위원회·개인정보보호위원회·과기부·KISA) 대응 시 표준 5단계 CLI 흐름과 규제별 `--framework` 대응표 추가.
+
+기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch50 절.
 
 ---
 
