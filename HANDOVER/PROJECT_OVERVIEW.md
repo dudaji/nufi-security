@@ -33,7 +33,7 @@
 
 ## 2. 현재 상태 (한눈에)
 
-- **버전:** `VERSION` 파일 = **v0.4.16** · 패치: v0.4.16-patch01 (2026-07-04 릴리스).
+- **버전:** `VERSION` 파일 = **v0.4.16** · 패치: v0.4.16-patch04 (2026-07-04 릴리스).
 - **성격:** 동작하는 제품. 게이트웨이·탐지·가명화·기밀 탐지·우회 차단·비동기 감사·
   Python SDK·PII 기반 하이브리드 LLM 라우팅·한국 규제 증빙 48개 통제까지 동작.
 - **핵심 정확도 수치(v0.4.16, onnx-int8, test n=854):**
@@ -46,7 +46,7 @@
   - (수치의 권위는 `docs/reports/recall-int8.json`. 자세한 버전별 상태는 [`PROJECT_STATE.md`](PROJECT_STATE.md).)
 - **테스트:** 307 passed · **데모:** 11/11 PASS (demo_all.sh)
 - **Python SDK:** `from nufi import detect, Guard, pseudonymize` — 게이트웨이 없이 코드에서
-  직접 임포트. 편의 함수: `scan_file`·`guard_file`·`batch_detect`. 예시: `examples/library_detect.py`.
+  직접 임포트. 편의 함수: `scan_file`·`guard_file`·`batch_detect`. 예시: `examples/library_detect.py`·`examples/sdk_file_scan.py`·`examples/sdk_compliance_report.py`.
   설계: [`../docs/SDK.md`](../docs/SDK.md).
 - **PII 라우팅:** PII 포함 요청 → 로컬 모델 강제, PII 없음 → 클라우드 허용.
   설정: [`../docs/PII_ROUTING.md`](../docs/PII_ROUTING.md).
