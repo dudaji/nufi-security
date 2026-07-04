@@ -4,6 +4,16 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch07)
+
+> **v0.4.16-patch07 — HANDOVER 현행화 (patch06 기준)**
+> PROJECT_STATE.md 버전 이력에 patch05·patch06 항목 추가, patch05~patch06 갭 점검 결과 기록.
+> PROJECT_OVERVIEW.md 패치 번호 patch04→patch06 정정. VERSION 변경 없음.
+
+### Changed
+- **HANDOVER/PROJECT_STATE.md** — 대상 버전 patch04→patch06, 버전 이력 표에 patch05·patch06 행 추가, §4 갭 점검 결과에 patch05~patch06 보강 항목 8건 기록.
+- **HANDOVER/PROJECT_OVERVIEW.md** — 현재 패치 번호 patch04→patch06 정정.
+
 ## [0.4.16] - 2026-07-04 (patch06)
 
 > **v0.4.16-patch06 — Finding.__repr__ 개선 + examples/README.md**
