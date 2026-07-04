@@ -33,18 +33,21 @@
 
 ## 2. 현재 상태 (한눈에)
 
-- **버전:** `VERSION` 파일 = **v0.4.6** (2026-07-03 릴리스).
+- **버전:** `VERSION` 파일 = **v0.4.16** · 패치: v0.4.16-patch01 (2026-07-04 릴리스).
 - **성격:** 동작하는 제품. 게이트웨이·탐지·가명화·기밀 탐지·우회 차단·비동기 감사·
   Python SDK·PII 기반 하이브리드 LLM 라우팅·한국 규제 증빙 48개 통제까지 동작.
-- **핵심 정확도 수치(공개 헤드라인):**
-  - 한국어 개인정보 재현율(recall, 전체) **0.977** (신뢰구간 0.9569–0.9879) — 목표 ≥0.90 ✅
-  - 인명(KR_PERSON) 재현율 **0.9516** (Wilson 신뢰구간 하한 0.9106) — 목표 ≥0.90 ✅
+- **핵심 정확도 수치(v0.4.16, onnx-int8, test n=854):**
+  - 한국어 개인정보 재현율(recall, 전체) **0.9908** [신뢰구간 0.9812–0.9956] — 목표 ≥0.90 ✅
+  - 인명(KR_PERSON) 재현율 **0.9799** (Wilson 신뢰구간 하한 **0.9591**) — 목표 ≥0.93 ✅
   - 주소(KR_LOCATION) 재현율 **1.000** (Wilson 신뢰구간 하한 0.9417) — 목표 ≥0.90 ✅
-  - 정밀도(precision) **0.9948**
+  - **12개 엔터티 클래스 전부 Wilson CI95 하한 ≥ 0.90** ✅
   - 인라인 지연(p95, 512자, CPU) **41 ms** — 목표 ≤150ms ✅
-  - (수치의 권위는 `docs/reports/*.json`. 자세한 버전별 상태는 [`PROJECT_STATE.md`](PROJECT_STATE.md).)
+  - benign_false_block = **0.0** (0/90)
+  - (수치의 권위는 `docs/reports/recall-int8.json`. 자세한 버전별 상태는 [`PROJECT_STATE.md`](PROJECT_STATE.md).)
+- **테스트:** 305 passed · **데모:** 11/11 PASS (demo_all.sh)
 - **Python SDK:** `from nufi import detect, Guard, pseudonymize` — 게이트웨이 없이 코드에서
-  직접 임포트. 편의 함수: `scan_file`·`guard_file`·`batch_detect`. 설계: [`../docs/SDK.md`](../docs/SDK.md).
+  직접 임포트. 편의 함수: `scan_file`·`guard_file`·`batch_detect`. 예시: `examples/library_detect.py`.
+  설계: [`../docs/SDK.md`](../docs/SDK.md).
 - **PII 라우팅:** PII 포함 요청 → 로컬 모델 강제, PII 없음 → 클라우드 허용.
   설정: [`../docs/PII_ROUTING.md`](../docs/PII_ROUTING.md).
 
