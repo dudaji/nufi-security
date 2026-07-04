@@ -676,6 +676,67 @@ for i, findings in enumerate(all_findings):
 
 ---
 
+## 7e. Part J — 정확도 벤치마크 직접 확인 *(v0.4.16 기준)*
+
+NuFi 가 인용하는 재현율(recall) 수치를 직접 재현하고 싶을 때 사용합니다.
+
+### 골드셋 정합 검증 (해시 체크, ~1초)
+
+커밋된 골드셋이 `generate.py` 로 재생성한 것과 정확히 일치하는지 확인합니다.
+
+```bash
+python3 goldset/generate.py --verify
+# → VERIFY OK  content_hash=<해시>  (불일치 시 MISMATCH 출력)
+```
+
+### 단위 테스트 + 문서 정합 (300개, ~30초)
+
+```bash
+python3 -m pytest tests/ -q
+# → 300 passed, 1 warning
+```
+
+주요 테스트 그룹:
+
+| 테스트 파일 | 검증 내용 |
+|------------|----------|
+| `test_goldset_invariants.py` | 골드셋 불변 조건 (미수록 성씨 누수·비율·해시) |
+| `test_cmp145_int8_consistency.py` | ONNX-int8 재현율 수용 기준 (CI 하한 0.93+) |
+| `test_repo_docs_are_consistent.py` | README·보고서 수치가 recall-int8.json 과 일치 |
+| `test_doc_style_guard.py` | 공개 문서 스타일 가드 |
+
+### 전체 벤치마크 재실행 (ONNX 백엔드, ~5분)
+
+```bash
+python3 scripts/bench_m5.py \
+    --backend onnx-int8 --person-union --location-union \
+    --split test --json-out docs/reports/recall-int8.json
+```
+
+**v0.4.16 기대 결과:**
+
+| 지표 | 수치 | 수용 기준 |
+|------|------|----------|
+| `pii_recall` | 0.9908 | ≥ 0.90 ✅ |
+| `person_recall` | 0.9799 | ≥ 0.85 ✅ |
+| `person_recall_ci_low` | 0.9591 | ≥ 0.93 ✅ |
+| `location_recall` | 1.0 | ≥ 0.85 ✅ |
+| `secret_recall` | 1.0 | ≥ 0.90 ✅ |
+| `benign_false_block` | 0.0 | ≤ 0.02 ✅ |
+| `acceptance_pass` | true | — |
+
+결과 권위 파일: `docs/reports/recall-int8.json`
+
+### 가명화 품질 벤치마크 (~30초)
+
+```bash
+python3 scripts/bench_pseudonymize.py \
+    --json-out docs/reports/pseudonymize-quality.json
+# → acceptance_pass: true
+```
+
+---
+
 ## 8. 정리 — 치트시트 & 다음 단계
 
 여기까지 했으면 여러분은 **앱(SDK) + 운영(CLI)** 양쪽을 다 손에 익혔습니다.
