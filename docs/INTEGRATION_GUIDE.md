@@ -412,5 +412,18 @@ nufi-egress audit query
 
 ---
 
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`PRESETS.md`](PRESETS.md) | 프리셋 선택 상세 비교(strict-kr-pii·audit-only·pseudonymize-roundtrip) |
+| [`CLI.md`](CLI.md) | `nufi-egress` 전체 서브커맨드 플래그·종료코드 레퍼런스 |
+| [`SDK.md`](SDK.md) | 경로 D Python SDK 직접 임포트 — API 전체 표면·안정성 계층 |
+| [`HANDS_ON.md`](HANDS_ON.md) | 토이 프로젝트 실습 정주행 — 배선·SDK·CLI 실제 손에 익히기 |
+| [`PII_ROUTING.md`](PII_ROUTING.md) | PII 기반 라우팅 Phase 1 — 로컬/클라우드 자동 분배 |
+| [`OPS_RULE_RELOAD.md`](OPS_RULE_RELOAD.md) | 통합 후 YAML 룰 무재기동 갱신 절차 |
+
 *최초 작성: 2026-06-28 — v0.0.2 기준. SDK·doctor·프리셋·배포 기능 위에 작성. 모든 명령/스니펫은 실제 실행·소스 대조로 확인.*
 *개정: 2026-06-28 — (1) 멀티-프로바이더(Claude/Anthropic·OpenAI·Google·Azure) 명시(routing.yaml·litellm_config.yaml 대조), (2) 운영 명령을 설치형 통합 CLI `nufi-egress <sub>` 리드로 전환(§4 `audit query` 포함) — 전 명령 실행 확인, 비설치 동등 실행법은 §2·CLI.md.*
