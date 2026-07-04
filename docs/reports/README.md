@@ -43,3 +43,14 @@
 | 12개 클래스 전부 CI95 하한 | **≥ 0.90** ✅ |
 | benign_false_block | **0.0** |
 | 온프렘 지연 p95 (512자, c=1) | **41 ms** |
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`../REPORTING.md`](../REPORTING.md) | 컴플라이언스 매핑 리포트 API — 이 보고서들을 증빙으로 연결하는 방법 |
+| [`../HANDS_ON.md`](../HANDS_ON.md) | Part J — 정확도 벤치마크를 직접 재현하는 실습 |
+| [`../SDK.md`](../SDK.md) | `compliance_report`·`load_catalog` API로 수치를 코드에서 접근 |
+| [`../../samples/gold/README.md`](../../samples/gold/README.md) | 골드셋 포맷·로드·필터링 — 보고서 수치의 입력 데이터 |
