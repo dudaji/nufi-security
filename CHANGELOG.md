@@ -4,6 +4,14 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch44)
+
+> **v0.4.16-patch44 — SDK.md Finding 객체 필드 상세 표 추가**
+> Finding dataclass 의 7개 필드(entity_type·text·start·end·score·source·context)를 표로 문서화. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/SDK.md** — §2.2 `Finding` 객체에 필드 상세 표(타입·설명) 추가.
+
 ## [0.4.16] - 2026-07-04 (patch43)
 
 > **v0.4.16-patch43 — MANUAL.md §3 탐지 대상 PII 클래스 12종 표 추가**

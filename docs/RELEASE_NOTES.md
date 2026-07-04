@@ -6,7 +6,7 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch43) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.16 패치 시리즈 (patch01~patch44) — **문서 풍부화 + SDK 사용성 개선**
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
@@ -50,7 +50,9 @@
 
 - **MANUAL §3 PII 클래스 12종 표(patch43)** — 매뉴얼 §3 핵심 개념에 탐지 대상 PII 클래스 전체 목록(클래스명·설명·탐지 방식·강한/약한 구분) 추가.
 
-기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch43 절.
+- **SDK Finding 필드 상세 표(patch44)** — `docs/SDK.md` §2.2 에 `Finding` dataclass 7개 필드(entity_type·text·start·end·score·source·context) 타입·설명 표 추가.
+
+기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch44 절.
 
 ---
 
