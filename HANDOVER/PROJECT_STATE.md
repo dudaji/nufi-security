@@ -3,7 +3,7 @@
 > 이어받는 사람/AI가 "무엇이 되어 있고, 무엇이 남았고, 어디를 조심해야 하나"를 파악하도록
 > 정리했습니다. 수치의 권위는 `docs/reports/*.json`, 변경 이력의 권위는 `CHANGELOG.md` 입니다.
 
-*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch32 (main, origin 동기화됨)*
+*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch34 (main, origin 동기화됨)*
 
 ---
 
@@ -11,6 +11,8 @@
 
 | 버전 | 테마 | 핵심 내용 |
 |---|---|---|
+| **v0.4.16-patch34** | CHANGELOG·HANDOVER 현행화 | patch33~34 이력 기록, RELEASE_NOTES 확장 |
+| **v0.4.16-patch33** | research/ 전략 문서 관련 문서 | FSEC·SOLUTION_FOCUS·CHARTER 관련 문서 표 신설 |
 | **v0.4.16-patch32** | CHANGELOG·HANDOVER 현행화 | patch30~32 이력 기록, RELEASE_NOTES 확장 |
 | **v0.4.16-patch31** | goldset README 관련 문서 | reports/README·HANDS_ON·kr-person-error-analysis 교차링크 |
 | **v0.4.16-patch30** | nufi_client README 보강 | 통합 가이드 링크 확정, SDK·INTEGRATION_GUIDE·examples 교차링크 |

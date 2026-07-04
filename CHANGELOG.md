@@ -4,6 +4,28 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch34)
+
+> **v0.4.16-patch34 — CHANGELOG·RELEASE_NOTES·HANDOVER patch34 기준 현행화**
+> patch33 항목 추가. RELEASE_NOTES·HANDOVER patch34 갱신. VERSION 변경 없음.
+
+### Changed (문서)
+- **CHANGELOG.md** — patch33 항목 추가.
+- **docs/RELEASE_NOTES.md** — 패치 시리즈 patch34로 확장.
+- **HANDOVER/PROJECT_STATE.md** — patch33~34 버전 이력 추가, 대상 patch34.
+- **HANDOVER/PROJECT_OVERVIEW.md** — 패치 번호 patch32→patch34.
+- **HANDOVER/README.md** — 대상 버전 patch32→patch34.
+
+## [0.4.16] - 2026-07-04 (patch33)
+
+> **v0.4.16-patch33 — research/ 문서 3종 관련 문서 섹션 신설**
+> FSEC_AI_GUIDE·SOLUTION_FOCUS_OPTIONS·NUFI_SECURITY_PLANE_CHARTER 교차링크. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/research/FSEC_AI_GUIDE_2026.md** — 관련 문서 표 신설: REPORTING·ROADMAP·NUFI_SECURITY_PLANE_CHARTER 3종.
+- **docs/research/SOLUTION_FOCUS_OPTIONS.md** — 관련 문서 표 신설: ROADMAP·NUFI_SECURITY_PLANE_CHARTER·FSEC_AI_GUIDE_2026 3종.
+- **docs/research/NUFI_SECURITY_PLANE_CHARTER.md** — 관련 문서 표 신설: ROADMAP·ARCHITECTURE·REPORTING·SOLUTION_FOCUS_OPTIONS 4종.
+
 ## [0.4.16] - 2026-07-04 (patch32)
 
 > **v0.4.16-patch32 — CHANGELOG·RELEASE_NOTES·HANDOVER patch32 기준 현행화**
