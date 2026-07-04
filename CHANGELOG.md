@@ -4,6 +4,21 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch12)
+
+> **v0.4.16-patch12 — 문서 풍부화 4차 (HANDOVER·RELEASE_NOTES·research 인덱스·ARCHITECTURE 갱신)**
+> HANDOVER docs: README 버전 갱신, PROJECT_STATE patch10 기준·버전 이력 7항목. RELEASE_NOTES 패치 시리즈 patch11로 확장. docs/README research/ 섹션 신설. ARCHITECTURE.md 갱신 이력 주석 보강. VERSION 변경 없음.
+
+### Changed / Added (모두 문서)
+- **HANDOVER/README.md** — 버전 표기 v0.2.2→v0.4.16-patch10.
+- **HANDOVER/PROJECT_STATE.md** — 대상 patch10, 버전 이력 patch07~10 행 추가.
+- **HANDOVER/PROJECT_OVERVIEW.md** — 패치 번호 patch06→patch10.
+- **docs/RELEASE_NOTES.md** — 패치 시리즈 patch08→patch11, 내용 상세화.
+- **docs/README.md** — research/ 조사·전략 문서 섹션 신설 (FSEC·CHARTER·SOLUTION_FOCUS).
+- **docs/ARCHITECTURE.md** — §8 갱신 이력 주석 보강.
+- **docs/HANDS_ON.md** — Part I에 sdk_file_scan.py 링크 추가. 다음 단계에 REPORTING.md 링크.
+- **tests/test_examples_smoke.py** — 도큐스트링 7종으로 업데이트.
+
 ## [0.4.16] - 2026-07-04 (patch10)
 
 > **v0.4.16-patch10 — 문서 풍부화 3차 (REPORTING·ARCHITECTURE·test docstring)**
