@@ -116,3 +116,13 @@ print(manifest["content_hash"])   # SHA-256 (재현 일치 검증용)
 NuFi Korean PII Gold Evaluation Set (synthetic), Dudaji/NuFi, 2026. CC0-1.0.
 seed=20260625, manifest content_hash 로 버전 고정.
 ```
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`docs/reports/README.md`](../../docs/reports/README.md) | 정확도 보고서 인덱스 — recall-int8.json 등 측정 결과 권위 |
+| [`docs/HANDS_ON.md`](../../docs/HANDS_ON.md) | Part J — 골드셋 검증·벤치마크 재실행 실습 |
+| [`docs/reports/kr-person-error-analysis.md`](../../docs/reports/kr-person-error-analysis.md) | KR_PERSON FN 분석 + v0.4.16 잔여 FN §7.6 |
