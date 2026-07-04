@@ -674,6 +674,7 @@ for i, findings in enumerate(all_findings):
 ```
 
 데모: `./scripts/demo_sdk_helpers.sh` (5/5 PASS). API 문서는 [`SDK.md`](SDK.md) §2.7 참고.
+독립 실행 예시: [`examples/sdk_file_scan.py`](../examples/sdk_file_scan.py).
 
 ---
 
