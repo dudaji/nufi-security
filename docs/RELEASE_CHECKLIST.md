@@ -63,6 +63,14 @@
 | v0.0.4 | Adopt 패치(설치형 패키징·통합 CLI·입문) | `demo.sh`(13/13)·`HANDS_ON.md` | `CLI.md`·`HANDS_ON.md` | ✅ | ✅ tag `v0.0.4` origin(`c4e822e`) |
 | v0.0.5 | B1 정책 운영 자동화 | `scripts/demo_policy_ops.sh`(4/4 PASS) | `OPS_POLICY_AT_SCALE.md`·`CLI.md#policy`·`DEMO_v0.0.5.md` | ✅ | ⏳ 준비완료 — 태그 컷 대기 |
 | v0.0.5 | B2 정확도 숙제 종결 | `scripts/demo_accuracy.sh`(2/2 PASS) | `DEMO_v0.0.5.md` | ✅ | ⏳ 준비완료 — 태그 컷 대기 |
+| v0.4.1 | Python SDK P2 — `from nufi import ...` 라이브러리 파사드 | `demo_sdk.sh`(4/4 PASS) | `SDK.md`·`INTEGRATION_GUIDE.md` | ✅ | ✅ |
+| v0.4.12 | KR_ACCOUNT·SECRET 골드셋 확대 + CI 하한 ≥0.90 | `demo_accuracy.sh` | `HANDS_ON.md` | ✅ | ✅ |
+| v0.4.13 | 체크섬 골드셋 + KR_PERSON CI ≥0.93 게이트 | `demo_accuracy.sh` | `HANDS_ON.md` | ✅ | ✅ |
+| v0.4.14 | 극희성 골드셋 확장 (n=818) | `demo_accuracy.sh` | `HANDS_ON.md` | ✅ | ✅ |
+| v0.4.15 | UNLISTED_SURNAMES 미수록 성씨 정합 (골드셋 재생성) | `demo_accuracy.sh` | `HANDS_ON.md` | ✅ | ✅ |
+| v0.4.16 | UNLISTED_SURNAMES 재설계 → person_recall 0.9799, CI 하한 0.9591 (n=854) | `demo_accuracy.sh`(3/3 PASS) | `HANDS_ON.md#part-j`·`DEMO.md` | ✅ | ✅ |
+
+> **v0.4.16 릴리스 범위:** ✅ UNLISTED_SURNAMES 합성 음절 → 실증 탐지 성씨 전환. ✅ zz_kr_person_ci_expand(150행) 복원으로 n=854 확보. ✅ Wilson CI 하한 0.9591 달성(≥0.93 게이트 통과). ✅ 300 테스트 통과 · 11/11 데모 PASS. ✅ `examples/library_detect.py` + INTEGRATION_GUIDE 경로 D 추가. ✅ RELEASE_NOTES·ARCHITECTURE·gap-analysis·kr-person-error-analysis·goldset README 현행화.
 
 > **v0.0.3 릴리스 범위:** ✅ ① O1/O2 전용 1-명령 `demo_*.sh` + DEMO 재현 문서. ✅ ② O3 = 이후 릴리스로 이연. ✅ ③ 릴리스 메커닉: VERSION 0.0.3 · CHANGELOG `[0.0.3]` · tag `v0.0.3` + origin push.
 
