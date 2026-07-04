@@ -380,6 +380,11 @@ NuFi 의 라우팅 원칙은 **"가능하면 private(온프렘) 으로, public �
 디스크에 남습니다(기본 off). 켤 경우 접근통제·보존기간·파기 절차를 운영 정책으로 정의하세요
 ([`SECURITY_RETAIN_RAW_KEYROTATION.md`](SECURITY_RETAIN_RAW_KEYROTATION.md)).
 
+**PII 기반 자동 라우팅(Phase 1):** egress 정책 결정 이전에 PII 감지 결과로 요청을
+로컬/클라우드로 선별 분배하는 경로도 있습니다. PII 포함 요청은 클라우드 경로에 도달하기 전에
+로컬 모델로 강제 전환되므로, 탐지→차단 판단 자체가 불필요해집니다.
+설정·비용 추적·fail-closed 동작: [`PII_ROUTING.md`](PII_ROUTING.md).
+
 ---
 
 ## 한 장 요약 — 신규 도입 5분 경로

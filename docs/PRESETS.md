@@ -97,3 +97,15 @@ raw YAML 직접 편집은 여전히 **파워유저 탈출구**로 유지된다 �
 순으로 완전한 config 집합(policy/routing/audit_profiles)을 만든다. 기존
 `PolicyEngine`/`Applier` 가 읽는 **동일 식별자·스키마**를 유지하므로 런타임 동작 경로는
 바뀌지 않는다(프리셋은 config 만 바꾼다). 엔진 구현은 `egress_audit/presets.py`.
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md) | 통합 경로 택일 → 프리셋 고르기 → doctor 검증 순서 |
+| [`OPS_RULE_RELOAD.md`](OPS_RULE_RELOAD.md) | 프리셋 적용 후 YAML 룰을 무재기동으로 갱신하는 절차 |
+| [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) | 다중 프로파일·경로별 바인딩·버전 관리·롤백 |
+| [`PII_ROUTING.md`](PII_ROUTING.md) | PII 감지 기반 로컬/클라우드 자동 분배(프리셋과 독립) |
+| [`CLI.md`](CLI.md) | `nufi-egress init` 전체 플래그·종료코드 레퍼런스 |
