@@ -124,6 +124,17 @@
 | ROADMAP.md 깨진 링크 2건 | 낮음 | ✅ 수정 — 존재하지 않는 파일→텍스트, 잘못된 보고서 파일명 수정 |
 | docs/reports/README.md 에서 5개 보고서 파일 누락 | 낮음 | ✅ baseline-int8.json, CMP-199, fn-dumps 2종, location-union-skip 인덱스 추가 |
 
+### patch14~patch39 교차링크 전반 보강 (2026-07-04)
+
+| 보강 항목 | 조치 |
+|---|---|
+| 전체 `docs/*.md` 관련 문서 섹션 누락 | ✅ INTEGRATION_GUIDE·PRESETS·OPS_RULE_RELOAD·OPS_POLICY_AT_SCALE·SECURITY_RETAIN_RAW·SDK·PII_ROUTING·REPORTING·DEMO·ROADMAP·CLI·HANDS_ON·DOC_STYLE·RELEASE_CHECKLIST 에 관련 문서 표 신설 |
+| `docs/research/` 3종 관련 문서 누락 | ✅ FSEC_AI_GUIDE_2026·SOLUTION_FOCUS_OPTIONS·NUFI_SECURITY_PLANE_CHARTER 에 관련 문서 표 신설 |
+| `HANDOVER/` 관련 문서 누락 | ✅ AGENT_OPERATING_MODEL·ENGINEERING_CONVENTIONS 에 관련 문서 표 신설 |
+| `docs/history/README.md` · `docs/research/README.md` 진입점 부재 | ✅ 디렉터리 README 신설 · `docs/README.md` 에 링크 |
+| `docs/reports/README.md` 관련 문서 누락 | ✅ REPORTING·SDK·HANDS_ON·goldset 교차링크 신설 |
+| `docs/README.md` 관련 문서 누락 | ✅ ROOT_README·MANUAL·HANDS_ON·CHANGELOG·HANDOVER 교차링크 신설 |
+
 ### 점검 결과 양호(gap 없음)
 
 모든 공개 정확도·지연 수치 (v0.4.16: pii_recall=0.9908, KR_PERSON 0.9799/CI하한 0.9591,
