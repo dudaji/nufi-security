@@ -44,6 +44,37 @@
 | benign_false_block | **0.0** |
 | 온프렘 지연 p95 (512자, c=1) | **41 ms** |
 
+## recall-int8.json 키 구조 안내
+
+보고서 JSON 을 코드에서 읽을 때 사용하는 주요 키:
+
+```python
+import json
+
+with open("docs/reports/recall-int8.json") as f:
+    r = json.load(f)
+
+# 전체 요약
+r["scores"]["pii_recall"]          # 전체 PII 재현율 (0.0~1.0)
+r["scores"]["pii_recall_ci95"]     # Wilson 95% 신뢰구간 [lower, upper]
+r["scores"]["pii_precision"]       # 정밀도
+r["scores"]["strong_recall"]       # 강한 PII(주민·여권·카드 등) 재현율
+
+# 클래스별 상세 (per_class_recall)
+for cls, val in r["scores"]["per_class_recall"].items():
+    print(cls, val["recall"], val["ci95_lower"])
+
+# 지연
+r["latency"]["p95_ms"]             # p95 지연 (ms, 512자 입력 기준)
+r["latency"]["concurrency"]        # 측정 동시성
+
+# 허용 판정
+r["acceptance_pass"]               # bool — 릴리스 게이트 통과 여부
+r["acceptance"]                    # 각 항목(pii_recall·ci_low·false_block·latency) 판정 dict
+```
+
+SDK 에서 접근: `from nufi import compliance_report` — 리포트 집계에서 이 파일이 자동 참조됩니다.
+
 ---
 
 ## 관련 문서
