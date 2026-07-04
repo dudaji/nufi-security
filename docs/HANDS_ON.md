@@ -704,7 +704,7 @@ python3 -m pytest tests/ -q
 | `test_cmp145_int8_consistency.py` | ONNX-int8 재현율 수용 기준 (CI 하한 0.93+) |
 | `test_repo_docs_are_consistent.py` | README·보고서 수치가 recall-int8.json 과 일치 |
 | `test_doc_style_guard.py` | 공개 문서 스타일 가드 |
-| `test_examples_smoke.py` | examples/ 스크립트 스모크 5종 (library_detect·sdk_quickstart·sdk_block_and_audit·sdk_reversible_roundtrip·sdk_streaming) |
+| `test_examples_smoke.py` | examples/ 스크립트 스모크 6종 (library_detect·sdk_quickstart·sdk_block_and_audit·sdk_reversible_roundtrip·sdk_streaming·sdk_file_scan) |
 
 ### 전체 벤치마크 재실행 (ONNX 백엔드, ~5분)
 
