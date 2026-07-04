@@ -4,6 +4,20 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch09)
+
+> **v0.4.16-patch09 — 문서 풍부화 연속 (RELEASE_NOTES·ROADMAP·SDK·INTEGRATION_GUIDE·HANDS_ON·README)**
+> RELEASE_NOTES에 patch01~08 패치 시리즈 항목 추가. ROADMAP P1·P2 완료 상태 업데이트.
+> SDK.md Finding 메서드 설명, INTEGRATION_GUIDE·HANDS_ON·README 교차링크 보강. VERSION 변경 없음.
+
+### Changed / Added (모두 문서)
+- **docs/RELEASE_NOTES.md** — v0.4.16 패치 시리즈(patch01~08) 사람 친화 요약 항목 추가.
+- **docs/ROADMAP.md** — P1 '진행 중'→'완료(v0.4.0)' + 48개 통제 기록. P2 v0.4.6·patch 확장 이력 추가.
+- **docs/SDK.md** — Finding 클래스 `__repr__`·`to_dict()` 메서드 설명 추가.
+- **docs/INTEGRATION_GUIDE.md** — 경로 D에 `examples/README.md` 인덱스 링크 추가.
+- **docs/HANDS_ON.md** — Part G에 `examples/README.md` 링크 추가.
+- **README.md** — SDK 예시 링크를 `examples/README.md` 인덱스로 업데이트.
+
 ## [0.4.16] - 2026-07-04 (patch08)
 
 > **v0.4.16-patch08 — CLI.md·goldset README 문서 풍부화**
