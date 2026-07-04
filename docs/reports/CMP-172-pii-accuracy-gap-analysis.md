@@ -1,14 +1,14 @@
 # CMP-172 한국어 PII 정확도·커버리지 갭 분석
 
-생성일: 2026-07-03 | 갱신: 2026-07-04 (n=818, v0.4.13) | 기준 데이터: docs/reports/recall-int8.json
+생성일: 2026-07-03 | 갱신: 2026-07-04 (n=854, v0.4.16) | 기준 데이터: docs/reports/recall-int8.json
 
 ## 1. 엔터티별 정확도 현황·목표 갭 표
 
-### 1.1 핵심 갭 매트릭스 (측정 근거: onnx-int8, test split, n=818, v0.4.13)
+### 1.1 핵심 갭 매트릭스 (측정 근거: onnx-int8, test split, n=854, v0.4.16)
 
 | 엔터티 | recall | CI 95% 하한 | 골드셋 n | FP | 목표 recall | 목표 CI 하한 | 갭 | 우선도 |
 |--------|--------|------------|---------|-----|-----------|-----------|-----|-------|
-| **KR_PERSON** | 0.9712 | **0.946** | 312 | 0 | ≥0.95 | ≥0.93 | ✅ CI 하한 ≥0.93 달성 (CMP-262) | ~~P0~~ done |
+| **KR_PERSON** | 0.9799 | **0.9591** | 348 | 0 | ≥0.95 | ≥0.93 | ✅ CI 하한 ≥0.93 달성 (v0.4.16) | ~~P0~~ done |
 | KR_LOCATION | 1.0 | 0.9417 | 62 | 0 | ≥0.95 | ≥0.90 | — 충족 | ~~—~~ done |
 | KR_RRN | 1.0 | 0.9011 | 35 | 0 | ≥0.98 | ≥0.90 | ✅ CI 하한 ≥0.90 달성 (CMP-263) | ~~P2~~ done |
 | KR_FOREIGNER_REG | 1.0 | 0.9011 | 35 | 0 | ≥0.98 | ≥0.90 | ✅ CI 하한 ≥0.90 달성 (CMP-263) | ~~P2~~ done |
@@ -24,7 +24,7 @@
 ### 1.2 갭 분류
 
 **갭 종류 A — 실질 정확도 갭 (recall < 1.0):**
-- KR_PERSON: recall 0.9712, 미수록 인명(unlisted) recall 0.9072. CI 하한 0.946 ≥ 0.93 달성. FN 9/312건은 희성·복성에 집중.
+- KR_PERSON: recall 0.9799, 미수록 인명(unlisted) recall 0.9571 (n=70). CI 하한 0.9591 ≥ 0.93 달성. FN 7/348건. v0.4.16에서 UNLISTED_SURNAMES 재설계 + 골드셋 확장(312→348)으로 개선.
 
 **갭 종류 B — 통계적 신뢰구간 갭 (recall=1.0이나 CI 하한 < 0.90):**
 - ✅ 전부 해소됨 (v0.4.11~v0.4.13 골드셋 확장으로 n≥35, CI 하한 ≥0.90 달성).
@@ -104,8 +104,8 @@ Wilson CI 하한 ≥ 0.93 을 만족하려면 (recall=0.95 가정):
 
 ### 3.3 CI 하한 상향의 증빙 효과
 
-현재 증빙 리포트가 인용하는 수치 (v0.4.13, n=818):
-- "KR_PERSON recall 97.12%, CI 하한 94.61%" → **증빙 신뢰도 상향 달성**
+현재 증빙 리포트가 인용하는 수치 (v0.4.16, n=854):
+- "KR_PERSON recall 97.99%, CI 하한 95.91%" → **증빙 신뢰도 상향 달성**
 - compliance_catalog.yaml의 CIA-PII 통제가 더 강한 수치를 자동 인용
 
 ## 4. 금융 고유식별 엔터티 확장 후보 분석
@@ -114,7 +114,7 @@ Wilson CI 하한 ≥ 0.93 을 만족하려면 (recall=0.95 가정):
 
 | 금융 신호 | 엔터티 클래스 | 법적 근거 | 현황 |
 |----------|-------------|----------|------|
-| 고객명 | KR_PERSON | 신용정보법 식별정보 | recall 0.9712, CI 하한 0.946 ✅ |
+| 고객명 | KR_PERSON | 신용정보법 식별정보 | recall 0.9799, CI 하한 0.9591 ✅ |
 | 주민등록번호 | KR_RRN | 신용정보법 고유식별번호 | recall 1.0 |
 | 외국인등록번호 | KR_FOREIGNER_REG | 신용정보법 외국인 | recall 1.0 |
 | 계좌번호 | KR_ACCOUNT | 신용정보법 신용거래정보 | recall 1.0, {2,8} 확장 완료 |
@@ -155,6 +155,6 @@ P0 완료 시 `report compliance --controls` 의 CIA-PII 통제가 "KR_PERSON CI
 
 ---
 
-측정 근거: `docs/reports/recall-int8.json` (v0.4.13, onnx-int8, test split, n=818)
+측정 근거: `docs/reports/recall-int8.json` (v0.4.16, onnx-int8, test split, n=854)
 오차 분석: `docs/reports/kr-person-error-analysis.md`
 신용정보법 커버리지: `docs/reports/CMP-199-credit-coverage.json`
