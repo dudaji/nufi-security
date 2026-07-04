@@ -10,6 +10,19 @@
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
+### 패치 시리즈 성과 요약 (한눈에)
+
+| 영역 | 패치 이전 | 패치 이후 |
+|---|---|---|
+| **Python SDK 예시** | 5종 | **7종** (sdk_file_scan·sdk_compliance_report 신규) |
+| **내부 문서 링크** | 92개 | **145개** (+53개, 모든 문서 교차링크 완성) |
+| **관련 문서 섹션 보유 문서** | 일부 | **전체** (docs/ 20종 + HANDOVER/ 5종 + 하위 디렉터리) |
+| **Finding dataclass 필드 문서화** | 없음 | **7개 필드 타입·설명 표 완비** |
+| **PII 클래스 목록 문서화** | 흩어짐 | **12종 표(탐지 방식·강한/약한 구분) MANUAL에 집중** |
+| **규제 프레임워크 커버리지 수치** | 총계만 | **5종 프레임워크별 direct/partial/oos 상세 표** |
+| **reports/JSON 접근 가이드** | 없음 | **recall-int8.json Python 접근 예시 포함** |
+| **디렉터리 진입점 README** | 없음 | **docs/history/ · docs/research/ 인덱스 신설** |
+
 ### 무엇이 추가됐나
 - **Python SDK 예시 7종 완성** — `sdk_file_scan.py`(파일 PII 탐지), `sdk_compliance_report.py`(규제 커버리지 출력) 신규. 예시 인덱스 `examples/README.md` 신설.
 - **`Finding.__repr__` 개선** — 개발자 REPL/로그에서 None 필드 제거, score 소수점 2자리, 기본 source 생략으로 가독성 향상.
