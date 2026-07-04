@@ -180,7 +180,10 @@ if result.blocked:
     print("차단됨:", [a["entity_type"] for a in result.decision.actions])
 ```
 
-전체 API 목록: [`SDK.md`](SDK.md). 실행 가능한 예시: `python3 examples/library_detect.py`.
+전체 API 목록: [`SDK.md`](SDK.md). 실행 가능한 예시:
+- `python3 examples/library_detect.py` — 탐지·가명화·Guard 기본
+- `python3 examples/sdk_file_scan.py` — scan_file·guard_file·batch_detect
+- `python3 examples/sdk_compliance_report.py` — 한국 규제 5종 통제 커버리지
 
 > **언제 경로 D 를 고르나?** 배치 파이프라인·데이터 정제·파일 스캔 등 LLM 없이 PII 처리만 필요한 경우.
 > LLM 게이트웨이(경로 A/B/C)와 달리 서버 기동이 없어 스크립트·CI 파이프라인에 바로 삽입됩니다.
