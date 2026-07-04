@@ -4,6 +4,14 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch46)
+
+> **v0.4.16-patch46 — RELEASE_NOTES 패치 시리즈 성과 요약 표 추가**
+> 패치 시리즈(patch01~patch45) 의 성과를 "패치 이전/이후" 비교 표로 시각화. SDK 예시 수·내부 링크 수·관련 문서 섹션 완성도 등 8개 지표 정리. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/RELEASE_NOTES.md** — v0.4.16 패치 시리즈 섹션에 성과 요약 표(8개 지표 패치 이전/이후 비교) 추가.
+
 ## [0.4.16] - 2026-07-04 (patch45)
 
 > **v0.4.16-patch45 — MANUAL.md 부록 문서 지도 완성 + 잔재 태그 제거**

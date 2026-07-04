@@ -6,7 +6,7 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch45) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.16 패치 시리즈 (patch01~patch46) — **문서 풍부화 + SDK 사용성 개선**
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
@@ -67,7 +67,9 @@
 
 - **MANUAL 부록 문서 지도 완성(patch45)** — `docs/MANUAL.md` 부록 문서 지도 표에 SDK·PII_ROUTING·RELEASE_NOTES·DOC_STYLE 4개 링크 추가. 잔재 XML 태그 제거. 내부 링크 145개로 증가.
 
-기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch45 절.
+- **RELEASE_NOTES 패치 시리즈 성과 요약 표(patch46)** — patch01~patch45 의 성과를 "패치 이전/이후" 8개 지표 비교 표로 시각화(SDK 예시 수·내부 링크 수·관련 문서 섹션·Finding 문서화·PII 클래스 표·규제 커버리지·reports JSON 가이드·디렉터리 README).
+
+기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch46 절.
 
 ---
 
