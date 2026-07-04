@@ -17,11 +17,11 @@
     "note": "CMP-236: 규칙∪NER 유니온(인명+주소). 실측 재확인 시 --person-union --location-union 활성."
   },
   "scores": {
-    "n_rows": 482,
-    "pii_recall": 0.977,
+    "n_rows": 554,
+    "pii_recall": 0.9801,
     "pii_recall_ci95": [
-      0.9569,
-      0.9879
+      0.9648,
+      0.9889
     ],
     "pii_precision": 1.0,
     "strong_recall": 1.0,
@@ -29,7 +29,7 @@
       0.9563,
       1.0
     ],
-    "person_recall": 0.9516,
+    "person_recall": 0.9651,
     "person_unlisted_recall": 0.8696,
     "person_unlisted_n": 69,
     "location_recall": 1.0,
@@ -122,12 +122,12 @@
         "fp": 0
       },
       "KR_PERSON": {
-        "recall": 0.9516,
-        "hit": 177,
-        "exp": 186,
+        "recall": 0.9651,
+        "hit": 249,
+        "exp": 258,
         "ci95": [
-          0.9106,
-          0.9743
+          0.935,
+          0.9815
         ],
         "fp": 0
       },
@@ -162,14 +162,15 @@
         "fp": 0
       }
     },
-    "person_recall_ci_low": 0.9106
+    "person_recall_ci_low": 0.935
   },
   "acceptance": {
     "pii_recall>=0.90": true,
     "pii_precision>=0.85": true,
     "strong_recall>=0.98": true,
     "person_recall>=0.85": true,
-    "person_recall_ci_low>=0.90": true,
+    "person_recall_ci_low>=0.93": true,
+    "account_recall_ci_low>=0.90": true,
     "location_recall>=0.85": true,
     "secret_recall>=0.90": true,
     "benign_false_block<=0.02": true

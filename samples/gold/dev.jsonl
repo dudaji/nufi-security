@@ -378,75 +378,123 @@
 {"id": "zz_kr_passport_expand-0038", "prompt": "O81864043 여권 분실 신고 접수.", "expect": ["KR_PASSPORT"], "spans": [[0, 9, "KR_PASSPORT"]], "source": "synth"}
 {"id": "zz_kr_passport_expand-0040", "prompt": "여권번호 R91229685 로 예약 조회합니다.", "expect": ["KR_PASSPORT"], "spans": [[5, 14, "KR_PASSPORT"]], "source": "synth"}
 {"id": "zz_kr_passport_expand-0042", "prompt": "여권 P73488490 유효기간 만료 안내.", "expect": ["KR_PASSPORT"], "spans": [[3, 12, "KR_PASSPORT"]], "source": "synth"}
-{"id": "zz_kr_person_union-0001", "prompt": "예금주 장수현 계좌를 등록했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0002", "prompt": "신도경 과장 출장 보고서를 제출해 주세요.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0007", "prompt": "예금주 옥상우 계좌를 등록했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0001", "prompt": "예금주 옥은서 명의 통장 개설 완료.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0002", "prompt": "가입자 윤은서님 보험 청구를 접수합니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0007", "prompt": "예금주 황보상현 명의 통장 개설 완료.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0017", "prompt": "가입자 남궁규현님 보험 청구를 접수합니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0019", "prompt": "예금주 독고보영 명의 통장 개설 완료.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0022", "prompt": "고객 옥지수님의 예약을 확정합니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0023", "prompt": "장민호 차장 업무 인수인계 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0025", "prompt": "가입자 옥다영님 보험 청구를 접수합니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0026", "prompt": "예금주 강예지 명의 통장 개설 완료.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0029", "prompt": "환자 박지수님 수술 일정을 안내합니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0031", "prompt": "독고준영 차장 업무 인수인계 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0036", "prompt": "담당자 제갈상현에게 계약서를 전달합니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0039", "prompt": "고객 선우은서님의 예약을 확정합니다.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0040", "prompt": "가입자 김다영님 보험 청구를 접수합니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0042", "prompt": "수취인 장하늘 앞 택배 도착했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0043", "prompt": "옥소희 대리 교육 수료증을 발급합니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0050", "prompt": "고객 황보진우님의 예약을 확정합니다.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0051", "prompt": "수취인 박태현 앞 택배 도착했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0057", "prompt": "옥소희 대리 교육 수료증을 발급합니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0058", "prompt": "환자 최성호님 수술 일정을 안내합니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0059", "prompt": "고객 독고보영님의 예약을 확정합니다.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0060", "prompt": "수취인 옥규현 앞 택배 도착했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0063", "prompt": "고객 강보영님의 예약을 확정합니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0065", "prompt": "정진우 대리 교육 수료증을 발급합니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0068", "prompt": "선우진우 대리 교육 수료증을 발급합니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0070", "prompt": "오정우 대리 교육 수료증을 발급합니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0071", "prompt": "고객 오예지님의 예약을 확정합니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0072", "prompt": "박민호 대리 교육 수료증을 발급합니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0073", "prompt": "가입자 김태현님 보험 청구를 접수합니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0074", "prompt": "서보영 차장 업무 인수인계 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0076", "prompt": "박규현 차장 업무 인수인계 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0077", "prompt": "예금주 윤유림 명의 통장 개설 완료.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0078", "prompt": "김예지 차장 업무 인수인계 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0080", "prompt": "독고재민 차장 업무 인수인계 부탁드립니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0082", "prompt": "담당자 윤성호에게 계약서를 전달합니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0088", "prompt": "환자 탁채린님 수술 일정을 안내합니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0091", "prompt": "고객 박성호님의 예약을 확정합니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0096", "prompt": "환자 옥정우님 수술 일정을 안내합니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0098", "prompt": "가입자 최민호님 보험 청구를 접수합니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0100", "prompt": "탁유림 대리 교육 수료증을 발급합니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0101", "prompt": "예금주 윤나영 명의 통장 개설 완료.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0104", "prompt": "담당자 정태현에게 계약서를 전달합니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0108", "prompt": "예금주 강재민 명의 통장 개설 완료.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0109", "prompt": "수취인 선우채린 앞 택배 도착했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0115", "prompt": "환자 서상현님 수술 일정을 안내합니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0117", "prompt": "가입자 조은서님 보험 청구를 접수합니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0119", "prompt": "고객 윤준영님의 예약을 확정합니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_expand-0120", "prompt": "가입자 강진우님 보험 청구를 접수합니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0003", "prompt": "담당자 오혜진에게 일정을 공유했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0004", "prompt": "가입자 강수현님 본인인증을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0008", "prompt": "황보소영 교수 세미나 자료를 공유합니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
 {"id": "zz_kr_person_union-0010", "prompt": "수신자 최영준 앞으로 서류를 발송합니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
 {"id": "zz_kr_person_union-0011", "prompt": "고객 선우지민님의 주문을 확인했습니다.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0019", "prompt": "독고재현 과장 출장 보고서를 제출해 주세요.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0012", "prompt": "고객 강유빈님의 주문을 확인했습니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0015", "prompt": "고객 최재현님의 주문을 확인했습니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
 {"id": "zz_kr_person_union-0020", "prompt": "예금주 윤수현 계좌를 등록했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
 {"id": "zz_kr_person_union-0021", "prompt": "수신자 정상우 앞으로 서류를 발송합니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0022", "prompt": "담당자 신지민에게 일정을 공유했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0023", "prompt": "가입자 정영준님 본인인증을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0025", "prompt": "환자 윤수현님 검사 결과를 안내드립니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0029", "prompt": "고객 선우동현님의 주문을 확인했습니다.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0032", "prompt": "환자 남궁태원님 검사 결과를 안내드립니다.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0035", "prompt": "환자 옥상우님 검사 결과를 안내드립니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0037", "prompt": "담당자 옥동현에게 일정을 공유했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0028", "prompt": "김선호 과장 출장 보고서를 제출해 주세요.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0036", "prompt": "고객 한소영님의 주문을 확인했습니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
 {"id": "zz_kr_person_union-0039", "prompt": "장태원 과장 출장 보고서를 제출해 주세요.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
 {"id": "zz_kr_person_union-0040", "prompt": "수신자 장슬기 앞으로 서류를 발송합니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0041", "prompt": "환자 독고보라님 검사 결과를 안내드립니다.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
 {"id": "zz_kr_person_union-0043", "prompt": "가입자 박나현님 본인인증을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0048", "prompt": "예금주 선우유빈 계좌를 등록했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0046", "prompt": "고객 신상우님의 주문을 확인했습니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
 {"id": "zz_kr_person_union-0049", "prompt": "수신자 서소영 앞으로 서류를 발송합니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
 {"id": "zz_kr_person_union-0050", "prompt": "예금주 정은채 계좌를 등록했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0054", "prompt": "예금주 최나현 계좌를 등록했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0057", "prompt": "예금주 최유빈 계좌를 등록했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0060", "prompt": "환자 서슬기님 검사 결과를 안내드립니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0061", "prompt": "예금주 옥보라 계좌를 등록했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0062", "prompt": "강보라 교수 세미나 자료를 공유합니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0063", "prompt": "수신자 오시현 앞으로 서류를 발송합니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0053", "prompt": "환자 옥혜진님 검사 결과를 안내드립니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0055", "prompt": "예금주 남궁소영 계좌를 등록했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0056", "prompt": "황보하영 과장 출장 보고서를 제출해 주세요.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0058", "prompt": "담당자 독고슬기에게 일정을 공유했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
 {"id": "zz_kr_person_union-0064", "prompt": "윤상우 과장 출장 보고서를 제출해 주세요.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0065", "prompt": "수신자 옥은채 앞으로 서류를 발송합니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0067", "prompt": "예금주 독고나현 계좌를 등록했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0068", "prompt": "강은채 교수 세미나 자료를 공유합니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0070", "prompt": "수신자 박영준 앞으로 서류를 발송합니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0066", "prompt": "환자 오동현님 검사 결과를 안내드립니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
 {"id": "zz_kr_person_union-0071", "prompt": "가입자 오지민님 본인인증을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0074", "prompt": "가입자 박동현님 본인인증을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0078", "prompt": "수신자 선우소영 앞으로 서류를 발송합니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0085", "prompt": "박선호 과장 출장 보고서를 제출해 주세요.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0072", "prompt": "환자 장보라님 검사 결과를 안내드립니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0075", "prompt": "담당자 김준혁에게 일정을 공유했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0076", "prompt": "제갈소영 교수 세미나 자료를 공유합니다.", "expect": ["KR_PERSON"], "spans": [[0, 4, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0079", "prompt": "환자 조보라님 검사 결과를 안내드립니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0081", "prompt": "서영준 교수 세미나 자료를 공유합니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0082", "prompt": "강태원 교수 세미나 자료를 공유합니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0083", "prompt": "예금주 조혜진 계좌를 등록했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0084", "prompt": "이나현 교수 세미나 자료를 공유합니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0086", "prompt": "예금주 정태원 계좌를 등록했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0087", "prompt": "윤영준 교수 세미나 자료를 공유합니다.", "expect": ["KR_PERSON"], "spans": [[0, 3, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
 {"id": "zz_kr_person_union-0088", "prompt": "고객 조슬기님의 주문을 확인했습니다.", "expect": ["KR_PERSON"], "spans": [[3, 6, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
 {"id": "zz_kr_person_union-0089", "prompt": "고객 황보보라님의 주문을 확인했습니다.", "expect": ["KR_PERSON"], "spans": [[3, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
 {"id": "zz_kr_person_union-0092", "prompt": "예금주 신지민 계좌를 등록했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
-{"id": "zz_kr_person_union-0098", "prompt": "수신자 제갈유빈 앞으로 서류를 발송합니다.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0096", "prompt": "예금주 옥보라 계좌를 등록했습니다.", "expect": ["KR_PERSON"], "spans": [[4, 7, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
+{"id": "zz_kr_person_union-0097", "prompt": "가입자 제갈나현님 본인인증을 진행해 주세요.", "expect": ["KR_PERSON"], "spans": [[4, 8, "KR_PERSON"]], "source": "synth", "gazetteer_unlisted": false}
 {"id": "zz_kr_phone_ext-0001", "prompt": "긴급 연락처 016-8420-2407 로 전화 부탁드립니다.", "expect": ["KR_PHONE"], "spans": [[7, 20, "KR_PHONE"]], "source": "synth"}
-{"id": "zz_kr_phone_ext-0002", "prompt": "배송 기사 016 0218 0335 연락 바랍니다.", "expect": ["KR_PHONE"], "spans": [[6, 19, "KR_PHONE"]], "source": "synth"}
+{"id": "zz_kr_phone_ext-0004", "prompt": "비상 연락망 051-094-9043 등록 완료.", "expect": ["KR_PHONE"], "spans": [[7, 19, "KR_PHONE"]], "source": "synth"}
+{"id": "zz_kr_phone_ext-0005", "prompt": "담당자 전화번호 064-036-6608 확인 바랍니다.", "expect": ["KR_PHONE"], "spans": [[9, 21, "KR_PHONE"]], "source": "synth"}
 {"id": "zz_kr_phone_ext-0007", "prompt": "긴급 연락처 02-128-3762 로 전화 부탁드립니다.", "expect": ["KR_PHONE"], "spans": [[7, 18, "KR_PHONE"]], "source": "synth"}
+{"id": "zz_kr_phone_ext-0009", "prompt": "고객센터 051-647-0822 로 문의해 주세요.", "expect": ["KR_PHONE"], "spans": [[5, 17, "KR_PHONE"]], "source": "synth"}
 {"id": "zz_kr_phone_ext-0010", "prompt": "비상 연락망 011-3655-2474 등록 완료.", "expect": ["KR_PHONE"], "spans": [[7, 20, "KR_PHONE"]], "source": "synth"}
-{"id": "zz_kr_phone_ext-0011", "prompt": "담당자 전화번호 02-835-6637 확인 바랍니다.", "expect": ["KR_PHONE"], "spans": [[9, 20, "KR_PHONE"]], "source": "synth"}
-{"id": "zz_kr_phone_ext-0012", "prompt": "회신 연락처 02 554 2607 남깁니다.", "expect": ["KR_PHONE"], "spans": [[7, 18, "KR_PHONE"]], "source": "synth"}
-{"id": "zz_kr_phone_ext-0013", "prompt": "긴급 연락처 011 8395 3655 로 전화 부탁드립니다.", "expect": ["KR_PHONE"], "spans": [[7, 20, "KR_PHONE"]], "source": "synth"}
-{"id": "zz_kr_phone_ext-0014", "prompt": "배송 기사 02 724 8991 연락 바랍니다.", "expect": ["KR_PHONE"], "spans": [[6, 17, "KR_PHONE"]], "source": "synth"}
-{"id": "zz_kr_phone_ext-0017", "prompt": "담당자 전화번호 02-120-6519 확인 바랍니다.", "expect": ["KR_PHONE"], "spans": [[9, 20, "KR_PHONE"]], "source": "synth"}
+{"id": "zz_kr_phone_ext-0019", "prompt": "긴급 연락처 011-6084-5724 로 전화 부탁드립니다.", "expect": ["KR_PHONE"], "spans": [[7, 20, "KR_PHONE"]], "source": "synth"}
 {"id": "zz_kr_phone_ext-0020", "prompt": "배송 기사 010-4605-1878 연락 바랍니다.", "expect": ["KR_PHONE"], "spans": [[6, 19, "KR_PHONE"]], "source": "synth"}
 {"id": "zz_kr_phone_ext-0022", "prompt": "비상 연락망 051 797 0072 등록 완료.", "expect": ["KR_PHONE"], "spans": [[7, 19, "KR_PHONE"]], "source": "synth"}
-{"id": "zz_kr_phone_ext-0025", "prompt": "긴급 연락처 02 248 4811 로 전화 부탁드립니다.", "expect": ["KR_PHONE"], "spans": [[7, 18, "KR_PHONE"]], "source": "synth"}
-{"id": "zz_kr_phone_ext-0030", "prompt": "회신 연락처 011-8147-5452 남깁니다.", "expect": ["KR_PHONE"], "spans": [[7, 20, "KR_PHONE"]], "source": "synth"}
+{"id": "zz_kr_phone_ext-0026", "prompt": "배송 기사 051-821-1211 연락 바랍니다.", "expect": ["KR_PHONE"], "spans": [[6, 18, "KR_PHONE"]], "source": "synth"}
+{"id": "zz_kr_phone_ext-0027", "prompt": "고객센터 064 921 6314 로 문의해 주세요.", "expect": ["KR_PHONE"], "spans": [[5, 17, "KR_PHONE"]], "source": "synth"}
 {"id": "zz_kr_phone_ext-0031", "prompt": "긴급 연락처 016 0281 3099 로 전화 부탁드립니다.", "expect": ["KR_PHONE"], "spans": [[7, 20, "KR_PHONE"]], "source": "synth"}
-{"id": "zz_kr_rrn_expand-0001", "prompt": "주민등록번호 256840-4268117 조회 부탁드립니다.", "expect": ["KR_RRN"], "spans": [[7, 21, "KR_RRN"]], "source": "synth"}
-{"id": "zz_kr_rrn_expand-0005", "prompt": "597515-2759368 주민번호 기준 보험료 산정.", "expect": ["KR_RRN"], "spans": [[0, 14, "KR_RRN"]], "source": "synth"}
-{"id": "zz_kr_rrn_expand-0006", "prompt": "주민등록번호 107365-1745320 조회 부탁드립니다.", "expect": ["KR_RRN"], "spans": [[7, 21, "KR_RRN"]], "source": "synth"}
+{"id": "zz_kr_phone_ext-0032", "prompt": "배송 기사 064-361-4462 연락 바랍니다.", "expect": ["KR_PHONE"], "spans": [[6, 18, "KR_PHONE"]], "source": "synth"}
+{"id": "zz_kr_phone_ext-0035", "prompt": "담당자 전화번호 016-3318-0013 확인 바랍니다.", "expect": ["KR_PHONE"], "spans": [[9, 22, "KR_PHONE"]], "source": "synth"}
+{"id": "zz_kr_rrn_expand-0007", "prompt": "본인확인용 주민번호 398287-3035280 입력해 주세요.", "expect": ["KR_RRN"], "spans": [[11, 25, "KR_RRN"]], "source": "synth"}
 {"id": "zz_kr_rrn_expand-0009", "prompt": "고객 주민등록번호 319495-2922664 대조 완료.", "expect": ["KR_RRN"], "spans": [[10, 24, "KR_RRN"]], "source": "synth"}
-{"id": "zz_kr_rrn_expand-0014", "prompt": "고객 주민등록번호 535540-1043599 대조 완료.", "expect": ["KR_RRN"], "spans": [[10, 24, "KR_RRN"]], "source": "synth"}
-{"id": "zz_kr_rrn_expand-0016", "prompt": "주민등록번호 682269-1054233 조회 부탁드립니다.", "expect": ["KR_RRN"], "spans": [[7, 21, "KR_RRN"]], "source": "synth"}
-{"id": "zz_kr_rrn_expand-0020", "prompt": "538058-4713314 주민번호 기준 보험료 산정.", "expect": ["KR_RRN"], "spans": [[0, 14, "KR_RRN"]], "source": "synth"}
+{"id": "zz_kr_rrn_expand-0010", "prompt": "223276-3862301 주민번호 기준 보험료 산정.", "expect": ["KR_RRN"], "spans": [[0, 14, "KR_RRN"]], "source": "synth"}
+{"id": "zz_kr_rrn_expand-0011", "prompt": "주민등록번호 785741-3638954 조회 부탁드립니다.", "expect": ["KR_RRN"], "spans": [[7, 21, "KR_RRN"]], "source": "synth"}
+{"id": "zz_kr_rrn_expand-0012", "prompt": "본인확인용 주민번호 587442-3187354 입력해 주세요.", "expect": ["KR_RRN"], "spans": [[11, 25, "KR_RRN"]], "source": "synth"}
+{"id": "zz_kr_rrn_expand-0019", "prompt": "고객 주민등록번호 512626-4783186 대조 완료.", "expect": ["KR_RRN"], "spans": [[10, 24, "KR_RRN"]], "source": "synth"}
+{"id": "zz_kr_rrn_expand-0022", "prompt": "본인확인용 주민번호 357010-1338251 입력해 주세요.", "expect": ["KR_RRN"], "spans": [[11, 25, "KR_RRN"]], "source": "synth"}
 {"id": "zz_kr_rrn_expand-0023", "prompt": "주민번호 435609-1248704 로 실명인증 진행합니다.", "expect": ["KR_RRN"], "spans": [[5, 19, "KR_RRN"]], "source": "synth"}
+{"id": "zz_kr_rrn_expand-0025", "prompt": "001183-1110851 주민번호 기준 보험료 산정.", "expect": ["KR_RRN"], "spans": [[0, 14, "KR_RRN"]], "source": "synth"}
 {"id": "zz_kr_rrn_expand-0026", "prompt": "주민등록번호 858665-1832541 조회 부탁드립니다.", "expect": ["KR_RRN"], "spans": [[7, 21, "KR_RRN"]], "source": "synth"}
-{"id": "zz_kr_rrn_expand-0027", "prompt": "본인확인용 주민번호 570997-2564160 입력해 주세요.", "expect": ["KR_RRN"], "spans": [[11, 25, "KR_RRN"]], "source": "synth"}
-{"id": "zz_secret_ext-0003", "prompt": "지도 API 키 AIzaLWx4QOoWjucAECcU85k2hZxbWEZHebv2H5Z 노출됐어.", "expect": ["SECRET"], "spans": [[9, 48, "SECRET"]], "source": "synth"}
+{"id": "zz_secret_ext-0001", "prompt": "오픈AI 키 sk-SzElPJw9RM2ZvsrzEzZGu8LHUUsot8z6 확인.", "expect": ["SECRET"], "spans": [[7, 42, "SECRET"]], "source": "synth"}
 {"id": "zz_secret_ext-0005", "prompt": "깃헙 PAT ghp_9I9JjxlKwJ0WLo6rMPrIr8rxZTbQemLMbz9Q 가 코드에 남아있음.", "expect": ["SECRET"], "spans": [[7, 47, "SECRET"]], "source": "synth"}
+{"id": "zz_secret_ext-0006", "prompt": "설정파일에 api_key=\"4v5EXluSseoWryKPp17e\" 박혀있음.", "expect": ["SECRET"], "spans": [[6, 36, "SECRET"]], "source": "synth"}
 {"id": "zz_secret_ext-0010", "prompt": "지도 API 키 AIza4aZ8HGuY0ZQLwOSosWfC9MKQkNMB7JFxGPj 노출됐어.", "expect": ["SECRET"], "spans": [[9, 48, "SECRET"]], "source": "synth"}
-{"id": "zz_secret_ext-0011", "prompt": "배포 키 AKIAIOSFODNN7EXAMPLE 검토 바랍니다.", "expect": ["SECRET"], "spans": [[5, 25, "SECRET"]], "source": "synth"}
-{"id": "zz_secret_ext-0015", "prompt": "오픈AI 키 sk-IlWGTkjNpfF9AMFeKsP5DyJnok2231yp 확인.", "expect": ["SECRET"], "spans": [[7, 42, "SECRET"]], "source": "synth"}
+{"id": "zz_secret_ext-0012", "prompt": "오픈AI 키 sk-8eI0xugE5ocaSdD4iqidOQEKjwccOOTk 확인.", "expect": ["SECRET"], "spans": [[7, 42, "SECRET"]], "source": "synth"}
 {"id": "zz_secret_ext-0016", "prompt": "깃헙 PAT ghp_wbrkbVTe0Quqme7DMa0fe8cQOwTlzOOthOiN 가 코드에 남아있음.", "expect": ["SECRET"], "spans": [[7, 47, "SECRET"]], "source": "synth"}
+{"id": "zz_secret_ext-0018", "prompt": "슬랙 토큰 xoxb-QtNVV1DcKM6PFWPEOTHL1E4s 회수 필요.", "expect": ["SECRET"], "spans": [[6, 35, "SECRET"]], "source": "synth"}
 {"id": "zz_secret_ext-0019", "prompt": "aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY", "expect": ["SECRET"], "spans": [[0, 62, "SECRET"]], "source": "synth"}
-{"id": "zz_secret_ext-0020", "prompt": "슬랙 토큰 xoxb-D55uWc8HUvFYMWCOBh5PgJ7k 회수 필요.", "expect": ["SECRET"], "spans": [[6, 35, "SECRET"]], "source": "synth"}

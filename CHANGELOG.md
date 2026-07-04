@@ -4,6 +4,19 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.13] - 2026-07-04
+
+> **v0.4.13 릴리스 — 체크섬 골드셋 + KR_PERSON CI 강화 (CMP-263)** — CMP-239·CMP-262
+> 결과물 패키징. 체크섬 엔터티 CI 하한 ≥0.90 + KR_PERSON CI 하한 ≥0.93 달성.
+
+### Added
+- **KR_PERSON 골드셋 표본 확대 (CMP-262)** — 등재 성씨 120건 추가(test 186→258).
+  Wilson CI 하한 0.9106→0.935, ≥0.93 게이트 통과. 전체 골드셋 1144→1264건.
+- **bench_m5.py CI 게이트 강화** — `person_recall_ci_low` 수용 기준 0.90→0.93 상향.
+
+### Changed
+- **VERSION** — `0.4.12` → `0.4.13`.
+
 ## [0.4.12] - 2026-07-04
 
 > **v0.4.12 릴리스 — KR_ACCOUNT·SECRET CI 하한 마감 (CMP-241)** — CMP-241 결과물

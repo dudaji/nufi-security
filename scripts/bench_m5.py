@@ -302,10 +302,10 @@ def main():
 
     # --- 합격 판정 (test 셋만 binary) ---
     if args.split == "test":
-        # CMP-236 수용기준: KR_PERSON Wilson CI '하한' ≥0.90 (0.85 → 0.90 상향).
+        # CMP-262 수용기준: KR_PERSON Wilson CI '하한' ≥0.93 (0.90 → 0.93 상향).
         person_ci_low = sc["per_class"].get("KR_PERSON", {}).get("ci95", [0.0, 0.0])[0]
         sc["person_recall_ci_low"] = person_ci_low
-        person_ci_target = 0.90
+        person_ci_target = 0.93
         # CMP-241: KR_ACCOUNT·SECRET CI 하한 게이트 (표본 확장 후 ≥0.90).
         account_ci_low = sc["per_class"].get("KR_ACCOUNT", {}).get("ci95", [0.0, 0.0])[0]
         secret_ci_low = sc["per_class"].get("SECRET", {}).get("ci95", [0.0, 0.0])[0]

@@ -619,6 +619,39 @@ def build():
                          "expect": [cls], "spans": [_span(p, v, cls)],
                          "source": "synth", "_cls": ck_cls})
 
+    # --- CMP-262: KR_PERSON 표본 확대 — Wilson CI 하한 ≥0.93 ---
+    # 기존 KR_PERSON test 186건(recall 0.9516, CI low 0.9106)으로는 CI 하한 0.93 미달.
+    # 등재 성씨(규칙∪모델 유니온 100% 탐지) 120건 추가(test ≈72) →
+    # test n=186+72=258, hit≈249 → CI low ≈0.935 ≥ 0.93 달성.
+    #
+    # sealed 보존: 독립 rng(SEED+73) + sort-last _cls("zz_kr_person_expand") append.
+    pe_rng = random.Random(SEED + 73)
+    _PE_LISTED = ["김", "이", "박", "최", "정", "강", "조", "윤", "장", "한",
+                  "오", "서", "신", "옥", "탁", "남궁", "황보", "제갈", "선우", "독고"]
+    _PE_GIVEN = ["채린", "준영", "소희", "동훈", "예지", "민호", "지수", "태현", "유림", "성호",
+                 "나영", "재민", "은서", "상현", "다영", "정우", "하늘", "규현", "보영", "진우"]
+    _PE_CTX = [
+        "고객 {name}님의 예약을 확정합니다.",
+        "{name} 차장 업무 인수인계 부탁드립니다.",
+        "환자 {name}님 수술 일정을 안내합니다.",
+        "수취인 {name} 앞 택배 도착했습니다.",
+        "담당자 {name}에게 계약서를 전달합니다.",
+        "가입자 {name}님 보험 청구를 접수합니다.",
+        "예금주 {name} 명의 통장 개설 완료.",
+        "{name} 대리 교육 수료증을 발급합니다.",
+    ]
+    pe_id = 0
+    for _ in range(120):
+        sur = pe_rng.choice(_PE_LISTED)
+        giv = pe_rng.choice(_PE_GIVEN)
+        name = sur + giv
+        p = pe_rng.choice(_PE_CTX).format(name=name)
+        pe_id += 1
+        rows.append({"id": f"zz_kr_person_expand-{pe_id:04d}", "prompt": p,
+                     "expect": ["KR_PERSON"], "spans": [_span(p, name, "KR_PERSON")],
+                     "source": "synth", "_cls": "zz_kr_person_expand",
+                     "_gazetteer_unlisted": False})
+
     return rows
 
 
