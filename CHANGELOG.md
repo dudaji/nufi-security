@@ -4,6 +4,21 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch02)
+
+> **v0.4.16-patch02 — 문서 수치 정합 마무리 (305건)**
+> patch01 이후 발견된 잔여 스테일 테스트 수(300·301) 및 HANDOVER 문서를 v0.4.16-patch01 기준으로 현행화. VERSION 변경 없음.
+
+### Fixed (문서 정합)
+- **RELEASE_CHECKLIST** — v0.4.16 범위 설명 300→305 정정.
+- **docs/README.md** — 진척 한눈에 테스트 수 301→305 정정.
+- **HANDOVER/PROJECT_OVERVIEW.md** — v0.4.6→v0.4.16, 정확도 수치·테스트 수·데모 현행화.
+- **HANDOVER/PROJECT_STATE.md** — v0.4.16-patch01 기준으로 버전 이력·완료 과제 현행화.
+
+### Added
+- **test_examples_smoke.py 스모크 확장** — sdk_reversible_roundtrip·sdk_streaming 2건 추가(303→305).
+- **docs/reports/README.md** — 리포트 폴더 인덱스 신규 추가.
+
 ## [0.4.16] - 2026-07-04 (patch01)
 
 > **v0.4.16-patch01 — 문서 보강 + examples 스모크 테스트 (303건)**
