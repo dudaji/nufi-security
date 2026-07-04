@@ -1,4 +1,10 @@
-# 공개 정확도·성능 수치 무결성 감사 (v0.2.2 과제 1)
+# 공개 정확도·성능 수치 무결성 감사 (v0.2.2 과제 1) — 역사적 문서
+
+> **⚠️ 역사적 문서 — 현재 기준값은 아래 권위 파일을 참고하세요.**
+> 이 감사는 v0.2.2 시점(n_rows=372) 기준이며, 지적된 드리프트 3건은 후속 릴리스에서
+> 모두 해소되었습니다. **현행 수치 권위:** `docs/reports/recall-int8.json`(n=854, v0.4.16
+> 기준: pii_recall=0.9908, person_recall=0.9799, CI 하한=0.9591, benign_fp=0).
+> 현행 문서 정합 감사는 `tests/test_docs_consistency.py` 가 CI 에서 상시 검증합니다.
 
 목적: 공개 문서(README·SDK·MANUAL·RELEASE_NOTES·CHANGELOG)에 실린 모든 정확도·성능
 수치가 커밋된 근거 리포트(`docs/reports/*.json`)와 정확히 일치하는지 전수 대조하고,
