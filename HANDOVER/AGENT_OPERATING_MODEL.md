@@ -117,5 +117,14 @@
 
 ---
 
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`ENGINEERING_CONVENTIONS.md`](ENGINEERING_CONVENTIONS.md) | 저장소 구조·문서 가드·릴리스·테스트·커밋 규약 |
+| [`PROJECT_STATE.md`](PROJECT_STATE.md) | 버전 이력·알려진 한계·열린 후속 과제 |
+| [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md) | 코드·문서 지도·현재 버전 |
+| [`../docs/DOC_STYLE.md`](../docs/DOC_STYLE.md) | 공개 문서 작성 규칙·내부어 금지어 가드 |
+
 *이 문서는 원본 `GOVERNANCE.md`(v2.0, 보드 지시, 2026-06-30)와 Paperclip 에이전트 운영
 관례를 인수인계용으로 요약한 것입니다. 규범적 효력의 단일 출처는 원본 `GOVERNANCE.md` 입니다.*

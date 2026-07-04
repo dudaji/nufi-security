@@ -59,3 +59,13 @@ git grep -nE '이사회|보드 승인|board approved|board review|Internal statu
 설명하려면 역할 호칭 등 위 금지어를 인용할 수밖에 없다(이 `DOC_STYLE.md` 자신이 금지어를
 예시로 인용하느라 예외인 것과 같은 이유). 스타일 가드(`scripts/check_doc_style.py`)는
 `HANDOVER/` 트리를 검사에서 제외한다. 공개 제품 문서에는 규칙이 그대로 강제된다.
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`../HANDOVER/ENGINEERING_CONVENTIONS.md`](../HANDOVER/ENGINEERING_CONVENTIONS.md) | 커밋·릴리스·테스트 규약 — 사전 커밋 점검 스크립트 목록 포함 |
+| [`../HANDOVER/AGENT_OPERATING_MODEL.md`](../HANDOVER/AGENT_OPERATING_MODEL.md) | 에이전트 거버넌스 — 이 스타일 규칙이 적용되는 배경 |
+| [`README.md`](README.md) | 문서 지도 — 각 문서의 역할과 읽기 순서 |

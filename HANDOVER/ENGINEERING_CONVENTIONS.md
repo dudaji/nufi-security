@@ -121,3 +121,15 @@ python3 scripts/check_doc_style.py --verbose   # 공개 문서/코드 표면 내
 python3 scripts/check_docs.py                   # 문서 링크·수치↔리포트 회귀 가드
 ./scripts/demo_all.sh                           # 기능 데모 집계 PASS/FAIL
 ```
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`AGENT_OPERATING_MODEL.md`](AGENT_OPERATING_MODEL.md) | 거버넌스·에이전트 역할·승인 게이트·이슈 흐름 |
+| [`PROJECT_OVERVIEW.md`](PROJECT_OVERVIEW.md) | 코드·문서 지도·현재 버전 |
+| [`PROJECT_STATE.md`](PROJECT_STATE.md) | 버전 이력·알려진 한계·열린 후속 과제 |
+| [`../docs/DOC_STYLE.md`](../docs/DOC_STYLE.md) | 공개 문서 작성 규칙 — 가드가 강제하는 금지 패턴 전체 목록 |
+| [`../CHANGELOG.md`](../CHANGELOG.md) | 기술 변경 이력(릴리스 권위) |
