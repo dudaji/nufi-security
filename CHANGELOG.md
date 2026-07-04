@@ -4,6 +4,14 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch45)
+
+> **v0.4.16-patch45 — MANUAL.md 부록 문서 지도 완성 + 잔재 태그 제거**
+> 매뉴얼 §부록 문서 지도에 SDK·PII_ROUTING·RELEASE_NOTES·DOC_STYLE 4개 링크를 추가하고, 이전 패치에서 잘못 삽입된 `</content></invoke>` 잔재 태그를 제거. 내부 링크 140→145개. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/MANUAL.md** — 부록 문서 지도 표에 SDK·PII_ROUTING·RELEASE_NOTES·DOC_STYLE 링크 추가. 최종 갱신 타임스탬프 추가. 잔재 XML 태그(`</content></invoke>`) 제거.
+
 ## [0.4.16] - 2026-07-04 (patch44)
 
 > **v0.4.16-patch44 — SDK.md Finding 객체 필드 상세 표 추가**

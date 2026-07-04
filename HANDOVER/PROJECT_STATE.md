@@ -3,7 +3,7 @@
 > 이어받는 사람/AI가 "무엇이 되어 있고, 무엇이 남았고, 어디를 조심해야 하나"를 파악하도록
 > 정리했습니다. 수치의 권위는 `docs/reports/*.json`, 변경 이력의 권위는 `CHANGELOG.md` 입니다.
 
-*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch44 (main, origin 동기화됨)*
+*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch45 (main, origin 동기화됨)*
 
 ---
 
@@ -11,6 +11,7 @@
 
 | 버전 | 테마 | 핵심 내용 |
 |---|---|---|
+| **v0.4.16-patch45** | MANUAL 부록 문서 지도 완성 | SDK·PII_ROUTING·RELEASE_NOTES·DOC_STYLE 링크 추가, 잔재 XML 태그 제거, 내부 링크 145개 |
 | **v0.4.16-patch44** | SDK Finding 필드 표 | Finding dataclass 7개 필드 타입·설명 표 추가 |
 | **v0.4.16-patch43** | MANUAL §3 PII 클래스 표 | 탐지 대상 PII 12종 표 추가(클래스·설명·방식·강한/약한 구분) |
 | **v0.4.16-patch42** | REPORTING 커버리지 수치 표 | 5종 규제 프레임워크별 direct/partial/oos 항목 수 표 추가 |

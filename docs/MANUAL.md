@@ -681,5 +681,9 @@ v0.3.x 에서 사용하던 아래 기능이 **완전히 제거**되었습니다:
 | 규정준수·컴플라이언스 매핑(증빙) | [`REPORTING.md`](REPORTING.md) |
 | 정책 프리셋 | [`PRESETS.md`](PRESETS.md) |
 | 원문 보존·키 회전 | [`SECURITY_RETAIN_RAW_KEYROTATION.md`](SECURITY_RETAIN_RAW_KEYROTATION.md) |
-</content>
-</invoke>
+| SDK | [`SDK.md`](SDK.md) |
+| PII 기반 라우팅 | [`PII_ROUTING.md`](PII_ROUTING.md) |
+| 릴리스 노트 | [`RELEASE_NOTES.md`](RELEASE_NOTES.md) |
+| 공개 문서 스타일 | [`DOC_STYLE.md`](DOC_STYLE.md) |
+
+*최종 갱신: 2026-07-04 · v0.4.16-patch45*

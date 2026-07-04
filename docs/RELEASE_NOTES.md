@@ -6,7 +6,7 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch44) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.16 패치 시리즈 (patch01~patch45) — **문서 풍부화 + SDK 사용성 개선**
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
@@ -52,7 +52,9 @@
 
 - **SDK Finding 필드 상세 표(patch44)** — `docs/SDK.md` §2.2 에 `Finding` dataclass 7개 필드(entity_type·text·start·end·score·source·context) 타입·설명 표 추가.
 
-기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch44 절.
+- **MANUAL 부록 문서 지도 완성(patch45)** — `docs/MANUAL.md` 부록 문서 지도 표에 SDK·PII_ROUTING·RELEASE_NOTES·DOC_STYLE 4개 링크 추가. 잔재 XML 태그 제거. 내부 링크 145개로 증가.
+
+기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch45 절.
 
 ---
 
