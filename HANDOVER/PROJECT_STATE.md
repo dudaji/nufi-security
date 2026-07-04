@@ -3,7 +3,7 @@
 > 이어받는 사람/AI가 "무엇이 되어 있고, 무엇이 남았고, 어디를 조심해야 하나"를 파악하도록
 > 정리했습니다. 수치의 권위는 `docs/reports/*.json`, 변경 이력의 권위는 `CHANGELOG.md` 입니다.
 
-*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch36 (main, origin 동기화됨)*
+*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch37 (main, origin 동기화됨)*
 
 ---
 
@@ -11,6 +11,7 @@
 
 | 버전 | 테마 | 핵심 내용 |
 |---|---|---|
+| **v0.4.16-patch37** | RELEASE_CHECKLIST 관련 문서 | RELEASE_CHECKLIST.md 관련 문서 섹션 신설 |
 | **v0.4.16-patch36** | HANDOVER·DOC_STYLE 관련 문서 | AGENT_OPERATING_MODEL·ENGINEERING_CONVENTIONS·DOC_STYLE 관련 문서 섹션 신설 |
 | **v0.4.16-patch35** | CLI·HANDS_ON 관련 문서 | CLI.md·HANDS_ON.md 관련 문서 섹션 신설 |
 | **v0.4.16-patch34** | CHANGELOG·HANDOVER 현행화 | patch33~34 이력 기록, RELEASE_NOTES 확장 |
