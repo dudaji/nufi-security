@@ -75,7 +75,19 @@ findings = det.analyze(text)
 
 - `Detector` = 현행 `DetectionPipeline` 의 공개 별칭. 생성자 인자 그대로 유지.
 - `detect(text, **kwargs)` = 프로세스 캐시된 기본 `Detector` 로 위임하는 편의 함수.
-- `Finding` = 현행 dataclass 그대로 재노출. 주요 메서드:
+- `Finding` = 현행 dataclass 그대로 재노출.
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `entity_type` | `str` | PII 클래스 (예: `KR_PERSON`, `KR_RRN`) |
+| `text` | `str` | 탐지된 원문 텍스트 |
+| `start` | `int` | 시작 문자 오프셋 (UTF 코드포인트) |
+| `end` | `int` | 끝 오프셋 (반열림, `[start, end)`) |
+| `score` | `float\|None` | 신뢰도 점수 (0.0~1.0, NER 백엔드일 때) |
+| `source` | `str\|None` | 탐지 백엔드 (`onnx-int8`, `gazetteer`, `regex`) |
+| `context` | `str\|None` | 주변 문맥 텍스트 (기밀 탐지용) |
+
+주요 메서드:
   - `__repr__` — REPL/로그 친화적 출력. None 필드 생략, score 소수점 2자리, 기본 gazetteer source 생략.
     예: `Finding(entity_type='KR_PERSON', text='홍길동', start=0, end=3, score=0.75)`
   - `to_dict()` — JSON 직렬화. 기밀 finding 은 원문(`text`) 제거(`§4.2`), 클래스 키 노출.
