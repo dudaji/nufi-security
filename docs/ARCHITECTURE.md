@@ -415,6 +415,9 @@ sequenceDiagram
 ## 8. 관련 문서
 
 - 읽기 순서·상태표: [`docs/README.md`](README.md)
+- Python SDK API: [`SDK.md`](SDK.md) · 예시 7종: [`../examples/README.md`](../examples/README.md)
+- 규정준수 리포팅 (한국 규제 5종 48개 통제): [`REPORTING.md`](REPORTING.md)
+- PII 기반 하이브리드 LLM 라우팅: [`PII_ROUTING.md`](PII_ROUTING.md)
 - 운영(정책 운영 자동화) v0.0.5 B1: [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) · 데모 [`DEMO_v0.0.5.md`](history/DEMO_v0.0.5.md)
 - 기반 명세: [`SPEC.md`](history/SPEC.md)
 - Enforcement(우회 차단): [`SPEC_EGRESS_ENFORCEMENT.md`](history/SPEC_EGRESS_ENFORCEMENT.md)
