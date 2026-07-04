@@ -65,6 +65,9 @@
 | 🏛 [`ARCHITECTURE.md`](ARCHITECTURE.md) | 통합 아키텍처 + 4개 시퀀스 (Mermaid) | ✅ **단일 권위 — 현행 흐름 정합의 기준** |
 
 ### 설계·명세 (🕮 역사적 — `docs/history/`, 왜·당시 결정)
+
+> 인덱스 및 열람 가이드: [`history/README.md`](history/README.md)
+
 | 문서 | 내용 | 상태 |
 |---|---|---|
 | 🕮 [기반 게이트웨이·탐지 명세](history/SPEC.md) | 기반 게이트웨이 + 개인정보·비밀 탐지 설계 | 🕮 역사적 (현행 흐름은 ARCHITECTURE.md) |
@@ -84,6 +87,9 @@
 | [`history/DEMO_v0.0.5.md`](history/DEMO_v0.0.5.md) | v0.0.5 1-명령 데모/재현 매뉴얼 | 🕮 역사적 — 버전별 스냅샷 |
 
 ### 조사·전략 문서 (`docs/research/`)
+
+> 인덱스 및 배경 설명: [`research/README.md`](research/README.md)
+
 | 문서 | 내용 | 상태 |
 |---|---|---|
 | [`research/FSEC_AI_GUIDE_2026.md`](research/FSEC_AI_GUIDE_2026.md) | 금융분야 AI 보안 안내서(2026.6) — NuFi 관련 조항 분석 | 📄 참조 |
