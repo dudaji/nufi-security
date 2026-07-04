@@ -77,3 +77,15 @@
 > **GitHub Release 발행 현황:** git 태그 `v0.0.1`~`v0.0.6` 은 모두 origin 에 있으나, 과거 메커닉이 5번 단계(GitHub Release 발행)를 누락해 Releases 페이지에 노트 본문이 없습니다. `./scripts/publish_github_release.sh vX.Y.Z` 로 백필합니다(인증 필요). `v0.0.6` 는 [`RELEASE_NOTES.md`](RELEASE_NOTES.md) 본문으로 우선 백필 대상이며, 이후 버전은 위 5번 단계로 상시 발행합니다.
 
 > **v0.0.5 릴리스 범위:** ✅ ① B1·B2 각 1-명령 `demo_*.sh`(4/4·2/2 PASS, root 불필요) + 재현 문서 `DEMO_v0.0.5.md`. ✅ ② 매뉴얼: `OPS_POLICY_AT_SCALE.md`·`CLI.md#policy`(B1) / 측정 리포트(B2). ✅ ③ README §매뉴얼·데모 표 + 문서지도 링크. ✅ ④ hands-on §6.9 정책 운영 실습. ✅ ⑤ CHANGELOG `[0.0.5]` 초안. ⏳ **남은 한 가지 = `VERSION` 갱신 + `git tag v0.0.5` + origin push**.
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`RELEASE_NOTES.md`](RELEASE_NOTES.md) | 사람 친화 릴리스 요약 — 비개발자 의사결정자용 |
+| [`../CHANGELOG.md`](../CHANGELOG.md) | 기술 변경 이력 — 버전별 상세 변경 목록 |
+| [`../HANDOVER/ENGINEERING_CONVENTIONS.md`](../HANDOVER/ENGINEERING_CONVENTIONS.md) | 릴리스 절차 상세 — 태그·push·GH Release 명령 |
+| [`DEMO.md`](DEMO.md) | 릴리스 데모 카탈로그 — DoD 검증 데모 목록 |
+| [`HANDS_ON.md`](HANDS_ON.md) | 릴리스 산출물 표준의 최우선 문서 |
