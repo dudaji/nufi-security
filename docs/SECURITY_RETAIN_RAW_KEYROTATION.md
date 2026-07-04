@@ -106,3 +106,13 @@ KEK 길이/형식이 틀리면 **부팅이 실패**해야 하며, 평문 폴백�
 - [ ] 보존기간 cron 이 등록되어 있는가? 경로는 절대경로인가?
 - [ ] `EGRESS_VAULT_KEK` 가 32바이트로 주입되어 있는가(휘발성 PoC 아님)?
 - [ ] 키 회전 시 드레이닝(§2.2) 순서를 따랐는가?
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`OPS_RULE_RELOAD.md`](OPS_RULE_RELOAD.md) | 핫리로드 운영 절차 (retain_raw 오설정 방지 포함) |
+| [`PRESETS.md`](PRESETS.md) | `audit_profiles.profiles.public.retain_raw` 프리셋 노브 설명 |
+| [`REPORTING.md`](REPORTING.md) | 감사 로그·보존 데이터를 컴플라이언스 리포트와 연결하는 방법 |
