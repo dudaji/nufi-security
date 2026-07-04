@@ -83,6 +83,13 @@
 | [`history/DEMO_v0.0.3.md`](history/DEMO_v0.0.3.md) | v0.0.3 1-명령 데모 재현 매뉴얼 | 🕮 역사적 — 버전별 스냅샷 |
 | [`history/DEMO_v0.0.5.md`](history/DEMO_v0.0.5.md) | v0.0.5 1-명령 데모/재현 매뉴얼 | 🕮 역사적 — 버전별 스냅샷 |
 
+### 조사·전략 문서 (`docs/research/`)
+| 문서 | 내용 | 상태 |
+|---|---|---|
+| [`research/FSEC_AI_GUIDE_2026.md`](research/FSEC_AI_GUIDE_2026.md) | 금융분야 AI 보안 안내서(2026.6) — NuFi 관련 조항 분석 | 📄 참조 |
+| [`research/NUFI_SECURITY_PLANE_CHARTER.md`](research/NUFI_SECURITY_PLANE_CHARTER.md) | NuFi 보안·증빙 평면 차터 — 통합 플랫폼 내 역할·통합 계약 | 📄 참조 |
+| [`research/SOLUTION_FOCUS_OPTIONS.md`](research/SOLUTION_FOCUS_OPTIONS.md) | 솔루션 집중 방향 옵션 분석 | 📄 참조 |
+
 ---
 
 ## 진척 한눈에
