@@ -3,7 +3,7 @@
 > 이어받는 사람/AI가 "무엇이 되어 있고, 무엇이 남았고, 어디를 조심해야 하나"를 파악하도록
 > 정리했습니다. 수치의 권위는 `docs/reports/*.json`, 변경 이력의 권위는 `CHANGELOG.md` 입니다.
 
-*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch41 (main, origin 동기화됨)*
+*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch42 (main, origin 동기화됨)*
 
 ---
 
@@ -11,6 +11,7 @@
 
 | 버전 | 테마 | 핵심 내용 |
 |---|---|---|
+| **v0.4.16-patch42** | REPORTING 커버리지 수치 표 | 5종 규제 프레임워크별 direct/partial/oos 항목 수 표 추가 |
 | **v0.4.16-patch41** | reports/README JSON 키 구조 | recall-int8.json Python 접근 예시·키 구조 안내 추가 |
 | **v0.4.16-patch40** | PROJECT_STATE 이력 현행화 | §4 갭 점검에 patch14~39 교차링크 보강 이력 16항목 추가 |
 | **v0.4.16-patch39** | docs/README 관련 문서 | docs/README.md 관련 문서 섹션 신설 |

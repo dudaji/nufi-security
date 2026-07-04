@@ -4,6 +4,14 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch42)
+
+> **v0.4.16-patch42 — REPORTING.md 프레임워크별 커버리지 수치 표 추가**
+> 5종 규제 프레임워크별 direct/partial/out_of_scope 항목 수를 표로 명시화. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/REPORTING.md** — §2 "프레임워크" 표에 커버리지 수치(direct·partial·oos) 열 추가. net-sep 5/5 direct 강조 주석 추가.
+
 ## [0.4.16] - 2026-07-04 (patch41)
 
 > **v0.4.16-patch41 — reports/README recall-int8.json 키 구조 안내 추가**
