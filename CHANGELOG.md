@@ -4,6 +4,14 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch48)
+
+> **v0.4.16-patch48 — ROADMAP §6 현재 달성 수치 표 추가**
+> ROADMAP.md 에 v0.4.16 기준 10개 목표 지표(재현율·지연·오탐·규제 증빙·테스트·데모)를 목표값 대비 달성값 표로 정리. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/ROADMAP.md** — §6 신설(현재 달성 수치) — 10개 지표 목표/달성 대비 표, 기존 §6→§7 재번호.
+
 ## [0.4.16] - 2026-07-04 (patch47)
 
 > **v0.4.16-patch47 — MANUAL §9 용어집 항목 7개 추가**
