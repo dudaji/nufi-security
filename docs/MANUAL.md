@@ -220,6 +220,26 @@ result = Guard().inspect("김민수님 계좌번호 110-123-456789")
 > 위 용어(egress·가역 가명화·해시체인·우회·[커버리지](#9-용어집)·EDM)의 짧은
 > 정의는 [§9 용어집](#9-용어집)에 모아 두었습니다.
 
+### 탐지 대상 PII 클래스 (12종)
+
+| 클래스 | 설명 | 탐지 방식 |
+|---|---|---|
+| **KR_RRN** | 주민등록번호 | 정규식 + 체크섬 |
+| **KR_FOREIGNER_REG** | 외국인등록번호 | 정규식 + 체크섬 |
+| **KR_BRN** | 사업자등록번호 | 정규식 + 체크섬 |
+| **KR_PASSPORT** | 여권번호 | 정규식 |
+| **KR_DRIVER_LICENSE** | 운전면허번호 | 정규식 |
+| **KR_ACCOUNT** | 계좌번호 | 정규식 |
+| **CREDIT_CARD** | 신용카드번호 | 정규식 + Luhn 체크섬 |
+| **KR_PHONE** | 국내 전화번호 | 정규식 |
+| **EMAIL** | 이메일 주소 | 정규식 |
+| **KR_PERSON** | 한국어 인명 | NER (onnx-int8 / gazetteer) |
+| **KR_LOCATION** | 한국어 지명 | NER (onnx-int8 / gazetteer) |
+| **SECRET** | API 키·토큰·비밀 | 패턴 + 섀넌 엔트로피(Shannon entropy) |
+
+> "강한 PII" = KR_RRN·KR_FOREIGNER_REG·KR_PASSPORT·KR_DRIVER_LICENSE·KR_ACCOUNT·CREDIT_CARD (어떤 프리셋에서도 외부 전송 차단).
+> "약한 PII" = KR_PHONE·EMAIL·KR_PERSON·KR_LOCATION·KR_BRN (프리셋에 따라 가명화·경고·차단).
+
 탐지 정확도(한국어 개인정보 재현율 0.9908, KR_PERSON 0.9799 등) 실측값과 한계는 루트
 [`../README.md`](../README.md) 의 *성능·정확도* 절을 보세요.
 
