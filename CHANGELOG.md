@@ -4,6 +4,22 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch03)
+
+> **v0.4.16-patch03 — examples 확장 + 문서 링크·수치 정합 (306건)**
+> sdk_file_scan.py 신규 예시 추가, 스모크 테스트 5→6건, ROADMAP 깨진 링크 수정, reports/README.md 누락 파일 추가. VERSION 변경 없음.
+
+### Added
+- **`examples/sdk_file_scan.py`** — `scan_file`·`guard_file`·`batch_detect` 편의 함수 사용 예시 신규 추가.
+- **`test_examples_smoke.py` sdk_file_scan 추가** — 스모크 테스트 5→6종, 전체 테스트 305→306건.
+- **`docs/reports/README.md` 누락 파일 5건** — baseline-int8.json·CMP-199·fn-dump 3종 인덱스 추가.
+
+### Fixed
+- **ROADMAP 깨진 링크 2건** — `research/FSEC_AI_GUIDE_2026.md`(없는 파일), `llm-routing-research.md`→`CMP-238-llm-routing-research.md`.
+- **HANDS_ON.md** — 스모크 테스트 5종→6종, 단위 테스트 수 305→306 제목 정정.
+- **docs/README.md** — 진척 테스트 수 305→306 정정.
+- **RELEASE_NOTES** — 스모크 테스트 5건→6건, 306 passed.
+
 ## [0.4.16] - 2026-07-04 (patch02)
 
 > **v0.4.16-patch02 — 문서 수치 정합 마무리 (305건)**
