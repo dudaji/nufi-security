@@ -3,7 +3,7 @@
 > 이어받는 사람/AI가 "무엇이 되어 있고, 무엇이 남았고, 어디를 조심해야 하나"를 파악하도록
 > 정리했습니다. 수치의 권위는 `docs/reports/*.json`, 변경 이력의 권위는 `CHANGELOG.md` 입니다.
 
-*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch06 (main, origin 동기화됨)*
+*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch10 (main, origin 동기화됨)*
 
 ---
 
@@ -11,6 +11,10 @@
 
 | 버전 | 테마 | 핵심 내용 |
 |---|---|---|
+| **v0.4.16-patch10** | 문서 풍부화 4차 | docs/README research 섹션, ARCHITECTURE §8 링크, REPORTING SDK §4, test docstring 7종, HANDOVER 버전 갱신 |
+| **v0.4.16-patch09** | 문서 풍부화 3차 | RELEASE_NOTES 패치 시리즈 요약, ROADMAP P1·P2 완료, SDK Finding 메서드 설명, 교차링크 보강 |
+| **v0.4.16-patch08** | CLI·goldset 문서 | CLI.md SDK 예시 표, goldset README 프로그래밍 가이드 |
+| **v0.4.16-patch07** | HANDOVER 현행화 | PROJECT_STATE patch06 기준 버전 이력·갭 점검 |
 | **v0.4.16-patch06** | Finding.__repr__ + examples/README | Finding repr 개선(None 필드 제거·score 포맷), examples/ 인덱스 README 신설 |
 | **v0.4.16-patch05** | 문서 풍부화 | ARCHITECTURE 컴포넌트 표, DEMO SDK 섹션, SDK/MANUAL/INTEGRATION_GUIDE 교차링크, FN §7.6 분석 |
 | **v0.4.16-patch04** | examples 확장 + 문서 보강 | examples 7종 스모크(sdk_file_scan·sdk_compliance_report 추가), 307 테스트, 보고서 인덱스, 잔여 FN §7.6 |
