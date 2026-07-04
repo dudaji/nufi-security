@@ -4,6 +4,14 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch51)
+
+> **v0.4.16-patch51 — SDK.md §2.4 GuardResult·Decision 필드 상세 표 추가**
+> Guard.inspect() 반환값인 GuardResult·Decision dataclass 의 모든 필드(타입·설명·property 포함)와 코드 예시 추가. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/SDK.md** — §2.4 에 GuardResult 필드 표(5개)·Decision 필드 표(4개) + 사용 예시 코드 블록 추가.
+
 ## [0.4.16] - 2026-07-04 (patch50)
 
 > **v0.4.16-patch50 — REPORTING §5 감사관 제출 치트시트 추가**

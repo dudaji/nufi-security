@@ -6,7 +6,7 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch50) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.16 패치 시리즈 (patch01~patch51) — **문서 풍부화 + SDK 사용성 개선**
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
@@ -77,7 +77,9 @@
 
 - **REPORTING §5 감사관 제출 치트시트(patch50)** — 한국 규제 감사(금융보안원·금융위원회·개인정보보호위원회·과기부·KISA) 대응 시 표준 5단계 CLI 흐름과 규제별 `--framework` 대응표 추가.
 
-기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch50 절.
+- **SDK GuardResult·Decision 필드 표(patch51)** — `Guard.inspect()` 반환값 `GuardResult`·`Decision` dataclass 의 모든 필드(5+4개, 타입·설명·property 포함)와 사용 예시 추가.
+
+기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch51 절.
 
 ---
 
