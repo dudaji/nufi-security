@@ -243,6 +243,49 @@ result = Guard().inspect("김민수님 계좌번호 110-123-456789")
 탐지 정확도(한국어 개인정보 재현율 0.9908, KR_PERSON 0.9799 등) 실측값과 한계는 루트
 [`../README.md`](../README.md) 의 *성능·정확도* 절을 보세요.
 
+### 감사 로그 레코드 스키마 (`logs/egress_audit.jsonl`)
+
+외부 전송 100%가 적재되는 감사 로그의 JSONL 레코드 구조입니다.
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `id` | `str` | UUID — 레코드 고유 식별자 |
+| `ts` | `str` | ISO 8601 타임스탬프 (`2026-07-04T12:34:56+0900`) |
+| `epoch_ms` | `int` | 유닉스 에포크 밀리초 — 정렬·범위 조회용 |
+| `model` | `str` | 요청 모델 명 (예: `claude-3-5-sonnet-20241022`) |
+| `provider` | `str` | egress 프로바이더 (예: `anthropic`, `openai`) |
+| `is_public` | `bool` | 외부(public) 경로 전송 여부 |
+| `outcome` | `str` | `forwarded` / `blocked` / `transformed` |
+| `decision` | `dict` | 정책 결정 요약 — `{blocked, action_counts, finding_count}` |
+| `findings` | `list` | Finding 목록 (원문 PII 는 `len=...:sha256=...` 단축해시로 마스킹) |
+| `request_body` | `dict` | 요청 본문 (마스킹/가명화 처리본) |
+| `chain` | `dict` | 해시체인 정보 — `{seq, prev_hash, hash}` (hash_chain=True 시) |
+| `extra` | `dict?` | 추가 메타데이터 (게이트웨이 경로별 선택적) |
+
+```json
+{
+  "id": "a1b2c3d4-...",
+  "ts": "2026-07-04T12:34:56+0900",
+  "epoch_ms": 1751598896000,
+  "model": "claude-3-5-sonnet-20241022",
+  "provider": "anthropic",
+  "is_public": true,
+  "outcome": "blocked",
+  "decision": {
+    "blocked": true,
+    "action_counts": {"block": 1, "pseudonymize": 1},
+    "finding_count": 2
+  },
+  "findings": [
+    {"entity_type": "KR_RRN", "text": "len=14:sha256=a3f2..."},
+    {"entity_type": "KR_PERSON", "text": "len=3:sha256=b7c1..."}
+  ],
+  "chain": {"seq": 42, "prev_hash": "3a9f...", "hash": "8d2c..."}
+}
+```
+
+> 원문 PII 평문은 `findings[].text` 에 넣지 않습니다. `len=<길이>:sha256=<해시>` 단축해시만 보관합니다(`_mask_finding()`). 해시체인 무결성 검증은 `nufi-egress audit query --verify-chain` 으로 수행합니다.
+
 ---
 
 ## §4 CLI 레퍼런스
