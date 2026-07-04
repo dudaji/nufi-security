@@ -4,6 +4,14 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch47)
+
+> **v0.4.16-patch47 — MANUAL §9 용어집 항목 7개 추가**
+> 용어집에 Wilson 신뢰구간·강한/약한 PII·가역성·PII 라우팅 등 독자가 자주 헷갈리는 개념 7개 추가. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/MANUAL.md** — §9 용어집에 Wilson CI·강한 PII·약한 PII·가역성·PII 라우팅 등 7개 항목 추가.
+
 ## [0.4.16] - 2026-07-04 (patch46)
 
 > **v0.4.16-patch46 — RELEASE_NOTES 패치 시리즈 성과 요약 표 추가**

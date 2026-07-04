@@ -6,7 +6,7 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch46) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.16 패치 시리즈 (patch01~patch47) — **문서 풍부화 + SDK 사용성 개선**
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
@@ -69,7 +69,9 @@
 
 - **RELEASE_NOTES 패치 시리즈 성과 요약 표(patch46)** — patch01~patch45 의 성과를 "패치 이전/이후" 8개 지표 비교 표로 시각화(SDK 예시 수·내부 링크 수·관련 문서 섹션·Finding 문서화·PII 클래스 표·규제 커버리지·reports JSON 가이드·디렉터리 README).
 
-기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch46 절.
+- **MANUAL §9 용어집 7개 항목 추가(patch47)** — Wilson 신뢰구간·강한 PII·약한 PII·가역성·PII 라우팅 등 독자가 자주 헷갈리는 핵심 개념 7개를 용어집에 추가.
+
+기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch47 절.
 
 ---
 
