@@ -610,6 +610,7 @@ print(result.decision)       # 정책 판정 (차단/가명화/경고)
 ```
 
 데모: `./scripts/demo_sdk.sh` (4/4 PASS). 전체 API 는 [`SDK.md`](SDK.md) 참고.
+독립 실행 예시 7종은 [`examples/README.md`](../examples/README.md) 를 보세요.
 
 ---
 
