@@ -4,6 +4,16 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch08)
+
+> **v0.4.16-patch08 — CLI.md·goldset README 문서 풍부화**
+> CLI.md 관련 스크립트 섹션에 Python SDK 예시 3종 표·링크 추가.
+> samples/gold/README.md 에 프로그래밍 방식 로드 코드 스니펫 추가. VERSION 변경 없음.
+
+### Changed / Added (모두 문서)
+- **docs/CLI.md** — 관련 스크립트 섹션에 Python SDK 예시 3종(library_detect·sdk_file_scan·sdk_compliance_report) 표 + `examples/README.md` 링크 추가.
+- **samples/gold/README.md** — 프로그래밍 방식 로드 예제 섹션 신설: split 로드·양성/음성/unlisted 필터·manifest 검증 코드 스니펫.
+
 ## [0.4.16] - 2026-07-04 (patch07)
 
 > **v0.4.16-patch07 — HANDOVER 현행화 (patch06 기준)**
