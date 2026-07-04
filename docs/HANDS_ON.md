@@ -689,11 +689,11 @@ python3 goldset/generate.py --verify
 # → VERIFY OK  content_hash=<해시>  (불일치 시 MISMATCH 출력)
 ```
 
-### 단위 테스트 + 문서 정합 (303개, ~30초)
+### 단위 테스트 + 문서 정합 (305개, ~35초)
 
 ```bash
 python3 -m pytest tests/ -q
-# → 303 passed, 1 warning
+# → 305 passed, 1 warning
 ```
 
 주요 테스트 그룹:
@@ -704,7 +704,7 @@ python3 -m pytest tests/ -q
 | `test_cmp145_int8_consistency.py` | ONNX-int8 재현율 수용 기준 (CI 하한 0.93+) |
 | `test_repo_docs_are_consistent.py` | README·보고서 수치가 recall-int8.json 과 일치 |
 | `test_doc_style_guard.py` | 공개 문서 스타일 가드 |
-| `test_examples_smoke.py` | examples/ 스크립트 스모크 (library_detect·sdk_quickstart·sdk_block_and_audit) |
+| `test_examples_smoke.py` | examples/ 스크립트 스모크 5종 (library_detect·sdk_quickstart·sdk_block_and_audit·sdk_reversible_roundtrip·sdk_streaming) |
 
 ### 전체 벤치마크 재실행 (ONNX 백엔드, ~5분)
 
