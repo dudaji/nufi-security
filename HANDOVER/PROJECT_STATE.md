@@ -3,7 +3,7 @@
 > 이어받는 사람/AI가 "무엇이 되어 있고, 무엇이 남았고, 어디를 조심해야 하나"를 파악하도록
 > 정리했습니다. 수치의 권위는 `docs/reports/*.json`, 변경 이력의 권위는 `CHANGELOG.md` 입니다.
 
-*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch10 (main, origin 동기화됨)*
+*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-04 · 대상: v0.4.16-patch15 (main, origin 동기화됨)*
 
 ---
 
@@ -11,6 +11,10 @@
 
 | 버전 | 테마 | 핵심 내용 |
 |---|---|---|
+| **v0.4.16-patch15** | 교차링크 보강 | INTEGRATION_GUIDE §5 PII_ROUTING 링크, PRESETS 관련 문서 섹션 신설 |
+| **v0.4.16-patch14** | MANUAL SDK 링크 | MANUAL.md SDK 예시 examples/README.md(7종) 인덱스 링크 |
+| **v0.4.16-patch13** | MANUAL 정확도 정정 | MANUAL.md §3 0.977→0.9908 현행화, RELEASE_NOTES 패치 시리즈 확장 |
+| **v0.4.16-patch12** | HANDOVER·research 인덱스 | HANDOVER README 버전 갱신, docs/README research 섹션, patch11 이력 |
 | **v0.4.16-patch10** | 문서 풍부화 4차 | docs/README research 섹션, ARCHITECTURE §8 링크, REPORTING SDK §4, test docstring 7종, HANDOVER 버전 갱신 |
 | **v0.4.16-patch09** | 문서 풍부화 3차 | RELEASE_NOTES 패치 시리즈 요약, ROADMAP P1·P2 완료, SDK Finding 메서드 설명, 교차링크 보강 |
 | **v0.4.16-patch08** | CLI·goldset 문서 | CLI.md SDK 예시 표, goldset README 프로그래밍 가이드 |

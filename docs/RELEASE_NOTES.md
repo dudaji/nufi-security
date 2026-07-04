@@ -6,7 +6,7 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch11) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.16 패치 시리즈 (patch01~patch15) — **문서 풍부화 + SDK 사용성 개선**
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
@@ -19,9 +19,10 @@
 - **ROADMAP 완료 상태 업데이트** — P1(한국 규제 증빙 48개 통제 완료)·P2(SDK v0.4.6·patch 확장) 정확히 기록.
 - **보고서 인덱스 정비 + 링크 수정** — `docs/reports/README.md` 누락 파일 5건 추가, ROADMAP.md 깨진 링크 2건 수정.
 - **research/ 문서 인덱스** — `docs/README.md` 에 research/ 조사·전략 문서 섹션 추가.
-- **HANDOVER 전반 현행화** — `PROJECT_STATE.md`·`PROJECT_OVERVIEW.md`·`README.md` patch10 기준 갱신 + 갭 점검 결과 기록.
+- **HANDOVER 전반 현행화** — `PROJECT_STATE.md`·`PROJECT_OVERVIEW.md`·`README.md` patch15 기준 갱신 + 갭 점검 결과 기록.
+- **교차링크 추가 보강(patch14~15)** — `INTEGRATION_GUIDE.md` §5에 PII_ROUTING.md 링크, `PRESETS.md` 관련 문서 표 신설, `MANUAL.md` SDK 예시 7종 인덱스 링크.
 
-기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch11 절.
+기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch15 절.
 
 ---
 

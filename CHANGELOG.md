@@ -4,6 +4,24 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch15)
+
+> **v0.4.16-patch15 — 교차링크 보강 (INTEGRATION_GUIDE·PRESETS)**
+> INTEGRATION_GUIDE.md §5 하이브리드 결정트리에 PII_ROUTING.md 링크 추가.
+> PRESETS.md 에 "관련 문서" 섹션 신설(INTEGRATION_GUIDE·OPS_*·PII_ROUTING·CLI). VERSION 변경 없음.
+
+### Changed / Added (모두 문서)
+- **docs/INTEGRATION_GUIDE.md** — §5 끝에 PII 기반 자동 라우팅(Phase 1) 설명 + PII_ROUTING.md 링크 추가.
+- **docs/PRESETS.md** — 관련 문서 표 신설: INTEGRATION_GUIDE·OPS_RULE_RELOAD·OPS_POLICY_AT_SCALE·PII_ROUTING·CLI 5종.
+
+## [0.4.16] - 2026-07-04 (patch14)
+
+> **v0.4.16-patch14 — MANUAL.md SDK 예시 7종 examples/README.md 링크 추가**
+> SDK 예시 단락을 examples/README.md(7종) 인덱스 링크로 업데이트. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/MANUAL.md** — SDK 예시 단락: examples/README.md(7종) 우선 링크로 업데이트.
+
 ## [0.4.16] - 2026-07-04 (patch13)
 
 > **v0.4.16-patch13 — MANUAL.md 정확도 수치 정정 + RELEASE_NOTES 패치 시리즈 patch11 확장**
