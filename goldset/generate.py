@@ -478,6 +478,50 @@ def build():
                      "source": "synth", "_cls": "zz_kr_person_union",
                      "_gazetteer_unlisted": False})
 
+    # --- CMP-240: KR_PHONE 표본 확장 — Wilson CI 하한 ≥0.90 ---
+    # 기존 KR_PHONE 25건(test 15)은 recall 1.0 이어도 Wilson CI 하한 0.796 에 그친다.
+    # test n=15+21=36 으로 확대하면 CI 하한 0.904 → 0.90+ 마감.
+    # sealed 보존: 독립 rng(SEED+47) + sort-last _cls("zz_kr_phone_ext") append.
+    ph_rng = random.Random(SEED + 47)
+    _PH_CTX = [
+        "긴급 연락처 {v} 로 전화 부탁드립니다.",
+        "배송 기사 {v} 연락 바랍니다.",
+        "고객센터 {v} 로 문의해 주세요.",
+        "비상 연락망 {v} 등록 완료.",
+        "담당자 전화번호 {v} 확인 바랍니다.",
+        "회신 연락처 {v} 남깁니다.",
+    ]
+    ph_id = 0
+    for _ in range(35):
+        v = make_phone(ph_rng)
+        p = _PH_CTX[ph_id % len(_PH_CTX)].format(v=v)
+        ph_id += 1
+        rows.append({"id": f"zz_kr_phone_ext-{ph_id:04d}", "prompt": p,
+                     "expect": ["KR_PHONE"], "spans": [_span(p, v, "KR_PHONE")],
+                     "source": "synth", "_cls": "zz_kr_phone_ext"})
+
+    # --- CMP-240: EMAIL 표본 확장 — Wilson CI 하한 ≥0.90 ---
+    # 기존 EMAIL 15건(test 9)은 recall 1.0 이어도 Wilson CI 하한 0.701 에 그친다.
+    # test n=9+27=36 으로 확대하면 CI 하한 0.904 → 0.90+ 마감.
+    # sealed 보존: 독립 rng(SEED+53) + sort-last _cls("zz_email_ext") append.
+    em_rng = random.Random(SEED + 53)
+    _EM_CTX = [
+        "문의 메일 {v} 로 회신 바랍니다.",
+        "담당자 이메일 {v} 확인해 주세요.",
+        "초대장을 {v} 로 발송했습니다.",
+        "계정 복구용 메일 {v} 등록 완료.",
+        "뉴스레터 수신 주소 {v} 변경 요청.",
+        "인증 메일을 {v} 로 전송합니다.",
+    ]
+    em_id = 0
+    for _ in range(45):
+        v = make_email(em_rng)
+        p = _EM_CTX[em_id % len(_EM_CTX)].format(v=v)
+        em_id += 1
+        rows.append({"id": f"zz_email_ext-{em_id:04d}", "prompt": p,
+                     "expect": ["EMAIL"], "spans": [_span(p, v, "EMAIL")],
+                     "source": "synth", "_cls": "zz_email_ext"})
+
     return rows
 
 
