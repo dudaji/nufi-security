@@ -124,6 +124,7 @@ flowchart TB
 | 패킷 캡처 | `capture/flow_tap.py`, `capture/content_dump.py` | `FlowTap.classify()`, `ContentDumpWriter.dump()` |
 | 비동기 감사봇 | `egress_audit/audit_bot.py`, `file_queue.py` | `AuditBot.run_once()` |
 | enforcement (nftables) | `enforcement/` | `Applier.apply()`, `render_ruleset()` |
+| Python SDK 파사드 | `nufi/` | `detect()`, `Guard()`, `pseudonymize()`, `scan_file()`, `guard_file()`, `batch_detect()` |
 | config | `config/*.yaml` | routing·policy·patterns·confidential·audit_profiles·edm |
 
 ---
