@@ -97,3 +97,16 @@ P0(코어 정확도)를 먼저 끌어올려 해자를 굳히고, P1로 한국 �
 - **설계·구현 분리:** 설계·명세와 구현 트랙을 분리해, 명세 확정 후 구현을 진행한다.
 - **OKR 연결 공백:** 본 로드맵은 아직 회사 목표·핵심결과에 연결되어 있지 않다(goalId=null). 리더십 연결 결정 필요.
 - **포지셔닝 정합:** README·MANUAL 의 "엔터프라이즈 게이트웨이" 서술을 본 경량·CLI/SDK·한국특화 방향으로 후속 정렬한다(별도 문서 트랙).
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`RELEASE_NOTES.md`](RELEASE_NOTES.md) | 각 버전·패치에서 무엇이 달라졌나 (P0~P2 완료 이력) |
+| [`../CHANGELOG.md`](../CHANGELOG.md) | 기술 변경 전체 이력 |
+| [`REPORTING.md`](REPORTING.md) | P1 규제 증빙 팩 구현 결과 — 컴플라이언스 리포팅 |
+| [`SDK.md`](SDK.md) | P2 Python SDK 구현 표면 |
+| [`PII_ROUTING.md`](PII_ROUTING.md) | 차기 P3 — LLM 라우팅 Phase 1 구현 현황 |
+| [`research/SOLUTION_FOCUS_OPTIONS.md`](research/SOLUTION_FOCUS_OPTIONS.md) | 2축 집중 결정의 배경 분석 |

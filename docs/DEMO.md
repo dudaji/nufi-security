@@ -133,3 +133,16 @@ HTTP 200   ← 전화/이메일은 pseudonymize(비차단) 정책 → 본문 가
 3. **유출 차단** — 강한 PII/비밀은 403 차단, 약한 PII는 가명화 후 전송.
 4. **전량 감사 로깅** — public 전송은 결정과 함께 100% 기록.
 5. **에어갭/저지연** — 외부 의존 0, p95 < 1ms(gazetteer 백엔드 기준).
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`HANDS_ON.md`](HANDS_ON.md) | Part F(게이트웨이 e2e)·G(SDK 직접 임포트)·H(강건성)·I(편의함수)·J(벤치마크) — 실습 정주행 |
+| [`examples/README.md`](../examples/README.md) | Python SDK 독립 실행 예시 7종 인덱스 |
+| [`CLI.md`](CLI.md) | 데모에서 쓰는 모든 서브커맨드 전체 플래그·종료코드 |
+| [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md) | 데모 확인 후 실서비스 배선으로 넘어가는 통합 진입점 |
+| [`REPORTING.md`](REPORTING.md) | `demo_report.sh`·`demo_compliance_mapping.sh` 배경: 컴플라이언스 리포팅 |
+| [`PII_ROUTING.md`](PII_ROUTING.md) | `demo_pii_routing.sh` 배경: PII 기반 하이브리드 라우팅 |
