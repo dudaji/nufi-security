@@ -4,6 +4,14 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch49)
+
+> **v0.4.16-patch49 — MANUAL §3 감사 로그 JSONL 레코드 스키마 문서화**
+> 매뉴얼 §3 핵심 개념에 `logs/egress_audit.jsonl` 레코드 필드 표(id·ts·epoch_ms·model·provider·is_public·outcome·decision·findings·request_body·chain·extra)와 실제 JSON 예시 추가. 원문 마스킹 방식(`len=...:sha256=...`) 명시. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/MANUAL.md** — §3 에 감사 로그 JSONL 스키마 표 + JSON 예시 블록 추가.
+
 ## [0.4.16] - 2026-07-04 (patch48)
 
 > **v0.4.16-patch48 — ROADMAP §6 현재 달성 수치 표 추가**

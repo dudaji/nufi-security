@@ -6,7 +6,7 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch48) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.16 패치 시리즈 (patch01~patch49) — **문서 풍부화 + SDK 사용성 개선**
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
@@ -73,7 +73,9 @@
 
 - **ROADMAP §6 현재 달성 수치 표(patch48)** — v0.4.16 기준 10개 지표(전체 PII 재현율·인명·주소·지연·오탐·12클래스 CI·규제 증빙·SDK 예시·테스트·데모)를 목표값 대비 달성값 표로 정리. 로드맵 문서에서 제품 현황을 한눈에 파악 가능.
 
-기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch48 절.
+- **MANUAL §3 감사 로그 JSONL 스키마(patch49)** — `logs/egress_audit.jsonl` 레코드 필드 표(12개 필드)와 실제 JSON 예시 추가. 원문 PII 마스킹 방식(`len=...:sha256=...`) 명시.
+
+기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch49 절.
 
 ---
 
