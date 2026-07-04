@@ -140,6 +140,59 @@ PII 라우팅 결정은 감사 로그에 기록된다:
 - `entity_types` — 감지된 엔티티 타입 목록
 - PII 원문은 마스킹 처리 (길이+해시만 보존)
 
+## 비용 추적
+
+`PiiRouter` 는 라우팅 결정에 따른 추정 비용을 누적 추적한다.
+
+### DEFAULT_COST_TABLE
+
+모델별 토큰당 비용(USD) 근사치. `PiiRouter(cost_table=...)` 로 오버라이드 가능.
+
+```python
+DEFAULT_COST_TABLE = {
+    "gpt-4o":            {"input": 2.50/1M, "output": 10.00/1M},
+    "gpt-4o-mini":       {"input": 0.15/1M, "output":  0.60/1M},
+    "gpt-3.5-turbo":     {"input": 0.50/1M, "output":  1.50/1M},
+    "claude-3-5-sonnet": {"input": 3.00/1M, "output": 15.00/1M},
+    "claude-3-haiku":    {"input": 0.25/1M, "output":  1.25/1M},
+    "local":             {"input": 0.0,      "output":  0.0},
+}
+```
+
+로컬 모델은 토큰 비용 0 으로 계산한다(인프라 비용은 별도 산정).
+
+### cost_summary()
+
+`PiiRouter.cost_summary()` 는 누적된 `record_cost()` 호출을 집계한 딕셔너리를 반환한다:
+
+```python
+router = PiiRouter()
+# ... route() + record_cost() 호출 후 ...
+summary = router.cost_summary()
+# {
+#   "total_requests": 150,
+#   "local_requests": 90,
+#   "cloud_requests": 60,
+#   "total_cost_usd": 0.042,
+#   "local_cost_usd": 0.0,
+#   "cloud_cost_usd": 0.042,
+#   "by_model": {"gpt-4o": 0.035, "claude-3-haiku": 0.007}
+# }
+```
+
+| 필드 | 설명 |
+|------|------|
+| `total_requests` | 전체 기록된 요청 수 |
+| `local_requests` / `cloud_requests` | 로컬/클라우드 분배 수 |
+| `total_cost_usd` | 전체 추정 비용 |
+| `local_cost_usd` / `cloud_cost_usd` | 로컬/클라우드 각 비용 |
+| `by_model` | 모델별 비용 분해 |
+
+PII 라우팅이 활성화되면 민감 요청이 로컬로 분배되어 `cloud_cost_usd` 가 절감된다.
+절감 효과는 `(cloud_requests / total_requests)` 비율과 `by_model` 분포로 확인할 수 있다.
+
+---
+
 ## Phase 2+ 로드맵
 
 - RouteLLM 분류기 도입 (비용-품질 최적화)

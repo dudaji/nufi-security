@@ -9,10 +9,19 @@ NuFi 의 네 가지 기능 — **탐지·가명화·정책 평가·증빙 리포
 
 ---
 
-## 0. 문제 — 표면이 흩어져 있다
+## 0. 컨텍스트 — 두 가지 사용 경로
 
-기능은 이미 동작하는 코드로 존재하지만, 공개 표면이 세 곳에 분산돼 있어 라이브러리
-사용자가 무엇을 임포트해야 하는지 한눈에 알 수 없다.
+NuFi 는 동일 엔진을 **두 가지 표면**으로 노출한다:
+
+| 경로 | 패키지 | 용도 |
+|---|---|---|
+| **인프로세스 라이브러리** | `nufi` (본 문서) | 엔진을 직접 임포트 — 탐지·가명화·정책·리포트 |
+| **게이트웨이 클라이언트** | [`nufi_client`](../nufi_client/__init__.py) | OpenAI 호환 HTTP/in-process 심 — 서빙빌더가 앞단에 끼움 |
+
+두 패키지는 **보완 관계**다. `nufi` 는 엔진 자체를 노출하고, `nufi_client` 는 게이트웨이를
+통과하는 요청/응답 라운드트립(가역 가명화 포함)을 감싼다.
+
+### 기존 임포트 분산 현황
 
 | 기능 | 현재 임포트 경로 | 비고 |
 |---|---|---|
@@ -22,9 +31,7 @@ NuFi 의 네 가지 기능 — **탐지·가명화·정책 평가·증빙 리포
 | 정책 평가 | `egress_audit.PolicyEngine`, `Decision`, `EgressGuard`, `GuardResult` | 노출됨 |
 | 증빙 리포트 | `enforcement.report` 모듈 함수 | 패키지 표면 아님 |
 
-추가로 `nufi_client` 패키지가 따로 있으나, 이는 **게이트웨이 HTTP/in-process 클라이언트**
-(서빙빌더가 앞단에 끼우는 얇은 심)로 본 SDK 표면과 **목적이 다르다**. 본 문서가 정의하는
-것은 게이트웨이를 거치지 않고 엔진을 직접 임포트하는 **인프로세스 라이브러리 API** 다.
+`nufi` 파사드는 위 분산된 심볼을 **단일 진입점**으로 재노출한다.
 
 ---
 
@@ -228,43 +235,27 @@ all_findings = batch_detect(["텍스트1", "텍스트2", "텍스트3"])
 
 ---
 
-## 5. 구현 인계 — 작업 명세
+## 5. Advanced 계층 심볼 리스트
 
-> 본 절은 사람 개발자(또는 구현 담당)에게 인계할 구현 작업의 수용기준이다.
-> 본 SDK 표면 설계는 코드를 새로 구현하지 않으며, 기존 심볼의 **재노출·이름 정렬·
-> 문서화**가 핵심이다(신규 알고리즘 없음).
+아래는 **advanced 계층**에 속하는 주요 심볼이다. `from nufi import ...` 로는 노출되지 않으며,
+하위 패키지를 직접 임포트해야 한다. 시그니처 변경 시 CHANGELOG 에 고지한다.
 
-**범위(IN):**
-1. 신규 패키지 `nufi/__init__.py` — §2 의 stable 심볼을 기존 모듈에서 재노출(별칭 포함:
-   `Detector`=`DetectionPipeline`, `Guard`=`EgressGuard`, `pseudonymize`=`pseudo_token`,
-   `compliance_report`=`build_compliance_report`, `render_report`=`render`).
-2. 편의 함수 `detect(text, **kw)` — 프로세스 캐시된 기본 `Detector` 위임(지연 로딩).
-3. `nufi.__version__` — 루트 `VERSION` 동기화(`pyproject` dynamic version 규약과 일치).
-4. `pyproject.toml` `[tool.setuptools] packages` 에 `nufi` 추가.
-5. 임포트 부수효과 0 보장(모델/config 지연 로딩) 회귀 테스트.
-6. CLI↔SDK 동등 스모크 테스트: `Guard().inspect` 결과가 동일 입력에 대해 CLI 집행
-   결정과 일치, `compliance_report` 모델의 무결성 게이트(0/1) 보존.
-7. README 진입점에 "라이브러리로 쓰기" 5줄 퀵스타트 링크, HANDS_ON 실습 1개.
+| 패키지 | 심볼 | 용도 |
+|---|---|---|
+| `egress_audit` | `DetectionPipeline` | 풀설정 탐지 파이프라인 (stable 별칭: `Detector`) |
+| `egress_audit` | `EgressGuard` | 풀설정 가드 (stable 별칭: `Guard`) |
+| `egress_audit` | `SurrogateMinter`, `MappingVault` | 가역 가명화 내부 구성요소 |
+| `enforcement.benchmark` | `run_benchmarks`, `evaluate_accuracy_gate`, `run_pseudonymize_benchmark` | 벤치마크 재현 |
+| `enforcement.report` | `build_compliance_report`, `render` | 리포트 내부 진입점 |
+| `gateway.pii_router` | `PiiRouter`, `DEFAULT_COST_TABLE` | PII 라우팅 + 비용 추적 |
 
-**범위(OUT):**
-- 새 탐지/가명화/정책 알고리즘. (재노출만)
-- 운영(SLA/대시보드/멀티테넌시) 신규 표면.
-- 게이트웨이 HTTP 클라이언트 변경(`nufi_client` 는 별개 트랙).
-- 프론트엔드.
-
-**수용기준(DoD):**
-- `from nufi import detect, Detector, Finding, pseudonymize, mask, redact,
-  ReversibleEgress, Guard, GuardResult, PolicyEngine, Decision, compliance_report,
-  render_report, load_catalog` 가 모두 성공.
-- `import nufi` 가 외부 네트워크 호출 0·모델 로딩 0(지연).
-- 문서 가드(`check_doc_style`)·문서 정합 가드(`check_docs`) rc=0.
-- 신규 스모크 테스트 통과, 기존 테스트 회귀 없음.
-- CHANGELOG `[Unreleased]` 에 SDK 표면 항목 기재.
+> `nufi_client` 패키지(`NuFi`, `RoundTrip`, `InProcessTransport` 등)는 본 SDK 와
+> 별개 트랙이다. 게이트웨이 클라이언트 API 는 [`nufi_client/__init__.py`](../nufi_client/__init__.py) 참조.
 
 ---
 
-## 6. 미해결·후속
+## 6. 후속
 
 - **OKR 연결:** 본 SDK 표면 → 회사 Objective/KR 매핑(goalId)은 리더십 정합 필요.
 - **버전 라인:** v0.1.0 포함 여부·릴리스 시점은 보드 명령 사항(예약 매터).
-- **고급 계층 정리:** advanced 로 분류한 SLA 함수의 장기 폐기 여부는 차기 결정.
+- **고급 계층 정리:** advanced 로 분류한 심볼의 장기 폐기 여부는 차기 결정.
