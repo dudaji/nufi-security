@@ -6,7 +6,7 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch29) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.16 패치 시리즈 (patch01~patch32) — **문서 풍부화 + SDK 사용성 개선**
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
@@ -28,7 +28,9 @@
 - **docs/README.md 진입점 보강(patch27)** — history/README.md·research/README.md 링크 추가로 하위 폴더 탐색성 향상.
 - **INTEGRATION_GUIDE.md 관련 문서 표(patch28)** — PRESETS·CLI·SDK·HANDS_ON·PII_ROUTING·OPS_RULE_RELOAD 6종 교차링크.
 
-기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch29 절.
+- **하위 패키지 README 교차링크(patch30~31)** — `nufi_client/README.md`·`samples/gold/README.md` 에 관련 문서 표 신설.
+
+기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch32 절.
 
 ---
 

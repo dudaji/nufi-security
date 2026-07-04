@@ -4,6 +4,34 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch32)
+
+> **v0.4.16-patch32 — CHANGELOG·RELEASE_NOTES·HANDOVER patch32 기준 현행화**
+> patch30·31 항목 추가. RELEASE_NOTES·HANDOVER patch32 갱신. VERSION 변경 없음.
+
+### Changed (문서)
+- **CHANGELOG.md** — patch30·31 항목 추가.
+- **docs/RELEASE_NOTES.md** — 패치 시리즈 patch32로 확장.
+- **HANDOVER/PROJECT_STATE.md** — patch30~32 버전 이력 추가, 대상 patch32.
+- **HANDOVER/PROJECT_OVERVIEW.md** — 패치 번호 patch29→patch32.
+- **HANDOVER/README.md** — 대상 버전 patch29→patch32.
+
+## [0.4.16] - 2026-07-04 (patch31)
+
+> **v0.4.16-patch31 — samples/gold/README.md 관련 문서 섹션 신설**
+> docs/reports/README·HANDS_ON·kr-person-error-analysis 교차링크. VERSION 변경 없음.
+
+### Changed (문서)
+- **samples/gold/README.md** — 관련 문서 표 신설: docs/reports/README.md·HANDS_ON.md·kr-person-error-analysis.md 3종.
+
+## [0.4.16] - 2026-07-04 (patch30)
+
+> **v0.4.16-patch30 — nufi_client/README.md 관련 문서 섹션 신설 + 통합 가이드 링크 확정**
+> 통합 가이드 "후속 문서" 링크를 INTEGRATION_GUIDE.md 로 확정. 관련 문서 표 신설. VERSION 변경 없음.
+
+### Changed (문서)
+- **nufi_client/README.md** — "통합 가이드" 링크를 `docs/INTEGRATION_GUIDE.md` 로 확정. 관련 문서 표 신설: docs/SDK.md·docs/INTEGRATION_GUIDE.md·examples/README.md 3종.
+
 ## [0.4.16] - 2026-07-04 (patch29)
 
 > **v0.4.16-patch29 — CHANGELOG·RELEASE_NOTES·HANDOVER patch29 기준 현행화**
