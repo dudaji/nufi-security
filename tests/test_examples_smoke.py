@@ -1,4 +1,4 @@
-"""examples/ 디렉터리 예시 스크립트 스모크 테스트.
+"""examples/ 디렉터리 예시 스크립트 스모크 테스트 — 7종.
 
 검증 항목:
   1. examples/library_detect.py — 오류 없이 실행 완료 (exit 0), KR_RRN·KR_PERSON 탐지.
@@ -6,8 +6,10 @@
   3. examples/sdk_block_and_audit.py — 오류 없이 실행 완료 (exit 0), 403 차단 확인.
   4. examples/sdk_reversible_roundtrip.py — 오류 없이 실행 완료 (exit 0), 가역 라운드트립 확인.
   5. examples/sdk_streaming.py — 오류 없이 실행 완료 (exit 0).
+  6. examples/sdk_file_scan.py — 오류 없이 실행 완료 (exit 0), scan_file·guard_file·batch_detect.
+  7. examples/sdk_compliance_report.py — 오류 없이 실행 완료 (exit 0), 통제·충족 커버리지 출력.
 
-실행: python3 tests/test_examples_smoke.py  (FAIL → exit 1)
+실행: EGRESS_NER_BACKEND=gazetteer python3 -m pytest tests/test_examples_smoke.py -v
 """
 from __future__ import annotations
 
