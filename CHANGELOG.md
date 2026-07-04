@@ -4,6 +4,14 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch41)
+
+> **v0.4.16-patch41 — reports/README recall-int8.json 키 구조 안내 추가**
+> JSON 보고서를 코드에서 읽는 방법(주요 키·Python 스니펫) 문서화. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/reports/README.md** — `recall-int8.json` 키 구조 안내 섹션 추가(per_class_recall·latency·acceptance·SDK 접근법 포함).
+
 ## [0.4.16] - 2026-07-04 (patch40)
 
 > **v0.4.16-patch40 — PROJECT_STATE 교차링크 보강 이력 현행화**

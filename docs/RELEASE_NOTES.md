@@ -6,7 +6,7 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch40) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.16 패치 시리즈 (patch01~patch41) — **문서 풍부화 + SDK 사용성 개선**
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
@@ -44,7 +44,9 @@
 
 - **PROJECT_STATE 교차링크 이력 현행화(patch40)** — `HANDOVER/PROJECT_STATE.md` §4 갭 점검에 patch14~39 에 걸친 교차링크 전반 보강 16개 항목 표 추가.
 
-기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch40 절.
+- **reports/README 보고서 JSON 키 구조 안내(patch41)** — `recall-int8.json` 의 Python 접근 예시(per_class_recall·latency·acceptance·SDK) 추가. 수치를 코드에서 읽는 방법 문서화.
+
+기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch41 절.
 
 ---
 
