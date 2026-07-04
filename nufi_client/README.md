@@ -81,4 +81,14 @@ for chunk in client.chat.completions.create(
 - `examples/sdk_streaming.py` — 스트리밍/비스트리밍
 - `tests/test_cmp119_sdk.py` — 수용기준 테스트
 
-> 통합 가이드(SDK + doctor + presets + deploy 묶음)는 후속 문서에서 다룬다.
+> 통합 가이드(SDK + doctor + presets + deploy 묶음): [`docs/INTEGRATION_GUIDE.md`](../docs/INTEGRATION_GUIDE.md).
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`docs/SDK.md`](../docs/SDK.md) | `nufi` 파사드(고수준 SDK) API — `detect`·`Guard`·`pseudonymize`·편의함수 |
+| [`docs/INTEGRATION_GUIDE.md`](../docs/INTEGRATION_GUIDE.md) | 통합 경로 택일 → 프리셋 → doctor 검증 순서 |
+| [`examples/README.md`](../examples/README.md) | `nufi_client` 를 직접 쓰는 독립 실행 예시 4종 인덱스 |
