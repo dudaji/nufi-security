@@ -79,6 +79,7 @@
 | [`HANDS_ON.md`](HANDS_ON.md) | **입문 튜토리얼** — 토이 프로젝트 1개를 SDK 전환 + CLI 운영으로 끝까지 실습 | ✅ **입문 진입점** |
 | [`DEMO.md`](DEMO.md) | **전체 데모 카탈로그** — 기능별 1-명령 `demo_*.sh` PASS/FAIL 모음 | ✅ **데모 진입점 (living)** |
 | [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) | **정책 운영 자동화 매뉴얼** (`nufi-egress policy …`) | ✅ v0.0.5 운영 진입점 |
+| 📊 [`reports/README.md`](reports/README.md) | **정확도 보고서 인덱스** — 현행 권위 JSON + 분석 보고서 목록 + v0.4.16 핵심 수치 | ✅ 현행 |
 | [`history/DEMO_v0.0.3.md`](history/DEMO_v0.0.3.md) | v0.0.3 1-명령 데모 재현 매뉴얼 | 🕮 역사적 — 버전별 스냅샷 |
 | [`history/DEMO_v0.0.5.md`](history/DEMO_v0.0.5.md) | v0.0.5 1-명령 데모/재현 매뉴얼 | 🕮 역사적 — 버전별 스냅샷 |
 
