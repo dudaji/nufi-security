@@ -44,7 +44,7 @@
   - 인라인 지연(p95, 512자, CPU) **41 ms** — 목표 ≤150ms ✅
   - benign_false_block = **0.0** (0/90)
   - (수치의 권위는 `docs/reports/recall-int8.json`. 자세한 버전별 상태는 [`PROJECT_STATE.md`](PROJECT_STATE.md).)
-- **테스트:** 305 passed · **데모:** 11/11 PASS (demo_all.sh)
+- **테스트:** 306 passed · **데모:** 11/11 PASS (demo_all.sh)
 - **Python SDK:** `from nufi import detect, Guard, pseudonymize` — 게이트웨이 없이 코드에서
   직접 임포트. 편의 함수: `scan_file`·`guard_file`·`batch_detect`. 예시: `examples/library_detect.py`.
   설계: [`../docs/SDK.md`](../docs/SDK.md).

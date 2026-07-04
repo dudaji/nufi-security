@@ -693,7 +693,7 @@ python3 goldset/generate.py --verify
 
 ```bash
 python3 -m pytest tests/ -q
-# → 305 passed, 1 warning
+# → 306 passed, 1 warning
 ```
 
 주요 테스트 그룹:

@@ -108,6 +108,20 @@ check(
     f"rc={proc5.returncode}" + (f" stderr={proc5.stderr[:200]}" if proc5.returncode != 0 else ""),
 )
 
+# 6. sdk_file_scan.py
+proc6 = _run_example("sdk_file_scan.py")
+check(
+    "sdk_file_scan.py exit 0",
+    proc6.returncode == 0,
+    f"rc={proc6.returncode}" + (f" stderr={proc6.stderr[:200]}" if proc6.returncode != 0 else ""),
+)
+if proc6.returncode == 0:
+    check(
+        "sdk_file_scan.py scan_file 탐지 출력 포함",
+        "KR_RRN" in proc6.stdout or "KR_PERSON" in proc6.stdout,
+        "stdout에 탐지 결과 없음" if ("KR_RRN" not in proc6.stdout and "KR_PERSON" not in proc6.stdout) else "",
+    )
+
 # 결과 집계
 print()
 passed = sum(1 for _, ok, _ in results if ok)
@@ -184,3 +198,16 @@ def test_sdk_streaming_runs():
         env=env,
     )
     assert result.returncode == 0, f"exit {result.returncode}: {result.stderr[:300]}"
+
+
+def test_sdk_file_scan_runs():
+    """examples/sdk_file_scan.py 가 오류 없이 실행되고 scan_file 탐지를 확인."""
+    env = {**_os.environ, "EGRESS_NER_BACKEND": "gazetteer"}
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "examples" / "sdk_file_scan.py")],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert result.returncode == 0, f"exit {result.returncode}: {result.stderr[:300]}"
+    assert "KR_RRN" in result.stdout or "KR_PERSON" in result.stdout
