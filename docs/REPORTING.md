@@ -165,3 +165,16 @@ for fw, counts in model.control_coverage.by_framework.items():
 ```
 
 재현 예제: [`examples/sdk_compliance_report.py`](../examples/sdk_compliance_report.py).
+
+---
+
+## 관련 문서
+
+| 문서 | 역할 |
+|---|---|
+| [`SDK.md`](SDK.md) | §2.5 증빙 리포트 API 전체 표면 + 안정성 계층 |
+| [`CLI.md`](CLI.md) | `nufi-egress report compliance`·`report sla` 전체 플래그·종료코드 레퍼런스 |
+| [`examples/sdk_compliance_report.py`](../examples/sdk_compliance_report.py) | 재현 가능한 SDK 예시 — 5종 프레임워크 커버리지 출력 |
+| [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) | 정책 변경 감사 로그 — REPORTING 입력 원천 |
+| [`SECURITY_RETAIN_RAW_KEYROTATION.md`](SECURITY_RETAIN_RAW_KEYROTATION.md) | 감사 원문 보존·TTL — 리포트 데이터 보존 정책 |
+| [`research/FSEC_AI_GUIDE_2026.md`](research/FSEC_AI_GUIDE_2026.md) | 금융분야 AI 보안 안내서 — fsec-ai 프레임워크 점검항목 원천 |
