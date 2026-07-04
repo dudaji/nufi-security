@@ -4,6 +4,15 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch35)
+
+> **v0.4.16-patch35 — CLI.md·HANDS_ON.md 관련 문서 섹션 신설**
+> 두 핵심 레퍼런스 문서에 관련 문서 표 추가. VERSION 변경 없음.
+
+### Changed (문서)
+- **docs/CLI.md** — 관련 문서 섹션 신설(HANDS_ON·INTEGRATION_GUIDE·PRESETS·OPS·REPORTING·DEMO 7종).
+- **docs/HANDS_ON.md** — 관련 문서 섹션 신설(INTEGRATION_GUIDE·PRESETS·CLI·SDK·REPORTING·DEMO·examples 7종).
+
 ## [0.4.16] - 2026-07-04 (patch34)
 
 > **v0.4.16-patch34 — CHANGELOG·RELEASE_NOTES·HANDOVER patch34 기준 현행화**

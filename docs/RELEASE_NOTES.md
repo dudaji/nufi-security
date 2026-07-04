@@ -6,7 +6,7 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch34) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.16 패치 시리즈 (patch01~patch35) — **문서 풍부화 + SDK 사용성 개선**
 
 > 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
 
@@ -32,7 +32,9 @@
 
 - **research/ 전략 문서 관련 문서 섹션(patch33)** — `FSEC_AI_GUIDE_2026.md`·`SOLUTION_FOCUS_OPTIONS.md`·`NUFI_SECURITY_PLANE_CHARTER.md` 에 관련 문서 표 신설. 조사·전략 문서 간 교차링크 체계 완성.
 
-기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch34 절.
+- **CLI·HANDS_ON 관련 문서 섹션(patch35)** — `CLI.md`·`HANDS_ON.md` 에 관련 문서 표 신설. 두 핵심 레퍼런스 문서 교차링크 완성.
+
+기술 변경 상세: [`CHANGELOG.md`](../CHANGELOG.md) patch01~patch35 절.
 
 ---
 
