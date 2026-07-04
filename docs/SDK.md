@@ -142,6 +142,8 @@ assert model["integrity"]["ok"] is True
 - **종료코드 의미 보존:** 무결성 게이트(0 정상 / 1 변조)는 CLI 와 동일하게 모델 안에
   표현하며, 커버리지는 정보성으로 비-0 을 만들지 않는다([REPORTING.md](REPORTING.md) §3 권위).
 
+재현 예제: [`examples/sdk_compliance_report.py`](../examples/sdk_compliance_report.py) — 한국 규제 5종 통제 커버리지 출력.
+
 ### 2.6 벤치마크 재현 (Accuracy + Pseudonymization benchmark)
 
 > §2.1–2.5 는 `nufi` 파사드 **설계**(미구현)지만, 본 벤치마크 표면은 **이미 구현·출하**되어
