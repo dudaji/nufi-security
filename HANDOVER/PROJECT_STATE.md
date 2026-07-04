@@ -141,11 +141,22 @@
 | `docs/reports/README.md` 관련 문서 누락 | ✅ REPORTING·SDK·HANDS_ON·goldset 교차링크 신설 |
 | `docs/README.md` 관련 문서 누락 | ✅ ROOT_README·MANUAL·HANDS_ON·CHANGELOG·HANDOVER 교차링크 신설 |
 
+### patch40~patch45 내용 보강 (2026-07-04)
+
+| 보강 항목 | 조치 |
+|---|---|
+| `docs/reports/README.md` Python 접근 예시 없음 | ✅ recall-int8.json 키 구조 + Python 코드 스니펫 추가 (patch41) |
+| `REPORTING.md` 프레임워크별 커버리지 수치 표 없음 | ✅ 5종 규제(fsec-ai/net-sep/pipa/cia/isms-p) direct·partial·oos 항목 수 표 추가 (patch42) |
+| `MANUAL.md` §3 에 PII 클래스 목록 없음 | ✅ 탐지 대상 PII 12종 표(클래스명·설명·탐지 방식·강한/약한 구분) 추가 (patch43) |
+| `SDK.md` Finding dataclass 필드 명세 없음 | ✅ entity_type·text·start·end·score·source·context 7개 필드 타입·설명 표 추가 (patch44) |
+| `MANUAL.md` 부록 문서 지도 불완전 + 잔재 XML 태그 | ✅ SDK·PII_ROUTING·RELEASE_NOTES·DOC_STYLE 4개 링크 추가, `</content></invoke>` 태그 제거 (patch45) |
+
 ### 점검 결과 양호(gap 없음)
 
 모든 공개 정확도·지연 수치 (v0.4.16: pii_recall=0.9908, KR_PERSON 0.9799/CI하한 0.9591,
 KR_LOCATION 1.0/CI하한 0.9417, p95 41ms, benign_fp=0) 가 커밋된 리포트 JSON 과 일치하며,
 `scripts/check_docs.py` 회귀 가드가 향후 드리프트를 기계로 막습니다. 307 테스트 · 11/11 데모 PASS.
+내부 링크 수: **145개** (v0.4.16-patch45 기준). 문서 교차링크 체계 완성.
 
 ## 5. 이어받는 사람이 가장 먼저 볼 것
 
