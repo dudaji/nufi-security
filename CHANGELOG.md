@@ -4,6 +4,17 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch06)
+
+> **v0.4.16-patch06 — Finding.__repr__ 개선 + examples/README.md**
+> SDK 사용성: Finding 클래스의 repr 을 개발자 친화적으로 개선(None 필드 제거·score 소수점 2자리). examples/ 디렉터리 README 추가. VERSION 변경 없음.
+
+### Added
+- **`examples/README.md`** — SDK 예시 7종 인덱스 + 실행법 + 백엔드 설명.
+
+### Changed
+- **`Finding.__repr__`** — None 필드(conf_class·confidence·match_meta) 제거, score 소수점 2자리, `gazetteer` source 기본 생략으로 출력 가독성 향상.
+
 ## [0.4.16] - 2026-07-04 (patch05)
 
 > **v0.4.16-patch05 — 문서 풍부화 (ARCHITECTURE·DEMO·SDK·MANUAL·reports·HANDOVER)**
