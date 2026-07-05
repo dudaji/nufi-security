@@ -73,6 +73,17 @@ _PATTERN_DEFS: List[tuple[str, float, str]] = [
     (r"관리자 모드", 0.6, "low"),
     (r"역할을 바꿔", 0.6, "low"),
     (r"제한을 풀어", 0.6, "low"),
+
+    # --- high (0.8): indirect prompt injection (data-embedded attacks) ---
+    (r"<!--\s*.+", 0.8, "high"),  # hidden instructions in HTML comments
+    (r"\[/?INST\]", 0.8, "high"),  # Llama instruction markers
+    (r"<\|im_start\|>", 0.8, "high"),  # ChatML markers
+    (r"<\|im_end\|>", 0.8, "high"),  # ChatML markers
+    (r"(?<!\w)Human:", 0.8, "high"),  # role injection (Human:)
+    (r"(?<!\w)Assistant:", 0.8, "high"),  # role injection (Assistant:)
+    (r"###\s*(Instruction|System):", 0.8, "high"),  # prompt delimiters
+    # Unicode tricks: zero-width chars between instruction keywords
+    (r"[iI][\u200b\u200c\u200d\ufeff]+[gG][\u200b\u200c\u200d\ufeff]*[nN][\u200b\u200c\u200d\ufeff]*[oO][\u200b\u200c\u200d\ufeff]*[rR][\u200b\u200c\u200d\ufeff]*[eE]", 0.8, "high"),  # "ignore" with zero-width chars
 ]
 
 
