@@ -15,7 +15,7 @@
   targets   capture_targets.yaml 파생/조회 + BPF 필터 출력(CMP-87 캡처 레이어 · CMP-143).
   flow-tap  public 목적지 flow tap(우회 탐지) — --simulate 리플레이/--live 캡처(CMP-143).
   policy    정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사(CMP-144 B1).
-  report    규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음 · CMP-150 C1).
+  report    규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음 · CMP-150 C1). trends 포함(patch149).
   benchmark 정확도(커밋 산출물 게이트) + 가명화 품질(라이브) 벤치마크 단일 재현(CMP-201 I5).
   inspect   통합 보안 분석 — PII + 인젝션 + 라우팅 + 위험도 한 번에 출력(patch78).
   pipeline  체인 파이프라인 — detect→decide→transform→route 한 번에(patch139).
@@ -815,7 +815,11 @@ def cmd_report(args) -> int:
         from enforcement.security_report import cmd_report_security
         return cmd_report_security(args)
 
-    print("usage: nufi-egress report {compliance|security} …", file=sys.stderr)
+    if args.report_kind == "trends":
+        from enforcement.trends_cmd import cmd_report_trends
+        return cmd_report_trends(args)
+
+    print("usage: nufi-egress report {compliance|security|trends} …", file=sys.stderr)
     return 2
 
 
@@ -1124,6 +1128,15 @@ def main(argv: Optional[List[str]] = None) -> int:
                     help="출력 형식(기본 md)")
     rp.add_argument("--output", default=None, metavar="PATH",
                     help="출력 파일 경로(생략 시 stdout)")
+    rp.set_defaults(func=cmd_report)
+
+    rp = rsub.add_parser("trends",
+                         help="PII 탐지 트렌드 — 기간별 이벤트·차단·PII 유형 추이 (patch149)")
+    rp.add_argument("--period", type=int, default=7,
+                    help="표시할 최근 일수(기본 7)")
+    rp.add_argument("--audit", default=None,
+                    help="감사 JSONL 경로(기본 logs/egress_audit.jsonl)")
+    rp.add_argument("--json", action="store_true", help="기계용 JSON 출력")
     rp.set_defaults(func=cmd_report)
 
     p = sub.add_parser("scan",
