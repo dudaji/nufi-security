@@ -801,6 +801,10 @@ def _report_write(text: str, out: Optional[str]) -> None:
 
 def cmd_report(args) -> int:
     # 기존 측정 산출물·감사 로그를 기간별 제출용 리포트로 묶는다(새 측정 없음).
+    if args.report_kind == "posture":
+        from enforcement.posture_cmd import cmd_report_posture
+        return cmd_report_posture(args)
+
     from enforcement import report as _rpt
     fmt = args.format
     flow_paths = [args.flow] if getattr(args, "flow", None) else None
@@ -841,7 +845,7 @@ def cmd_report(args) -> int:
         from enforcement.coverage_map import cmd_report_coverage_map
         return cmd_report_coverage_map(args)
 
-    print("usage: nufi-egress report {compliance|security|trends|diff|executive|badge|coverage-map} …", file=sys.stderr)
+    print("usage: nufi-egress report {compliance|security|trends|diff|executive|badge|coverage-map|posture} …", file=sys.stderr)
     return 2
 
 
@@ -1202,6 +1206,20 @@ def main(argv: Optional[List[str]] = None) -> int:
                     help="출력 형식(기본 text)")
     rp.add_argument("--output", default=None, metavar="PATH",
                     help="출력 파일 경로(생략 시 stdout)")
+    rp.set_defaults(func=cmd_report)
+
+    rp = rsub.add_parser("posture",
+                         help="보안 포스처 스냅샷 — 시간 경과 추적용 (patch168)")
+    rp.add_argument("directory", nargs="?", default=".",
+                    help="스캔할 디렉터리 경로(기본 현재 디렉터리)")
+    rp.add_argument("--save", action="store_true",
+                    help="포스처 히스토리 파일에 저장")
+    rp.add_argument("--compare", action="store_true",
+                    help="마지막 저장된 포스처와 비교")
+    rp.add_argument("--json", action="store_true",
+                    help="기계용 JSON 출력")
+    rp.add_argument("--history", default=None, metavar="PATH",
+                    help="히스토리 파일 경로(기본 .nufi_posture_history.jsonl)")
     rp.set_defaults(func=cmd_report)
 
     p = sub.add_parser("scan",
