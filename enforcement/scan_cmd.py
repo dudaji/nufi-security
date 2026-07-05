@@ -7,15 +7,18 @@ SDK 에서도 ``from nufi import scan_dir`` 로 사용 가능.
 --format sarif 옵션으로 SARIF 2.1.0 JSON 출력 지원 (GitHub code scanning 호환).
 --redact 모드로 PII 를 자동 치환하여 파일을 재작성 (patch88).
 --parallel N 으로 멀티스레드 스캔 지원 (patch97).
+--cache 로 파일 해시 기반 결과 캐싱 (patch101).
 """
 from __future__ import annotations
 
 import fnmatch
+import hashlib
 import json
 import os
 import shutil
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
@@ -144,6 +147,57 @@ class ScanResult:
 
 
 # ---------------------------------------------------------------------------
+# File hash caching (patch101)
+# ---------------------------------------------------------------------------
+
+_CACHE_FILENAME = ".nufi_cache.json"
+
+
+def _file_sha256(path: Path) -> str:
+    """Compute SHA-256 hex digest of a file's contents."""
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while True:
+            chunk = f.read(65536)
+            if not chunk:
+                break
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _load_cache(cache_path: Path) -> Dict[str, Any]:
+    """Load the scan cache from disk."""
+    if not cache_path.is_file():
+        return {}
+    try:
+        return json.loads(cache_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def _save_cache(cache_path: Path, cache: Dict[str, Any]) -> None:
+    """Persist the scan cache to disk."""
+    cache_path.write_text(
+        json.dumps(cache, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+
+def clear_scan_cache(target: str | Path) -> bool:
+    """Delete the scan cache file for the given target root.
+
+    Returns True if a cache file was removed, False otherwise.
+    """
+    target = Path(target)
+    scan_root = target if target.is_dir() else target.parent
+    cache_path = scan_root / _CACHE_FILENAME
+    if cache_path.is_file():
+        cache_path.unlink()
+        return True
+    return False
+
+
+# ---------------------------------------------------------------------------
 # Core scan logic
 # ---------------------------------------------------------------------------
 
@@ -182,6 +236,7 @@ def scan_path(
     check_injection: bool = False,
     exclude: Optional[List[str]] = None,
     parallel: int = 1,
+    cache: bool = False,
 ) -> ScanResult:
     """Scan a file or directory for PII (and optionally injection patterns).
 
@@ -192,6 +247,7 @@ def scan_path(
         exclude: Glob patterns to exclude files/directories from scanning.
             If None, will attempt to load .nufiignore from the target dir.
         parallel: Number of threads to use for scanning (default 1 = sequential).
+        cache: If True, cache results by file SHA-256 hash and skip unchanged files.
 
     Returns:
         ScanResult with all findings.
@@ -224,22 +280,80 @@ def scan_path(
         result.errors.append({"path": str(target), "error": "Path does not exist"})
         return result
 
-    if parallel > 1 and len(files_to_scan) > 1:
+    # Load cache if enabled
+    cache_data: Dict[str, Any] = {}
+    cache_path = scan_root / _CACHE_FILENAME
+    if cache:
+        cache_data = _load_cache(cache_path)
+
+    # Separate files into cached (unchanged) and to-scan
+    files_needing_scan: List[Path] = []
+    if cache:
+        for fpath in files_to_scan:
+            # Skip cache file itself
+            if fpath.name == _CACHE_FILENAME:
+                continue
+            file_key = str(fpath)
+            file_hash = _file_sha256(fpath)
+            cached_entry = cache_data.get(file_key)
+            if cached_entry and cached_entry.get("hash") == file_hash:
+                # Use cached findings
+                result.files_scanned += 1
+                cached_findings = cached_entry.get("findings", [])
+                if cached_findings:
+                    result.files_with_findings += 1
+                for fd in cached_findings:
+                    result.findings.append(ScanFinding(
+                        file=fd["file"],
+                        line=fd["line"],
+                        finding_type=fd["finding_type"],
+                        text=fd["text"],
+                    ))
+            else:
+                files_needing_scan.append(fpath)
+    else:
+        files_needing_scan = [f for f in files_to_scan if f.name != _CACHE_FILENAME]
+        # If not caching, include cache file in normal scan list
+        files_needing_scan = files_to_scan
+
+    if parallel > 1 and len(files_needing_scan) > 1:
         # Parallel scan: each thread creates its own pipeline instance
         with ThreadPoolExecutor(max_workers=parallel) as executor:
             futures = [
                 executor.submit(_scan_file_isolated, fpath, check_injection, patterns)
-                for fpath in files_to_scan
+                for fpath in files_needing_scan
             ]
             sub_results = [f.result() for f in futures]
-        return _merge_results(sub_results)
+        scan_result = _merge_results(sub_results)
+        # Merge with cached results
+        result.files_scanned += scan_result.files_scanned
+        result.files_with_findings += scan_result.files_with_findings
+        result.findings.extend(scan_result.findings)
+        result.errors.extend(scan_result.errors)
     else:
         # Sequential scan (original behaviour)
         pipeline = DetectionPipeline()
         injection_detector = PromptInjectionDetector() if check_injection else None
-        for fpath in files_to_scan:
+        for fpath in files_needing_scan:
             _scan_file(fpath, pipeline, injection_detector, result, patterns)
-        return result
+
+    # Update cache if enabled
+    if cache:
+        for fpath in files_needing_scan:
+            file_key = str(fpath)
+            file_hash = _file_sha256(fpath)
+            # Collect findings for this file from result
+            file_findings = [
+                f.to_dict() for f in result.findings if f.file == file_key
+            ]
+            cache_data[file_key] = {
+                "hash": file_hash,
+                "findings": file_findings,
+                "ts": datetime.now(timezone.utc).isoformat(),
+            }
+        _save_cache(cache_path, cache_data)
+
+    return result
 
 
 def _scan_file(
@@ -546,6 +660,15 @@ def cmd_scan(args) -> int:
     """``nufi-egress scan`` CLI handler."""
     target = args.target
 
+    # --clear-cache: delete cache and exit
+    if getattr(args, "clear_cache", False):
+        removed = clear_scan_cache(target)
+        if removed:
+            print("Cache cleared.")
+        else:
+            print("No cache file found.")
+        return 0
+
     # Parse patterns
     patterns: Optional[List[str]] = None
     if getattr(args, "pattern", None):
@@ -578,6 +701,7 @@ def cmd_scan(args) -> int:
         check_injection=getattr(args, "check_injection", False),
         exclude=exclude,
         parallel=getattr(args, "parallel", 1),
+        cache=getattr(args, "cache", False),
     )
 
     # Output format

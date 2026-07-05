@@ -450,3 +450,49 @@ def test_parallel_scan_produces_same_results_as_sequential(tmp_path: Path):
     seq_types = sorted((f.file, f.line, f.finding_type) for f in seq_result.findings)
     par_types = sorted((f.file, f.line, f.finding_type) for f in par_result.findings)
     assert par_types == seq_types
+
+
+# ---------------------------------------------------------------------------
+# Cache tests (patch101)
+# ---------------------------------------------------------------------------
+
+def test_cache_skips_unchanged_file(tmp_path: Path):
+    """--cache: unchanged file is not re-scanned (cached findings returned)."""
+    f = tmp_path / "data.txt"
+    f.write_text("홍길동 주민번호 900101-1234567\n", encoding="utf-8")
+
+    # First scan populates cache
+    result1 = scan_path(tmp_path, cache=True)
+    assert result1.files_scanned >= 1
+    assert result1.has_pii
+    findings_count = len(result1.findings)
+
+    # Second scan should use cache — same findings returned
+    result2 = scan_path(tmp_path, cache=True)
+    assert result2.files_scanned >= 1
+    assert result2.has_pii
+    assert len(result2.findings) == findings_count
+
+    # Verify cache file exists
+    cache_file = tmp_path / ".nufi_cache.json"
+    assert cache_file.exists()
+    cache_data = json.loads(cache_file.read_text(encoding="utf-8"))
+    assert str(f) in cache_data
+
+
+def test_cache_invalidated_on_file_change(tmp_path: Path):
+    """--cache: modified file is re-scanned (cache invalidated)."""
+    f = tmp_path / "data.txt"
+    f.write_text("홍길동 주민번호 900101-1234567\n", encoding="utf-8")
+
+    # First scan populates cache
+    result1 = scan_path(tmp_path, cache=True)
+    assert result1.has_pii
+
+    # Modify file to remove PII
+    f.write_text("Nothing sensitive here.\n", encoding="utf-8")
+
+    # Second scan should detect the change and re-scan
+    result2 = scan_path(tmp_path, cache=True)
+    assert not result2.has_pii
+    assert len(result2.findings) == 0
