@@ -4,6 +4,24 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch56)
+
+> **v0.4.17-patch56 — config/pii_routing.yaml 설정 파일 도입**
+> PII 라우팅 파라미터를 코드 수정 없이 YAML로 제어할 수 있도록 전용 설정 파일 도입. PiiRouter가 초기화 시 config를 자동 로드하며, LiteLLM hook도 참조.
+
+### Added (설정)
+- **config/pii_routing.yaml** — PII 라우팅 전용 설정 파일 (enabled, local_model, cloud_model, fail_closed, force_local_entities).
+
+### Added (테스트)
+- **tests/test_cmp271_pii_routing_config.py** — 설정 파일 로딩·통합 검증 11건.
+
+### Changed (게이트웨이)
+- **gateway/pii_router.py** — `load_pii_routing_config()` 함수 추가, `PiiRouter` 생성자에 `config_path` 파라미터·`enabled` 속성 추가, `from_config()` 클래스메서드 추가.
+- **gateway/litellm_hook.py** — `EgressAuditHook.__init__` 에 `config_path` 전달.
+
+### Changed (문서)
+- **docs/PII_ROUTING.md** — config/pii_routing.yaml 설정 레퍼런스 섹션 추가.
+
 ## [0.4.17] - 2026-07-05 (patch55)
 
 > **v0.4.17-patch55 — CLI nufi-egress route 서브커맨드 추가**

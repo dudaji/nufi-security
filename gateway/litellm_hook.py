@@ -124,6 +124,7 @@ class EgressAuditHook(_Base):
             local_model=os.environ.get("NUFI_LOCAL_MODEL", "nufi-local"),
             cloud_model=os.environ.get("NUFI_CLOUD_MODEL", "nufi-cloud"),
             fail_closed=os.environ.get("NUFI_FAIL_CLOSED", "1") != "0",
+            config_path=os.environ.get("NUFI_PII_ROUTING_CONFIG"),
         )
 
     def _log_routing(self, decision: RoutingDecision, data: dict) -> None:

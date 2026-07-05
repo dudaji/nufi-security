@@ -9,9 +9,13 @@ LiteLLM 프록시의 pre_call_hook 에서 모델명을 동적 치환하는 방�
 from __future__ import annotations
 
 import logging
+import os
 import time
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+import yaml
 
 from egress_audit import DetectionPipeline, Finding
 
@@ -75,6 +79,40 @@ DEFAULT_COST_TABLE: Dict[str, Dict[str, float]] = {
 }
 
 
+_DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent.parent / "config" / "pii_routing.yaml"
+
+
+def load_pii_routing_config(
+    config_path: Optional[str] = None,
+) -> Dict[str, Any]:
+    """config/pii_routing.yaml 를 읽어 딕셔너리로 반환한다.
+
+    Parameters
+    ----------
+    config_path : str, optional
+        YAML 설정 파일 경로. None 이면 기본 경로(config/pii_routing.yaml) 사용.
+        환경변수 NUFI_PII_ROUTING_CONFIG 로도 오버라이드 가능.
+
+    Returns
+    -------
+    dict
+        설정 딕셔너리. 파일이 없거나 읽기 실패 시 빈 딕셔너리.
+    """
+    path_str = config_path or os.environ.get("NUFI_PII_ROUTING_CONFIG")
+    path = Path(path_str) if path_str else _DEFAULT_CONFIG_PATH
+    if not path.is_file():
+        logger.debug("PII routing config not found at %s — using defaults", path)
+        return {}
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = yaml.safe_load(f) or {}
+        logger.info("Loaded PII routing config from %s", path)
+        return data
+    except Exception:
+        logger.exception("Failed to load PII routing config from %s", path)
+        return {}
+
+
 class PiiRouter:
     """PII 감지 기반 하이브리드 라우터.
 
@@ -92,6 +130,9 @@ class PiiRouter:
         이 엔티티 타입이 감지되면 무조건 로컬. None 이면 모든 PII 엔티티.
     cost_table : dict, optional
         모델별 토큰당 비용 테이블.
+    config_path : str, optional
+        config/pii_routing.yaml 경로. None 이면 기본 경로.
+        설정 파일의 값은 명시적 파라미터보다 우선순위가 낮다.
     """
 
     def __init__(
@@ -102,18 +143,59 @@ class PiiRouter:
         fail_closed: bool = True,
         force_local_entities: Optional[set] = None,
         cost_table: Optional[Dict[str, Dict[str, float]]] = None,
+        config_path: Optional[str] = None,
     ):
-        self.local_model = local_model
-        self.cloud_model = cloud_model
+        # 설정 파일 로드 (명시적 파라미터가 기본값이면 config 값 사용)
+        cfg = load_pii_routing_config(config_path)
+        self.enabled = cfg.get("enabled", True)
+        self.local_model = local_model if local_model != "nufi-local" else cfg.get("local_model", local_model)
+        self.cloud_model = cloud_model if cloud_model != "nufi-cloud" else cfg.get("cloud_model", cloud_model)
         self.pipeline = pipeline or DetectionPipeline(ner_backend="gazetteer")
-        self.fail_closed = fail_closed
+        if "fail_closed" in cfg and fail_closed is True:
+            self.fail_closed = cfg["fail_closed"]
+        else:
+            self.fail_closed = fail_closed
         self.force_local_entities = force_local_entities
+        if self.force_local_entities is None and cfg.get("force_local_entities"):
+            self.force_local_entities = set(cfg["force_local_entities"])
         self.cost_table = cost_table or DEFAULT_COST_TABLE
         self._cost_log: List[CostRecord] = []
+
+    @classmethod
+    def from_config(cls, config_path: Optional[str] = None, **kwargs) -> "PiiRouter":
+        """설정 파일에서 PiiRouter 를 생성한다.
+
+        config_path 의 값을 기본으로 하되, kwargs 로 오버라이드 가능.
+        """
+        cfg = load_pii_routing_config(config_path)
+        init_kwargs: Dict[str, Any] = {}
+        if "local_model" in cfg:
+            init_kwargs["local_model"] = cfg["local_model"]
+        if "cloud_model" in cfg:
+            init_kwargs["cloud_model"] = cfg["cloud_model"]
+        if "fail_closed" in cfg:
+            init_kwargs["fail_closed"] = cfg["fail_closed"]
+        if cfg.get("force_local_entities"):
+            init_kwargs["force_local_entities"] = set(cfg["force_local_entities"])
+        init_kwargs.update(kwargs)
+        router = cls(**init_kwargs, config_path=config_path)
+        router.enabled = cfg.get("enabled", True)
+        return router
 
     def route(self, text: str, requested_model: Optional[str] = None) -> RoutingDecision:
         """텍스트의 PII 여부에 따라 라우팅 결정을 반환한다."""
         original = requested_model or self.cloud_model
+
+        # enabled=false 이면 항상 클라우드 허용
+        if not self.enabled:
+            return RoutingDecision(
+                target_model=original,
+                reason=ROUTE_REASON_CLEAN,
+                pii_detected=False,
+                original_model=original,
+                latency_ms=0.0,
+            )
+
         t0 = time.monotonic()
 
         try:

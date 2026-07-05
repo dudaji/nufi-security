@@ -18,6 +18,7 @@ egress 감사 단계에 도달하지 않는다.
 
 | 파일 | 역할 |
 |------|------|
+| `config/pii_routing.yaml` | PII 라우팅 전용 설정 (모델명·활성화·엔티티 필터) |
 | `config/routing.yaml` | PII 라우팅 설정 (`pii_routing` 섹션) |
 | `config/litellm_config.yaml` | LiteLLM 프록시 모델 등록 + PII 라우팅 |
 | `gateway/router.py` | `Router.resolve_for_pii()` — PII 라우팅 결정 |
@@ -26,6 +27,32 @@ egress 감사 단계에 도달하지 않는다.
 | `gateway/core.py` | `Gateway._try_pii_route()` — FastAPI PoC 경로 PII 라우팅 |
 
 ## 설정
+
+### config/pii_routing.yaml (전용 설정 파일)
+
+PII 라우팅의 모든 파라미터를 코드 수정 없이 YAML로 제어할 수 있다.
+`PiiRouter` 초기화 시 이 파일을 자동으로 읽는다.
+
+```yaml
+# config/pii_routing.yaml
+enabled: true                    # PII 라우팅 활성화 여부
+local_model: nufi-local          # PII 감지 시 로컬 모델명
+cloud_model: nufi-cloud          # PII 미감지 시 클라우드 모델명
+fail_closed: true                # 감지 오류 시 로컬 폴백
+force_local_entities: null       # null=전부, 또는 [KR_RRN, SECRET, ...]
+```
+
+| 키 | 타입 | 기본값 | 설명 |
+|----|------|--------|------|
+| `enabled` | bool | `true` | `false` 이면 PII 감지 생략, 모든 요청 클라우드 허용 |
+| `local_model` | str | `nufi-local` | PII 포함 요청을 보낼 LiteLLM 모델명 |
+| `cloud_model` | str | `nufi-cloud` | PII 없는 요청을 허용할 클라우드 모델명 |
+| `fail_closed` | bool | `true` | 감지 파이프라인 오류 시 로컬 강제 여부 |
+| `force_local_entities` | list\|null | `null` | 로컬 강제 엔티티 목록. `null`이면 모든 PII |
+
+환경변수 `NUFI_PII_ROUTING_CONFIG` 로 설정 파일 경로를 오버라이드할 수 있다.
+
+**우선순위**: 명시적 코드 파라미터 > 환경변수 > config/pii_routing.yaml 기본값
 
 ### routing.yaml (FastAPI PoC 경로)
 
