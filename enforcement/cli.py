@@ -1,6 +1,7 @@
 """``nufi-egress`` CLI (CMP-94 트랙 B · 스펙 §8.1-2/5).
 
 서브커맨드:
+  version   버전 및 백엔드 정보 출력(NuFi/Python/KoELECTRA ONNX/패턴 수).
   render    집행 규칙 셋 텍스트 출력(적용 안 함, 비특권). 골든 검증·점검용.
   apply     규칙 셋 원자 적용(정적 사전 차단). root/CAP_NET_ADMIN 필요(없으면 dry-run).
   disable   킬스위치 — 전 규칙 즉시 제거(A8).
@@ -709,12 +710,49 @@ def cmd_benchmark(args) -> int:
     return 0 if report["overall_pass"] else 1
 
 
+def cmd_version(args) -> int:
+    """NuFi 버전 및 백엔드 정보 출력(patch81)."""
+    import platform
+
+    # NuFi version
+    version_file = _ROOT / "VERSION"
+    nufi_version = version_file.read_text().strip() if version_file.exists() else "unknown"
+
+    # Python version
+    python_version = platform.python_version()
+
+    # KoELECTRA ONNX availability
+    try:
+        import optimum.onnxruntime  # noqa: F401
+        koelectra_onnx = "yes"
+    except ImportError:
+        koelectra_onnx = "no"
+
+    # Injection patterns count
+    from egress_audit.detectors.prompt_injection import _PATTERN_DEFS
+    pattern_count = len(_PATTERN_DEFS)
+
+    print(f"NuFi version: {nufi_version}")
+    print(f"Python: {python_version}")
+    print(f"KoELECTRA ONNX: {koelectra_onnx}")
+    print(f"Injection patterns: {pattern_count}")
+    return 0
+
+
 def main(argv: Optional[List[str]] = None) -> int:
+    # Read VERSION for --version flag
+    _ver_file = _ROOT / "VERSION"
+    _version_str = _ver_file.read_text().strip() if _ver_file.exists() else "unknown"
+
     ap = argparse.ArgumentParser(prog="nufi-egress",
                                  description="NuFi Egress Enforcement CLI")
+    ap.add_argument("--version", action="version", version=f"nufi-egress {_version_str}")
     ap.add_argument("--routing", default=None, help="routing.yaml 경로")
     ap.add_argument("--policy", default=None, help="policy.yaml 경로")
     sub = ap.add_subparsers(dest="cmd", required=True)
+
+    p = sub.add_parser("version", help="버전 및 백엔드 정보 출력")
+    p.set_defaults(func=cmd_version)
 
     p = sub.add_parser("render", help="집행 규칙 셋 출력(적용 안 함)")
     p.set_defaults(func=cmd_render)
