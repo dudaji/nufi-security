@@ -496,3 +496,44 @@ def test_cache_invalidated_on_file_change(tmp_path: Path):
     result2 = scan_path(tmp_path, cache=True)
     assert not result2.has_pii
     assert len(result2.findings) == 0
+
+
+# ---------------------------------------------------------------------------
+# --summary-only tests (patch119)
+# ---------------------------------------------------------------------------
+
+def test_summary_only_flag_shows_compact_output(pii_file: Path, capsys):
+    """--summary-only: per-file details hidden, only summary line printed."""
+    import argparse
+    from enforcement.scan_cmd import cmd_scan
+
+    args = argparse.Namespace(
+        target=str(pii_file),
+        pattern=None,
+        check_injection=False,
+        json=False,
+        format=None,
+        output=None,
+        fail_on_pii=True,
+        exclude=None,
+        redact=False,
+        dry_run=False,
+        no_backup=False,
+        stats=False,
+        summary_only=True,
+    )
+    rc = cmd_scan(args)
+    # PII found → fail-on-pii → exit 1
+    assert rc == 1
+
+    captured = capsys.readouterr()
+    # Summary line must contain key fields
+    assert "Files scanned:" in captured.out
+    assert "Findings:" in captured.out
+    assert "Risk:" in captured.out
+    assert "Status:" in captured.out
+    # Must show FAIL since PII was found
+    assert "FAIL" in captured.out
+    # Must NOT contain per-file detail lines (no "L<number>:")
+    lines = captured.out.strip().splitlines()
+    assert len(lines) == 1  # exactly one summary line

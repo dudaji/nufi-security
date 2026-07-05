@@ -736,6 +736,8 @@ def cmd_scan(args) -> int:
         lines = _render_jsonl(result)
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)
         Path(output_path).write_text(lines, encoding="utf-8")
+    elif getattr(args, "summary_only", False):
+        _render_summary_only(result)
     elif getattr(args, "json", False):
         print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
     else:
@@ -789,6 +791,34 @@ def _render_human(result: ScanResult) -> None:
         print("Errors:")
         for e in result.errors:
             print(f"  {e['path']}: {e['error']}")
+
+
+def _compute_scan_risk(result: ScanResult) -> str:
+    """Compute overall risk level from scan findings."""
+    has_injection = result.has_injection
+    has_strong_pii = any(
+        f.finding_type.split(":", 1)[1] in _STRONG_PII
+        for f in result.findings
+        if ":" in f.finding_type and f.finding_type.startswith("PII:")
+    )
+    if has_injection or has_strong_pii:
+        return "critical"
+    if len(result.findings) >= 5:
+        return "high"
+    if result.findings:
+        return "medium"
+    return "clean"
+
+
+def _render_summary_only(result: ScanResult) -> None:
+    """Print only a compact summary line — no per-file details."""
+    risk = _compute_scan_risk(result)
+    passed = not result.has_pii and not result.has_injection
+    status = "PASS" if passed else "FAIL"
+    print(f"Files scanned: {result.files_scanned} | "
+          f"Findings: {len(result.findings)} | "
+          f"Risk: {risk} | "
+          f"Status: {status}")
 
 
 def _render_stats(result: ScanResult) -> None:

@@ -1072,6 +1072,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="멀티스레드 스캔 워커 수(기본 1 = 순차)")
     p.add_argument("--profile", default=None, metavar="NAME",
                    help="스캔 프로파일 적용(development/ci/strict 등, config/scan_profiles.yaml)")
+    p.add_argument("--summary-only", action="store_true",
+                   help="요약만 출력(파일별 상세 없음, CI 빠른 체크용)")
     p.set_defaults(func=cmd_scan)
 
     p = sub.add_parser("diff",

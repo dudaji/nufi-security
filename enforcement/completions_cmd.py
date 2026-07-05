@@ -11,7 +11,8 @@ from __future__ import annotations
 SUBCOMMANDS: dict[str, list[str]] = {
     "scan":      ["--target", "--pattern", "--check-injection", "--json", "--format",
                   "--output", "--exclude", "--fail-on-pii", "--redact", "--dry-run",
-                  "--no-backup", "--stats", "--parallel", "--profile"],
+                  "--no-backup", "--stats", "--parallel", "--profile",
+                  "--summary-only"],
     "route":     ["--text", "--file", "--stdin", "--summary", "--model",
                   "--local-model", "--cloud-model", "--check-injection",
                   "--min-severity", "--json"],
@@ -21,6 +22,7 @@ SUBCOMMANDS: dict[str, list[str]] = {
     "init":      ["--list", "--dir", "--install-hook", "--out", "--base-dir",
                   "--set", "--force", "--dry-run"],
     "config":    [],
+    "explain":   ["--text", "--json", "--min-severity"],
     "doctor":    ["--ner-backend", "--connect-timeout", "--json", "--no-json"],
     "version":   [],
     "report":    [],
