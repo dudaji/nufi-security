@@ -4,6 +4,86 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch86)
+
+> **v0.4.17-patch86 — scan --format sarif SARIF 2.1.0 출력**
+> GitHub Code Scanning 호환 SARIF 출력. gh code-scanning upload-sarif 연동 가능.
+
+### Changed (CLI)
+- **enforcement/scan_cmd.py** — `scan_result_to_sarif()` + `--format sarif` 출력.
+- **enforcement/cli.py** — `scan --format` 인자 추가.
+
+### Added (테스트)
+- **tests/test_scan_cmd.py** — SARIF 테스트 2건.
+
+## [0.4.17] - 2026-07-05 (patch85)
+
+> **v0.4.17-patch85 — .nufiignore + scan --exclude 패턴 제외**
+> .nufiignore 로 스캔 제외 패턴 설정. --exclude 로 CLI 직접 제외.
+
+### Added (설정)
+- **.nufiignore** — 기본 제외 패턴.
+
+### Changed (CLI)
+- **enforcement/scan_cmd.py** — `load_nufiignore()` + `_is_excluded()` + `exclude` 파라미터.
+- **enforcement/cli.py** — `scan --exclude` 인자.
+
+### Added (테스트)
+- **tests/test_scan_cmd.py** — .nufiignore·--exclude·기본동작 테스트 3건.
+
+## [0.4.17] - 2026-07-05 (patch84)
+
+> **v0.4.17-patch84 — pre-commit 훅 + CI GitHub Actions 예시**
+> git pre-commit 훅 + GitHub Actions 워크플로우 예시로 CI 연동.
+
+### Added (스크립트)
+- **scripts/pre-commit-hook.sh** — 커밋 전 PII 스캔 차단 훅.
+- **examples/ci-github-actions.yml** — GitHub Actions 워크플로우.
+
+### Changed (문서)
+- **docs/INTEGRATION_GUIDE.md** — §6 Pre-commit & CI/CD 통합 추가.
+- **README.md** — "처음 오셨다면" 표에 CI/pre-commit 행 추가.
+
+## [0.4.17] - 2026-07-05 (patch83)
+
+> **v0.4.17-patch83 — nufi-egress scan 디렉터리/파일 PII 스캔**
+> 파일·디렉터리 재귀 스캔 + --fail-on-pii CI 연동 + scan_dir SDK.
+
+### Added (CLI)
+- **enforcement/scan_cmd.py** — `scan_path()` + `cmd_scan()`.
+- **enforcement/cli.py** — `scan` 서브커맨드 (--pattern, --check-injection, --json, --fail-on-pii).
+- **nufi/__init__.py** — `scan_dir` export.
+
+### Added (테스트)
+- **tests/test_scan_cmd.py** — 스캔 테스트 4건.
+
+## [0.4.17] - 2026-07-05 (patch82)
+
+> **v0.4.17-patch82 — SDK.md §2.9~2.11 route·detect_injection·inspect_text**
+
+### Changed (문서)
+- **docs/SDK.md** — §2.9 route, §2.10 detect_injection, §2.11 inspect_text 레퍼런스.
+
+## [0.4.17] - 2026-07-05 (patch81)
+
+> **v0.4.17-patch81 — nufi-egress version 서브커맨드 + --version**
+
+### Added (CLI)
+- **enforcement/cli.py** — `version` 서브커맨드 + `--version` 플래그.
+- **tests/test_cli_version.py** — 버전 테스트 3건.
+
+## [0.4.17] - 2026-07-05 (patch80)
+
+> **v0.4.17-patch80 — 인젝션 패턴 카테고리 필터**
+> korean/english/indirect/role_override 카테고리별 활성화/비활성화.
+
+### Changed (엔진)
+- **egress_audit/detectors/prompt_injection.py** — categories 파라미터.
+- **config/pii_routing.yaml** — `injection_categories` 필드.
+
+### Added (테스트)
+- **tests/test_prompt_injection.py** — 카테고리 필터 테스트 3건.
+
 ## [0.4.17] - 2026-07-05 (patch79)
 
 > **v0.4.17-patch79 — README·CHANGELOG patch75~78 반영**
