@@ -534,9 +534,28 @@ def cmd_scan(args) -> int:
 
     # Output format
     output_format = getattr(args, "format", None)
+    output_path = getattr(args, "output", None)
+
     if output_format == "sarif":
         sarif = scan_result_to_sarif(result)
-        print(json.dumps(sarif, ensure_ascii=False, indent=2))
+        text_out = json.dumps(sarif, ensure_ascii=False, indent=2)
+        if output_path:
+            Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+            Path(output_path).write_text(text_out + "\n", encoding="utf-8")
+        else:
+            print(text_out)
+    elif output_format == "jsonl":
+        lines = _render_jsonl(result)
+        if output_path:
+            Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+            Path(output_path).write_text(lines, encoding="utf-8")
+        else:
+            print(lines, end="")
+    elif output_path:
+        # --output without --format: default to JSON Lines
+        lines = _render_jsonl(result)
+        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(output_path).write_text(lines, encoding="utf-8")
     elif getattr(args, "json", False):
         print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
     else:
@@ -550,6 +569,21 @@ def cmd_scan(args) -> int:
     if getattr(args, "fail_on_pii", False) and result.has_pii:
         return 1
     return 0
+
+
+def _render_jsonl(result: ScanResult) -> str:
+    """Render findings as JSON Lines (one JSON object per finding per line)."""
+    lines: List[str] = []
+    for f in result.findings:
+        obj = {
+            "file": f.file,
+            "line": f.line,
+            "entity_type": f.finding_type,
+            "text": f.text,
+            "score": 1.0,
+        }
+        lines.append(json.dumps(obj, ensure_ascii=False))
+    return "\n".join(lines) + ("\n" if lines else "")
 
 
 def _render_human(result: ScanResult) -> None:

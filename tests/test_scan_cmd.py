@@ -346,3 +346,77 @@ def test_stats_flag_prints_summary(pii_file: Path, capsys):
     assert "위험도별" in captured.out
     # At least one risk level shown
     assert any(level in captured.out for level in ("critical", "high", "medium", "low"))
+
+
+# ---------------------------------------------------------------------------
+# --output file tests (patch94)
+# ---------------------------------------------------------------------------
+
+def test_output_flag_writes_to_file(pii_file: Path, tmp_path: Path):
+    """--output PATH: 스캔 결과를 파일에 JSON Lines 로 기록한다."""
+    import argparse
+    from enforcement.scan_cmd import cmd_scan
+
+    out_file = tmp_path / "results.jsonl"
+    args = argparse.Namespace(
+        target=str(pii_file),
+        pattern=None,
+        check_injection=False,
+        json=False,
+        format=None,
+        output=str(out_file),
+        fail_on_pii=False,
+        exclude=None,
+        redact=False,
+        dry_run=False,
+        no_backup=False,
+        stats=False,
+    )
+    rc = cmd_scan(args)
+    assert rc == 0
+    assert out_file.exists()
+    content = out_file.read_text(encoding="utf-8")
+    # Each non-empty line must be valid JSON
+    lines = [l for l in content.splitlines() if l.strip()]
+    assert len(lines) >= 1
+    for line in lines:
+        obj = json.loads(line)
+        assert "file" in obj
+        assert "line" in obj
+        assert "entity_type" in obj
+        assert "text" in obj
+        assert "score" in obj
+
+
+def test_format_jsonl_produces_valid_json_lines(pii_file: Path, capsys):
+    """--format jsonl: 각 줄이 유효한 JSON 객체인 JSON Lines 를 출력한다."""
+    import argparse
+    from enforcement.scan_cmd import cmd_scan
+
+    args = argparse.Namespace(
+        target=str(pii_file),
+        pattern=None,
+        check_injection=False,
+        json=False,
+        format="jsonl",
+        output=None,
+        fail_on_pii=False,
+        exclude=None,
+        redact=False,
+        dry_run=False,
+        no_backup=False,
+        stats=False,
+    )
+    rc = cmd_scan(args)
+    assert rc == 0
+
+    captured = capsys.readouterr()
+    lines = [l for l in captured.out.splitlines() if l.strip()]
+    assert len(lines) >= 1
+    for line in lines:
+        obj = json.loads(line)
+        assert "file" in obj
+        assert "line" in obj
+        assert "entity_type" in obj
+        assert "text" in obj
+        assert "score" in obj
