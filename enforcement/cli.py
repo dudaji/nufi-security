@@ -453,6 +453,12 @@ def cmd_watch(args) -> int:
     return _watch(args)
 
 
+def cmd_compare(args) -> int:
+    """스캔 결과 비교 (patch133)."""
+    from enforcement.compare_cmd import cmd_compare as _compare
+    return _compare(args)
+
+
 def cmd_lint(args) -> int:
     """보안 안티패턴 검사 (patch130)."""
     from enforcement.lint_cmd import cmd_lint as _lint
@@ -838,6 +844,7 @@ _HELP_EPILOG = """\
     explain         텍스트 탐지 결과 상세 설명 (디버깅/교육용)
     route           PII 라우팅 결정 테스트
     diff            git 변경 파일만 PII/인젝션 스캔
+    compare         두 스캔 결과 비교 (new/resolved/unchanged)
 
   [운영]
     export          탐지 패턴 내보내기 (YAML/JSON/regex)
@@ -1123,6 +1130,15 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="프롬프트 인젝션 패턴도 함께 탐지")
     p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
     p.set_defaults(func=cmd_diff)
+
+    p = sub.add_parser("compare",
+                       help="두 스캔 결과(SARIF/JSON) 비교 — new/resolved/unchanged (patch133)")
+    p.add_argument("before", help="이전 스캔 결과 파일(SARIF 또는 NuFi JSON)")
+    p.add_argument("after", help="이후 스캔 결과 파일(SARIF 또는 NuFi JSON)")
+    p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    p.add_argument("--fail-on-new", action="store_true",
+                   help="신규 발견 시 exit 1 (CI 게이트)")
+    p.set_defaults(func=cmd_compare)
 
     p = sub.add_parser("config",
                        help="설정 파일 검증(syntax·필수 필드·regex · patch105)")
