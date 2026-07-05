@@ -20,6 +20,7 @@
 | [`sdk_compliance_report.py`](sdk_compliance_report.py) | 한국 규제 5종 통제 커버리지 출력 | `compliance_report`, `render_report`, `load_catalog` |
 | [`sdk_security_report.py`](sdk_security_report.py) | 디렉터리 스캔 → 보안 리포트(Markdown/JSON) 생성 | `security_report`, `render_security_markdown`, `render_security_json` |
 | [`sdk_ci_integration.py`](sdk_ci_integration.py) | CI/pre-commit 통합 — PII·인젝션 검사 + 종료 코드 | `detect`, `detect_injection`, `scan_file` |
+| [`ci-github-actions.yml`](ci-github-actions.yml) | GitHub Actions 워크플로 예시 — PR/push 시 PII 스캔 자동화 | (YAML 설정) |
 
 ## 실행 방법
 
@@ -29,7 +30,7 @@ EGRESS_NER_BACKEND=gazetteer python3 examples/library_detect.py
 EGRESS_NER_BACKEND=gazetteer python3 examples/sdk_file_scan.py
 EGRESS_NER_BACKEND=gazetteer python3 examples/sdk_compliance_report.py
 
-# 전체 스모크 검증 (7종 자동 테스트)
+# 전체 스모크 검증 (9종 자동 테스트)
 EGRESS_NER_BACKEND=gazetteer python3 -m pytest tests/test_examples_smoke.py -v
 ```
 
@@ -49,6 +50,7 @@ EGRESS_NER_BACKEND=gazetteer python3 -m pytest tests/test_examples_smoke.py -v
 
 | 문서 | 역할 |
 |---|---|
+| [`docs/QUICKSTART.md`](../docs/QUICKSTART.md) | 0에서 첫 스캔까지 2분 — 최단 경로 가이드 |
 | [`docs/SDK.md`](../docs/SDK.md) | SDK 전체 API 표면·안정성 계층·CLI↔SDK 동등 매핑 |
 | [`docs/HANDS_ON.md`](../docs/HANDS_ON.md) | Part G·I — 예시를 실습 맥락에서 정주행 |
 | [`docs/REPORTING.md`](../docs/REPORTING.md) | `sdk_compliance_report.py` 배경: 컴플라이언스 리포팅 API |
