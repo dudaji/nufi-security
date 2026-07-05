@@ -453,6 +453,12 @@ def cmd_watch(args) -> int:
     return _watch(args)
 
 
+def cmd_lint(args) -> int:
+    """보안 안티패턴 검사 (patch130)."""
+    from enforcement.lint_cmd import cmd_lint as _lint
+    return _lint(args)
+
+
 def cmd_export(args) -> int:
     """탐지 패턴 내보내기 (patch122)."""
     from enforcement.export_cmd import cmd_export as _export
@@ -1135,6 +1141,16 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--webhook", default=None,
                    help="PII 탐지 시 JSON 페이로드를 POST 할 URL(Slack/Teams 연동)")
     p.set_defaults(func=cmd_watch)
+
+    p = sub.add_parser("lint",
+                       help="보안 안티패턴 검사 — 하드코딩 키/디버그/HTTP/eval 탐지 (patch130)")
+    p.add_argument("target", help="검사할 파일 또는 디렉터리 경로")
+    p.add_argument("--fix", action="store_true",
+                   help="자동 수정 가능한 항목 적용(예: http→https)")
+    p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    p.add_argument("--exclude", default=None,
+                   help="제외할 glob 패턴(쉼표 구분)")
+    p.set_defaults(func=cmd_lint)
 
     p = sub.add_parser("inspect",
                        help="통합 보안 분석 — PII + 인젝션 + 라우팅 + 위험도 (patch78)")
