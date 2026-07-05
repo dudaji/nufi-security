@@ -523,6 +523,12 @@ def cmd_summary(args) -> int:
     return _summary(args)
 
 
+def cmd_serve(args) -> int:
+    """HTTP API 서버 (patch155)."""
+    from enforcement.serve_cmd import cmd_serve as _serve
+    return _serve(args)
+
+
 def cmd_explain(args) -> int:
     """텍스트 탐지 결과 상세 설명 (patch116)."""
     from enforcement.explain_cmd import explain_text, render_human
@@ -1365,6 +1371,15 @@ def main(argv: Optional[List[str]] = None) -> int:
                        help="프로젝트 헬스 대시보드 — 설정·활동·위험·닥터·버전 한 화면 요약 (patch147)")
     p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
     p.set_defaults(func=cmd_summary)
+
+    # --- Serve (patch155) ---------------------------------------------------- #
+    p = sub.add_parser("serve",
+                       help="HTTP API 서버 — REST 엔드포인트로 탐지 기능 제공 (patch155)")
+    p.add_argument("--host", default="localhost",
+                   help="바인드 호스트(기본 localhost)")
+    p.add_argument("--port", type=int, default=8000,
+                   help="바인드 포트(기본 8000)")
+    p.set_defaults(func=cmd_serve)
 
     # --- Stats (patch112) ---------------------------------------------------- #
     from enforcement.stats_cmd import cmd_stats
