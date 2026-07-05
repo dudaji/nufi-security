@@ -29,3 +29,13 @@ check_injection: false
 # 지정된 YAML 파일의 패턴이 내장 패턴에 추가 적용됩니다.
 # 파일이 없으면 내장 패턴만 사용.
 injection_patterns_path: config/injection_patterns.yaml
+
+# 활성화할 인젝션 패턴 카테고리 (patch80).
+# null 이면 모든 카테고리 활성화.
+# 특정 카테고리만 지정하면 해당 카테고리의 패턴만 탐지에 사용.
+# 유효값: korean, english, indirect, role_override
+injection_categories:
+  - korean      # 한국어 직접 인젝션
+  - english     # 영어 직접 인젝션
+  - indirect    # 간접 인젝션 (ChatML, HTML comment, etc.)
+  # - role_override  # 역할 변경 (disabled = fewer false positives)
