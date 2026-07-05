@@ -146,5 +146,106 @@ class TestRouteJsonSchema:
         assert self.REQUIRED_FIELDS <= set(data.keys())
 
 
+# ---------------------------------------------------------------------------
+# 6. --file 옵션: 파일 라인별 라우팅
+# ---------------------------------------------------------------------------
+
+class TestRouteFile:
+    """--file 옵션으로 파일 라인별 PII 라우팅 테스트."""
+
+    def _write_input(self, tmp_path, lines):
+        f = tmp_path / "input.txt"
+        f.write_text("\n".join(lines), encoding="utf-8")
+        return str(f)
+
+    def test_file_json_output(self, tmp_path):
+        path = self._write_input(tmp_path, [
+            "김민수님 계좌 110-123-456789",
+            "오늘 날씨 어때",
+            "",
+            "이메일 test@example.com 확인",
+        ])
+        args = _make_args(text=None, file=path, json=True, summary=False)
+        rc, out = _capture_stdout(cmd_route, args)
+        assert rc == 0
+        data = json.loads(out)
+        assert "decisions" in data
+        # 빈 줄 제외 → 3건
+        assert len(data["decisions"]) == 3
+        # 첫 번째 라인은 PII 감지
+        assert data["decisions"][0]["verdict"] == "local"
+        assert data["decisions"][0]["line"] == 1
+        # 두 번째 라인은 클라우드
+        assert data["decisions"][1]["verdict"] == "cloud"
+        assert data["decisions"][1]["line"] == 2
+
+    def test_file_human_output(self, tmp_path):
+        path = self._write_input(tmp_path, [
+            "김민수님 계좌 110-123-456789",
+            "hello world",
+        ])
+        args = _make_args(text=None, file=path, json=False, summary=False)
+        rc, out = _capture_stdout(cmd_route, args)
+        assert rc == 0
+        assert "local" in out
+        assert "cloud" in out
+
+    def test_file_not_found(self, tmp_path):
+        args = _make_args(text=None, file="/nonexistent/path.txt", json=False, summary=False)
+        rc, _ = _capture_stdout(cmd_route, args)
+        assert rc == 1
+
+
+# ---------------------------------------------------------------------------
+# 7. --summary 플래그: 요약 통계
+# ---------------------------------------------------------------------------
+
+class TestRouteSummary:
+    """--summary 플래그로 요약 통계 출력 테스트."""
+
+    def _write_input(self, tmp_path, lines):
+        f = tmp_path / "input.txt"
+        f.write_text("\n".join(lines), encoding="utf-8")
+        return str(f)
+
+    def test_summary_json(self, tmp_path):
+        path = self._write_input(tmp_path, [
+            "김민수님 계좌 110-123-456789",
+            "오늘 날씨 어때",
+            "이메일 test@example.com 확인",
+        ])
+        args = _make_args(text=None, file=path, json=True, summary=True)
+        rc, out = _capture_stdout(cmd_route, args)
+        assert rc == 0
+        data = json.loads(out)
+        assert "summary" in data
+        s = data["summary"]
+        assert s["total_lines"] == 3
+        assert s["local_count"] + s["cloud_count"] == 3
+        assert s["local_pct"] + s["cloud_pct"] == pytest.approx(100.0, abs=0.2)
+        assert isinstance(s["unique_entity_types"], list)
+
+    def test_summary_human(self, tmp_path):
+        path = self._write_input(tmp_path, [
+            "김민수님 계좌 110-123-456789",
+            "hello world",
+        ])
+        args = _make_args(text=None, file=path, json=False, summary=True)
+        rc, out = _capture_stdout(cmd_route, args)
+        assert rc == 0
+        assert "요약" in out
+        assert "처리 라인" in out
+        assert "로컬 라우팅" in out
+
+    def test_no_summary_without_flag(self, tmp_path):
+        path = self._write_input(tmp_path, [
+            "김민수님 계좌 110-123-456789",
+        ])
+        args = _make_args(text=None, file=path, json=False, summary=False)
+        rc, out = _capture_stdout(cmd_route, args)
+        assert rc == 0
+        assert "요약" not in out
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
