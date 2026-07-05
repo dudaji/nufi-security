@@ -13,6 +13,8 @@ SDK 에서도 ``from nufi import scan_dir`` 로 사용 가능.
 --verbose 로 발견 항목별 상세 정보 출력 (patch137).
 --git-staged 로 git staged 파일만 스캔 (pre-commit 통합, patch171).
 --ignore-file PATH 로 false positive 억제 (patch178).
+--baseline PATH 로 이전 스캔 결과와 비교하여 신규 발견만 출력 (patch181).
+--count-only 로 발견 건수만 빠르게 출력 (patch182).
 """
 from __future__ import annotations
 
@@ -909,6 +911,74 @@ def scan_staged(
 
 
 # ---------------------------------------------------------------------------
+# Baseline comparison (patch181)
+# ---------------------------------------------------------------------------
+
+def _load_baseline(baseline_path: str) -> set:
+    """Load baseline findings as a set of (file, line, finding_type, text) tuples.
+
+    Supports JSON (ScanResult.to_dict() format) and JSONL (one finding per line).
+    """
+    p = Path(baseline_path)
+    if not p.is_file():
+        return set()
+
+    content = p.read_text(encoding="utf-8").strip()
+    if not content:
+        return set()
+
+    findings_set: set = set()
+
+    # Try JSON first (full scan result dict)
+    if content.startswith("{"):
+        try:
+            data = json.loads(content)
+            for f in data.get("findings", []):
+                key = (f.get("file", ""), f.get("line", 0),
+                       f.get("finding_type", ""), f.get("text", ""))
+                findings_set.add(key)
+            return findings_set
+        except json.JSONDecodeError:
+            pass
+
+    # JSONL format (one JSON object per line)
+    for line in content.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            f = json.loads(line)
+            # JSONL from _render_jsonl uses "entity_type" key
+            ftype = f.get("finding_type", f.get("entity_type", ""))
+            key = (f.get("file", ""), f.get("line", 0), ftype, f.get("text", ""))
+            findings_set.add(key)
+        except json.JSONDecodeError:
+            continue
+
+    return findings_set
+
+
+def _apply_baseline(result: "ScanResult", baseline_path: str) -> "ScanResult":
+    """Remove findings that already exist in the baseline.
+
+    Returns a new ScanResult with only NEW findings.
+    """
+    baseline = _load_baseline(baseline_path)
+    if not baseline:
+        return result
+
+    new_findings = []
+    for f in result.findings:
+        key = (f.file, f.line, f.finding_type, f.text)
+        if key not in baseline:
+            new_findings.append(f)
+
+    result.findings = new_findings
+    result.files_with_findings = len(set(f.file for f in new_findings))
+    return result
+
+
+# ---------------------------------------------------------------------------
 # CLI handler (called from cli.py)
 # ---------------------------------------------------------------------------
 
@@ -1010,6 +1080,20 @@ def cmd_scan(args) -> int:
         scan_root = Path(target) if Path(target).is_dir() else Path(target).parent
         suppressed_count = apply_suppressions(result, suppressions, scan_root)
 
+    # --baseline: filter out findings already in baseline (patch181)
+    baseline_path = getattr(args, "baseline", None)
+    if baseline_path:
+        result = _apply_baseline(result, baseline_path)
+
+    # --count-only: print summary count and exit (patch182)
+    if getattr(args, "count_only", False):
+        count = len(result.findings)
+        file_count = len(set(f.file for f in result.findings))
+        print(f"Found: {count} PII findings in {file_count} files")
+        if getattr(args, "fail_on_pii", False) and count > 0:
+            return 1
+        return 0
+
     # Output format
     output_format = getattr(args, "format", None)
     output_path = getattr(args, "output", None)
@@ -1058,7 +1142,7 @@ def cmd_scan(args) -> int:
     if getattr(args, "stats", False):
         _render_stats(result)
 
-    # Exit code
+    # Exit code — with --baseline, no new findings means pass even with --fail-on-pii
     if getattr(args, "fail_on_pii", False) and result.has_pii:
         return 1
     return 0

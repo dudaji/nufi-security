@@ -757,3 +757,99 @@ def test_format_csv_output(pii_file: Path):
     assert int(data_row[1]) == result.findings[0].line
     assert data_row[4] != ""  # score
     assert data_row[5] in ("error", "warning")
+
+
+# ---------------------------------------------------------------------------
+# --baseline tests (patch181)
+# ---------------------------------------------------------------------------
+
+def test_baseline_filters_known_findings(pii_file: Path, tmp_path: Path, capsys):
+    """--baseline: 베이스라인에 있는 발견은 제외하고 신규만 보여준다."""
+    import argparse
+    from enforcement.scan_cmd import cmd_scan, scan_path, _apply_baseline
+
+    # First scan to create baseline
+    result = scan_path(pii_file)
+    assert result.has_pii
+
+    # Write baseline as JSON
+    baseline_file = tmp_path / "baseline.json"
+    baseline_file.write_text(
+        json.dumps(result.to_dict(), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+
+    # Now scan with baseline — all findings are in baseline, so nothing new
+    args = argparse.Namespace(
+        target=str(pii_file),
+        pattern=None,
+        check_injection=False,
+        json=False,
+        format=None,
+        output=None,
+        fail_on_pii=True,
+        exclude=None,
+        redact=False,
+        dry_run=False,
+        no_backup=False,
+        stats=False,
+        summary_only=False,
+        verbose=False,
+        git_staged=False,
+        profile=None,
+        clear_cache=False,
+        parallel=1,
+        cache=False,
+        ignore_file=None,
+        baseline=str(baseline_file),
+        count_only=False,
+    )
+    rc = cmd_scan(args)
+    # No new findings → exit 0 even with --fail-on-pii
+    assert rc == 0
+
+    captured = capsys.readouterr()
+    assert "no findings" in captured.out.lower() or "0" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# --count-only tests (patch182)
+# ---------------------------------------------------------------------------
+
+def test_count_only_prints_summary(pii_file: Path, capsys):
+    """--count-only: 발견 건수만 출력하고 상세 없음."""
+    import argparse
+    from enforcement.scan_cmd import cmd_scan
+
+    args = argparse.Namespace(
+        target=str(pii_file),
+        pattern=None,
+        check_injection=False,
+        json=False,
+        format=None,
+        output=None,
+        fail_on_pii=True,
+        exclude=None,
+        redact=False,
+        dry_run=False,
+        no_backup=False,
+        stats=False,
+        summary_only=False,
+        verbose=False,
+        git_staged=False,
+        profile=None,
+        clear_cache=False,
+        parallel=1,
+        cache=False,
+        ignore_file=None,
+        baseline=None,
+        count_only=True,
+    )
+    rc = cmd_scan(args)
+    # PII found + --fail-on-pii + count > 0 → exit 1
+    assert rc == 1
+
+    captured = capsys.readouterr()
+    assert "Found:" in captured.out
+    assert "PII findings" in captured.out
+    assert "files" in captured.out

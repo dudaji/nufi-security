@@ -1264,6 +1264,10 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="git staged 파일만 스캔(pre-commit 훅 통합용, target 불필요)")
     p.add_argument("--ignore-file", default=None, metavar="PATH",
                    help="false positive 억제 파일 경로(기본 .nufi_ignore_findings.yaml)")
+    p.add_argument("--baseline", default=None, metavar="PATH",
+                   help="베이스라인 파일(JSON/JSONL)과 비교하여 신규 발견만 출력")
+    p.add_argument("--count-only", action="store_true",
+                   help="발견 건수만 출력(상세 없음, CI 빠른 상태 체크용)")
     p.set_defaults(func=cmd_scan)
 
     p = sub.add_parser("diff",
