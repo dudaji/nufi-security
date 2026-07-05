@@ -203,11 +203,17 @@ nufi-egress route --text "오늘 날씨 어때" --json             # → 클라�
 # 9) 전체 데모 러너 — 모든 기능 데모를 차례로 실행하고 집계 PASS/FAIL 출력
 ./scripts/demo_all.sh                         # 데모 카탈로그: docs/DEMO.md · 요약: docs/RELEASE_NOTES.md
 
-# 10) 배선 점검 — 5개 항목 자가진단
+# 10) 배선 점검 — 6개 항목 자가진단 (인젝션 탐지 포함)
 nufi-egress doctor
 
 # 11) 벤치마크 — 재현율(recall)·정밀도(precision)·지연(latency)
 python3 scripts/bench.py --ner gazetteer
+
+# 12) 인젝션 탐지 벤치마크 — 골드셋 38건 recall/precision 측정
+python3 scripts/bench_injection.py
+
+# 13) 통합 보안 스캔 — PII+인젝션+라우팅+위험도를 한 번에
+nufi-egress inspect --text "김민수님 주민번호 900101-1234568"
 
 # 12) 인젝션 탐지 벤치마크 — 재현율·정밀도 측정 (30건 골드셋)
 python3 scripts/bench_injection.py

@@ -6,24 +6,25 @@
 
 ---
 
-## v0.4.17 (patch73) — **프롬프트 인젝션 가드레일 완성**
+## v0.4.17 (patch79) — **프롬프트 인젝션 가드레일 + 통합 스캔**
 
 > 한국어·영어 프롬프트 인젝션/탈옥 탐지 — SDK·CLI·Guard·게이트웨이·LiteLLM 전 계층 통합. 정책 기반(block/warn/log) + severity 필터 + 커스텀 패턴 + 벤치마크. (2026-07-05)
 
-### 이번 릴리스에 포함된 것 (patch59~73)
+### 이번 릴리스에 포함된 것 (patch55~79)
 
 | 계층 | 기능 |
 |---|---|
-| **SDK** | `from nufi import detect_injection` · `Guard(check_injection=True, min_severity=...)` |
-| **CLI** | `nufi-egress route --check-injection` · `doctor --check-injection` 진단 |
+| **SDK** | `detect_injection` · `route` · `inspect_text` · `Guard(check_injection=True)` |
+| **CLI** | `route --file --stdin --check-injection` · `inspect --text --json` · `doctor` (6체크) |
 | **게이트웨이** | `NUFI_CHECK_INJECTION=1` → Phase 0 인젝션 차단 (PII 탐지 전 선행) |
 | **LiteLLM** | pre_call_hook Phase 0 인젝션 차단 + 감사 로깅 |
 | **severity** | 패턴별 critical/high/medium/low 분류 · `min_severity` 임계 필터 |
-| **정책** | `config/policy.yaml` injection.action (block/warn/log) + min_severity |
+| **정책** | `config/policy.yaml` injection.action (block/warn/log) + `config/pii_routing.yaml` |
 | **커스텀** | `config/injection_patterns.yaml` 로 운영자 정의 패턴 추가 |
-| **벤치마크** | `bench_injection.py` — 골드셋 30건 recall/precision 게이트 (현재 1.0/1.0) |
+| **벤치마크** | `bench_injection.py` — 골드셋 38건 recall/precision 게이트 (현재 1.0/1.0) |
+| **간접 인젝션** | HTML 코멘트·ChatML·Llama·역할변경·유니코드 제로폭 8종 |
 | **문서** | `PROMPT_INJECTION.md` 가이드 · `HANDS_ON.md` 실습 |
-| **데모** | `demo_prompt_injection.sh` (31건 PASS) + SDK 예시 |
+| **데모** | `demo_prompt_injection.sh` (31건 PASS) + E2E 11건 + SDK 예시 |
 
 ### 누구에게 유용한가
 

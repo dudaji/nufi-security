@@ -4,6 +4,60 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch79)
+
+> **v0.4.17-patch79 — README·CHANGELOG patch75~78 반영**
+> inspect 서브커맨드·인젝션 벤치마크·stdin 지원·간접 인젝션 패턴을 README·데모 섹션에 반영.
+
+### Changed (문서)
+- **README.md** — 데모 섹션에 인젝션 벤치마크·inspect 커맨드 추가, doctor 6체크 표기.
+- **CHANGELOG.md** — patch75~78 엔트리 추가.
+
+## [0.4.17] - 2026-07-05 (patch78)
+
+> **v0.4.17-patch78 — nufi-egress inspect 통합 보안 스캔 커맨드**
+> PII+인젝션+라우팅+차단을 한 번에 분석하는 inspect 서브커맨드. 위험도 자동 산출.
+
+### Added (CLI)
+- **enforcement/inspect_cmd.py** — `inspect_text()` 분석 함수 + `render_human()` 출력.
+- **enforcement/cli.py** — `inspect` 서브커맨드 (--text, --file, --json).
+- **nufi/__init__.py** — `inspect_text` SDK export.
+
+### Added (테스트)
+- **tests/test_inspect.py** — inspect 테스트 8건.
+
+## [0.4.17] - 2026-07-05 (patch77)
+
+> **v0.4.17-patch77 — 인젝션 E2E 통합 테스트**
+> SDK·Guard·Policy·Route·CLI·커스텀패턴·심각도·벤치마크 전 경로 검증.
+
+### Added (테스트)
+- **tests/test_injection_e2e.py** — 파이프라인 E2E 테스트 11건.
+- **scripts/demo_injection_e2e.sh** — E2E 래퍼.
+
+## [0.4.17] - 2026-07-05 (patch76)
+
+> **v0.4.17-patch76 — 간접 인젝션 패턴 8종 추가**
+> HTML 코멘트·ChatML·Llama·역할·구분자·유니코드 제로폭 패턴. 골드셋 38건 확장.
+
+### Added (엔진)
+- **egress_audit/detectors/prompt_injection.py** — indirect 카테고리 8종 패턴.
+- **samples/injection_gold.jsonl** — 8건 추가 (인젝션 5 + 무해 3).
+
+### Added (테스트)
+- **tests/test_prompt_injection.py** — 간접 인젝션 테스트 7건.
+
+## [0.4.17] - 2026-07-05 (patch75)
+
+> **v0.4.17-patch75 — CLI route --stdin 파이프 입력 지원**
+> echo "텍스트" | nufi-egress route --stdin 으로 파이프 입력 처리.
+
+### Added (CLI)
+- **enforcement/cli.py** — `route --stdin` 옵션 + `_route_stdin()` 함수.
+
+### Added (테스트)
+- **tests/test_cmp270_cli_route.py** — stdin 테스트 2건.
+
 ## [0.4.17] - 2026-07-05 (patch73)
 
 > **v0.4.17-patch73 — 인젝션 정책(block/warn/log) + 벤치 데모 등록**
