@@ -448,6 +448,24 @@ def cmd_watch(args) -> int:
     return _watch(args)
 
 
+def cmd_explain(args) -> int:
+    """텍스트 탐지 결과 상세 설명 (patch116)."""
+    from enforcement.explain_cmd import explain_text, render_human
+
+    if not args.text:
+        print("오류: --text 를 지정해야 합니다.", file=sys.stderr)
+        return 1
+
+    result = explain_text(args.text)
+
+    if args.json:
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
+        print(render_human(result))
+
+    return 0
+
+
 def cmd_inspect(args) -> int:
     """통합 보안 분석 — PII + 인젝션 + 라우팅 + 위험도 (patch78)."""
     from enforcement.inspect_cmd import inspect_text, render_human
@@ -782,6 +800,7 @@ _HELP_EPILOG = """\
   [탐지]
     scan            파일/디렉터리 PII + 인젝션 스캔
     inspect         통합 보안 분석 (PII + 인젝션 + 라우팅 + 위험도)
+    explain         텍스트 탐지 결과 상세 설명 (디버깅/교육용)
     route           PII 라우팅 결정 테스트
     diff            git 변경 파일만 PII/인젝션 스캔
 
@@ -1096,6 +1115,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--file", default=None, help="분석할 파일 경로(라인별 처리)")
     p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
     p.set_defaults(func=cmd_inspect)
+
+    p = sub.add_parser("explain",
+                       help="텍스트 탐지 결과 상세 설명 — PII·인젝션·정책·라우팅 근거 출력 (patch116)")
+    p.add_argument("--text", required=True, help="분석할 텍스트")
+    p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    p.set_defaults(func=cmd_explain)
 
     p = sub.add_parser("route",
                        help="PII 라우팅 결정 테스트 — 텍스트의 PII 감지·모델 라우팅 판정 출력")
