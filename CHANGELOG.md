@@ -4,6 +4,34 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch149-150)
+
+> **v0.4.17-patch149~150 — report trends + CHANGELOG sweep**
+> PII 탐지 트렌드 리포트 커맨드, 최종 CHANGELOG.
+
+### Added (patch149)
+- **enforcement/trends_cmd.py** — `nufi-egress report trends`: 감사 로그(egress_audit.jsonl)를 날짜별로 그룹핑하여 PII 탐지 트렌드 출력. 날짜별 총 이벤트·차단 건수·PII 유형 집계. `--period N`(기본 7일), `--json` 기계 출력, `--audit` 경로 오버라이드.
+- **enforcement/cli.py** — `report trends` 서브커맨드 추가.
+- **tests/test_trends_cmd.py** — 날짜 그룹핑·빈 로그·기간 제한·JSON 출력 테스트 4건.
+
+### Changed (patch150)
+- **CHANGELOG.md** — patch143~149 전체 엔트리 추가.
+- **docs/RELEASE_NOTES.md** — patch143~149 반영.
+- **README.md** — 테스트 수 541건, 서브커맨드 34종 갱신.
+
+## [0.4.17] - 2026-07-05 (patch147-148)
+
+> **v0.4.17-patch147~148 — summary dashboard + CLI showcase demo**
+> 프로젝트 헬스 대시보드, CLI 쇼케이스 데모.
+
+### Added (patch147)
+- **enforcement/summary_cmd.py** — `nufi-egress summary`: 프로젝트 헬스 대시보드. 설정·활동·위험·닥터·버전을 한 화면 요약. `--json` 기계 출력.
+- **enforcement/cli.py** — `summary` 서브커맨드 추가.
+- **tests/test_summary_cmd.py** — 대시보드 출력·JSON 출력 테스트.
+
+### Added (patch148)
+- **scripts/demo_cli_showcase.py** — CLI 쇼케이스 데모: 주요 CLI 커맨드 빠른 검증 스크립트.
+
 ## [0.4.17] - 2026-07-05 (patch143-146)
 
 > **v0.4.17-patch143~146 — SDK typing + CLI UX + playground + CHANGELOG sweep**

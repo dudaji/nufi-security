@@ -6,6 +6,26 @@
 
 ---
 
+## v0.4.17 (patch150) -- **report trends + summary dashboard + CHANGELOG**
+
+> PII 탐지 트렌드 리포트, 프로젝트 헬스 대시보드, CLI 쇼케이스 데모. (2026-07-05)
+
+### 이번 릴리스에 포함된 것 (patch147~149)
+
+| 계층 | 기능 |
+|---|---|
+| **Trends** | `report trends` -- 감사 로그를 날짜별 그룹핑하여 PII 탐지 추이(이벤트·차단·유형) 출력. `--period N` 기간 지정, `--json` 기계 출력 (patch149) |
+| **Summary** | `summary` -- 프로젝트 헬스 대시보드. 설정·활동·위험·닥터·버전을 한 화면 요약 (patch147) |
+| **Demo** | CLI 쇼케이스 데모 스크립트 추가 (patch148) |
+
+### 누구에게 유용한가
+
+- **운영/보안팀** -- `report trends` 로 PII 탐지 추이를 날짜별로 확인. 차단 건수 증가 추세 파악.
+- **대시보드** -- `summary` 로 NuFi 설정·활동·위험을 한 화면에서 빠르게 점검.
+- **CI/자동화** -- `--json` 출력으로 모니터링 파이프라인에 통합.
+
+---
+
 ## v0.4.17 (patch146) -- **playground + SDK typing + CLI UX + CHANGELOG**
 
 > 인터랙티브 playground REPL, PEP 561 타입 마커, CLI 에러 친화 처리. (2026-07-05)

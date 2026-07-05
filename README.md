@@ -300,8 +300,8 @@ nufi-egress pipeline --text "오늘 날씨 어때" --actions detect,route --json
   라이브러리 + PyYAML 만 써서 외부 네트워크 의존이 0. 무거운 백엔드(transformers/ONNX,
   presidio, detect-secrets)는 설치되어 있으면 자동으로 켜집니다.
 
-> CLI(`nufi-egress`)는 **33개 서브커맨드**(version, scan, mask, redact, explain, pipeline,
-> route, inspect, watch, init, doctor 등)를 제공하며, 자동화 테스트 **520건**이 전 기능을
+> CLI(`nufi-egress`)는 **34개 서브커맨드**(version, scan, mask, redact, explain, pipeline,
+> route, inspect, watch, init, doctor 등)를 제공하며, 자동화 테스트 **541건**이 전 기능을
 > 커버합니다.
 
 ---
