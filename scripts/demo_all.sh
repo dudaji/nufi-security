@@ -15,6 +15,7 @@
 #   demo_audit_separation.sh 차등 감사 — public/private 분리 + 패킷 우회 탭 + 비동기 봇
 #   demo_location_union.sh   주소 유니온 — 모델 ∪ 확장규칙(P2)로 KR_LOCATION 재현율 향상
 #   demo_pii_routing.sh      PII 라우팅 — PII 포함→로컬, PII 없음→클라우드(4시나리오)
+#   demo_transform.sh        텍스트 변환 — mask·redact·explain(PII 마스킹/리댁션/상세설명)
 #   demo_litellm_e2e.sh      LiteLLM Proxy E2E — 프록시 기동·PII 라우팅·감사(litellm 필요)
 #   demo_accuracy.sh         정확도 재현 — KR_PERSON INT8 CI + 온프렘 p95 (측정 산출물 필요)
 #
@@ -80,6 +81,7 @@ run_demo demo_prompt_injection.sh "프롬프트 인젝션 탐지(한/영 패턴�
 run_demo demo_bench_injection.sh "인젝션 탐지 벤치마크(재현율·정밀도 측정 30건 골드셋)"
 run_demo demo_scan.sh            "파일/디렉터리 PII 스캔(CI/pre-commit · --redact · SARIF)"
 run_demo demo_getting_started.sh "Getting-started 워크플로(init→scan→redact→inspect→route→doctor)"
+run_demo demo_transform.sh      "텍스트 변환(mask·redact·explain — PII 마스킹/리댁션/상세설명)"
 run_demo demo_litellm_e2e.sh     "LiteLLM Proxy E2E(프록시 기동→PII 라우팅→감사 검증)"
 
 # 정확도 데모는 커밋된 측정 산출물(docs/reports/*.json)이 있어야 재현 가능하다.

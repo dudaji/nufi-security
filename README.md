@@ -62,6 +62,9 @@ CLI(`nufi-egress`)와 Python SDK(`from nufi import detect, Guard, pseudonymize`)
 cd security
 python3 -m pip install -r requirements.txt    # 코어 의존: PyYAML·fastapi·uvicorn·httpx
 
+# 프로젝트 초기화 — config·.nufiignore·pre-commit 훅 한 번에 설정
+nufi-egress init --install-hook
+
 # 게이트웨이 띄우기 (OpenAI 호환 /v1/chat/completions)
 PORT=4000 ./scripts/run_gateway.sh
 ```
@@ -230,6 +233,18 @@ nufi-egress watch path/to/dir --check-injection --once
 
 # 18) 인젝션 탐지 벤치마크 — 재현율·정밀도 측정 (38건 골드셋)
 python3 scripts/bench_injection.py
+
+# 19) 텍스트 PII 마스킹 — PII를 asterisk(*)로 가림
+nufi-egress mask --text "김민수님 전화번호 010-1234-5678"
+
+# 20) 텍스트 PII 리댁션 — PII를 타입 태그([TYPE])로 교체
+nufi-egress redact --text "김민수님 이메일 hong@example.com"
+
+# 21) 텍스트 탐지 설명 — PII·인젝션·정책·라우팅 근거 상세 출력
+nufi-egress explain --text "김민수님 주민번호 900101-1234568" --json
+
+# 22) mask/redact/explain 통합 데모
+./scripts/demo_transform.sh                  # 매뉴얼: docs/DEMO.md
 ```
 
 > 운영(ops) 데모(`demo_report`·`demo_multitenancy`·`demo_dashboards`)와
@@ -270,9 +285,17 @@ python3 scripts/bench_injection.py
   직접 나가는 트래픽을 패킷 수준에서 탐지하고, 방화벽 허용목록(nftables allowlist)으로 실제 차단.
 - **비동기 감사(asynchronous audit)** — 무거운 분석(NER·기밀 분류·우회 상관)을 사용자 요청
   경로와 분리(producer/consumer)해, 응답 지연을 늘리지 않으면서 준실시간으로 처리.
+- **텍스트 변환(mask/redact/explain)** — `nufi-egress mask`(PII를 `***`로 가림),
+  `nufi-egress redact`(PII를 `[KR_PERSON]` 등 타입 태그로 교체),
+  `nufi-egress explain`(탐지 근거·정책·라우팅 판정을 상세 출력). 인젝션 텍스트는
+  변환하지 않고 PII만 처리합니다.
 - **에어갭 우선(air-gap first)** — 코어(정규식 + 체크섬 + 비밀 + 사전 NER)는 순수 표준
   라이브러리 + PyYAML 만 써서 외부 네트워크 의존이 0. 무거운 백엔드(transformers/ONNX,
   presidio, detect-secrets)는 설치되어 있으면 자동으로 켜집니다.
+
+> CLI(`nufi-egress`)는 **21개 서브커맨드**(version, scan, mask, redact, explain, route,
+> inspect, watch, init, doctor 등)를 제공하며, 자동화 테스트 **499건**이 전 기능을
+> 커버합니다.
 
 ---
 
