@@ -4,6 +4,14 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-05 (patch53)
+
+> **v0.4.16-patch53 — HANDS_ON_LITELLM.md 신규**
+> LiteLLM Proxy + NuFi 콜백을 사용한 PII 기반 하이브리드 라우팅 E2E 실습 가이드. 스텁 로컬 LLM 기동 → LiteLLM Proxy 설정 → 3개 시나리오(일반→클라우드, PII→로컬, 강한PII→차단) → 감사 로그 확인 → 비용 추적 → 트러블슈팅.
+
+### Added (문서)
+- **docs/HANDS_ON_LITELLM.md** — LiteLLM Proxy 연동 Hands-On 튜토리얼 신규 작성 (11개 섹션).
+
 ## [0.4.16] - 2026-07-04 (patch52)
 
 > **v0.4.16-patch52 — README.md 경쟁 위치 섹션 추가**
