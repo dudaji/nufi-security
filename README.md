@@ -245,6 +245,10 @@ nufi-egress explain --text "김민수님 주민번호 900101-1234568" --json
 
 # 22) mask/redact/explain 통합 데모
 ./scripts/demo_transform.sh                  # 매뉴얼: docs/DEMO.md
+
+# 23) 파이프라인 — detect→decide→transform→route 체인 처리
+nufi-egress pipeline --text "김민수님 주민번호 900101-1234568" --json
+nufi-egress pipeline --text "오늘 날씨 어때" --actions detect,route --json
 ```
 
 > 운영(ops) 데모(`demo_report`·`demo_multitenancy`·`demo_dashboards`)와
@@ -289,12 +293,15 @@ nufi-egress explain --text "김민수님 주민번호 900101-1234568" --json
   `nufi-egress redact`(PII를 `[KR_PERSON]` 등 타입 태그로 교체),
   `nufi-egress explain`(탐지 근거·정책·라우팅 판정을 상세 출력). 인젝션 텍스트는
   변환하지 않고 PII만 처리합니다.
+- **체인 파이프라인(pipeline)** — `nufi-egress pipeline`은 탐지(detect)→정책 판정
+  (block-check)→변환(mask/redact/pseudonymize)→라우팅(route)을 한 번에 실행합니다.
+  `--actions` 로 원하는 단계만 선택 가능. `--json` 으로 구조화된 결과 출력.
 - **에어갭 우선(air-gap first)** — 코어(정규식 + 체크섬 + 비밀 + 사전 NER)는 순수 표준
   라이브러리 + PyYAML 만 써서 외부 네트워크 의존이 0. 무거운 백엔드(transformers/ONNX,
   presidio, detect-secrets)는 설치되어 있으면 자동으로 켜집니다.
 
-> CLI(`nufi-egress`)는 **21개 서브커맨드**(version, scan, mask, redact, explain, route,
-> inspect, watch, init, doctor 등)를 제공하며, 자동화 테스트 **499건**이 전 기능을
+> CLI(`nufi-egress`)는 **33개 서브커맨드**(version, scan, mask, redact, explain, pipeline,
+> route, inspect, watch, init, doctor 등)를 제공하며, 자동화 테스트 **520건**이 전 기능을
 > 커버합니다.
 
 ---
