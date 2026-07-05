@@ -16,6 +16,7 @@ from .surrogate import (SurrogateMinter, StreamingDeanonymizer,
                         REVERSIBLE_ENTITIES, TAG_OF)
 from .reversible import ReversibleEgress, RevResult
 from .detectors.confidential import ConfidentialKeywordDetector
+from .detectors.prompt_injection import PromptInjectionDetector
 from .edm import EdmMatcher, EdmIndex
 from .reload import (ReloadableGuard, RuleSetPaths, RuleValidationError,
                      ReloadResult, ReloadDiff, RuleSetReport, validate_ruleset,
@@ -23,7 +24,7 @@ from .reload import (ReloadableGuard, RuleSetPaths, RuleValidationError,
 
 __all__ = [
     "DetectionPipeline", "Finding", "CONF_SOURCES", "PolicyEngine", "Decision",
-    "ConfidentialKeywordDetector", "EdmMatcher", "EdmIndex",
+    "ConfidentialKeywordDetector", "PromptInjectionDetector", "EdmMatcher", "EdmIndex",
     "AuditLogger", "MessageStore", "EgressGuard", "GuardResult",
     "FileQueue", "SourceSpec", "Envelope", "AuditBot", "p95_latency_ms",
     "EnforcementPoint", "SIMULATED", "ENFORCED",
