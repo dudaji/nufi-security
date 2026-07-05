@@ -9,6 +9,7 @@ from typing import List, Optional
 
 from .pipeline import DetectionPipeline, Finding
 from .policy import PolicyEngine, Decision
+from .detectors.prompt_injection import PromptInjectionDetector
 
 
 @dataclass
@@ -28,9 +29,15 @@ class GuardResult:
 
 class EgressGuard:
     def __init__(self, pipeline: Optional[DetectionPipeline] = None,
-                 policy: Optional[PolicyEngine] = None, **pipeline_kwargs):
+                 policy: Optional[PolicyEngine] = None,
+                 check_injection: bool = False,
+                 **pipeline_kwargs):
         self.pipeline = pipeline or DetectionPipeline(**pipeline_kwargs)
         self.policy = policy or PolicyEngine()
+        self.check_injection = check_injection
+        self._injection_detector: Optional[PromptInjectionDetector] = None
+        if check_injection:
+            self._injection_detector = PromptInjectionDetector()
 
     @property
     def ner_backend(self) -> str:
@@ -43,4 +50,28 @@ class EgressGuard:
     def inspect(self, text: str) -> GuardResult:
         findings = self.pipeline.analyze(text)
         decision = self.policy.apply(text, findings)
+
+        # Prompt injection detection (patch61)
+        if self.check_injection and self._injection_detector:
+            injection_findings = self._injection_detector.detect(text)
+            if injection_findings:
+                # Convert injection findings to pipeline Finding type
+                for ijf in injection_findings:
+                    pf = Finding(
+                        entity_type=ijf.entity_type,
+                        text=ijf.text,
+                        start=ijf.start,
+                        end=ijf.end,
+                        score=ijf.score,
+                        source=ijf.source,
+                    )
+                    findings.append(pf)
+                # Block the request — policy action "block_injection"
+                decision.blocked = True
+                decision.actions.append({
+                    "action": "block_injection",
+                    "entity_type": "PROMPT_INJECTION",
+                    "reason": "prompt injection detected",
+                })
+
         return GuardResult(blocked=decision.blocked, decision=decision, findings=findings)

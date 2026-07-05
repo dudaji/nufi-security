@@ -427,10 +427,16 @@ def cmd_route(args) -> int:
         cloud_model=getattr(args, "cloud_model", "nufi-cloud"),
     )
 
+    # Prompt injection detector (patch61)
+    injection_detector = None
+    if getattr(args, "check_injection", False):
+        from egress_audit.detectors.prompt_injection import PromptInjectionDetector
+        injection_detector = PromptInjectionDetector()
+
     # --file: 파일 라인별 처리
     file_path = getattr(args, "file", None)
     if file_path:
-        return _route_file(router, args, file_path)
+        return _route_file(router, args, file_path, injection_detector=injection_detector)
 
     if not args.text:
         print("오류: --text 또는 --file 중 하나를 지정해야 합니다.", file=__import__('sys').stderr)
@@ -438,8 +444,20 @@ def cmd_route(args) -> int:
 
     decision = router.route(args.text, requested_model=args.model)
 
+    # Check injection if flag is set
+    injection_findings = []
+    if injection_detector:
+        injection_findings = injection_detector.detect(args.text)
+
     if args.json:
-        print(json.dumps(decision.to_dict(), ensure_ascii=False, indent=2))
+        out = decision.to_dict()
+        if injection_findings:
+            out["injection_findings"] = [
+                {"entity_type": f.entity_type, "text": f.text, "score": f.score}
+                for f in injection_findings
+            ]
+            out["injection_detected"] = True
+        print(json.dumps(out, ensure_ascii=False, indent=2))
     else:
         status = "🔒 로컬 라우팅" if decision.routed_to_local else "☁️  클라우드 허용"
         print(f"입력: {args.text}")
@@ -450,11 +468,15 @@ def cmd_route(args) -> int:
         if decision.findings:
             types = sorted({f.entity_type for f in decision.findings})
             print(f"  엔티티:     {', '.join(types)}")
+        if injection_findings:
+            print(f"  ⚠ 인젝션 탐지: {len(injection_findings)}건")
+            for ijf in injection_findings:
+                print(f"    - [{ijf.score:.1f}] {ijf.text}")
         print(f"  지연(ms):   {decision.latency_ms:.2f}")
     return 0
 
 
-def _route_file(router, args, file_path: str) -> int:
+def _route_file(router, args, file_path: str, injection_detector=None) -> int:
     """파일을 라인별로 PII 라우팅 처리한다."""
     path = Path(file_path)
     if not path.exists():
@@ -478,13 +500,22 @@ def _route_file(router, args, file_path: str) -> int:
             local_count += 1
         else:
             cloud_count += 1
-        decisions.append({
+        entry = {
             "line": idx,
             "text": line.strip(),
             "verdict": verdict,
             "entity_types": entity_types,
             **decision.to_dict(),
-        })
+        }
+        if injection_detector:
+            ijf = injection_detector.detect(line.strip())
+            if ijf:
+                entry["injection_detected"] = True
+                entry["injection_findings"] = [
+                    {"entity_type": f.entity_type, "text": f.text, "score": f.score}
+                    for f in ijf
+                ]
+        decisions.append(entry)
 
     show_summary = getattr(args, "summary", False)
     total = local_count + cloud_count
@@ -776,6 +807,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="PII 감지 시 라우팅할 로컬 모델명(기본 nufi-local)")
     p.add_argument("--cloud-model", default="nufi-cloud",
                    help="PII 미감지 시 허용할 클라우드 모델명(기본 nufi-cloud)")
+    p.add_argument("--check-injection", action="store_true",
+                   help="프롬프트 인젝션 탐지도 함께 수행")
     p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
     p.set_defaults(func=cmd_route)
 
