@@ -22,6 +22,7 @@
   history   최근 활동 로그 조회 — 스캔·차단·라우팅 이벤트(patch141).
   route     PII 라우팅 결정 테스트 — 텍스트의 PII 감지·모델 라우팅 판정 출력(CMP-270).
   playground 인터랙티브 PII 분석 REPL — 실시간 텍스트 분석·마스킹·리댁션 실험(patch145).
+  summary   프로젝트 헬스 대시보드 — 설정·활동·위험·닥터·버전 한 화면 요약(patch147).
 
 설치형 진입점(pyproject.toml console_scripts): ``pip install -e .`` 후 ``nufi-egress``
 (별칭 ``nufi``) 로 PATH 에서 직접 실행. 레거시 ``python3 -m enforcement.cli`` 동치 유지.
@@ -516,6 +517,12 @@ def cmd_playground(args) -> int:
     return _playground(args)
 
 
+def cmd_summary(args) -> int:
+    """프로젝트 헬스 대시보드 (patch147)."""
+    from enforcement.summary_cmd import cmd_summary as _summary
+    return _summary(args)
+
+
 def cmd_explain(args) -> int:
     """텍스트 탐지 결과 상세 설명 (patch116)."""
     from enforcement.explain_cmd import explain_text, render_human
@@ -883,6 +890,7 @@ _HELP_EPILOG = """\
     test            자가 검증 (PII·인젝션·라우팅·Guard·설정·버전)
     version         버전 및 백엔드 정보 출력
     history         최근 활동 로그 조회 (스캔·차단·라우팅)
+    summary         프로젝트 헬스 대시보드 (설정·활동·위험·닥터·버전)
     stats           NuFi 설정·탐지 역량 요약 통계
     completions     셸 자동완성 스크립트 출력
 
@@ -1324,6 +1332,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--mode", choices=["inspect", "mask", "redact"], default="inspect",
                    help="출력 모드(기본 inspect)")
     p.set_defaults(func=cmd_playground)
+
+    # --- Summary (patch147) -------------------------------------------------- #
+    p = sub.add_parser("summary",
+                       help="프로젝트 헬스 대시보드 — 설정·활동·위험·닥터·버전 한 화면 요약 (patch147)")
+    p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    p.set_defaults(func=cmd_summary)
 
     # --- Stats (patch112) ---------------------------------------------------- #
     from enforcement.stats_cmd import cmd_stats
