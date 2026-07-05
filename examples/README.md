@@ -18,6 +18,8 @@
 | [`sdk_pii_routing.py`](sdk_pii_routing.py) | PII 기반 로컬/클라우드 라우팅 결정 | `route`, `RoutingDecision` |
 | [`sdk_prompt_injection.py`](sdk_prompt_injection.py) | 프롬프트 인젝션 탐지 + Guard 차단 | `detect_injection`, `Guard(check_injection=True)`, `is_injection` |
 | [`sdk_compliance_report.py`](sdk_compliance_report.py) | 한국 규제 5종 통제 커버리지 출력 | `compliance_report`, `render_report`, `load_catalog` |
+| [`sdk_security_report.py`](sdk_security_report.py) | 디렉터리 스캔 → 보안 리포트(Markdown/JSON) 생성 | `security_report`, `render_security_markdown`, `render_security_json` |
+| [`sdk_ci_integration.py`](sdk_ci_integration.py) | CI/pre-commit 통합 — PII·인젝션 검사 + 종료 코드 | `detect`, `detect_injection`, `scan_file` |
 
 ## 실행 방법
 

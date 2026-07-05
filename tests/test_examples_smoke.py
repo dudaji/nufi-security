@@ -1,4 +1,4 @@
-"""examples/ 디렉터리 예시 스크립트 스모크 테스트 — 7종.
+"""examples/ 디렉터리 예시 스크립트 스모크 테스트 — 9종.
 
 검증 항목:
   1. examples/library_detect.py — 오류 없이 실행 완료 (exit 0), KR_RRN·KR_PERSON 탐지.
@@ -8,6 +8,8 @@
   5. examples/sdk_streaming.py — 오류 없이 실행 완료 (exit 0).
   6. examples/sdk_file_scan.py — 오류 없이 실행 완료 (exit 0), scan_file·guard_file·batch_detect.
   7. examples/sdk_compliance_report.py — 오류 없이 실행 완료 (exit 0), 통제·충족 커버리지 출력.
+  8. examples/sdk_security_report.py — 오류 없이 실행 완료 (exit 0), 보안 리포트 생성.
+  9. examples/sdk_ci_integration.py — PII·인젝션 탐지로 exit 1, CI 결과 출력.
 
 실행: EGRESS_NER_BACKEND=gazetteer python3 -m pytest tests/test_examples_smoke.py -v
 """
@@ -241,3 +243,33 @@ def test_sdk_compliance_report_runs():
     assert result.returncode == 0, f"exit {result.returncode}: {result.stderr[:300]}"
     assert "통제" in result.stdout
     assert "충족" in result.stdout or "ISMS" in result.stdout
+
+
+def test_sdk_security_report_runs():
+    """examples/sdk_security_report.py 가 오류 없이 실행되고 리포트를 출력한다."""
+    env = {**_os.environ, "EGRESS_NER_BACKEND": "gazetteer"}
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "examples" / "sdk_security_report.py")],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert result.returncode == 0, f"exit {result.returncode}: {result.stderr[:300]}"
+    assert "보안 리포트" in result.stdout or "Security" in result.stdout
+    assert "risk_level" in result.stdout
+
+
+def test_sdk_ci_integration_runs():
+    """examples/sdk_ci_integration.py 가 오류 없이 실행되고 CI 결과를 출력한다."""
+    env = {**_os.environ, "EGRESS_NER_BACKEND": "gazetteer"}
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "examples" / "sdk_ci_integration.py")],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    # Exit code 1 is expected (PII + injection detected in demo files)
+    assert result.returncode == 1, f"exit {result.returncode}: {result.stderr[:300]}"
+    assert "PASS" in result.stdout
+    assert "FAIL" in result.stdout
+    assert "Exit code: 1" in result.stdout
