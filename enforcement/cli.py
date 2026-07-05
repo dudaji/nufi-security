@@ -1325,8 +1325,50 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="대상 셸(bash 또는 zsh)")
     p.set_defaults(func=cmd_completions)
 
-    args = ap.parse_args(argv)
-    return args.func(args)
+    try:
+        args = ap.parse_args(argv)
+    except SystemExit as exc:
+        # argparse calls sys.exit on error; re-raise with the same code
+        # but the error message has already been printed by argparse.
+        raise
+
+    # ── Friendly pre-flight checks (patch144) ─────────────────────────── #
+    cmd = getattr(args, "cmd", None)
+    if cmd == "scan" and not getattr(args, "target", None):
+        print("Error: please specify a path to scan.\n"
+              "Usage: nufi-egress scan <path>", file=sys.stderr)
+        return 1
+    if cmd == "route":
+        has_input = (getattr(args, "text", None)
+                     or getattr(args, "file", None)
+                     or getattr(args, "stdin", False))
+        if not has_input:
+            print("Error: please specify --text, --file, or --stdin.\n"
+                  "Usage: nufi-egress route --text <text>", file=sys.stderr)
+            return 1
+    if cmd == "explain" and not getattr(args, "text", None):
+        print("Error: please specify --text.\n"
+              "Usage: nufi-egress explain --text <text>", file=sys.stderr)
+        return 1
+
+    # ── Global exception handler (patch144) ─────────────────────────── #
+    try:
+        return args.func(args)
+    except FileNotFoundError as exc:
+        print(f"Error: file not found: {exc}", file=sys.stderr)
+        return 1
+    except PermissionError as exc:
+        print(f"Error: permission denied: {exc}", file=sys.stderr)
+        return 1
+    except KeyboardInterrupt:
+        print("\nInterrupted.", file=sys.stderr)
+        return 130
+    except BrokenPipeError:
+        return 0
+    except Exception as exc:
+        print(f"Error: {exc}\n"
+              "Run with --help for usage information.", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":
