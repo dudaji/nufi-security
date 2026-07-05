@@ -4,6 +4,17 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-05 (patch54)
+
+> **v0.4.16-patch54 — LiteLLM Proxy E2E 데모 스크립트 추가**
+> 스텁 LLM + LiteLLM Proxy를 실제로 기동하여 NuFi 콜백의 PII 감지·라우팅·차단을 3개 시나리오로 자동 검증하는 E2E 데모. demo_all.sh에도 등록.
+
+### Added (스크립트)
+- **scripts/demo_litellm_e2e.sh** — LiteLLM Proxy E2E 자동 검증 데모 (S1 클라우드 통과, S2 로컬 라우팅, S3 차단).
+
+### Changed (스크립트)
+- **scripts/demo_all.sh** — demo_litellm_e2e.sh 등록.
+
 ## [0.4.16] - 2026-07-05 (patch53)
 
 > **v0.4.16-patch53 — HANDS_ON_LITELLM.md 신규**
