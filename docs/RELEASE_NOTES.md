@@ -6,6 +6,25 @@
 
 ---
 
+## v0.4.17 (patch61) — **한국어 프롬프트 인젝션 탐지 + Guard 통합**
+
+> 한국어·영어 프롬프트 인젝션/탈옥 패턴을 감지하고 차단하는 가드레일 기능. (2026-07-05)
+
+### 무엇이 달라지나
+
+- **`from nufi import detect_injection`** — 한국어 8종·영어 8종·역할변경 2종 프롬프트 인젝션 패턴 탐지.
+- **`Guard(check_injection=True).inspect(text)`** — PII 차단과 인젝션 차단을 한 번에.
+- **`nufi-egress route --check-injection`** — CLI 에서 인젝션 탐지 동시 수행.
+- **`nufi-egress route --file input.txt --summary`** — 파일 일괄 스캔 + 통계.
+
+### 누구에게 유용한가
+
+- LLM 서비스에 **사용자 입력 가드레일**이 필요한 팀 — 프롬프트 인젝션을 인라인으로 차단.
+- **에어갭 환경** — 외부 의존 없는 순수 정규식 탐지.
+- **보안 감사 대응** — PII + 인젝션 동시 탐지를 증빙으로 제출 가능.
+
+---
+
 ## v0.4.17 (patch58) — **README.md PII 라우팅 표면 반영**
 
 > patch55~57 결과물(CLI route·설정 파일·SDK route)을 최상위 README.md에 반영. (2026-07-05)

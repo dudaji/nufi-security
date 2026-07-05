@@ -4,6 +4,41 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch61)
+
+> **v0.4.17-patch61 — Guard 프롬프트 인젝션 탐지 통합**
+> Guard(check_injection=True)로 PII와 프롬프트 인젝션을 동시에 탐지·차단. CLI --check-injection 플래그 추가.
+
+### Changed (엔진)
+- **egress_audit/guard.py** — `check_injection` 파라미터 추가, 인젝션 감지 시 `block_injection` 액션으로 차단.
+- **enforcement/cli.py** — `route --check-injection` 플래그 (--text, --file 모드 모두 지원).
+
+### Added (테스트)
+- **tests/test_guard_injection.py** — Guard 인젝션 통합 테스트 6건.
+
+## [0.4.17] - 2026-07-05 (patch60)
+
+> **v0.4.17-patch60 — 한국어 프롬프트 인젝션 탐지기**
+> 한국어·영어 프롬프트 인젝션/탈옥 패턴 18종을 정규식으로 탐지하는 경량 탐지기. `from nufi import detect_injection` 으로 SDK 노출.
+
+### Added (엔진)
+- **egress_audit/detectors/prompt_injection.py** — `PromptInjectionDetector` (한국어 8종 + 영어 8종 + 역할변경 2종 패턴).
+- **nufi/__init__.py** — `detect_injection` 편의 함수 export.
+
+### Added (테스트)
+- **tests/test_prompt_injection.py** — 프롬프트 인젝션 탐지 테스트 13건.
+
+## [0.4.17] - 2026-07-05 (patch59)
+
+> **v0.4.17-patch59 — CLI route --file 파일 일괄 스캔 + --summary 통계**
+> `nufi-egress route --file input.txt`로 파일을 줄 단위 PII 라우팅 판정. --summary로 로컬/클라우드 비율 통계.
+
+### Added (CLI)
+- **enforcement/cli.py** — `route --file` (파일 줄별 판정), `route --summary` (집계 통계) 옵션.
+
+### Added (테스트)
+- **tests/test_cmp270_cli_route.py** — --file, --summary 테스트 6건 추가 (총 14건).
+
 ## [0.4.17] - 2026-07-05 (patch58)
 
 > **v0.4.17-patch58 — README.md PII 라우팅 표면 반영**
