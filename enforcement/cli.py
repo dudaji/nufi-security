@@ -19,6 +19,7 @@
   benchmark 정확도(커밋 산출물 게이트) + 가명화 품질(라이브) 벤치마크 단일 재현(CMP-201 I5).
   inspect   통합 보안 분석 — PII + 인젝션 + 라우팅 + 위험도 한 번에 출력(patch78).
   pipeline  체인 파이프라인 — detect→decide→transform→route 한 번에(patch139).
+  history   최근 활동 로그 조회 — 스캔·차단·라우팅 이벤트(patch141).
   route     PII 라우팅 결정 테스트 — 텍스트의 PII 감지·모델 라우팅 판정 출력(CMP-270).
 
 설치형 진입점(pyproject.toml console_scripts): ``pip install -e .`` 후 ``nufi-egress``
@@ -502,6 +503,12 @@ def cmd_pipeline(args) -> int:
     return _pipeline(args)
 
 
+def cmd_history(args) -> int:
+    """활동 로그 조회 (patch141)."""
+    from enforcement.history_cmd import cmd_history as _history
+    return _history(args)
+
+
 def cmd_explain(args) -> int:
     """텍스트 탐지 결과 상세 설명 (patch116)."""
     from enforcement.explain_cmd import explain_text, render_human
@@ -868,6 +875,7 @@ _HELP_EPILOG = """\
     doctor          하이브리드 배선 진단
     test            자가 검증 (PII·인젝션·라우팅·Guard·설정·버전)
     version         버전 및 백엔드 정보 출력
+    history         최근 활동 로그 조회 (스캔·차단·라우팅)
     stats           NuFi 설정·탐지 역량 요약 통계
     completions     셸 자동완성 스크립트 출력
 
@@ -1291,6 +1299,16 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--json-out", default=None,
                    help="JSON 리포트를 파일로도 기록(경로)")
     p.set_defaults(func=cmd_benchmark)
+
+    # --- History (patch141) -------------------------------------------------- #
+    p = sub.add_parser("history",
+                       help="최근 활동 로그 조회 — 스캔·차단·라우팅 이벤트 (patch141)")
+    p.add_argument("--last", type=int, default=20,
+                   help="최근 N개 이벤트 표시(기본 20)")
+    p.add_argument("--type", choices=["scan", "block", "route", "all"], default="all",
+                   help="이벤트 유형 필터(기본 all)")
+    p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    p.set_defaults(func=cmd_history)
 
     # --- Stats (patch112) ---------------------------------------------------- #
     from enforcement.stats_cmd import cmd_stats
