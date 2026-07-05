@@ -829,7 +829,11 @@ def cmd_report(args) -> int:
         from enforcement.report_diff_cmd import cmd_report_diff
         return cmd_report_diff(args)
 
-    print("usage: nufi-egress report {compliance|security|trends|diff} …", file=sys.stderr)
+    if args.report_kind == "executive":
+        from enforcement.executive_report import cmd_report_executive
+        return cmd_report_executive(args)
+
+    print("usage: nufi-egress report {compliance|security|trends|diff|executive} …", file=sys.stderr)
     return 2
 
 
@@ -1155,6 +1159,16 @@ def main(argv: Optional[List[str]] = None) -> int:
     rp.add_argument("after", help="이후 스캔 결과 파일(SARIF 또는 NuFi JSON)")
     rp.add_argument("--format", choices=["md", "json", "html"], default="md",
                     help="출력 형식(기본 md)")
+    rp.add_argument("--output", default=None, metavar="PATH",
+                    help="출력 파일 경로(생략 시 stdout)")
+    rp.set_defaults(func=cmd_report)
+
+    rp = rsub.add_parser("executive",
+                         help="경영진용 1페이지 보안 요약 — 등급/지표/위험/권고 (patch163)")
+    rp.add_argument("directory", nargs="?", default=".",
+                    help="스캔할 디렉터리 경로(기본 현재 디렉터리)")
+    rp.add_argument("--format", choices=["text", "json", "md"], default="text",
+                    help="출력 형식(기본 text)")
     rp.add_argument("--output", default=None, metavar="PATH",
                     help="출력 파일 경로(생략 시 stdout)")
     rp.set_defaults(func=cmd_report)
