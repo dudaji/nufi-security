@@ -20,22 +20,31 @@ import uuid
 from typing import Any, Optional
 
 from egress_audit import ReversibleEgress, AuditLogger
+from egress_audit.detectors.prompt_injection import PromptInjectionDetector
 from gateway.router import Router
-from gateway.pii_router import PiiRouter, RoutingDecision, CostRecord
+from gateway.pii_router import PiiRouter, RoutingDecision, CostRecord, load_pii_routing_config
 
 logger = logging.getLogger("nufi.litellm_hook")
 
 try:
     from litellm.integrations.custom_logger import CustomLogger as _Base  # type: ignore
     from litellm.proxy._types import UserAPIKeyAuth  # type: ignore
-    from fastapi import HTTPException  # type: ignore
     _HAS_LITELLM = True
 except Exception:  # pragma: no cover - 미설치 환경
     class _Base:  # 최소 스텁
         pass
-    HTTPException = RuntimeError  # type: ignore
     UserAPIKeyAuth = object       # type: ignore
     _HAS_LITELLM = False
+
+try:
+    from fastapi import HTTPException  # type: ignore
+except Exception:  # pragma: no cover
+    # Minimal stub that mimics HTTPException interface for non-fastapi envs
+    class HTTPException(Exception):  # type: ignore
+        def __init__(self, status_code: int = 500, detail: Any = None, **kwargs):
+            self.status_code = status_code
+            self.detail = detail
+            super().__init__(f"HTTP {status_code}: {detail}")
 
 
 def _public_classes() -> set:
@@ -126,6 +135,16 @@ class EgressAuditHook(_Base):
             fail_closed=os.environ.get("NUFI_FAIL_CLOSED", "1") != "0",
             config_path=os.environ.get("NUFI_PII_ROUTING_CONFIG"),
         )
+        # Injection detection (patch65)
+        cfg = load_pii_routing_config(os.environ.get("NUFI_PII_ROUTING_CONFIG"))
+        env_flag = os.environ.get("NUFI_CHECK_INJECTION", "")
+        if env_flag == "1":
+            self._check_injection = True
+        elif env_flag == "0":
+            self._check_injection = False
+        else:
+            self._check_injection = bool(cfg.get("check_injection", False))
+        self._injection_detector = PromptInjectionDetector() if self._check_injection else None
 
     def _log_routing(self, decision: RoutingDecision, data: dict) -> None:
         """라우팅 결정을 감사 로그에 기록."""
@@ -143,6 +162,30 @@ class EgressAuditHook(_Base):
     async def async_pre_call_hook(self, user_api_key_dict, cache, data: dict, call_type: str):
         text = _extract_text(data.get("messages"))
         original_model = data.get("model", "")
+
+        # --- Phase 0: 프롬프트 인젝션 탐지 (patch65) ---
+        if self._check_injection and self._injection_detector:
+            injection_findings = self._injection_detector.detect(text)
+            if injection_findings:
+                self.audit.log(
+                    model=original_model,
+                    provider="unknown",
+                    is_public=True,
+                    request_body={"model": original_model, "messages": data.get("messages")},
+                    decision_summary={"injection_detected": True,
+                                      "pattern_count": len(injection_findings)},
+                    findings=[{"entity_type": f.entity_type, "text": f.text,
+                               "score": f.score, "start": f.start, "end": f.end}
+                              for f in injection_findings],
+                    outcome="blocked_injection",
+                )
+                logger.warning("Injection detected in request (model=%s): %s",
+                               original_model,
+                               [f.text for f in injection_findings])
+                raise HTTPException(status_code=403, detail={
+                    "error": "injection_blocked",
+                    "patterns": [f.text for f in injection_findings],
+                })
 
         # --- Phase 1: PII 기반 라우팅 결정 ---
         routing = self.pii_router.route(text, requested_model=original_model)
