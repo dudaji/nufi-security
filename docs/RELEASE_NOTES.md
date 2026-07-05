@@ -6,9 +6,43 @@
 
 ---
 
-## v0.4.16 패치 시리즈 (patch01~patch54) — **문서 풍부화 + SDK 사용성 개선**
+## v0.4.17 (patch55) — **CLI `route` 서브커맨드 추가**
 
-> 핵심 수치·코드 변경 없음. 문서·사용성 보강만. (2026-07-04)
+> PII 라우팅 결정을 CLI에서 바로 테스트할 수 있습니다. (2026-07-05)
+
+### 무엇이 달라지나
+
+- **`nufi-egress route --text "김민수님 계좌 110-123-456789"`** → PII 감지, 로컬 모델 라우팅 판정 출력.
+- **`nufi-egress route --text "오늘 날씨 어때"`** → PII 없음, 클라우드 허용 출력.
+- **`--json` 플래그** → 기계용 JSON 출력(CI/자동화 연동).
+- **`--model`/`--local-model`/`--cloud-model`** → 모델명 커스터마이징.
+
+### 누구에게 유용한가
+
+- **운영자**: 정책 변경 전 PII 라우팅 결정을 즉석에서 확인.
+- **개발자**: 감지 엔진 동작을 CLI 한 줄로 디버깅.
+- **CI/CD**: `--json` 출력을 파이프라인에서 자동 검증.
+
+---
+
+## v0.4.16 패치 시리즈 (patch01~patch57) — **문서 풍부화 + SDK 사용성 개선**
+
+> 핵심 수치 변경 없음. SDK 표면 확장 + 문서·사용성 보강. (2026-07-05)
+
+### patch57 — SDK `route()` 함수 노출
+
+PII 라우팅 결정을 SDK 한 줄로 호출할 수 있게 됐습니다:
+
+```python
+from nufi import route
+decision = route("고객 홍길동님 주민번호 …")
+if decision.routed_to_local:
+    print("로컬 모델로 전환")
+```
+
+- `route(text) -> RoutingDecision` — PII 감지 시 로컬, 미감지 시 클라우드 모델 반환
+- `RoutingDecision`, `PiiRouter` 도 stable 계층으로 export
+- 예시: `examples/sdk_pii_routing.py`
 
 ### 패치 시리즈 성과 요약 (한눈에)
 

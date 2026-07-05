@@ -4,6 +4,35 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch55)
+
+> **v0.4.17-patch55 — CLI nufi-egress route 서브커맨드 추가**
+> PII 라우팅 결정을 CLI에서 테스트할 수 있는 `nufi-egress route` 서브커맨드. 기존 `PiiRouter.route()`를 CLI 진입점으로 노출. `--json` 플래그로 기계용 출력 지원.
+
+### Added (CLI)
+- **enforcement/cli.py** — `route` 서브커맨드: `--text`로 PII 감지·모델 라우팅 판정 출력. `--json`/`--model`/`--local-model`/`--cloud-model` 옵션.
+
+### Added (테스트)
+- **tests/test_cmp270_cli_route.py** — `route` 서브커맨드 단위 테스트 (PII 감지·클린 텍스트·JSON 출력·스키마 완전성·main 진입점).
+
+### Changed (문서)
+- **docs/CLI.md** — `route` 서브커맨드 레퍼런스 섹션 추가 (옵션 표·사용 예시·종료코드).
+- **docs/RELEASE_NOTES.md** — v0.4.17 릴리스 노트.
+
+## [0.4.16] - 2026-07-05 (patch57)
+
+> **v0.4.16-patch57 — SDK route() 함수 노출 + 예시 추가**
+> PII 라우팅 결정을 `from nufi import route` 한 줄로 호출 가능하게 노출. RoutingDecision·PiiRouter도 stable 계층에 포함.
+
+### Added (SDK)
+- **nufi/__init__.py** — `route(text) -> RoutingDecision` 편의 함수, `RoutingDecision`·`PiiRouter` export.
+- **examples/sdk_pii_routing.py** — PII 라우팅 SDK 예시 (PII→로컬, 클린→클라우드, to_dict).
+- **tests/test_unit.py** — `test_route_pii_detected_routes_local`, `test_route_clean_text_routes_cloud` 추가.
+
+### Changed (문서)
+- **docs/SDK.md** — §2.8 PII 라우팅 섹션 추가 (RoutingDecision 필드 표 포함).
+- **examples/README.md** — `sdk_pii_routing.py` 등록.
+
 ## [0.4.16] - 2026-07-05 (patch54)
 
 > **v0.4.16-patch54 — LiteLLM Proxy E2E 데모 스크립트 추가**

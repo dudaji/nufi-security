@@ -114,10 +114,95 @@ def test_m4_edm_index_no_plaintext():
         assert plain not in raw   # 원문 비저장(NFR1)
 
 
+def test_route_pii_detected_routes_local():
+    """CMP-272: nufi.route() — PII 텍스트는 로컬로 라우팅."""
+    from nufi import route, RoutingDecision
+    decision = route("고객 홍길동 주민번호 900101-1234568")
+    assert isinstance(decision, RoutingDecision)
+    assert decision.pii_detected
+    assert decision.routed_to_local
+
+
+def test_route_clean_text_routes_cloud():
+    """CMP-272: nufi.route() — PII 없는 텍스트는 클라우드 허용."""
+    from nufi import route
+    decision = route("오늘 날씨가 맑습니다.")
+    assert not decision.pii_detected
+    assert not decision.routed_to_local
+
+
 def test_router_private_default_public_fallback():
     r = Router()
     assert not r.resolve("nufi-default").is_public
     assert r.resolve("nufi-default", force_fallback=True).is_public
+
+
+# --------------------------------------------------------------------------- #
+# CLI `route` subcommand tests (CMP-270)
+# --------------------------------------------------------------------------- #
+
+def test_cli_route_pii_detected_routes_local():
+    """CLI route: PII 포함 텍스트는 로컬 모델 라우팅으로 판정."""
+    import io
+    from contextlib import redirect_stdout
+    from enforcement.cli import main as cli_main
+
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        rc = cli_main(["route", "--text", "김민수님 계좌 110-123-456789", "--json"])
+    assert rc == 0
+    import json as _json
+    out = _json.loads(buf.getvalue())
+    assert out["pii_detected"] is True
+    assert out["routed_to_local"] is True
+
+
+def test_cli_route_clean_text_allows_cloud():
+    """CLI route: PII 없는 텍스트는 클라우드 허용."""
+    import io
+    from contextlib import redirect_stdout
+    from enforcement.cli import main as cli_main
+
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        rc = cli_main(["route", "--text", "오늘 날씨 어때", "--json"])
+    assert rc == 0
+    import json as _json
+    out = _json.loads(buf.getvalue())
+    assert out["pii_detected"] is False
+    assert out["routed_to_local"] is False
+
+
+def test_cli_route_json_output_structure():
+    """CLI route --json: 출력에 필수 필드가 모두 존재."""
+    import io
+    from contextlib import redirect_stdout
+    from enforcement.cli import main as cli_main
+
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        cli_main(["route", "--text", "테스트 입력", "--json"])
+    import json as _json
+    out = _json.loads(buf.getvalue())
+    required_keys = {"target_model", "reason", "pii_detected", "routed_to_local",
+                     "finding_count", "entity_types", "latency_ms"}
+    assert required_keys.issubset(out.keys())
+
+
+def test_cli_route_model_override():
+    """CLI route --local-model/--cloud-model 오버라이드가 결과에 반영."""
+    import io
+    from contextlib import redirect_stdout
+    from enforcement.cli import main as cli_main
+
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        cli_main(["route", "--text", "오늘 날씨 어때",
+                  "--local-model", "my-local", "--cloud-model", "my-cloud", "--json"])
+    import json as _json
+    out = _json.loads(buf.getvalue())
+    # clean text → cloud model should be the overridden name
+    assert out["target_model"] == "my-cloud"
 
 
 def _run():

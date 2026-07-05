@@ -66,6 +66,29 @@ from enforcement.report import (  # noqa: E402
 )
 
 # ---------------------------------------------------------------------------
+# PII 라우팅 (PII-based routing) — v0.4.16 (patch57)
+# ---------------------------------------------------------------------------
+from gateway.pii_router import PiiRouter, RoutingDecision  # noqa: E402
+
+_DEFAULT_ROUTER: PiiRouter | None = None
+
+
+def route(text: str, **kwargs: Any) -> RoutingDecision:
+    """텍스트의 PII 여부에 따라 라우팅 결정을 반환한다 — 한 줄 호출.
+
+    >>> decision = route("홍길동 주민번호 900101-1234567")
+    >>> decision.pii_detected
+    True
+    >>> decision.routed_to_local
+    True
+    """
+    global _DEFAULT_ROUTER
+    if _DEFAULT_ROUTER is None:
+        _DEFAULT_ROUTER = PiiRouter(**kwargs) if kwargs else PiiRouter()
+    return _DEFAULT_ROUTER.route(text)
+
+
+# ---------------------------------------------------------------------------
 # 편의 함수 (Convenience helpers) — v0.4.6
 # ---------------------------------------------------------------------------
 
@@ -126,6 +149,10 @@ __all__ = [
     "compliance_report",
     "render_report",
     "load_catalog",
+    # routing
+    "route",
+    "RoutingDecision",
+    "PiiRouter",
     # convenience
     "scan_file",
     "guard_file",

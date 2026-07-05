@@ -249,6 +249,49 @@ all_findings = batch_detect(["텍스트1", "텍스트2", "텍스트3"])
 - `guard_file(path)` = 텍스트 파일을 읽어 `Guard().inspect()` 실행.
 - `batch_detect(texts)` = `Detector` 를 한 번 생성해 여러 텍스트를 순차 탐지.
 
+### 2.8 PII 라우팅 (PII-based routing, v0.4.16 patch57)
+
+PII 감지 결과에 따라 모델 라우팅 결정을 한 줄로 반환한다.
+
+```python
+from nufi import route, RoutingDecision, PiiRouter
+
+# 한 줄 — PII 여부에 따라 로컬/클라우드 결정
+decision = route("고객 홍길동 주민번호 900101-1234567")
+decision.pii_detected      # True
+decision.routed_to_local   # True
+decision.target_model      # "nufi-local"
+decision.reason            # "pii_detected"
+decision.to_dict()         # JSON 직렬화 가능한 요약
+
+# PII 없음 → 클라우드 허용
+decision = route("오늘 날씨가 좋습니다.")
+decision.routed_to_local   # False
+decision.target_model      # "nufi-cloud"
+
+# 커스텀 설정 — PiiRouter 직접 생성
+router = PiiRouter(local_model="my-local", cloud_model="gpt-4o")
+decision = router.route(text)
+```
+
+- `route(text, **kwargs)` = 프로세스 캐시된 `PiiRouter` 로 위임하는 편의 함수.
+- `RoutingDecision` = 라우팅 결정 dataclass (target_model, reason, pii_detected, findings, routed_to_local).
+- `PiiRouter` = PII 감지 기반 하이브리드 라우터 클래스 (advanced 설정 시 직접 사용).
+
+#### RoutingDecision 필드
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `target_model` | `str` | 라우팅 대상 모델명 |
+| `reason` | `str` | 사유 (`pii_detected`, `no_pii`, `detection_error`, `force_local`) |
+| `pii_detected` | `bool` | PII 감지 여부 |
+| `findings` | `list[Finding]` | 감지된 PII 목록 |
+| `original_model` | `str` | 원래 요청된 모델명 |
+| `latency_ms` | `float` | 감지 소요 시간(ms) |
+| `routed_to_local` | `bool` (property) | 로컬 라우팅 여부 |
+
+재현 예제: [`examples/sdk_pii_routing.py`](../examples/sdk_pii_routing.py)
+
 ---
 
 ## 3. CLI ↔ SDK 동등 매핑
