@@ -83,6 +83,7 @@ run_demo demo_scan.sh            "파일/디렉터리 PII 스캔(CI/pre-commit �
 run_demo demo_getting_started.sh "Getting-started 워크플로(init→scan→redact→inspect→route→doctor)"
 run_demo demo_transform.sh      "텍스트 변환(mask·redact·explain — PII 마스킹/리댁션/상세설명)"
 run_demo demo_litellm_e2e.sh     "LiteLLM Proxy E2E(프록시 기동→PII 라우팅→감사 검증)"
+run_demo demo_cli_showcase.sh   "CLI 쇼케이스(playground·summary·pipeline·mask·redact)"
 
 # 정확도 데모는 커밋된 측정 산출물(docs/reports/*.json)이 있어야 재현 가능하다.
 if [ -f "$ROOT/docs/reports/recall-int8.json" ] \

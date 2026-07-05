@@ -40,6 +40,7 @@ python3 -m pip install -r requirements.txt   # PyYAML·fastapi·uvicorn·httpx
 | [`demo_bypass_enforcement.sh`](../scripts/demo_bypass_enforcement.sh) | 우회 차단(ENFORCED) — 격리 netns 에서 실제 egress drop *(root/nft 필요)* | 3 | `sudo bash scripts/demo_bypass_enforcement.sh` | [`history/DEMO_v0.0.5.md`](history/DEMO_v0.0.5.md) |
 | [`demo_getting_started.sh`](../scripts/demo_getting_started.sh) | Getting Started 워크플로우 — init·PII 스캔·redact·inspect·route·doctor 를 순서대로 시연 | 8 | `./scripts/demo_getting_started.sh` | [`CLI.md`](CLI.md) |
 | [`demo_transform.sh`](../scripts/demo_transform.sh) | 텍스트 변환 — mask(PII→asterisk)·redact(PII→타입 태그)·explain(상세 설명) + 인젝션 비간섭·클린 텍스트 무변환 | 5 | `./scripts/demo_transform.sh` | [`CLI.md`](CLI.md) |
+| [`demo_cli_showcase.sh`](../scripts/demo_cli_showcase.sh) | CLI 쇼케이스 — playground·summary·pipeline·mask·redact 5가지 커맨드 빠른 검증 | 5 | `./scripts/demo_cli_showcase.sh` | [`CLI.md`](CLI.md) |
 | [`demo_all.sh`](../scripts/demo_all.sh) | 전체 데모 러너 — 위 데모를 차례로 실행하고 집계 PASS/FAIL 출력 | — | `./scripts/demo_all.sh` | 본 문서 |
 
 > **`compare` 명령 참고:** `nufi-egress compare before.sarif after.sarif` 로 두 스캔 결과의 new/resolved/unchanged 발견을 비교할 수 있습니다. PR 리뷰에서 변경이 새 PII 를 도입했는지 확인하는 데 유용합니다. 상세 플래그는 [`CLI.md#compare`](CLI.md) 참조.
