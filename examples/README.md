@@ -16,6 +16,7 @@
 | [`sdk_streaming.py`](sdk_streaming.py) | 스트리밍 응답 경유 | `NuFi()` streaming |
 | [`sdk_file_scan.py`](sdk_file_scan.py) | 파일 단위 PII 탐지·정책 평가 | `scan_file`, `guard_file`, `batch_detect` |
 | [`sdk_pii_routing.py`](sdk_pii_routing.py) | PII 기반 로컬/클라우드 라우팅 결정 | `route`, `RoutingDecision` |
+| [`sdk_prompt_injection.py`](sdk_prompt_injection.py) | 프롬프트 인젝션 탐지 + Guard 차단 | `detect_injection`, `Guard(check_injection=True)`, `is_injection` |
 | [`sdk_compliance_report.py`](sdk_compliance_report.py) | 한국 규제 5종 통제 커버리지 출력 | `compliance_report`, `render_report`, `load_catalog` |
 
 ## 실행 방법
