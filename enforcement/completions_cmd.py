@@ -12,7 +12,7 @@ SUBCOMMANDS: dict[str, list[str]] = {
     "scan":      ["--target", "--pattern", "--check-injection", "--json", "--format",
                   "--output", "--exclude", "--fail-on-pii", "--redact", "--dry-run",
                   "--no-backup", "--stats", "--parallel", "--profile",
-                  "--summary-only"],
+                  "--summary-only", "--git-staged"],
     "route":     ["--text", "--file", "--stdin", "--summary", "--model",
                   "--local-model", "--cloud-model", "--check-injection",
                   "--min-severity", "--json"],

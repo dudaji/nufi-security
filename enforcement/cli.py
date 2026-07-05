@@ -1224,7 +1224,7 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     p = sub.add_parser("scan",
                        help="파일/디렉터리 PII + 인젝션 스캔(CI/pre-commit · patch83)")
-    p.add_argument("target", help="스캔할 파일 또는 디렉터리 경로")
+    p.add_argument("target", nargs="?", default=None, help="스캔할 파일 또는 디렉터리 경로")
     p.add_argument("--pattern", default=None,
                    help="파일 glob 패턴(쉼표 구분, 예: '*.py,*.md,*.txt')")
     p.add_argument("--check-injection", action="store_true",
@@ -1254,6 +1254,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="요약만 출력(파일별 상세 없음, CI 빠른 체크용)")
     p.add_argument("--verbose", action="store_true",
                    help="발견 항목별 상세 출력(파일/줄/컬럼/엔티티/점수/탐지방법/전후 컨텍스트)")
+    p.add_argument("--git-staged", action="store_true",
+                   help="git staged 파일만 스캔(pre-commit 훅 통합용, target 불필요)")
     p.set_defaults(func=cmd_scan)
 
     p = sub.add_parser("diff",
@@ -1470,7 +1472,7 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     # ── Friendly pre-flight checks (patch144) ─────────────────────────── #
     cmd = getattr(args, "cmd", None)
-    if cmd == "scan" and not getattr(args, "target", None):
+    if cmd == "scan" and not getattr(args, "target", None) and not getattr(args, "git_staged", False):
         print("Error: please specify a path to scan.\n"
               "Usage: nufi-egress scan <path>", file=sys.stderr)
         return 1

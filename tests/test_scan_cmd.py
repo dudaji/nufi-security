@@ -584,3 +584,77 @@ def test_verbose_flag_shows_detailed_output(pii_file: Path, capsys):
     assert "text:" in out
     # Must show finding(s) count per file
     assert "finding(s)" in out
+
+
+# ---------------------------------------------------------------------------
+# --git-staged tests (patch171)
+# ---------------------------------------------------------------------------
+
+def test_git_staged_scans_only_staged_files(tmp_path: Path, capsys):
+    """--git-staged: git staged 파일만 스캔한다 (모의 subprocess)."""
+    import argparse
+    import subprocess
+    from unittest.mock import patch as mock_patch
+    from enforcement.scan_cmd import cmd_scan, scan_staged, ScanResult, ScanFinding
+
+    # Create a file with PII
+    pii = tmp_path / "secret.txt"
+    pii.write_text("홍길동 주민번호 900101-1234567\n", encoding="utf-8")
+
+    # Create a file without PII (should not appear in findings)
+    clean = tmp_path / "clean.txt"
+    clean.write_text("Nothing sensitive here.\n", encoding="utf-8")
+
+    # Mock _git_staged_files to return only the PII file
+    staged_files = ["secret.txt"]
+
+    def mock_run(cmd, **kwargs):
+        """Mock subprocess.run for git diff --cached."""
+        return subprocess.CompletedProcess(
+            args=cmd, returncode=0, stdout="\n".join(staged_files) + "\n", stderr=""
+        )
+
+    # Test scan_staged SDK function directly
+    with mock_patch("enforcement.scan_cmd.subprocess.run", side_effect=mock_run):
+        result = scan_staged(repo=str(tmp_path))
+
+    assert result.files_scanned == 1
+    assert result.has_pii
+    assert len(result.findings) >= 1
+    for f in result.findings:
+        assert "secret.txt" in f.file
+
+    # Test cmd_scan with --git-staged via mock of scan_staged
+    with mock_patch("enforcement.scan_cmd.scan_staged") as mock_scan_staged:
+        mock_result = ScanResult(
+            files_scanned=1,
+            files_with_findings=1,
+            findings=[ScanFinding(
+                file=str(pii), line=1, finding_type="PII:KR_RRN", text="900101-1234567"
+            )],
+        )
+        mock_scan_staged.return_value = mock_result
+        args = argparse.Namespace(
+            target=None,
+            pattern=None,
+            check_injection=False,
+            json=False,
+            format=None,
+            output=None,
+            fail_on_pii=True,
+            exclude=None,
+            redact=False,
+            dry_run=False,
+            no_backup=False,
+            stats=False,
+            summary_only=False,
+            verbose=False,
+            git_staged=True,
+            profile=None,
+            clear_cache=False,
+            parallel=1,
+            cache=False,
+        )
+        rc = cmd_scan(args)
+        assert rc == 1  # fail-on-pii should trigger
+        mock_scan_staged.assert_called_once()

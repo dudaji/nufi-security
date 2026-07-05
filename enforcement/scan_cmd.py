@@ -10,6 +10,7 @@ SDK 에서도 ``from nufi import scan_dir`` 로 사용 가능.
 --cache 로 파일 해시 기반 결과 캐싱 (patch101).
 --profile NAME 으로 사전 정의 스캔 프로파일 적용 (patch110).
 --verbose 로 발견 항목별 상세 정보 출력 (patch137).
+--git-staged 로 git staged 파일만 스캔 (pre-commit 통합, patch171).
 """
 from __future__ import annotations
 
@@ -18,6 +19,7 @@ import hashlib
 import json
 import os
 import shutil
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -688,6 +690,98 @@ def scan_result_to_sarif(result: "ScanResult") -> Dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# Git staged files helper (patch171)
+# ---------------------------------------------------------------------------
+
+def _git_staged_files(repo: Optional[str] = None) -> List[str]:
+    """Return list of git-staged file paths (``git diff --cached --name-only``).
+
+    Returns an empty list if git is not available or no files are staged.
+    """
+    cmd = ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR"]
+    kwargs: Dict[str, Any] = {"capture_output": True, "text": True}
+    if repo:
+        kwargs["cwd"] = repo
+    try:
+        proc = subprocess.run(cmd, **kwargs)  # noqa: S603
+    except FileNotFoundError:
+        return []
+    if proc.returncode != 0:
+        return []
+    return [line for line in proc.stdout.strip().splitlines() if line.strip()]
+
+
+def scan_staged(
+    *,
+    patterns: Optional[List[str]] = None,
+    check_injection: bool = False,
+    exclude: Optional[List[str]] = None,
+    parallel: int = 1,
+    cache: bool = False,
+    repo: Optional[str] = None,
+) -> ScanResult:
+    """Scan only git-staged files for PII/injection.
+
+    Ideal for pre-commit hooks: only scans files in the staging area.
+    Respects .nufiignore patterns.
+
+    Args:
+        patterns: Glob patterns to filter files.
+        check_injection: Also check for prompt injection patterns.
+        exclude: Glob patterns to exclude.
+        parallel: Number of threads.
+        cache: Enable file hash caching.
+        repo: Git repository root (default: current directory).
+
+    Returns:
+        ScanResult with all findings.
+    """
+    staged = _git_staged_files(repo=repo)
+    if not staged:
+        return ScanResult()
+
+    repo_root = Path(repo) if repo else Path(".")
+    scan_root = repo_root
+
+    # Build exclusion patterns
+    if exclude is None:
+        exclude_patterns = load_nufiignore(scan_root)
+    else:
+        exclude_patterns = list(exclude)
+
+    # Filter staged files
+    files_to_scan: List[Path] = []
+    for rel in staged:
+        fpath = repo_root / rel
+        if not fpath.is_file():
+            continue
+        if _is_excluded(fpath, scan_root, exclude_patterns):
+            continue
+        files_to_scan.append(fpath)
+
+    if not files_to_scan:
+        return ScanResult()
+
+    # Reuse scan_path logic by scanning each file
+    result = ScanResult()
+    if parallel > 1 and len(files_to_scan) > 1:
+        with ThreadPoolExecutor(max_workers=parallel) as executor:
+            futures = [
+                executor.submit(_scan_file_isolated, fpath, check_injection, patterns)
+                for fpath in files_to_scan
+            ]
+            sub_results = [f.result() for f in futures]
+        result = _merge_results(sub_results)
+    else:
+        pipeline = DetectionPipeline()
+        injection_detector = PromptInjectionDetector() if check_injection else None
+        for fpath in files_to_scan:
+            _scan_file(fpath, pipeline, injection_detector, result, patterns)
+
+    return result
+
+
+# ---------------------------------------------------------------------------
 # CLI handler (called from cli.py)
 # ---------------------------------------------------------------------------
 
@@ -701,6 +795,35 @@ def cmd_scan(args) -> int:
         from enforcement.scan_profiles import resolve_profile, apply_profile_to_args
         profile = resolve_profile(profile_name)
         apply_profile_to_args(profile, args)
+
+    # --git-staged: scan only staged files (patch171)
+    if getattr(args, "git_staged", False):
+        patterns_list: Optional[List[str]] = None
+        if getattr(args, "pattern", None):
+            patterns_list = [p.strip() for p in args.pattern.split(",") if p.strip()]
+        exclude_list: Optional[List[str]] = None
+        if getattr(args, "exclude", None):
+            exclude_list = [p.strip() for p in args.exclude.split(",") if p.strip()]
+        result = scan_staged(
+            patterns=patterns_list,
+            check_injection=getattr(args, "check_injection", False),
+            exclude=exclude_list,
+            parallel=getattr(args, "parallel", 1),
+            cache=getattr(args, "cache", False),
+        )
+        output_format = getattr(args, "format", None)
+        if getattr(args, "json", False):
+            print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        elif output_format == "sarif":
+            sarif = scan_result_to_sarif(result)
+            print(json.dumps(sarif, ensure_ascii=False, indent=2))
+        elif not result.findings:
+            print(f"Staged scan: {result.files_scanned} files scanned, no findings.")
+        else:
+            _render_human(result)
+        if getattr(args, "fail_on_pii", False) and result.has_pii:
+            return 1
+        return 0
 
     # --clear-cache: delete cache and exit
     if getattr(args, "clear_cache", False):
