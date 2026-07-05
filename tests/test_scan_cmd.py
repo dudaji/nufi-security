@@ -728,3 +728,32 @@ def test_suppression_by_glob_pattern(pii_dir: Path):
     remaining_test = [f for f in result2.findings if "test_sample.txt" in f.file]
     assert len(remaining_test) == 0
     assert suppressed >= 1
+
+
+# ---------------------------------------------------------------------------
+# CSV format (patch180)
+# ---------------------------------------------------------------------------
+
+def test_format_csv_output(pii_file: Path):
+    """--format csv 옵션: CSV 포맷으로 출력한다."""
+    import csv
+    import io
+    from enforcement.scan_cmd import _render_csv
+
+    result = scan_path(pii_file)
+    assert result.findings, "Test precondition: at least one finding"
+
+    csv_text = _render_csv(result)
+    reader = csv.reader(io.StringIO(csv_text))
+    rows = list(reader)
+
+    # Header row
+    assert rows[0] == ["file", "line", "entity_type", "text", "score", "severity"]
+    # One data row per finding
+    assert len(rows) == 1 + len(result.findings)
+    # Check a data row has correct structure
+    data_row = rows[1]
+    assert data_row[0] == result.findings[0].file
+    assert int(data_row[1]) == result.findings[0].line
+    assert data_row[4] != ""  # score
+    assert data_row[5] in ("error", "warning")

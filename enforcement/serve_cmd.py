@@ -1,4 +1,4 @@
-"""``nufi-egress serve`` — HTTP API 모드 (patch155/158/159/170).
+"""``nufi-egress serve`` — HTTP API 모드 (patch155/158/159/170/179).
 
 FastAPI 기반 REST API로 NuFi 탐지 기능을 마이크로서비스에 제공한다.
 
@@ -11,6 +11,9 @@ Endpoints:
   POST /injection — 프롬프트 인젝션 탐지
   POST /pipeline  — 전체 파이프라인 실행
   POST /explain   — 탐지 결과 상세 설명
+  POST /posture   — 보안 자세 스냅샷
+  GET  /summary   — 요약 대시보드
+  GET  /stats     — NuFi 통계
   GET  /health    — 헬스 체크
   GET  /docs      — Swagger UI (auto)
   GET  /redoc     — ReDoc (auto)
@@ -123,6 +126,12 @@ class PipelineRequest(BaseModel):
         default_factory=lambda: ["detect", "mask", "route"],
         description="Pipeline actions to execute (detect, mask, redact, pseudonymize, route, block-check)",
     )
+
+
+class PostureRequest(BaseModel):
+    """Request body for /posture endpoint."""
+    path: str = Field(".", description="Path to directory to evaluate posture for")
+    save: bool = Field(False, description="Whether to save the posture snapshot to history")
 
 
 class ScanRequest(BaseModel):
@@ -306,6 +315,31 @@ def create_app() -> FastAPI:
         from enforcement.explain_cmd import explain_text
 
         return explain_text(req.text)
+
+    @app.post("/posture")
+    def posture(req: PostureRequest):
+        """Capture a posture snapshot for the given directory."""
+        from enforcement.posture_cmd import capture_posture, save_posture
+
+        target = Path(req.path).resolve()
+        snapshot = capture_posture(str(target))
+        if req.save:
+            save_posture(snapshot)
+        return snapshot
+
+    @app.get("/summary")
+    def summary():
+        """Return summary dashboard data."""
+        from enforcement.summary_cmd import collect_summary
+
+        return collect_summary()
+
+    @app.get("/stats")
+    def stats():
+        """Return NuFi stats data."""
+        from enforcement.stats_cmd import collect_stats
+
+        return collect_stats().to_dict()
 
     @app.post("/scan")
     def scan(req: ScanRequest):

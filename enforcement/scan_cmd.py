@@ -5,6 +5,7 @@ SDK 에서도 ``from nufi import scan_dir`` 로 사용 가능.
 
 .nufiignore 파일 또는 --exclude 플래그로 스캔 대상에서 제외할 패턴 지정 가능.
 --format sarif 옵션으로 SARIF 2.1.0 JSON 출력 지원 (GitHub code scanning 호환).
+--format csv 옵션으로 CSV 출력 지원 (patch180).
 --redact 모드로 PII 를 자동 치환하여 파일을 재작성 (patch88).
 --parallel N 으로 멀티스레드 스캔 지원 (patch97).
 --cache 로 파일 해시 기반 결과 캐싱 (patch101).
@@ -1013,7 +1014,14 @@ def cmd_scan(args) -> int:
     output_format = getattr(args, "format", None)
     output_path = getattr(args, "output", None)
 
-    if output_format == "sarif":
+    if output_format == "csv":
+        text_out = _render_csv(result)
+        if output_path:
+            Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+            Path(output_path).write_text(text_out, encoding="utf-8")
+        else:
+            print(text_out, end="")
+    elif output_format == "sarif":
         sarif = scan_result_to_sarif(result)
         text_out = json.dumps(sarif, ensure_ascii=False, indent=2)
         if output_path:
@@ -1069,6 +1077,21 @@ def _render_jsonl(result: ScanResult) -> str:
         }
         lines.append(json.dumps(obj, ensure_ascii=False))
     return "\n".join(lines) + ("\n" if lines else "")
+
+
+def _render_csv(result: ScanResult) -> str:
+    """Render findings as standard CSV (comma-separated, quoted strings)."""
+    import csv
+    import io
+
+    output = io.StringIO()
+    writer = csv.writer(output, quoting=csv.QUOTE_NONNUMERIC)
+    writer.writerow(["file", "line", "entity_type", "text", "score", "severity"])
+    for f in result.findings:
+        entity_type = f.finding_type
+        severity = "error" if _sarif_level(f.finding_type) == "error" else "warning"
+        writer.writerow([f.file, f.line, entity_type, f.text, f.score, severity])
+    return output.getvalue()
 
 
 def _render_human(result: ScanResult) -> None:

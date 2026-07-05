@@ -124,3 +124,22 @@ def test_explain_endpoint():
     assert "pii_findings" in data
     assert len(data["pii_findings"]) > 0
     assert "summary" in data
+
+
+def test_posture_endpoint():
+    """POST /posture returns a posture snapshot dict."""
+    resp = client.post("/posture", json={"path": ".", "save": False})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "grade" in data
+    assert "timestamp" in data
+
+
+def test_summary_endpoint():
+    """GET /summary returns summary dashboard data."""
+    resp = client.get("/summary")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "version" in data
+    assert "ts" in data
+    assert "doctor" in data
