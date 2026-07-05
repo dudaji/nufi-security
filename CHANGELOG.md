@@ -4,6 +4,25 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch155-157)
+
+> **v0.4.17-patch155~157 — serve HTTP API + docs + CHANGELOG sweep**
+> HTTP REST API 서버 모드, API 문서·데모·퀵스타트 보강, 최종 CHANGELOG.
+
+### Added (patch155)
+- **enforcement/serve_cmd.py** — `nufi-egress serve --port 8000`: FastAPI/uvicorn 기반 HTTP REST API 서버. 엔드포인트: `POST /detect`, `POST /route`, `POST /inspect`, `POST /mask`, `POST /redact`, `GET /health`. 마이크로서비스 연동용.
+- **enforcement/cli.py** — `serve` 서브커맨드 추가(`--host`, `--port` 인자).
+- **tests/test_serve_cmd.py** — 엔드포인트 테스트.
+
+### Changed (patch156)
+- **docs/CLI.md** — `serve` 서브커맨드 레퍼런스 추가(엔드포인트 목록·Request/Response 형식·curl 예시).
+- **README.md** — 데모 1분 실행 섹션에 serve 예시 추가(#24).
+- **docs/QUICKSTART.md** — serve 모드 섹션(§9) 추가.
+
+### Changed (patch157)
+- **CHANGELOG.md** — patch155~156 엔트리 추가.
+- **docs/RELEASE_NOTES.md** — patch155~156 반영.
+
 ## [0.4.17] - 2026-07-05 (patch151-154)
 
 > **v0.4.17-patch151~154 — quickstart + examples + report diff + CHANGELOG sweep**

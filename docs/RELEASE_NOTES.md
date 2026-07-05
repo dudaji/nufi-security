@@ -6,6 +6,25 @@
 
 ---
 
+## v0.4.17 (patch157) -- **serve HTTP API + docs + CHANGELOG**
+
+> HTTP REST API 서버 모드, API 문서·데모·퀵스타트 보강. (2026-07-05)
+
+### 이번 릴리스에 포함된 것 (patch155~156)
+
+| 계층 | 기능 |
+|---|---|
+| **Serve** | `nufi-egress serve --port 8000` -- FastAPI/uvicorn HTTP REST API 서버. POST `/detect`, `/route`, `/inspect`, `/mask`, `/redact` + GET `/health`. 마이크로서비스에서 HTTP 호출로 PII 탐지·라우팅·마스킹 연동 (patch155) |
+| **Docs** | CLI.md serve 레퍼런스(엔드포인트·Request/Response·curl 예시), README 데모 #24, QUICKSTART.md §9 추가 (patch156) |
+
+### 누구에게 유용한가
+
+- **마이크로서비스 팀** -- 기존 서비스에서 HTTP REST 호출로 PII 탐지·마스킹·라우팅을 바로 연동. SDK 설치 없이 HTTP 만으로 동작.
+- **Docker/K8s 배포** -- `nufi-egress serve` 를 사이드카 또는 독립 파드로 배포하여 클러스터 내부에서 PII 보호 API 제공.
+- **빠른 프로토타이핑** -- curl 한 줄로 PII 탐지·라우팅 결정 확인.
+
+---
+
 ## v0.4.17 (patch154) -- **report diff + quickstart + examples + CHANGELOG**
 
 > 스캔 비교 diff 리포트, 퀵스타트 가이드, 예제 README 갱신. (2026-07-05)
