@@ -9,6 +9,7 @@ SDK 에서도 ``from nufi import scan_dir`` 로 사용 가능.
 --parallel N 으로 멀티스레드 스캔 지원 (patch97).
 --cache 로 파일 해시 기반 결과 캐싱 (patch101).
 --profile NAME 으로 사전 정의 스캔 프로파일 적용 (patch110).
+--verbose 로 발견 항목별 상세 정보 출력 (patch137).
 """
 from __future__ import annotations
 
@@ -109,6 +110,11 @@ class ScanFinding:
     line: int
     finding_type: str  # e.g. "PII:KR_RRN" or "INJECTION:ignore_previous"
     text: str
+    column: int = 1
+    score: float = 1.0
+    detection_method: str = "regex"
+    context_before: str = ""
+    context_after: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -357,6 +363,16 @@ def scan_path(
     return result
 
 
+def _classify_detection_method(source: str) -> str:
+    """Map a Finding.source value to a human-friendly detection method."""
+    if not source:
+        return "regex"
+    s = source.lower()
+    if "ner" in s or "gazetteer" in s:
+        return "ner"
+    return "regex"
+
+
 def _scan_file(
     path: Path,
     pipeline: DetectionPipeline,
@@ -393,11 +409,20 @@ def _scan_file(
         pii_findings = pipeline.analyze(line)
         for f in pii_findings:
             snippet = f.text if len(f.text) <= 40 else f.text[:37] + "..."
+            col = f.start + 1  # 1-based column
+            ctx_before = line[max(0, f.start - 5):f.start]
+            ctx_after = line[f.end:f.end + 5]
+            method = _classify_detection_method(getattr(f, "source", "regex"))
             result.findings.append(ScanFinding(
                 file=file_str,
                 line=line_no,
                 finding_type=f"PII:{f.entity_type}",
                 text=snippet,
+                column=col,
+                score=getattr(f, "score", 1.0),
+                detection_method=method,
+                context_before=ctx_before,
+                context_after=ctx_after,
             ))
             file_has_findings = True
 
@@ -406,11 +431,20 @@ def _scan_file(
             inj_findings = injection_detector.detect(line)
             for f in inj_findings:
                 snippet = f.text if len(f.text) <= 40 else f.text[:37] + "..."
+                col = f.start + 1
+                ctx_before = line[max(0, f.start - 5):f.start]
+                ctx_after = line[f.end:f.end + 5]
+                method = _classify_detection_method(getattr(f, "source", "regex"))
                 result.findings.append(ScanFinding(
                     file=file_str,
                     line=line_no,
                     finding_type=f"INJECTION:{f.entity_type}",
                     text=snippet,
+                    column=col,
+                    score=getattr(f, "score", 1.0),
+                    detection_method=method,
+                    context_before=ctx_before,
+                    context_after=ctx_after,
                 ))
                 file_has_findings = True
 
@@ -740,6 +774,8 @@ def cmd_scan(args) -> int:
         _render_summary_only(result)
     elif getattr(args, "json", False):
         print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+    elif getattr(args, "verbose", False):
+        _render_verbose(result)
     else:
         _render_human(result)
 
@@ -785,6 +821,37 @@ def _render_human(result: ScanResult) -> None:
             current_file = f.file
             print(f"  {f.file}")
         print(f"    L{f.line}: [{f.finding_type}] {f.text}")
+
+    if result.errors:
+        print()
+        print("Errors:")
+        for e in result.errors:
+            print(f"  {e['path']}: {e['error']}")
+
+
+def _render_verbose(result: ScanResult) -> None:
+    """Verbose output: detailed per-finding information."""
+    if not result.findings:
+        print(f"Scan complete: {result.files_scanned} files scanned, no findings.")
+        return
+
+    print(f"Scan complete: {result.files_scanned} files scanned, "
+          f"{result.files_with_findings} with findings, "
+          f"{len(result.findings)} total findings.")
+    print()
+
+    current_file = None
+    for f in result.findings:
+        if f.file != current_file:
+            current_file = f.file
+            # Count findings for this file
+            file_count = sum(1 for x in result.findings if x.file == f.file)
+            print(f"  {f.file} ({file_count} finding(s))")
+        ctx = f"...{f.context_before}[{f.text}]{f.context_after}..."
+        print(f"    L{f.line}:C{f.column} [{f.finding_type}] "
+              f"score={f.score:.2f} method={f.detection_method}")
+        print(f"      text: {f.text}")
+        print(f"      context: {ctx}")
 
     if result.errors:
         print()

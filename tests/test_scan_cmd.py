@@ -1,4 +1,4 @@
-"""tests/test_scan_cmd.py — nufi-egress scan 커맨드 테스트 (patch86, patch88, patch91, patch97).
+"""tests/test_scan_cmd.py — nufi-egress scan 커맨드 테스트 (patch86, patch88, patch91, patch97, patch137).
 
 시나리오:
 1. 단일 파일 스캔 → PII 발견
@@ -13,6 +13,7 @@
 10. --redact --no-backup: 백업 없이 수정
 11. --stats 플래그: 요약 통계 출력
 12. --parallel N: 멀티스레드 스캔 결과가 순차 스캔과 동일
+13. --verbose 플래그: 발견 항목별 상세 출력
 """
 from __future__ import annotations
 
@@ -537,3 +538,49 @@ def test_summary_only_flag_shows_compact_output(pii_file: Path, capsys):
     # Must NOT contain per-file detail lines (no "L<number>:")
     lines = captured.out.strip().splitlines()
     assert len(lines) == 1  # exactly one summary line
+
+
+# ---------------------------------------------------------------------------
+# --verbose tests (patch137)
+# ---------------------------------------------------------------------------
+
+def test_verbose_flag_shows_detailed_output(pii_file: Path, capsys):
+    """--verbose: 발견 항목별 상세 정보(컬럼/점수/탐지방법/컨텍스트)를 출력한다."""
+    import argparse
+    from enforcement.scan_cmd import cmd_scan
+
+    args = argparse.Namespace(
+        target=str(pii_file),
+        pattern=None,
+        check_injection=False,
+        json=False,
+        format=None,
+        output=None,
+        fail_on_pii=False,
+        exclude=None,
+        redact=False,
+        dry_run=False,
+        no_backup=False,
+        stats=False,
+        summary_only=False,
+        verbose=True,
+    )
+    rc = cmd_scan(args)
+    assert rc == 0
+
+    captured = capsys.readouterr()
+    out = captured.out
+    # Must show scan summary header
+    assert "Scan complete:" in out
+    # Must show column info (C<number>)
+    assert ":C" in out
+    # Must show score
+    assert "score=" in out
+    # Must show detection method
+    assert "method=" in out
+    # Must show context line
+    assert "context:" in out
+    # Must show finding text line
+    assert "text:" in out
+    # Must show finding(s) count per file
+    assert "finding(s)" in out

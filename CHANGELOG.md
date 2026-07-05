@@ -4,6 +4,29 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch135-138)
+
+> **v0.4.17-patch135~138 — selftest + CLI docs + scan --verbose + CHANGELOG sweep**
+> 설치 자가진단, CLI 레퍼런스 갱신, 스캔 상세 출력 모드, 최종 CHANGELOG.
+
+### Added (patch137)
+- **enforcement/scan_cmd.py** — `nufi-egress scan --verbose`: 발견 항목별 상세 출력(파일/줄/컬럼/엔티티 타입/매칭 텍스트/점수/탐지 방법(regex/ner)/전후 5자 컨텍스트). `--verbose` 없이는 기존 요약 출력 유지.
+- **enforcement/cli.py** — `--verbose` argparse 플래그 추가.
+- **tests/test_scan_cmd.py** — `--verbose` 상세 출력 검증 테스트 1건.
+
+### Changed (patch136)
+- **docs/CLI.md** — compare·test 서브커맨드 레퍼런스 문서 추가.
+- **docs/DEMO.md** — 데모 카탈로그 갱신.
+
+### Added (patch135)
+- **enforcement/selftest_cmd.py** — `nufi-egress test`: 설치 자가진단 6체크(PII 탐지·인젝션 탐지·라우팅·Guard·설정·버전). 모두 PASS 시 exit 0, FAIL 시 exit 1. `--json` 기계 출력.
+- **enforcement/cli.py** — `test` 서브커맨드 추가.
+- **tests/test_selftest_cmd.py** — 자가진단 PASS + JSON 출력 테스트.
+
+### Changed (patch138)
+- **CHANGELOG.md** — patch135~137 엔트리 추가.
+- **docs/RELEASE_NOTES.md** — patch135~137 반영.
+
 ## [0.4.17] - 2026-07-05 (patch129-134)
 
 > **v0.4.17-patch129~134 — HANDOVER + lint + generate + CLI docs + compare + CHANGELOG sweep**

@@ -1125,6 +1125,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="스캔 프로파일 적용(development/ci/strict 등, config/scan_profiles.yaml)")
     p.add_argument("--summary-only", action="store_true",
                    help="요약만 출력(파일별 상세 없음, CI 빠른 체크용)")
+    p.add_argument("--verbose", action="store_true",
+                   help="발견 항목별 상세 출력(파일/줄/컬럼/엔티티/점수/탐지방법/전후 컨텍스트)")
     p.set_defaults(func=cmd_scan)
 
     p = sub.add_parser("diff",
