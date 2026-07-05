@@ -1,4 +1,4 @@
-"""tests/test_scan_cmd.py — nufi-egress scan 커맨드 테스트 (patch86, patch88).
+"""tests/test_scan_cmd.py — nufi-egress scan 커맨드 테스트 (patch86, patch88, patch91).
 
 시나리오:
 1. 단일 파일 스캔 → PII 발견
@@ -11,6 +11,7 @@
 8. --dry-run 모드: 파일 미수정
 9. --redact 모드: 파일 수정 + 백업 생성
 10. --redact --no-backup: 백업 없이 수정
+11. --stats 플래그: 요약 통계 출력
 """
 from __future__ import annotations
 
@@ -307,3 +308,41 @@ def test_redact_no_backup_skips_backup_creation(tmp_path: Path):
     assert not backup.exists()
     assert result.backups_created == []
     assert result.total_redactions >= 1
+
+
+# ---------------------------------------------------------------------------
+# Stats output tests (patch91)
+# ---------------------------------------------------------------------------
+
+def test_stats_flag_prints_summary(pii_file: Path, capsys):
+    """--stats 플래그: 엔티티별·위험도별 요약 통계를 출력한다."""
+    import argparse
+    from enforcement.scan_cmd import cmd_scan
+
+    args = argparse.Namespace(
+        target=str(pii_file),
+        pattern=None,
+        check_injection=False,
+        json=False,
+        format=None,
+        fail_on_pii=False,
+        exclude=None,
+        redact=False,
+        dry_run=False,
+        no_backup=False,
+        stats=True,
+    )
+    rc = cmd_scan(args)
+    assert rc == 0
+
+    captured = capsys.readouterr()
+    # Stats header must appear
+    assert "스캔 요약" in captured.out or "Stats" in captured.out
+    # Must show scanned file count
+    assert "총 스캔 파일" in captured.out
+    # Must show entity type breakdown
+    assert "엔티티별" in captured.out
+    # Must show risk breakdown
+    assert "위험도별" in captured.out
+    # At least one risk level shown
+    assert any(level in captured.out for level in ("critical", "high", "medium", "low"))

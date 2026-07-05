@@ -4,6 +4,33 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch91)
+
+> **v0.4.17-patch91 — scan --stats 요약 통계 + init quick-start 문서**
+> 스캔 후 엔티티별·위험도별 요약 통계 출력. CLI.md init 섹션 보강.
+
+### Added (CLI)
+- **enforcement/scan_cmd.py** — `--stats` 플래그: 총 파일·엔티티별·위험도별 요약 출력.
+- **enforcement/cli.py** — `scan --stats` 인자 추가.
+
+### Changed (문서)
+- **docs/CLI.md** — `init` quick-start 초기화 모드 + `--install-hook`/`--dir` 문서 추가.
+- **CHANGELOG.md** — patch83~90 엔트리 정리, patch91 최신.
+- **docs/RELEASE_NOTES.md** — patch90 최신 반영.
+
+### Added (테스트)
+- **tests/test_scan_cmd.py** — `--stats` 요약 출력 테스트 1건.
+
+## [0.4.17] - 2026-07-05 (patch87~90)
+
+> **v0.4.17-patch87~90 — redact 모드 + init quick-start + 인젝션 카테고리**
+> scan --redact PII 자동 치환, init quick-start 프로젝트 초기화, 인젝션 카테고리 필터.
+
+### Changed (patch87~90)
+- **enforcement/scan_cmd.py** — `redact_path()` + `--redact`/`--dry-run`/`--no-backup` (patch88).
+- **enforcement/init_cmd.py** — quick-start init: 프리셋 없이 config·.nufiignore·hook 생성 (patch90).
+- **enforcement/cli.py** — `init --dir --install-hook` 플래그 (patch90).
+
 ## [0.4.17] - 2026-07-05 (patch86)
 
 > **v0.4.17-patch86 — scan --format sarif SARIF 2.1.0 출력**

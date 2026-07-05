@@ -100,22 +100,42 @@ nufi doctor — 하이브리드 배선 진단 (v0.0.1)
 
 ## `init`
 
-**의견 있는 프리셋**에서 운영 config 를 구체화합니다(기본값 오설정으로 인한 조용한 누수 위험 감소). 프리셋은 config 만 바꾸고 런타임 경로는 그대로입니다.
+**프로젝트 초기화(quick-start)** 또는 **프리셋에서 운영 config 구체화**를 수행합니다. 프리셋 인자 없이 실행하면 quick-start 모드로 동작하여 `.nufiignore`, 기본 정책(`config/policy.yaml`), PII 라우팅 설정 등을 자동 생성합니다. `--install-hook` 으로 git pre-commit 훅을 설치하면 커밋 전 PII 스캔을 자동화할 수 있습니다.
 
 ```
-usage: nufi-egress init [-h] [--list] [--out OUT] [--base-dir BASE_DIR]
+usage: nufi-egress init [-h] [--list] [--dir DIR] [--install-hook]
+                        [--out OUT] [--base-dir BASE_DIR]
                         [--set KEY=VALUE] [--force] [--dry-run] [preset]
 ```
 
 | 인자/옵션 | 무엇 | 기본 |
 |---|---|---|
-| `preset` | 프리셋 이름(생략 시 `--list` 동작) | — |
+| `preset` | 프리셋 이름(생략 시 quick-start 초기화) | — |
 | `--list` | 사용 가능한 프리셋 목록 | — |
+| `--dir DIR` | 초기화 대상 디렉터리 | `.` (현재 디렉터리) |
+| `--install-hook` | git pre-commit 훅 설치(PII 스캔) | off |
 | `--out DIR` | config 출력 디렉터리 | `./config` |
 | `--base-dir DIR` | 오버레이 베이스 config 디렉터리 | — |
 | `--set KEY=VALUE` | 허용된 노브만 override | — |
 | `--force` | 기존 config 덮어쓰기 | off |
 | `--dry-run` | 구체화 결과만 출력(파일 미생성) | off |
+
+### Quick-start 초기화 (프리셋 생략)
+
+프리셋 없이 실행하면 프로젝트에 NuFi 기본 설정 파일을 생성합니다. 이미 파일이 존재하면 덮어쓰지 않습니다(idempotent).
+
+```bash
+# 기본 초기화 — .nufiignore + config/policy.yaml + config/pii_routing.yaml 생성
+nufi-egress init
+
+# git pre-commit 훅 포함 초기화
+nufi-egress init --install-hook
+
+# 특정 디렉터리에 초기화
+nufi-egress init --dir ./my-project --install-hook
+```
+
+### 프리셋 모드
 
 ```bash
 nufi-egress init --list

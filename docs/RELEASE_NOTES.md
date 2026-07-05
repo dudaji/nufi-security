@@ -6,9 +6,9 @@
 
 ---
 
-## v0.4.17 (patch86) — **인젝션 가드레일 + 파일 스캔 + CI 연동**
+## v0.4.17 (patch91) — **인젝션 가드레일 + 파일 스캔 + CI 연동 + 스캔 통계**
 
-> 프롬프트 인젝션 탐지 전 계층 + 디렉터리 스캔 + pre-commit/CI + SARIF 출력. (2026-07-05)
+> 프롬프트 인젝션 탐지 전 계층 + 디렉터리 스캔 + pre-commit/CI + SARIF + redact + init quick-start + scan --stats. (2026-07-05)
 
 ### 이번 릴리스에 포함된 것 (patch55~86)
 

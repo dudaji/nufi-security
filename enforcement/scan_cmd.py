@@ -542,6 +542,10 @@ def cmd_scan(args) -> int:
     else:
         _render_human(result)
 
+    # Stats summary
+    if getattr(args, "stats", False):
+        _render_stats(result)
+
     # Exit code
     if getattr(args, "fail_on_pii", False) and result.has_pii:
         return 1
@@ -571,6 +575,51 @@ def _render_human(result: ScanResult) -> None:
         print("Errors:")
         for e in result.errors:
             print(f"  {e['path']}: {e['error']}")
+
+
+def _render_stats(result: ScanResult) -> None:
+    """Print summary statistics block after scan output."""
+    import collections
+
+    total_findings = len(result.findings)
+    files_pct = (
+        round(result.files_with_findings / result.files_scanned * 100, 1)
+        if result.files_scanned else 0.0
+    )
+
+    # Entity type breakdown
+    entity_counter: "collections.Counter[str]" = collections.Counter()
+    for f in result.findings:
+        entity_counter[f.finding_type] += 1
+
+    # Risk breakdown (based on SARIF level mapping)
+    risk_counter: "collections.Counter[str]" = collections.Counter()
+    for f in result.findings:
+        level = _sarif_level(f.finding_type)
+        if level == "error":
+            # Distinguish critical vs high
+            entity = f.finding_type.split(":", 1)[1] if ":" in f.finding_type else f.finding_type
+            if f.finding_type.startswith("INJECTION:") or entity in _STRONG_PII:
+                risk_counter["critical"] += 1
+            else:
+                risk_counter["high"] += 1
+        else:
+            risk_counter["medium"] += 1
+
+    print()
+    print("── 스캔 요약 (Stats) ──")
+    print(f"  총 스캔 파일:       {result.files_scanned}")
+    print(f"  발견 있는 파일:     {result.files_with_findings} ({files_pct}%)")
+    print(f"  총 발견 수:         {total_findings}")
+    if entity_counter:
+        print("  엔티티별:")
+        for etype, count in entity_counter.most_common():
+            print(f"    {etype:<30} {count}")
+    if risk_counter:
+        print("  위험도별:")
+        for level in ("critical", "high", "medium", "low"):
+            if risk_counter[level]:
+                print(f"    {level:<12} {risk_counter[level]}")
 
 
 def _render_redact(result: RedactResult, *, dry_run: bool) -> None:
