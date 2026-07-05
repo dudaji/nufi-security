@@ -10,6 +10,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from enforcement.explain_cmd import explain_text, render_human
+from nufi import explain as sdk_explain
 
 
 class TestExplainWithPII:
@@ -76,3 +77,19 @@ class TestExplainCleanText:
         human = render_human(result)
         assert "NuFi Explain" in human
         assert "(none)" in human  # both PII and injection show (none)
+
+
+class TestSDKExplain:
+    """SDK convenience function ``from nufi import explain`` (patch118)."""
+
+    def test_sdk_explain_returns_dict_with_expected_keys(self):
+        result = sdk_explain("홍길동 주민번호 900101-1234567")
+        assert isinstance(result, dict)
+        assert result["has_findings"] is True
+        assert result["risk_level"] in ("critical", "high", "medium", "low", "clean")
+        assert "action" in result
+        assert "routing" in result
+        assert "pii_findings" in result
+        assert "injection_findings" in result
+        assert "summary" in result
+        assert len(result["pii_findings"]) >= 1

@@ -123,6 +123,24 @@ def route(text: str, **kwargs: Any) -> RoutingDecision:
 from enforcement.inspect_cmd import inspect_text  # noqa: E402
 
 # ---------------------------------------------------------------------------
+# 텍스트 설명 (Explain) — v0.4.x (patch118)
+# ---------------------------------------------------------------------------
+from enforcement.explain_cmd import explain_text as _explain_text  # noqa: E402
+
+
+def explain(text: str, *, min_severity: str = "low") -> dict:
+    """텍스트 탐지 결과를 상세 설명한다 — 디버깅·교육용 한 줄 호출.
+
+    Returns a dict with risk_level, action, routing, pii_findings,
+    injection_findings, summary, etc.
+
+    >>> result = explain("홍길동 주민번호 900101-1234567")
+    >>> result["has_findings"]
+    True
+    """
+    return _explain_text(text, min_severity=min_severity)
+
+# ---------------------------------------------------------------------------
 # 디렉터리/파일 스캔 (Directory/File Scan) — v0.4.x (patch83)
 # ---------------------------------------------------------------------------
 from enforcement.scan_cmd import scan_path as scan_dir  # noqa: E402
@@ -235,6 +253,8 @@ __all__ = [
     "PiiRouter",
     # unified inspect
     "inspect_text",
+    # explain
+    "explain",
     # convenience
     "scan_file",
     "scan_dir",
