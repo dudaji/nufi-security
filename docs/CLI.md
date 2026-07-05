@@ -25,7 +25,7 @@ nufi --help                   # nufi-egress 와 동일(별칭)
 
 ```
 usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
-                   {render,apply,disable,status,feedback,doctor,coverage,monitor,init,audit,targets,flow-tap,policy,report,benchmark} ...
+                   {render,apply,disable,status,feedback,doctor,coverage,monitor,init,audit,targets,flow-tap,policy,report,route,benchmark} ...
 ```
 
 | 전역 옵션 | 무엇 | 기본 |
@@ -49,6 +49,7 @@ usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
 | [`flow-tap`](#flow-tap) | public 목적지 flow tap — 우회 탐지(`--simulate` 리플레이/`--live`) | 라이브는 root/CAP_NET_RAW |
 | [`policy`](#policy) | 정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사 | 불필요 |
 | [`report`](#report) | 규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음) | 불필요 |
+| [`route`](#route) | PII 라우팅 결정 테스트 — 텍스트의 PII 감지·모델 라우팅 판정 출력 | 불필요 |
 | [`benchmark`](#benchmark) | 정확도+가명화 벤치마크 재현(커밋 증거 대조 + 라이브 하니스) | 불필요 |
 
 > **신규 도입 5분 경로:** `init audit-only` → SDK/게이트웨이 배선 → `doctor`(core-3 GREEN 확인) → `status`/감사 로그 관찰 → 준비되면 `apply`. 자세한 결정 트리는 [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md).
@@ -447,6 +448,47 @@ nufi-egress report compliance --audit samples/sla/audit_decisions.jsonl \
 
 > 공통 옵션: `--customer NAME`(헤더), `--title NAME`, `--format {md,html,json}`, `--out PATH`(생략 시 stdout).
 > 1-명령 데모: `./scripts/demo_report.sh`(권한 불필요). 규제 매핑 데모: `./scripts/demo_compliance_mapping.sh`.
+
+---
+
+## `route`
+
+PII 라우팅 결정을 CLI에서 테스트합니다. 입력 텍스트의 PII 감지 여부에 따라 로컬/클라우드 모델 라우팅 판정을 출력합니다. 엔진은 `gateway/pii_router.py` 의 `PiiRouter.route()` 입니다.
+
+```
+usage: nufi-egress route [-h] --text TEXT [--model MODEL]
+                         [--local-model LOCAL_MODEL] [--cloud-model CLOUD_MODEL]
+                         [--json]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--text TEXT` | 라우팅 판정할 텍스트(필수) | — |
+| `--model MODEL` | 요청 모델명 | cloud_model |
+| `--local-model NAME` | PII 감지 시 라우팅할 로컬 모델명 | `nufi-local` |
+| `--cloud-model NAME` | PII 미감지 시 허용할 클라우드 모델명 | `nufi-cloud` |
+| `--json` | 기계용 JSON 출력 | — |
+
+```bash
+# PII 포함 → 로컬 라우팅
+nufi-egress route --text "김민수님 계좌 110-123-456789"
+# → 판정: 🔒 로컬 라우팅
+#     대상 모델:  nufi-local
+#     사유:       pii_detected
+#     PII 감지:   True
+#     엔티티:     KR_ACCOUNT, KR_PERSON
+
+# PII 없음 → 클라우드 허용
+nufi-egress route --text "오늘 날씨 어때"
+# → 판정: ☁️  클라우드 허용
+#     대상 모델:  nufi-cloud
+#     사유:       no_pii
+
+# JSON 출력
+nufi-egress route --text "주민번호 900101-1234567" --json
+```
+
+> 종료코드: 항상 0(판정 결과 관측 명령). PII 감지 여부는 출력의 `pii_detected` 필드로 확인.
 
 ---
 

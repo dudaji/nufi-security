@@ -16,6 +16,7 @@
   policy    정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사(CMP-144 B1).
   report    규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음 · CMP-150 C1).
   benchmark 정확도(커밋 산출물 게이트) + 가명화 품질(라이브) 벤치마크 단일 재현(CMP-201 I5).
+  route     PII 라우팅 결정 테스트 — 텍스트의 PII 감지·모델 라우팅 판정 출력(CMP-270).
 
 설치형 진입점(pyproject.toml console_scripts): ``pip install -e .`` 후 ``nufi-egress``
 (별칭 ``nufi``) 로 PATH 에서 직접 실행. 레거시 ``python3 -m enforcement.cli`` 동치 유지.
@@ -417,6 +418,32 @@ def cmd_flow_tap(args) -> int:
 
 
 
+def cmd_route(args) -> int:
+    """PII 라우팅 결정을 CLI에서 테스트한다(CMP-270)."""
+    from gateway.pii_router import PiiRouter
+
+    router = PiiRouter(
+        local_model=getattr(args, "local_model", "nufi-local"),
+        cloud_model=getattr(args, "cloud_model", "nufi-cloud"),
+    )
+    decision = router.route(args.text, requested_model=args.model)
+
+    if args.json:
+        print(json.dumps(decision.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        status = "🔒 로컬 라우팅" if decision.routed_to_local else "☁️  클라우드 허용"
+        print(f"입력: {args.text}")
+        print(f"판정: {status}")
+        print(f"  대상 모델:  {decision.target_model}")
+        print(f"  사유:       {decision.reason}")
+        print(f"  PII 감지:   {decision.pii_detected}")
+        if decision.findings:
+            types = sorted({f.entity_type for f in decision.findings})
+            print(f"  엔티티:     {', '.join(types)}")
+        print(f"  지연(ms):   {decision.latency_ms:.2f}")
+    return 0
+
+
 def _report_write(text: str, out: Optional[str]) -> None:
     if out:
         Path(out).parent.mkdir(parents=True, exist_ok=True)
@@ -658,6 +685,18 @@ def main(argv: Optional[List[str]] = None) -> int:
                     help="출력 형식(기본 md)")
     rp.add_argument("--out", default=None, help="출력 파일 경로(생략 시 stdout)")
     rp.set_defaults(func=cmd_report)
+
+    p = sub.add_parser("route",
+                       help="PII 라우팅 결정 테스트 — 텍스트의 PII 감지·모델 라우팅 판정 출력")
+    p.add_argument("--text", required=True, help="라우팅 판정할 텍스트")
+    p.add_argument("--model", default=None,
+                   help="요청 모델명(기본: cloud_model)")
+    p.add_argument("--local-model", default="nufi-local",
+                   help="PII 감지 시 라우팅할 로컬 모델명(기본 nufi-local)")
+    p.add_argument("--cloud-model", default="nufi-cloud",
+                   help="PII 미감지 시 허용할 클라우드 모델명(기본 nufi-cloud)")
+    p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    p.set_defaults(func=cmd_route)
 
     p = sub.add_parser("benchmark",
                        help="정확도(커밋 산출물 게이트)+가명화(라이브) 벤치마크 단일 재현 "
