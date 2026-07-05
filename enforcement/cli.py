@@ -434,13 +434,17 @@ def cmd_route(args) -> int:
         min_sev = getattr(args, "min_severity", "low")
         injection_detector = PromptInjectionDetector(min_severity=min_sev)
 
+    # --stdin: stdin 라인별 처리
+    if getattr(args, "stdin", False):
+        return _route_stdin(router, args, injection_detector=injection_detector)
+
     # --file: 파일 라인별 처리
     file_path = getattr(args, "file", None)
     if file_path:
         return _route_file(router, args, file_path, injection_detector=injection_detector)
 
     if not args.text:
-        print("오류: --text 또는 --file 중 하나를 지정해야 합니다.", file=__import__('sys').stderr)
+        print("오류: --text, --file, --stdin 중 하나를 지정해야 합니다.", file=__import__('sys').stderr)
         return 1
 
     decision = router.route(args.text, requested_model=args.model)
@@ -485,6 +489,77 @@ def _route_file(router, args, file_path: str, injection_detector=None) -> int:
         return 1
 
     lines = path.read_text(encoding="utf-8").splitlines()
+    decisions = []
+    local_count = 0
+    cloud_count = 0
+    all_entity_types: set = set()
+
+    for idx, line in enumerate(lines, start=1):
+        if not line.strip():
+            continue
+        decision = router.route(line.strip(), requested_model=args.model)
+        verdict = "local" if decision.routed_to_local else "cloud"
+        entity_types = sorted({f.entity_type for f in decision.findings})
+        all_entity_types.update(entity_types)
+        if decision.routed_to_local:
+            local_count += 1
+        else:
+            cloud_count += 1
+        entry = {
+            "line": idx,
+            "text": line.strip(),
+            "verdict": verdict,
+            "entity_types": entity_types,
+            **decision.to_dict(),
+        }
+        if injection_detector:
+            ijf = injection_detector.detect(line.strip())
+            if ijf:
+                entry["injection_detected"] = True
+                entry["injection_findings"] = [
+                    {"entity_type": f.entity_type, "text": f.text, "score": f.score}
+                    for f in ijf
+                ]
+        decisions.append(entry)
+
+    show_summary = getattr(args, "summary", False)
+    total = local_count + cloud_count
+
+    if args.json:
+        output: dict = {"decisions": decisions}
+        if show_summary:
+            output["summary"] = {
+                "total_lines": total,
+                "local_count": local_count,
+                "local_pct": round(local_count / total * 100, 1) if total else 0.0,
+                "cloud_count": cloud_count,
+                "cloud_pct": round(cloud_count / total * 100, 1) if total else 0.0,
+                "unique_entity_types": sorted(all_entity_types),
+            }
+        print(json.dumps(output, ensure_ascii=False, indent=2))
+    else:
+        for d in decisions:
+            icon = "🔒" if d["verdict"] == "local" else "☁️ "
+            ent = f" [{', '.join(d['entity_types'])}]" if d["entity_types"] else ""
+            print(f"  {d['line']:>4}: {icon} {d['verdict']}{ent}")
+
+        if show_summary:
+            print()
+            print("── 요약 ──")
+            print(f"  처리 라인:  {total}")
+            local_pct = round(local_count / total * 100, 1) if total else 0.0
+            cloud_pct = round(cloud_count / total * 100, 1) if total else 0.0
+            print(f"  로컬 라우팅: {local_count} ({local_pct}%)")
+            print(f"  클라우드:    {cloud_count} ({cloud_pct}%)")
+            if all_entity_types:
+                print(f"  엔티티 종류: {', '.join(sorted(all_entity_types))}")
+
+    return 0
+
+
+def _route_stdin(router, args, injection_detector=None) -> int:
+    """stdin 에서 라인별로 PII 라우팅 처리한다 (--stdin)."""
+    lines = sys.stdin.read().splitlines()
     decisions = []
     local_count = 0
     cloud_count = 0
@@ -800,8 +875,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--text", default=None, help="라우팅 판정할 텍스트")
     p.add_argument("--file", default=None,
                    help="라인별 PII 라우팅할 입력 파일 경로")
+    p.add_argument("--stdin", action="store_true",
+                   help="stdin 에서 라인별로 읽어 PII 라우팅(파이프 용도)")
     p.add_argument("--summary", action="store_true",
-                   help="--file 사용 시 요약 통계 출력")
+                   help="--file/--stdin 사용 시 요약 통계 출력")
     p.add_argument("--model", default=None,
                    help="요청 모델명(기본: cloud_model)")
     p.add_argument("--local-model", default="nufi-local",
