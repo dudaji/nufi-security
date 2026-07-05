@@ -4,6 +4,22 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-06 (patch158-160)
+
+> **v0.4.17-patch158~160 — OpenAPI 스키마 + /injection 엔드포인트 + 문서**
+> Swagger UI·ReDoc 자동생성, Pydantic 스키마, /injection API, 테스트 550건.
+
+### Added (API)
+- **enforcement/serve_cmd.py** — Pydantic 모델 기반 OpenAPI 스키마 자동생성. `POST /injection` 엔드포인트. `--openapi` JSON 스펙 내보내기.
+- **examples/api_client.py** — HTTP API 클라이언트 예시.
+
+### Added (테스트)
+- **tests/test_serve_cmd.py** — /docs·/injection·--openapi 테스트 4건 추가.
+
+### Changed (문서)
+- **README.md** — 테스트 550 갱신.
+- **docs/README.md** — QUICKSTART.md 상단 노출.
+
 ## [0.4.17] - 2026-07-05 (patch155-157)
 
 > **v0.4.17-patch155~157 — serve HTTP API + docs + CHANGELOG sweep**
