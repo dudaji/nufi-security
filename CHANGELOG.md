@@ -4,6 +4,31 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch124-128)
+
+> **v0.4.17-patch124~128 — mask/redact + 통합 데모 + unified benchmark(injection) + CHANGELOG sweep**
+> 텍스트 PII 마스킹·리댁션 커맨드, 통합 데모, 벤치마크에 인젝션 통합, 최종 CHANGELOG 정리.
+
+### Added (patch127)
+- **enforcement/benchmark.py** — `run_injection_benchmark()`: 인젝션 골드셋(samples/injection_gold.jsonl)에 대해 PromptInjectionDetector recall/precision/F1 라이브 측정. 게이트: recall >= 0.90, precision >= 0.90.
+- **enforcement/benchmark.py** — `run_benchmarks()` 에 `injection` 축 통합. `--only injection` 단독 실행 지원. 전체 실행 시 PII 정확도 + 가명화 + 인젝션 3축 모두 PASS 해야 exit 0.
+- **enforcement/cli.py** — `benchmark --only` 선택지에 `injection` 추가.
+- **tests/test_benchmark_unified.py** — 인젝션 단독·전체 벤치마크 통합 테스트 2건.
+
+### Added (patch125-126)
+- **scripts/demo_transform.sh** — mask/redact/explain 통합 데모(5시나리오 PASS/FAIL).
+- **README.md** — init 퀵스타트·mask/redact/explain 데모·CLI 21종 표기 갱신.
+- **docs/DEMO.md** — 텍스트 변환 데모 카탈로그 등록.
+
+### Added (patch124)
+- **enforcement/transform_cmd.py** — `nufi-egress mask`: PII를 `***`로 마스킹. `nufi-egress redact`: PII를 `[TYPE]` 태그로 리댁션. `--text`/`--file`/`--output` 지원.
+- **enforcement/cli.py** — `mask`·`redact` 서브커맨드 추가.
+- **tests/test_transform_cmd.py** — 마스킹·리댁션·파일 입출력 테스트 5건.
+
+### Changed (patch128)
+- **CHANGELOG.md** — patch124~127 엔트리 추가.
+- **docs/RELEASE_NOTES.md** — patch124~127 반영.
+
 ## [0.4.17] - 2026-07-05 (patch118-123)
 
 > **v0.4.17-patch118~123 — SDK explain + summary-only + audit verify + CLI docs + export patterns + CHANGELOG sweep**

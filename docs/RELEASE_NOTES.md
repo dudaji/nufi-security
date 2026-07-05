@@ -6,6 +6,26 @@
 
 ---
 
+## v0.4.17 (patch128) — **mask/redact + unified benchmark(injection) + 통합 데모**
+
+> 텍스트 PII 마스킹·리댁션 커맨드, 벤치마크에 인젝션 통합, 통합 데모. (2026-07-05)
+
+### 이번 릴리스에 포함된 것 (patch124~127)
+
+| 계층 | 기능 |
+|---|---|
+| **벤치마크 통합** | `benchmark` 에 인젝션 축 통합 — PII 정확도 + 가명화 + 인젝션 3축 한 번에 재현. `--only injection` 단독 실행 지원 (patch127) |
+| **통합 데모** | mask/redact/explain 통합 데모(5시나리오 PASS/FAIL) + README·DEMO.md 갱신 (patch125-126) |
+| **텍스트 변환** | `mask` — PII를 `***`로 마스킹. `redact` — PII를 `[TYPE]` 태그로 리댁션. `--text`/`--file`/`--output` 지원 (patch124) |
+
+### 누구에게 유용한가
+
+- **CI/품질 게이트** — `benchmark` 한 명령으로 PII 정확도·가명화·인젝션 3축 모두 PASS 확인. 하나라도 미달이면 exit 1.
+- **데이터 보호** — `mask`/`redact` 로 텍스트 내 PII 를 즉시 가림/치환. 파일 일괄 처리 지원.
+- **데모/교육** — 통합 데모 스크립트로 mask/redact/explain 기능을 한 번에 시연.
+
+---
+
 ## v0.4.17 (patch123) — **export patterns + audit verify + SDK explain + summary-only**
 
 > 패턴 내보내기 · 감사 해시체인 검증 · SDK explain 노출 · 스캔 요약 전용 모드 · CLI 문서 갱신. (2026-07-05)
