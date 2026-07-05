@@ -25,6 +25,7 @@ SUBCOMMANDS: dict[str, list[str]] = {
     "version":   [],
     "report":    [],
     "benchmark": ["--only", "--json", "--json-out"],
+    "stats":       ["--json"],
     "completions": ["bash", "zsh"],
 }
 

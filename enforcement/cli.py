@@ -791,6 +791,7 @@ _HELP_EPILOG = """\
     config          설정 파일 검증
     doctor          하이브리드 배선 진단
     version         버전 및 백엔드 정보 출력
+    stats           NuFi 설정·탐지 역량 요약 통계
     completions     셸 자동완성 스크립트 출력
 
   [보고]
@@ -1129,6 +1130,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--json-out", default=None,
                    help="JSON 리포트를 파일로도 기록(경로)")
     p.set_defaults(func=cmd_benchmark)
+
+    # --- Stats (patch112) ---------------------------------------------------- #
+    from enforcement.stats_cmd import cmd_stats
+    p = sub.add_parser("stats",
+                       help="NuFi 설정·탐지 역량 요약 통계")
+    p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    p.set_defaults(func=cmd_stats)
 
     # --- Shell completions (patch109) ---------------------------------------- #
     from enforcement.completions_cmd import cmd_completions
