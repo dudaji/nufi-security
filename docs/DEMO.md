@@ -33,6 +33,9 @@ python3 -m pip install -r requirements.txt   # PyYAML·fastapi·uvicorn·httpx
 | [`demo_sdk.sh`](../scripts/demo_sdk.sh) | Python SDK — `from nufi import ...` 한 줄로 탐지·가명화·정책 평가 (임포트·버전 동기화·detect·pseudonymize·mask·redact·Guard.inspect) | 4 | `./scripts/demo_sdk.sh` | [`SDK.md`](SDK.md) |
 | [`demo_resilience.sh`](../scripts/demo_resilience.sh) | 게이트웨이 강건성 — 지연 추적(latency_ms)·방어 파싱(content=None·비-dict·큰 프롬프트 잘림)·탐지 타임아웃 fail-closed 차단 | 5 | `./scripts/demo_resilience.sh` | 본 문서 |
 | [`demo_sdk_helpers.sh`](../scripts/demo_sdk_helpers.sh) | SDK 편의 함수 — `scan_file`(파일 PII 탐지)·`guard_file`(파일 정책 평가)·`batch_detect`(일괄 탐지) | 5 | `./scripts/demo_sdk_helpers.sh` | [`SDK.md`](SDK.md) |
+| [`demo_prompt_injection.sh`](../scripts/demo_prompt_injection.sh) | 프롬프트 인젝션 탐지 — 한국어·영어 18종 패턴 탐지, Guard 통합 차단, PII+인젝션 복합 시나리오, is_injection() 편의 메서드 | 6 (31건) | `./scripts/demo_prompt_injection.sh` | [`PROMPT_INJECTION.md`](PROMPT_INJECTION.md) |
+| [`demo_bench_injection.sh`](../scripts/demo_bench_injection.sh) | 인젝션 벤치마크 — 골드셋 38건(인젝션 20+무해 18) recall/precision/F1 측정 + 게이트(≥0.90) | 1 | `./scripts/demo_bench_injection.sh` | [`PROMPT_INJECTION.md`](PROMPT_INJECTION.md) |
+| [`demo_scan.sh`](../scripts/demo_scan.sh) | 파일/디렉터리 PII 스캔 — 디렉터리 재귀 스캔·--fail-on-pii·--redact --dry-run·--format sarif | 4 | `./scripts/demo_scan.sh` | [`CLI.md#scan`](CLI.md) |
 | [`demo_accuracy.sh`](../scripts/demo_accuracy.sh) | 정확도 재현 — KR_PERSON INT8 Wilson CI 하한 ≥ 0.93(v0.4.16: 0.9591) + 온프렘 p95 표 + 단일 명령 벤치마크(`nufi-egress benchmark`: 정확도+가명화 동시 재현) *(측정 산출물 필요)* | 3 | `./scripts/demo_accuracy.sh` | [`HANDS_ON.md#part-j`](HANDS_ON.md) |
 | [`demo_bypass_enforcement.sh`](../scripts/demo_bypass_enforcement.sh) | 우회 차단(ENFORCED) — 격리 netns 에서 실제 egress drop *(root/nft 필요)* | 3 | `sudo bash scripts/demo_bypass_enforcement.sh` | [`history/DEMO_v0.0.5.md`](history/DEMO_v0.0.5.md) |
 | [`demo_all.sh`](../scripts/demo_all.sh) | 전체 데모 러너 — 위 데모를 차례로 실행하고 집계 PASS/FAIL 출력 | — | `./scripts/demo_all.sh` | 본 문서 |
@@ -56,6 +59,8 @@ python3 -m pip install -r requirements.txt   # PyYAML·fastapi·uvicorn·httpx
 | [`sdk_streaming.py`](../examples/sdk_streaming.py) | 스트리밍 응답 경유 |
 | [`sdk_file_scan.py`](../examples/sdk_file_scan.py) | `scan_file`·`guard_file`·`batch_detect` 파일 단위 탐지·평가 |
 | [`sdk_compliance_report.py`](../examples/sdk_compliance_report.py) | `compliance_report`·`render_report`·`load_catalog` — 한국 규제 5종 통제 커버리지 출력 |
+| [`sdk_pii_routing.py`](../examples/sdk_pii_routing.py) | `route` — PII 라우팅 결정 (PII→로컬, 클린→클라우드, to_dict) |
+| [`sdk_prompt_injection.py`](../examples/sdk_prompt_injection.py) | `detect_injection`·`Guard(check_injection=True)`·`PromptInjectionDetector.is_injection()` — 프롬프트 인젝션 탐지 |
 
 ```bash
 # 전체 예시 한 번에 검증 (스모크)
