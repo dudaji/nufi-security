@@ -327,6 +327,7 @@ usage: nufi-egress audit {report,daemon,once,query} [--profiles P]
 | `daemon` | 폴 루프 데몬(준실시간) | `--profiles`/`--ner-backend` |
 | `once` | 큐 1회 드레인 후 종료(배치) | 레거시 `--simulate`/`--once` 동치 |
 | `query` | 감사로그 집계(outcome·엔티티·해시 체인) | `--log`/`--verify-chain`/`--json` |
+| `verify` | 해시 체인 무결성 전용 검증(patch120) | `--log`/`--json` |
 
 ```bash
 nufi-egress audit once                       # 큐 1회 드레인(배치)
@@ -334,6 +335,37 @@ nufi-egress audit query --verify-chain --json # §4 감사로그 집계 + 체인
 ```
 
 > 종료코드: `query --verify-chain` 으로 해시 체인이 깨지면 1(변조탐지 게이트), 아니면 0.
+
+### `audit verify`
+
+감사 로그 JSONL 파일의 **해시 체인 무결성**을 전용으로 검증합니다. 각 레코드의 `chain.hash` 를 재계산해 `prev_hash` 연결·seq 연속성·타임스탬프 단조증가를 확인합니다. 행 수정·삭제·재배열·시계역행이 있으면 첫 번째 변조 지점을 보고합니다.
+
+```
+usage: nufi-egress audit verify [--log LOG] [--json]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--log LOG` | 감사 JSONL 경로 | `logs/egress_audit.jsonl` |
+| `--json` | 기계용 JSON 출력 | — |
+
+```bash
+nufi-egress audit verify                              # 기본 로그 검증
+nufi-egress audit verify --log /path/to/audit.jsonl   # 특정 파일 검증
+nufi-egress audit verify --json                       # CI/자동화용 JSON 출력
+```
+
+출력 예시(사람읽기):
+
+```
+Audit log: logs/egress_audit.jsonl
+  Total records: 42
+  Valid records: 42
+  Date range:    2026-07-01T09:00:00+0900 ~ 2026-07-05T18:30:00+0900
+  Hash chain:    OK — all records verified
+```
+
+> 종료코드: 체인 무결성 OK 이면 0, 변조 탐지 시 1(CI 변조탐지 게이트).
 
 ---
 
@@ -686,6 +718,51 @@ nufi-egress watch ./data --once --webhook https://hooks.slack.com/...
 ```
 
 > 종료코드: `--once` 모드에서 PII 발견 시 1, 아니면 0. 데몬 모드는 Ctrl+C 로 종료.
+
+---
+
+## `explain`
+
+텍스트의 탐지 결과를 **상세하게 설명**합니다. PII 탐지·인젝션 분석·정책 판정·라우팅 결정의 **근거**를 한 번에 출력하므로, 오탐 디버깅·교육·감사 증적 작성에 유용합니다.
+
+```
+usage: nufi-egress explain --text TEXT [--json]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--text TEXT` | 분석할 텍스트(필수) | — |
+| `--json` | 기계용 JSON 출력 | — |
+
+```bash
+nufi-egress explain --text "홍길동의 주민등록번호는 900101-1234567입니다"
+nufi-egress explain --text "오늘 날씨 어때" --json
+```
+
+출력에는 각 PII 엔티티의 매치 텍스트·위치·탐지 방법·신뢰도, 인젝션 패턴 분석, 위험도(`risk_level`)와 정책 액션(`block`/`pseudonymize`/`log`/`allow`), 라우팅 결정(`local`/`cloud`)과 사유가 포함됩니다.
+
+> 종료코드: 항상 0(관측 명령).
+
+---
+
+## `stats`
+
+NuFi 설정 파일 현황·탐지 역량(PII/인젝션 패턴 수)·스캔 프로파일·캐시 상태·`.nufiignore` 패턴·감사 로그 통계를 한 눈에 요약합니다.
+
+```
+usage: nufi-egress stats [--json]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--json` | 기계용 JSON 출력 | — |
+
+```bash
+nufi-egress stats           # 사람읽기 요약
+nufi-egress stats --json    # CI/자동화용 JSON
+```
+
+> 종료코드: 항상 0(관측 명령).
 
 ---
 
