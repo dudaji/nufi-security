@@ -1,23 +1,24 @@
-"""``nufi-egress serve`` — HTTP API 모드 (patch155/158).
+"""``nufi-egress serve`` — HTTP API 모드 (patch155/158/159).
 
 FastAPI 기반 REST API로 NuFi 탐지 기능을 마이크로서비스에 제공한다.
 
 Endpoints:
-  POST /detect  — PII 탐지
-  POST /route   — 라우팅 결정
-  POST /inspect — 통합 분석
-  POST /mask    — PII 마스킹
-  POST /redact  — PII 리댁션
-  GET  /health  — 헬스 체크
-  GET  /docs    — Swagger UI (auto)
-  GET  /redoc   — ReDoc (auto)
+  POST /detect    — PII 탐지
+  POST /route     — 라우팅 결정
+  POST /inspect   — 통합 분석
+  POST /mask      — PII 마스킹
+  POST /redact    — PII 리댁션
+  POST /injection — 프롬프트 인젝션 탐지
+  GET  /health    — 헬스 체크
+  GET  /docs      — Swagger UI (auto)
+  GET  /redoc     — ReDoc (auto)
 """
 from __future__ import annotations
 
 import json
 import sys
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
@@ -88,6 +89,28 @@ class HealthResponse(BaseModel):
     """Response from /health endpoint."""
     status: str = Field(..., description="Service status")
     version: str = Field(..., description="Service version")
+
+
+class InjectionRequest(BaseModel):
+    """Request body for /injection endpoint."""
+    text: str = Field(..., description="Text to check for prompt injection")
+    min_severity: Optional[str] = Field("low", description="Minimum severity filter (low/medium/high/critical)")
+
+
+class InjectionFindingItem(BaseModel):
+    """A single injection finding."""
+    entity_type: str = Field(..., description="Type: PROMPT_INJECTION")
+    text: str = Field(..., description="Matched text")
+    start: int = Field(..., description="Start offset")
+    end: int = Field(..., description="End offset")
+    score: float = Field(..., description="Confidence score")
+
+
+class InjectionResponse(BaseModel):
+    """Response from /injection endpoint."""
+    injection_detected: bool = Field(..., description="Whether injection patterns were found")
+    findings: List[InjectionFindingItem] = Field(default_factory=list, description="List of injection findings")
+    severity: str = Field("none", description="Highest severity level among findings")
 
 
 # Keep backward-compatible alias
@@ -162,6 +185,37 @@ def create_app() -> FastAPI:
         from enforcement.transform_cmd import _transform_text
 
         return {"result": _transform_text(req.text, "redact")}
+
+    @app.post("/injection", response_model=InjectionResponse)
+    def injection(req: InjectionRequest):
+        from nufi import detect_injection
+
+        min_sev = req.min_severity or "low"
+        findings = detect_injection(req.text, min_severity=min_sev)
+        items = [
+            {
+                "entity_type": f.entity_type,
+                "text": f.text,
+                "start": f.start,
+                "end": f.end,
+                "score": f.score,
+            }
+            for f in findings
+        ]
+        # Determine highest severity
+        severity_order = ["low", "medium", "high", "critical"]
+        highest = "none"
+        for f in findings:
+            meta = getattr(f, "match_meta", None) or {}
+            sev = meta.get("severity", "low")
+            if sev in severity_order:
+                if highest == "none" or severity_order.index(sev) > severity_order.index(highest):
+                    highest = sev
+        return {
+            "injection_detected": len(items) > 0,
+            "findings": items,
+            "severity": highest,
+        }
 
     return app
 
