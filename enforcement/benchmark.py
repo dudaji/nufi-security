@@ -1,6 +1,6 @@
-"""I5 — 정확도·가명화 벤치마크 단일 진입점 (프로그램/CLI/SDK 공용 표면).
+"""I5 — 정확도·가명화·인젝션 벤치마크 단일 진입점 (프로그램/CLI/SDK 공용 표면).
 
-CMP-188 P0 I5. 흩어져 있던 두 벤치마크를 **한 함수·한 명령**으로 묶어 재현한다:
+CMP-188 P0 I5. 흩어져 있던 벤치마크를 **한 함수·한 명령**으로 묶어 재현한다:
 
 - **정확도(accuracy)** — 봉인 골드셋 측정 산출물(커밋된 JSON 증거)을 게이트 목표선에
   대조한다(무거운 모델 재실행 없이 결정적). 게이트:
@@ -11,11 +11,14 @@ CMP-188 P0 I5. 흩어져 있던 두 벤치마크를 **한 함수·한 명령**�
 - **가명화(pseudonymize)** — 가역/비가역 품질 하니스를 **라이브로 재실행**한다(결정적,
   모델 불필요). scripts/bench_pseudonymize.run_all() 재사용. 충돌율 0·결정성·원복 정확·
   차단 유지 불변식.
+- **인젝션(injection)** — 인젝션 골드셋(samples/injection_gold.jsonl)에 대해
+  PromptInjectionDetector 의 recall/precision/F1 을 라이브 측정한다(결정적, 모델 불필요).
+  게이트: recall >= 0.90, precision >= 0.90.
 
 원칙: 실고객 데이터 0 · 외부 호출 0 · 결정적. 종료/`overall_pass` 는 게이트 판정.
-CLI:  nufi-egress benchmark [--only accuracy|pseudonymize] [--json-out FILE]
+CLI:  nufi-egress benchmark [--only accuracy|pseudonymize|injection] [--json-out FILE]
 SDK:  from enforcement.benchmark import run_benchmarks, evaluate_accuracy_gate,
-                                       run_pseudonymize_benchmark
+                                       run_pseudonymize_benchmark, run_injection_benchmark
 """
 from __future__ import annotations
 
@@ -34,6 +37,10 @@ PSEUDO_REPORT = ROOT / "docs/reports/pseudonymize-quality.json"
 
 PERSON_CI_FLOOR = 0.90    # KR_PERSON Wilson CI 하한 목표 (CMP-236: 0.85 → 0.90 상향)
 LOW_CONCURRENCY = 2       # 운영 p95 기준: c≤2 에서 목표 이내면 통과(고동시성=워커 스케일아웃)
+
+INJECTION_RECALL_FLOOR = 0.90   # 인젝션 recall 목표
+INJECTION_PRECISION_FLOOR = 0.90  # 인젝션 precision 목표
+INJECTION_GOLD = ROOT / "samples" / "injection_gold.jsonl"
 
 
 def _load(path) -> Optional[Dict[str, Any]]:
@@ -142,6 +149,48 @@ def run_pseudonymize_benchmark() -> Dict[str, Any]:
     return bench_pseudonymize.run_all()
 
 
+def run_injection_benchmark(gold_path=INJECTION_GOLD,
+                            recall_floor: float = INJECTION_RECALL_FLOOR,
+                            precision_floor: float = INJECTION_PRECISION_FLOOR) -> Dict[str, Any]:
+    """인젝션 골드셋에 대해 recall/precision/F1 을 라이브 측정(결정적, 모델 불필요).
+
+    scripts/bench_injection.py 의 run_benchmark() 를 재사용.
+    반환: {tp, fn, fp, tn, recall, precision, f1, pass, gates:[...]}.
+    """
+    scripts_dir = str(ROOT / "scripts")
+    if scripts_dir not in sys.path:
+        sys.path.insert(0, scripts_dir)
+    import bench_injection  # noqa: E402
+
+    metrics = bench_injection.run_benchmark()
+
+    recall_ok = metrics["recall"] >= recall_floor
+    precision_ok = metrics["precision"] >= precision_floor
+    passed = recall_ok and precision_ok
+
+    gates = [
+        {"id": "injection_recall", "pass": bool(recall_ok),
+         "target": f"recall >= {recall_floor}",
+         "detail": f"recall={metrics['recall']:.4f} (TP={metrics['tp']} FN={metrics['fn']})"},
+        {"id": "injection_precision", "pass": bool(precision_ok),
+         "target": f"precision >= {precision_floor}",
+         "detail": f"precision={metrics['precision']:.4f} (TP={metrics['tp']} FP={metrics['fp']})"},
+    ]
+
+    return {
+        "benchmark": "injection",
+        "tp": metrics["tp"],
+        "fn": metrics["fn"],
+        "fp": metrics["fp"],
+        "tn": metrics["tn"],
+        "recall": metrics["recall"],
+        "precision": metrics["precision"],
+        "f1": metrics["f1"],
+        "gates": gates,
+        "pass": passed,
+    }
+
+
 def run_benchmarks(only: Optional[str] = None, *,
                    recall_report=RECALL_REPORT, p95_report=P95_REPORT,
                    baseline_report=BASELINE_REPORT,
@@ -151,28 +200,34 @@ def run_benchmarks(only: Optional[str] = None, *,
     only: None=둘 다, "accuracy"=정확도만, "pseudonymize"=가명화만.
     반환: {accuracy:{...|None}, pseudonymize:{...|None}, overall_pass:bool}.
     """
-    if only not in (None, "accuracy", "pseudonymize"):
-        raise ValueError(f"only 는 accuracy|pseudonymize 중 하나여야 합니다: {only!r}")
+    if only not in (None, "accuracy", "pseudonymize", "injection"):
+        raise ValueError(f"only 는 accuracy|pseudonymize|injection 중 하나여야 합니다: {only!r}")
 
     accuracy = None
     pseudonymize = None
+    injection = None
     if only in (None, "accuracy"):
         accuracy = evaluate_accuracy_gate(recall_report, p95_report,
                                           baseline_report, person_ci_floor)
     if only in (None, "pseudonymize"):
         pseudonymize = run_pseudonymize_benchmark()
+    if only in (None, "injection"):
+        injection = run_injection_benchmark()
 
     passes = []
     if accuracy is not None:
         passes.append(accuracy["pass"])
     if pseudonymize is not None:
         passes.append(bool(pseudonymize.get("acceptance_pass")))
+    if injection is not None:
+        passes.append(bool(injection.get("pass")))
 
     return {
         "benchmark": "nufi-benchmark",
         "only": only,
         "accuracy": accuracy,
         "pseudonymize": pseudonymize,
+        "injection": injection,
         "overall_pass": all(passes) if passes else False,
     }
 
@@ -214,7 +269,18 @@ def render(report: Dict[str, Any]) -> str:
             if not val:
                 lines.append(f"         [미달] {name}")
 
+    inj = report.get("injection")
+    if inj is not None:
+        lines.append("")
+        lines.append("[인젝션] 골드셋 recall/precision/F1 라이브 측정(결정적)")
+        for g in inj["gates"]:
+            mark = "PASS" if g["pass"] else "FAIL"
+            lines.append(f"  [{mark}] {g['id']}  ({g['target']})")
+            lines.append(f"         {g['detail']}")
+        lines.append(f"  F1={inj['f1']:.4f}  (TP={inj['tp']} FN={inj['fn']} "
+                     f"FP={inj['fp']} TN={inj['tn']})")
+
     lines.append("-" * 60)
-    lines.append("✅ 벤치마크 전체 PASS" if report["overall_pass"]
-                 else "❌ 벤치마크 FAIL — 위 항목 확인")
+    lines.append("PASS" if report["overall_pass"]
+                 else "FAIL")
     return "\n".join(lines)

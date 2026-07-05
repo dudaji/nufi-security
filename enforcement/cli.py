@@ -1201,8 +1201,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     p = sub.add_parser("benchmark",
                        help="정확도(커밋 산출물 게이트)+가명화(라이브) 벤치마크 단일 재현 "
                             "— 전체 PASS 시 exit 0, 미달 시 1")
-    p.add_argument("--only", choices=["accuracy", "pseudonymize"], default=None,
-                   help="한 축만 실행(기본: 둘 다)")
+    p.add_argument("--only", choices=["accuracy", "pseudonymize", "injection"], default=None,
+                   help="한 축만 실행(기본: 셋 다)")
     p.add_argument("--json", action="store_true",
                    help="사람 친화 요약 대신 원시 JSON 리포트 출력")
     p.add_argument("--json-out", default=None,
