@@ -459,6 +459,12 @@ def cmd_compare(args) -> int:
     return _compare(args)
 
 
+def cmd_test(args) -> int:
+    """자가 검증 (patch135)."""
+    from enforcement.selftest_cmd import cmd_test as _test
+    return _test(args)
+
+
 def cmd_lint(args) -> int:
     """보안 안티패턴 검사 (patch130)."""
     from enforcement.lint_cmd import cmd_lint as _lint
@@ -852,6 +858,7 @@ _HELP_EPILOG = """\
     init            프로젝트 초기화 또는 프리셋 구체화
     config          설정 파일 검증
     doctor          하이브리드 배선 진단
+    test            자가 검증 (PII·인젝션·라우팅·Guard·설정·버전)
     version         버전 및 백엔드 정보 출력
     stats           NuFi 설정·탐지 역량 요약 통계
     completions     셸 자동완성 스크립트 출력
@@ -1139,6 +1146,11 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--fail-on-new", action="store_true",
                    help="신규 발견 시 exit 1 (CI 게이트)")
     p.set_defaults(func=cmd_compare)
+
+    p = sub.add_parser("test",
+                       help="자가 검증 — PII·인젝션·라우팅·Guard·설정·버전 6체크 (patch135)")
+    p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    p.set_defaults(func=cmd_test)
 
     p = sub.add_parser("config",
                        help="설정 파일 검증(syntax·필수 필드·regex · patch105)")
