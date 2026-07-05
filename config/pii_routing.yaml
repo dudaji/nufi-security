@@ -24,3 +24,8 @@ force_local_entities: null
 # true 이면 게이트웨이에서 PII 검사 이전에 인젝션 패턴을 탐지하여 차단.
 # 환경변수 NUFI_CHECK_INJECTION=1 로도 활성화 가능.
 check_injection: false
+
+# 커스텀 인젝션 패턴 파일 경로 (patch71).
+# 지정된 YAML 파일의 패턴이 내장 패턴에 추가 적용됩니다.
+# 파일이 없으면 내장 패턴만 사용.
+injection_patterns_path: config/injection_patterns.yaml
