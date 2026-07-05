@@ -6,6 +6,25 @@
 
 ---
 
+## v0.4.17 (patch142) — **pipeline + history + CHANGELOG**
+
+> 체인 파이프라인 · 활동 로그 조회 · CHANGELOG sweep. (2026-07-05)
+
+### 이번 릴리스에 포함된 것 (patch139~141)
+
+| 계층 | 기능 |
+|---|---|
+| **활동 로그** | `history` — 감사 로그 + 스캔 캐시를 통합 읽어 최근 활동(스캔·차단·라우팅) 시간순 출력. `--last N`, `--type`, `--json` 지원 (patch141) |
+| **README** | 테스트 520건·서브커맨드 33종·pipeline 반영 (patch140) |
+| **파이프라인** | `pipeline --text` — detect→decide→transform→route 전체 보안 파이프라인을 한 번에 실행. `--actions` 선택, `--json` 기계 출력 (patch139) |
+
+### 누구에게 유용한가
+
+- **운영 감시** — `history` 로 최근 NuFi 활동을 한눈에 조회. 차단·라우팅·스캔 이벤트를 유형별로 필터링하여 실시간 모니터링.
+- **통합 파이프라인** — `pipeline` 으로 PII 탐지부터 라우팅까지 전체 보안 체인을 단일 명령으로 실행. CI/CD 또는 실시간 게이트 용도.
+
+---
+
 ## v0.4.17 (patch138) — **selftest + scan --verbose + CLI docs**
 
 > 설치 자가진단 · 스캔 상세 출력 · CLI 레퍼런스 갱신. (2026-07-05)

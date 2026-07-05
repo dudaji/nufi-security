@@ -4,6 +4,28 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch139-142)
+
+> **v0.4.17-patch139~142 — pipeline + history + CHANGELOG sweep**
+> 체인 파이프라인, 활동 로그 조회, 최종 CHANGELOG.
+
+### Added (patch141)
+- **enforcement/history_cmd.py** — `nufi-egress history`: 최근 NuFi 활동 로그 조회. 감사 로그(logs/egress_audit.jsonl)와 스캔 캐시(.nufi_cache.json)를 통합 읽어 스캔·차단·라우팅 이벤트를 시간순 출력. `--last N`(기본 20), `--type scan|block|route|all` 필터, `--json` 기계 출력. 로그 미존재 시 "No activity recorded yet" 안내.
+- **enforcement/cli.py** — `history` 서브커맨드 추가.
+- **tests/test_history_cmd.py** — 이벤트 분류·필터 + 빈 로그 + JSON 출력 테스트 3건.
+
+### Added (patch139)
+- **enforcement/pipeline_cmd.py** — `nufi-egress pipeline --text "..."`: detect→decide→transform→route 체인 파이프라인 한 번에 실행. `--actions` 선택 실행, `--json` 기계 출력.
+- **enforcement/cli.py** — `pipeline` 서브커맨드 추가.
+- **tests/test_pipeline_cmd.py** — 파이프라인 전체 실행 + 액션 선택 테스트.
+
+### Changed (patch140)
+- **README.md** — 테스트 520·서브커맨드 33종·pipeline 반영.
+
+### Changed (patch142)
+- **CHANGELOG.md** — patch139~141 엔트리 추가.
+- **docs/RELEASE_NOTES.md** — patch139~141 반영.
+
 ## [0.4.17] - 2026-07-05 (patch135-138)
 
 > **v0.4.17-patch135~138 — selftest + CLI docs + scan --verbose + CHANGELOG sweep**
