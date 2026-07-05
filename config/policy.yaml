@@ -47,6 +47,14 @@ conf_class_actions:
   INTERNAL:     { action: warn,  severity: medium }
   PUBLIC:       { action: allow, severity: low }
 
+# --- 프롬프트 인젝션 정책 ---
+# Guard(check_injection=True) 시 인젝션 탐지 결과에 적용하는 동작.
+#   action: block(차단) | warn(findings에 추가, 차단하지 않음) | log(로그만, findings 미추가)
+#   min_severity: low | medium | high | critical — 이 수준 이상만 반응
+injection:
+  action: block          # block | warn | log
+  min_severity: medium   # low | medium | high | critical
+
 # --- Egress Enforcement (트랙 B · CMP-94, 모델 (a) nftables 허용목록) ---
 # 우회(게이트웨이 미경유) public LLM 직결 패킷의 L3/L4 실제 drop 토글.
 # 정책 단일 출처(A7): public 목적지·게이트웨이는 routing.yaml 에서 파생/재사용.

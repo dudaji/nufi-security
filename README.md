@@ -208,6 +208,9 @@ nufi-egress doctor
 
 # 11) 벤치마크 — 재현율(recall)·정밀도(precision)·지연(latency)
 python3 scripts/bench.py --ner gazetteer
+
+# 12) 인젝션 탐지 벤치마크 — 재현율·정밀도 측정 (30건 골드셋)
+python3 scripts/bench_injection.py
 ```
 
 > 운영(ops) 데모(`demo_report`·`demo_multitenancy`·`demo_dashboards`)와
