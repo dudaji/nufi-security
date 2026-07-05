@@ -372,6 +372,54 @@ result["routing"]             # "local"
 
 관련 문서: CLI `nufi-egress inspect`, §2.4 Guard (정책 기반 차단과 별도)
 
+### 2.12 `scan_dir()` — 디렉터리 스캔 (v0.4.x patch96)
+
+디렉터리(또는 단일 파일)를 재귀 스캔하여 PII/인젝션 결과를 반환한다.
+
+```python
+from nufi import scan_dir
+
+# 디렉터리 전체 스캔
+results = scan_dir("./data")
+for r in results:
+    print(r["path"], r["findings"])
+```
+
+- **함수 시그니처:** `scan_dir(path: str | Path, **kwargs) -> list[dict]`
+- **반환 타입:** `list[dict]` — 각 항목은 `{"path": str, "findings": list[dict]}`.
+- 내부적으로 `enforcement.scan_cmd.scan_path` 에 위임한다.
+
+### 2.13 `batch_route()` — 배치 라우팅 (v0.4.x patch96)
+
+여러 텍스트의 PII 라우팅 결정을 한 번에 반환한다. `PiiRouter` 를 한 번만 생성해 재사용하므로 반복 호출보다 효율적이다.
+
+```python
+from nufi import batch_route
+
+decisions = batch_route(["홍길동 주민번호 900101-1234567", "hello world"])
+decisions[0].routed_to_local   # True
+decisions[1].routed_to_local   # False
+```
+
+- **함수 시그니처:** `batch_route(texts: list[str], **kwargs) -> list[RoutingDecision]`
+- **반환 타입:** `list[RoutingDecision]` — 각 항목은 §2.8 의 `RoutingDecision`.
+- kwargs 로 `local_model`, `cloud_model` 등을 전달하면 커스텀 라우터를 사용한다.
+
+### 2.14 `batch_inspect()` — 배치 통합 분석 (v0.4.x patch96)
+
+여러 텍스트를 한 번에 통합 보안 분석(PII + 인젝션 + 라우팅 + 위험도)한다.
+
+```python
+from nufi import batch_inspect
+
+results = batch_inspect(["홍길동 주민번호 900101-1234567", "hello"])
+results[0]["blocked"]   # True
+results[1]["blocked"]   # False
+```
+
+- **함수 시그니처:** `batch_inspect(texts: list[str]) -> list[dict]`
+- **반환 타입:** `list[dict]` — 각 항목은 §2.11 `inspect_text()` 의 반환 형식과 동일.
+
 ---
 
 ## 3. CLI ↔ SDK 동등 매핑
