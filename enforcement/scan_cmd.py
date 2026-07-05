@@ -8,6 +8,7 @@ SDK 에서도 ``from nufi import scan_dir`` 로 사용 가능.
 --redact 모드로 PII 를 자동 치환하여 파일을 재작성 (patch88).
 --parallel N 으로 멀티스레드 스캔 지원 (patch97).
 --cache 로 파일 해시 기반 결과 캐싱 (patch101).
+--profile NAME 으로 사전 정의 스캔 프로파일 적용 (patch110).
 """
 from __future__ import annotations
 
@@ -659,6 +660,13 @@ def scan_result_to_sarif(result: "ScanResult") -> Dict[str, Any]:
 def cmd_scan(args) -> int:
     """``nufi-egress scan`` CLI handler."""
     target = args.target
+
+    # --profile: apply scan profile defaults before processing flags (patch110)
+    profile_name = getattr(args, "profile", None)
+    if profile_name:
+        from enforcement.scan_profiles import resolve_profile, apply_profile_to_args
+        profile = resolve_profile(profile_name)
+        apply_profile_to_args(profile, args)
 
     # --clear-cache: delete cache and exit
     if getattr(args, "clear_cache", False):

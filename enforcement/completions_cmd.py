@@ -11,7 +11,7 @@ from __future__ import annotations
 SUBCOMMANDS: dict[str, list[str]] = {
     "scan":      ["--target", "--pattern", "--check-injection", "--json", "--format",
                   "--output", "--exclude", "--fail-on-pii", "--redact", "--dry-run",
-                  "--no-backup", "--stats", "--parallel"],
+                  "--no-backup", "--stats", "--parallel", "--profile"],
     "route":     ["--text", "--file", "--stdin", "--summary", "--model",
                   "--local-model", "--cloud-model", "--check-injection",
                   "--min-severity", "--json"],

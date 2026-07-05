@@ -4,6 +4,30 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch107-110)
+
+> **v0.4.17-patch107~110 — E2E 테스트 + SDK 예시 + shell completions + scan profiles**
+> 스캔 파이프라인 E2E 통합 테스트, SDK 실전 예시, 셸 자동완성, 스캔 프로파일.
+
+### Added (patch110)
+- **enforcement/scan_profiles.py** — 스캔 프로파일 로딩·해석 모듈. `config/scan_profiles.yaml` 에 `development`/`ci`/`strict` 프로파일 정의.
+- **config/scan_profiles.yaml** — 사전 정의 스캔 프로파일(development, ci, strict).
+- **enforcement/cli.py** — `scan --profile NAME` 옵션 추가. 프로파일 설정은 명시적 CLI 플래그로 오버라이드 가능.
+- **tests/test_scan_profiles.py** — 프로파일 로딩·적용·오버라이드 테스트 3건.
+
+### Added (patch109)
+- **enforcement/completions_cmd.py** — `nufi-egress completions bash/zsh` 셸 자동완성 스크립트 생성.
+- **enforcement/cli.py** — `completions` 서브커맨드 + `--help` 출력 카테고리 분류(탐지/운영/보고).
+- **tests/test_completions.py** — 자동완성 스크립트 생성 테스트 1건.
+
+### Added (patch108)
+- **examples/sdk_security_report.py** — SDK 로 디렉터리 보안 리포트 생성·렌더링 실전 예시.
+- **examples/sdk_ci_integration.py** — CI/pre-commit PII+인젝션 검사 시뮬레이션 실전 예시.
+- **tests/test_examples_smoke.py** — SDK 예시 스모크 테스트 2건 추가.
+
+### Added (patch107)
+- **tests/test_scan_e2e.py** — init→scan→redact, cache 무효화, SARIF/JSONL 출력, 병렬 일관성, .nufiignore·exclude, 인젝션 탐지, security report E2E 통합 테스트 10건.
+
 ## [0.4.17] - 2026-07-05 (patch101-105)
 
 > **v0.4.17-patch101~105 — config validate + diff + watch --webhook + scan --cache + README 데모 섹션**

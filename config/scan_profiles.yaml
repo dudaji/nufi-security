@@ -1,0 +1,21 @@
+# Scan profiles — predefined sets of scan options for common use cases.
+# Usage: nufi-egress scan . --profile ci
+# Profile settings can be overridden by explicit CLI flags.
+
+scan_profiles:
+  development:
+    check_injection: false
+    min_severity: high
+    fail_on_pii: false
+    parallel: 1
+  ci:
+    check_injection: true
+    min_severity: medium
+    fail_on_pii: true
+    parallel: 4
+    format: sarif
+  strict:
+    check_injection: true
+    min_severity: low
+    fail_on_pii: true
+    parallel: 4
