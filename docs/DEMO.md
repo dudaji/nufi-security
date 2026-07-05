@@ -42,6 +42,8 @@ python3 -m pip install -r requirements.txt   # PyYAML·fastapi·uvicorn·httpx
 | [`demo_transform.sh`](../scripts/demo_transform.sh) | 텍스트 변환 — mask(PII→asterisk)·redact(PII→타입 태그)·explain(상세 설명) + 인젝션 비간섭·클린 텍스트 무변환 | 5 | `./scripts/demo_transform.sh` | [`CLI.md`](CLI.md) |
 | [`demo_all.sh`](../scripts/demo_all.sh) | 전체 데모 러너 — 위 데모를 차례로 실행하고 집계 PASS/FAIL 출력 | — | `./scripts/demo_all.sh` | 본 문서 |
 
+> **`compare` 명령 참고:** `nufi-egress compare before.sarif after.sarif` 로 두 스캔 결과의 new/resolved/unchanged 발견을 비교할 수 있습니다. PR 리뷰에서 변경이 새 PII 를 도입했는지 확인하는 데 유용합니다. 상세 플래그는 [`CLI.md#compare`](CLI.md) 참조.
+
 > `demo_bypass_enforcement.sh` 는 `demo_audit_separation.sh --enforce` 경로가 root/nft 가
 > 있을 때 호출하는 하위 데모다. 권한이 없으면 차등 감사 데모가 정직하게 SIMULATED 로
 > 폴백하므로, 일반 실행에는 추가 권한이 필요 없다.

@@ -56,6 +56,8 @@ usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
 | [`generate`](#generate) | 테스트용 한국어 PII 샘플 데이터 생성 | 불필요 |
 | [`mask`](#mask) | 텍스트 PII 마스킹(asterisk 가림) | 불필요 |
 | [`redact`](#redact-text) | 텍스트 PII 리댁션(타입 태그 교체) | 불필요 |
+| [`compare`](#compare) | 두 스캔 결과(SARIF/JSON) 비교 — new/resolved/unchanged | 불필요 |
+| [`test`](#test) | 자가 검증 — PII·인젝션·라우팅·Guard·설정·버전 6체크 | 불필요 |
 
 > **신규 도입 5분 경로:** `init audit-only` → SDK/게이트웨이 배선 → `doctor`(core-3 GREEN 확인) → `status`/감사 로그 관찰 → 준비되면 `apply`. 자세한 결정 트리는 [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md).
 
@@ -949,6 +951,83 @@ nufi-egress redact --file input.txt --output redacted.txt
 ```
 
 > 종료코드: 항상 0. `--text` 또는 `--file` 중 하나를 지정해야 합니다.
+
+---
+
+## `compare`
+
+두 스캔 결과(SARIF 2.1.0 또는 NuFi JSON)를 비교하여 **new**(신규), **resolved**(해결), **unchanged**(변동 없음) 발견을 보고합니다. PR 리뷰에서 "이 변경이 새로운 PII 를 도입했는가?" 를 확인할 때 유용합니다.
+
+```
+usage: nufi-egress compare BEFORE AFTER [--json] [--fail-on-new]
+```
+
+| 인자/옵션 | 무엇 | 기본 |
+|---|---|---|
+| `BEFORE` | 이전 스캔 결과 파일(SARIF 또는 NuFi JSON)(필수) | -- |
+| `AFTER` | 이후 스캔 결과 파일(SARIF 또는 NuFi JSON)(필수) | -- |
+| `--json` | 기계용 JSON 출력 | -- |
+| `--fail-on-new` | 신규 발견 시 exit 1(CI 게이트) | off |
+
+```bash
+# 두 스캔 결과 비교
+nufi-egress compare before.sarif after.sarif
+
+# JSON 출력
+nufi-egress compare before.json after.json --json
+
+# CI 게이트: 신규 발견 시 실패
+nufi-egress compare before.sarif after.sarif --fail-on-new
+```
+
+> 종료코드: `--fail-on-new` 사용 시 신규 발견이 있으면 1, 아니면 0.
+
+---
+
+## `test`
+
+NuFi 가 올바르게 설치되고 동작하는지 6개 빠른 체크를 실행합니다. 각 체크는 PASS/FAIL 과 소요 시간을 보고합니다. 모든 체크가 통과하면 exit 0, 하나라도 실패하면 exit 1 입니다.
+
+```
+usage: nufi-egress test [--json]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--json` | 기계용 JSON 출력 | -- |
+
+### 체크 항목
+
+| # | 이름 | 검증 내용 |
+|---|---|---|
+| 1 | `pii_detection` | PII 탐지 엔진이 한국어 인명(KR_PERSON)을 감지하는지 |
+| 2 | `injection_detection` | 프롬프트 인젝션 탐지기가 알려진 패턴을 감지하는지 |
+| 3 | `route_decision` | PII 포함 텍스트가 로컬 모델로 라우팅되는지 |
+| 4 | `guard_block` | EgressGuard 가 강한 PII(주민번호)를 차단하는지 |
+| 5 | `config_parse` | 설정 파일(policy.yaml, routing.yaml)이 정상 파싱되는지 |
+| 6 | `version_match` | VERSION 파일과 SDK 버전이 일치하는지 |
+
+```bash
+nufi-egress test            # 사람읽기 출력
+nufi-egress test --json     # CI/자동화용 JSON
+```
+
+출력 예시:
+
+```
+nufi-egress self-test
+==================================================
+  [PASS] + pii_detection          (12.3ms) entities=['KR_PERSON']
+  [PASS] + injection_detection    (1.2ms) findings=1
+  [PASS] + route_decision         (8.5ms) target=test-local, reason=pii_detected
+  [PASS] + guard_block            (15.1ms) blocked=True
+  [PASS] + config_parse           (0.8ms) parsed: policy.yaml, routing.yaml
+  [PASS] + version_match          (0.1ms) file=0.4.17, sdk=0.4.17
+--------------------------------------------------
+6/6 checks passed in 0.04s
+```
+
+> 종료코드: 모든 체크 PASS 이면 0, 하나라도 FAIL 이면 1.
 
 ---
 
