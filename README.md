@@ -150,6 +150,7 @@ API 전체 목록·안정성 계층은 [`docs/SDK.md`](docs/SDK.md), 데모는 `
 | **명령어 전체 레퍼런스** (`nufi-egress` 모든 서브커맨드) | [`docs/CLI.md`](docs/CLI.md) |
 | **데모 전체 목록** (이름·목적·시나리오 수·실행법 카탈로그) | [`docs/DEMO.md`](docs/DEMO.md) |
 | **PII 기반 하이브리드 LLM 라우팅** (PII 포함 요청 → 로컬 모델 강제, PII 없는 요청 → 클라우드 허용 — 유출 경로 원천 차단) | [`docs/PII_ROUTING.md`](docs/PII_ROUTING.md) |
+| **프롬프트 인젝션 탐지** (한국어·영어 인젝션/탈옥 패턴 18종 탐지·차단 — PII 라우팅 이전에 실행) | [`docs/PROMPT_INJECTION.md`](docs/PROMPT_INJECTION.md) |
 | **컴플라이언스 매핑 리포트** (한국 규제팩 — 금융 AI 안내서·망분리·개인정보보호법·신용정보법·ISMS-P 대비 통제 커버리지 48개 통제, 증빙 자동판정) | [`docs/REPORTING.md`](docs/REPORTING.md) · [`docs/MANUAL.md`](docs/MANUAL.md) |
 | **내부 구조·다이어그램** 보기 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
 | **온프렘/에어갭 설치** | [`deploy/README.md`](deploy/README.md) · [`deploy/airgap/INSTALL.md`](deploy/airgap/INSTALL.md) |
