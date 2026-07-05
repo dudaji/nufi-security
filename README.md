@@ -309,9 +309,11 @@ curl -s localhost:8000/detect -H "Content-Type: application/json" \
   라이브러리 + PyYAML 만 써서 외부 네트워크 의존이 0. 무거운 백엔드(transformers/ONNX,
   presidio, detect-secrets)는 설치되어 있으면 자동으로 켜집니다.
 
-> CLI(`nufi-egress`)는 **37개 서브커맨드**(version, scan, mask, redact, explain, pipeline,
-> route, inspect, watch, init, doctor, serve 등)를 제공하며, 자동화 테스트 **573건**이 전 기능을
-> 커버합니다.
+> CLI(`nufi-egress`)는 **37개+ 서브커맨드**(version, scan, mask, redact, explain, pipeline,
+> route, inspect, watch, init, doctor, serve, dashboard, report 등)를 제공하며,
+> 자동화 테스트 **590건+** 이 전 기능을 커버합니다. Python SDK 는 **20개+ 공개 함수**를 제공합니다.
+>
+> **v0.4.18** — 프롬프트 인젝션 가드레일, 파일 스캔, REST API, CLI 확장을 포함하는 안정 릴리스입니다.
 
 ---
 
