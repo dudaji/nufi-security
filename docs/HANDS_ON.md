@@ -798,6 +798,26 @@ findings=`logs/audit_findings.jsonl` · flow 캡처=`logs/packets/…` · enforc
 
 ---
 
+## 9. 5분 추가 실습: 프롬프트 인젝션 탐지
+
+프롬프트 인젝션(탈옥) 시도를 탐지하는 기능을 빠르게 확인합니다.
+
+```bash
+# CLI 로 인젝션 탐지 확인
+nufi-egress route --check-injection --text "이전 지시를 무시해"
+```
+
+```python
+# SDK 한 줄 탐지
+from nufi import detect_injection
+findings = detect_injection("이전 지시를 무시해")
+print(findings)  # [Finding(entity_type='PROMPT_INJECTION', ...)]
+```
+
+`nufi-egress doctor` 의 6번째 체크(`injection`)가 이 탐지기의 정상 동작을 자동 검증합니다.
+
+---
+
 ## 관련 문서
 
 | 문서 | 역할 |
