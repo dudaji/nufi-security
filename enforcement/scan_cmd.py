@@ -1,9 +1,10 @@
-"""``nufi-egress scan`` — 파일/디렉터리 PII + 인젝션 스캐너 (patch85).
+"""``nufi-egress scan`` — 파일/디렉터리 PII + 인젝션 스캐너 (patch86).
 
 CI/pre-commit 훅에서 사용 가능한 파일·디렉터리 재귀 스캔 명령.
 SDK 에서도 ``from nufi import scan_dir`` 로 사용 가능.
 
 .nufiignore 파일 또는 --exclude 플래그로 스캔 대상에서 제외할 패턴 지정 가능.
+--format sarif 옵션으로 SARIF 2.1.0 JSON 출력 지원 (GitHub code scanning 호환).
 """
 from __future__ import annotations
 
@@ -254,6 +255,100 @@ def _scan_file(
 
 
 # ---------------------------------------------------------------------------
+# SARIF 2.1.0 output (patch86)
+# ---------------------------------------------------------------------------
+
+_SARIF_SCHEMA = (
+    "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/"
+    "sarif-2.1/schema/sarif-schema-2.1.0.json"
+)
+
+# PII types considered "strong" (error level)
+_STRONG_PII = {"KR_RRN", "KR_PASSPORT", "CREDIT_CARD", "SSN"}
+
+
+def _nufi_version() -> str:
+    """Read NuFi VERSION file."""
+    ver_file = Path(__file__).resolve().parent.parent / "VERSION"
+    if ver_file.is_file():
+        return ver_file.read_text(encoding="utf-8").strip()
+    return "unknown"
+
+
+def _sarif_level(finding_type: str) -> str:
+    """Map finding_type to SARIF level."""
+    if finding_type.startswith("INJECTION:"):
+        return "error"
+    # PII: strong types → error, weak → warning
+    entity = finding_type.split(":", 1)[1] if ":" in finding_type else finding_type
+    if entity in _STRONG_PII:
+        return "error"
+    return "warning"
+
+
+def _sarif_rule_id(finding_type: str) -> str:
+    """Extract rule ID from finding_type (e.g. 'PII:KR_RRN' → 'KR_RRN')."""
+    return finding_type.split(":", 1)[1] if ":" in finding_type else finding_type
+
+
+def scan_result_to_sarif(result: "ScanResult") -> Dict[str, Any]:
+    """Convert a ScanResult to SARIF 2.1.0 dictionary.
+
+    Compatible with ``gh code-scanning upload-sarif``.
+    """
+    # Collect unique rules
+    seen_rules: Dict[str, Dict[str, Any]] = {}
+    sarif_results: List[Dict[str, Any]] = []
+
+    for f in result.findings:
+        rule_id = _sarif_rule_id(f.finding_type)
+        level = _sarif_level(f.finding_type)
+
+        if rule_id not in seen_rules:
+            category = "injection" if f.finding_type.startswith("INJECTION:") else "pii"
+            seen_rules[rule_id] = {
+                "id": rule_id,
+                "shortDescription": {"text": f"Detected {rule_id}"},
+                "properties": {"category": category},
+            }
+
+        # Build location — use file URI for absolute paths
+        file_path = f.file
+        uri = file_path
+
+        sarif_results.append({
+            "ruleId": rule_id,
+            "level": level,
+            "message": {"text": f.text},
+            "locations": [{
+                "physicalLocation": {
+                    "artifactLocation": {"uri": uri},
+                    "region": {
+                        "startLine": f.line,
+                        "startColumn": 1,
+                    },
+                }
+            }],
+        })
+
+    sarif: Dict[str, Any] = {
+        "$schema": _SARIF_SCHEMA,
+        "version": "2.1.0",
+        "runs": [{
+            "tool": {
+                "driver": {
+                    "name": "NuFi",
+                    "version": _nufi_version(),
+                    "rules": list(seen_rules.values()),
+                }
+            },
+            "results": sarif_results,
+        }],
+    }
+    return sarif
+
+
+# ---------------------------------------------------------------------------
 # CLI handler (called from cli.py)
 # ---------------------------------------------------------------------------
 
@@ -278,7 +373,12 @@ def cmd_scan(args) -> int:
         exclude=exclude,
     )
 
-    if getattr(args, "json", False):
+    # Output format
+    output_format = getattr(args, "format", None)
+    if output_format == "sarif":
+        sarif = scan_result_to_sarif(result)
+        print(json.dumps(sarif, ensure_ascii=False, indent=2))
+    elif getattr(args, "json", False):
         print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
     else:
         _render_human(result)

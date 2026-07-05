@@ -955,6 +955,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--check-injection", action="store_true",
                    help="프롬프트 인젝션 패턴도 함께 탐지")
     p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    p.add_argument("--format", default=None, choices=["sarif"],
+                   help="출력 포맷 (sarif: SARIF 2.1.0 JSON, GitHub code scanning 호환)")
     p.add_argument("--exclude", default=None,
                    help="제외할 glob 패턴(쉼표 구분, 예: '*.log,node_modules/**,venv/**')")
     p.add_argument("--fail-on-pii", action="store_true",

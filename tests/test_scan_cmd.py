@@ -1,4 +1,4 @@
-"""tests/test_scan_cmd.py — nufi-egress scan 커맨드 테스트 (patch85).
+"""tests/test_scan_cmd.py — nufi-egress scan 커맨드 테스트 (patch86).
 
 시나리오:
 1. 단일 파일 스캔 → PII 발견
@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from enforcement.scan_cmd import scan_path, load_nufiignore
+from enforcement.scan_cmd import scan_path, load_nufiignore, scan_result_to_sarif
 
 
 # ---------------------------------------------------------------------------
@@ -178,3 +178,67 @@ def test_default_scan_without_nufiignore(tmp_path: Path):
     result = scan_path(tmp_path, exclude=None)
     assert result.files_scanned == 2
     assert result.has_pii
+
+
+# ---------------------------------------------------------------------------
+# SARIF output tests (patch86)
+# ---------------------------------------------------------------------------
+
+def test_sarif_output_valid_json_with_schema(pii_file: Path):
+    """SARIF 출력이 올바른 JSON 이며 schema/version 필드가 정확하다."""
+    result = scan_path(pii_file)
+    sarif = scan_result_to_sarif(result)
+
+    # Valid structure
+    assert sarif["version"] == "2.1.0"
+    assert "$schema" in sarif
+    assert "sarif-schema-2.1.0" in sarif["$schema"]
+
+    # runs array
+    assert len(sarif["runs"]) == 1
+    run = sarif["runs"][0]
+    assert run["tool"]["driver"]["name"] == "NuFi"
+    assert run["tool"]["driver"]["version"] == "0.4.17"
+    assert isinstance(run["tool"]["driver"]["rules"], list)
+    assert len(run["tool"]["driver"]["rules"]) >= 1
+
+    # Ensure it serializes to valid JSON
+    serialized = json.dumps(sarif, ensure_ascii=False, indent=2)
+    parsed = json.loads(serialized)
+    assert parsed["version"] == "2.1.0"
+
+
+def test_sarif_results_contain_expected_fields(tmp_path: Path):
+    """SARIF results 에 ruleId, level, message, locations 필드가 포함된다."""
+    # File with PII content (same format as pii_file fixture)
+    f = tmp_path / "mixed.txt"
+    f.write_text(
+        "홍길동 주민번호 900101-1234567\n"
+        "이메일: test@example.com\n",
+        encoding="utf-8",
+    )
+    result = scan_path(f, check_injection=True)
+    sarif = scan_result_to_sarif(result)
+
+    run = sarif["runs"][0]
+    results = run["results"]
+    assert len(results) >= 1
+
+    for r in results:
+        # Required SARIF result fields
+        assert "ruleId" in r
+        assert "level" in r
+        assert r["level"] in ("error", "warning", "note")
+        assert "message" in r
+        assert "text" in r["message"]
+        assert "locations" in r
+        assert len(r["locations"]) >= 1
+        loc = r["locations"][0]
+        assert "physicalLocation" in loc
+        phys = loc["physicalLocation"]
+        assert "artifactLocation" in phys
+        assert "uri" in phys["artifactLocation"]
+        assert "region" in phys
+        assert "startLine" in phys["region"]
+        assert phys["region"]["startLine"] >= 1
+        assert "startColumn" in phys["region"]
