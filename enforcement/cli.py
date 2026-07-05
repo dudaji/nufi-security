@@ -424,6 +424,18 @@ def cmd_flow_tap(args) -> int:
 
 
 
+def cmd_diff(args) -> int:
+    """git diff 변경 파일만 PII/인젝션 스캔 (patch104)."""
+    from enforcement.diff_cmd import cmd_diff as _diff
+    return _diff(args)
+
+
+def cmd_config(args) -> int:
+    """설정 파일 검증 (patch105)."""
+    from enforcement.config_cmd import cmd_config as _config
+    return _config(args)
+
+
 def cmd_scan(args) -> int:
     """파일/디렉터리 PII + 인젝션 스캔 (patch83)."""
     from enforcement.scan_cmd import cmd_scan as _scan
@@ -1005,6 +1017,26 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--parallel", type=int, default=1, metavar="N",
                    help="멀티스레드 스캔 워커 수(기본 1 = 순차)")
     p.set_defaults(func=cmd_scan)
+
+    p = sub.add_parser("diff",
+                       help="git 변경 파일만 PII/인젝션 스캔(PR 리뷰·pre-commit · patch104)")
+    p.add_argument("--base", default="HEAD",
+                   help="비교 기준 git ref(기본 HEAD = 미커밋 변경)")
+    p.add_argument("--fail-on-pii", action="store_true",
+                   help="PII 발견 시 exit code 1 (CI 게이트)")
+    p.add_argument("--check-injection", action="store_true",
+                   help="프롬프트 인젝션 패턴도 함께 탐지")
+    p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    p.set_defaults(func=cmd_diff)
+
+    p = sub.add_parser("config",
+                       help="설정 파일 검증(syntax·필수 필드·regex · patch105)")
+    csub = p.add_subparsers(dest="config_action", required=True)
+    cp = csub.add_parser("validate", help="모든 NuFi 설정 파일 유효성 검증")
+    cp.add_argument("--config-dir", default=None,
+                    help="설정 디렉터리 경로(기본 config/)")
+    cp.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    cp.set_defaults(func=cmd_config)
 
     p = sub.add_parser("watch",
                        help="디렉터리 PII 실시간 감시(폴링 · patch92)")
