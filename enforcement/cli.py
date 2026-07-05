@@ -15,7 +15,7 @@
   targets   capture_targets.yaml 파생/조회 + BPF 필터 출력(CMP-87 캡처 레이어 · CMP-143).
   flow-tap  public 목적지 flow tap(우회 탐지) — --simulate 리플레이/--live 캡처(CMP-143).
   policy    정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사(CMP-144 B1).
-  report    규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음 · CMP-150 C1). trends(patch149), diff(patch153) 포함.
+  report    규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음 · CMP-150 C1). trends(patch149), diff(patch153), coverage-map(patch166) 포함.
   benchmark 정확도(커밋 산출물 게이트) + 가명화 품질(라이브) 벤치마크 단일 재현(CMP-201 I5).
   inspect   통합 보안 분석 — PII + 인젝션 + 라우팅 + 위험도 한 번에 출력(patch78).
   pipeline  체인 파이프라인 — detect→decide→transform→route 한 번에(patch139).
@@ -837,7 +837,11 @@ def cmd_report(args) -> int:
         from enforcement.badge_cmd import cmd_report_badge
         return cmd_report_badge(args)
 
-    print("usage: nufi-egress report {compliance|security|trends|diff|executive|badge} …", file=sys.stderr)
+    if args.report_kind == "coverage-map":
+        from enforcement.coverage_map import cmd_report_coverage_map
+        return cmd_report_coverage_map(args)
+
+    print("usage: nufi-egress report {compliance|security|trends|diff|executive|badge|coverage-map} …", file=sys.stderr)
     return 2
 
 
@@ -1184,6 +1188,20 @@ def main(argv: Optional[List[str]] = None) -> int:
                     help="배지 종류(기본 grade)")
     rp.add_argument("--output", default=None, metavar="PATH",
                     help="SVG 파일 출력 경로(생략 시 stdout)")
+    rp.set_defaults(func=cmd_report)
+
+    rp = rsub.add_parser("coverage-map",
+                         help="PII 엔티티 커버리지 맵 — 파일별 PII 유형 노출 현황 (patch166)")
+    rp.add_argument("directory", nargs="?", default=".",
+                    help="스캔할 디렉터리 경로(기본 현재 디렉터리)")
+    rp.add_argument("--pattern", default=None,
+                    help="파일 glob 패턴(쉼표 구분, 예: '*.py,*.md')")
+    rp.add_argument("--exclude", default=None,
+                    help="제외할 glob 패턴(쉼표 구분)")
+    rp.add_argument("--format", choices=["text", "json", "csv"], default="text",
+                    help="출력 형식(기본 text)")
+    rp.add_argument("--output", default=None, metavar="PATH",
+                    help="출력 파일 경로(생략 시 stdout)")
     rp.set_defaults(func=cmd_report)
 
     p = sub.add_parser("scan",

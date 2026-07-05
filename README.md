@@ -67,6 +67,9 @@ nufi-egress init --install-hook
 
 # 게이트웨이 띄우기 (OpenAI 호환 /v1/chat/completions)
 PORT=4000 ./scripts/run_gateway.sh
+
+# 또는 REST API 서버로 마이크로서비스 연동
+nufi-egress serve --port 8000
 ```
 
 요청을 보내 봅니다.
@@ -306,8 +309,8 @@ curl -s localhost:8000/detect -H "Content-Type: application/json" \
   라이브러리 + PyYAML 만 써서 외부 네트워크 의존이 0. 무거운 백엔드(transformers/ONNX,
   presidio, detect-secrets)는 설치되어 있으면 자동으로 켜집니다.
 
-> CLI(`nufi-egress`)는 **34개 서브커맨드**(version, scan, mask, redact, explain, pipeline,
-> route, inspect, watch, init, doctor 등)를 제공하며, 자동화 테스트 **550건**이 전 기능을
+> CLI(`nufi-egress`)는 **37개 서브커맨드**(version, scan, mask, redact, explain, pipeline,
+> route, inspect, watch, init, doctor, serve 등)를 제공하며, 자동화 테스트 **573건**이 전 기능을
 > 커버합니다.
 
 ---
