@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -126,6 +127,56 @@ def _read_version() -> str:
     return vf.read_text().strip() if vf.exists() else "unknown"
 
 
+_TEST_CONSOLE_HTML = """\
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>NuFi API Test Console</title>
+<style>
+body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+h1 { color: #1a1a2e; }
+textarea { width: 100%; height: 120px; font-size: 1rem; padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+.btn-row { margin: 1rem 0; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+button { padding: 0.5rem 1rem; font-size: 0.9rem; border: none; border-radius: 4px; background: #4361ee; color: #fff; cursor: pointer; }
+button:hover { background: #3a56d4; }
+#result { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 1rem; white-space: pre-wrap; font-family: monospace; font-size: 0.85rem; min-height: 100px; }
+</style>
+</head>
+<body>
+<h1>NuFi API Test Console</h1>
+<textarea id="input" placeholder="Enter text to analyze..."></textarea>
+<div class="btn-row">
+  <button onclick="callApi('/detect')">Detect</button>
+  <button onclick="callApi('/route')">Route</button>
+  <button onclick="callApi('/mask')">Mask</button>
+  <button onclick="callApi('/redact')">Redact</button>
+  <button onclick="callApi('/injection')">Injection Check</button>
+</div>
+<div id="result">Results will appear here...</div>
+<script>
+async function callApi(endpoint) {
+  const text = document.getElementById('input').value;
+  const res = document.getElementById('result');
+  res.textContent = 'Loading...';
+  try {
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text: text})
+    });
+    const data = await resp.json();
+    res.textContent = JSON.stringify(data, null, 2);
+  } catch (e) {
+    res.textContent = 'Error: ' + e.message;
+  }
+}
+</script>
+</body>
+</html>
+"""
+
+
 def create_app() -> FastAPI:
     """Create and return the FastAPI application."""
     app = FastAPI(
@@ -133,6 +184,10 @@ def create_app() -> FastAPI:
         version=_read_version(),
         description="NuFi Egress Security API — PII detection, routing, masking",
     )
+
+    @app.get("/", response_class=HTMLResponse)
+    def root():
+        return HTMLResponse(content=_TEST_CONSOLE_HTML)
 
     @app.get("/health", response_model=HealthResponse)
     def health():

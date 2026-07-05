@@ -90,3 +90,11 @@ def test_injection_clean_text():
     assert data["injection_detected"] is False
     assert len(data["findings"]) == 0
     assert data["severity"] == "none"
+
+
+def test_root_returns_html_test_console():
+    """GET / returns HTML page with expected title."""
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert "text/html" in resp.headers["content-type"]
+    assert "<title>NuFi API Test Console</title>" in resp.text

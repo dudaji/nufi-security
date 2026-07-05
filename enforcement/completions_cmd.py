@@ -29,6 +29,15 @@ SUBCOMMANDS: dict[str, list[str]] = {
     "benchmark": ["--only", "--json", "--json-out"],
     "stats":       ["--json"],
     "completions": ["bash", "zsh"],
+    "serve":     ["--host", "--port", "--openapi"],
+    "compare":   ["--json", "--format"],
+    "pipeline":  ["--config", "--json", "--dry-run"],
+    "playground": [],
+    "lint":      ["--fix", "--json", "--config"],
+    "generate":  ["--template", "--output", "--force"],
+    "history":   ["--json", "--limit"],
+    "summary":   ["--json", "--format"],
+    "test":      ["--pattern", "--json", "--verbose"],
 }
 
 SUBCOMMAND_NAMES = sorted(SUBCOMMANDS.keys())
