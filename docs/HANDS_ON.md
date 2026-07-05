@@ -818,6 +818,38 @@ print(findings)  # [Finding(entity_type='PROMPT_INJECTION', ...)]
 
 ---
 
+## 10. 파일 스캔 & CI 연동
+
+디렉터리 전체를 PII/인젝션 스캔하고, CI 파이프라인에 연동하는 워크플로를 실습합니다.
+
+### 10.1 기본 스캔
+
+```bash
+nufi-egress scan ./src --stats                    # 디렉터리 스캔 + 요약 통계
+nufi-egress scan ./src --check-injection --json    # 인젝션 포함, JSON 출력
+nufi-egress scan ./src --fail-on-pii               # PII 발견 시 exit 1 (CI 게이트)
+```
+
+### 10.2 SARIF 출력 (GitHub/GitLab 코드 스캔 연동)
+
+```bash
+nufi-egress scan ./src --format sarif --output results.sarif
+# → GitHub Actions 의 upload-sarif 로 PR 코멘트에 PII 위치 표시
+```
+
+### 10.3 pre-commit hook 설치
+
+```bash
+nufi-egress init --install-hook      # .git/hooks/pre-commit 에 PII 스캔 훅 설치
+git add sensitive_file.py && git commit -m "test"
+# → PII 발견 시 커밋 차단 (exit 1)
+```
+
+> **체크포인트:** `scan --fail-on-pii` 가 PII 포함 파일에서 exit 1 을 반환하면 성공.
+> SARIF 포맷은 GitHub Advanced Security, GitLab SAST, VS Code SARIF Viewer 와 호환됩니다.
+
+---
+
 ## 관련 문서
 
 | 문서 | 역할 |
