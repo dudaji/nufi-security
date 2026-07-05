@@ -427,11 +427,12 @@ def cmd_route(args) -> int:
         cloud_model=getattr(args, "cloud_model", "nufi-cloud"),
     )
 
-    # Prompt injection detector (patch61)
+    # Prompt injection detector (patch61, patch69-severity)
     injection_detector = None
     if getattr(args, "check_injection", False):
         from egress_audit.detectors.prompt_injection import PromptInjectionDetector
-        injection_detector = PromptInjectionDetector()
+        min_sev = getattr(args, "min_severity", "low")
+        injection_detector = PromptInjectionDetector(min_severity=min_sev)
 
     # --file: 파일 라인별 처리
     file_path = getattr(args, "file", None)
@@ -809,6 +810,9 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="PII 미감지 시 허용할 클라우드 모델명(기본 nufi-cloud)")
     p.add_argument("--check-injection", action="store_true",
                    help="프롬프트 인젝션 탐지도 함께 수행")
+    p.add_argument("--min-severity", default="low",
+                   choices=["low", "medium", "high", "critical"],
+                   help="인젝션 탐지 최소 심각도(기본: low)")
     p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
     p.set_defaults(func=cmd_route)
 
