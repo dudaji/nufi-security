@@ -315,6 +315,24 @@ nufi-egress coverage --simulate samples/flow_replay.jsonl
 
 > 각 서브커맨드의 인자·종료코드·출력 예시는 [`CLI.md`](CLI.md) 에서 해당 절을 보세요.
 
+### v0.4.17 신규 CLI 커맨드 빠른 참조
+
+v0.4.17 에서 추가된 CLI 커맨드를 아래 표로 정리합니다. 각 커맨드의 전체 옵션·예시는
+[`CLI.md`](CLI.md) 가 권위입니다.
+
+| 커맨드 | 설명 | 카테고리 |
+|---|---|---|
+| `scan <target>` | 파일/디렉터리 PII + 인젝션 스캔 (CI/pre-commit) | 탐지 |
+| `route --text <text>` | PII 라우팅 결정 테스트 (로컬/클라우드 판정) | 탐지 |
+| `inspect --text <text>` | 통합 보안 분석 (PII + 인젝션 + 라우팅 + 위험도) | 탐지 |
+| `diff [--base REF]` | git 변경 파일만 PII/인젝션 스캔 | 탐지 |
+| `watch <directory>` | 디렉터리 PII 실시간 감시 (폴링) | 운영 |
+| `init [preset]` | 프로젝트 초기화 또는 프리셋 구체화 | 운영 |
+| `config validate` | 설정 파일 유효성 검증 (syntax/필수필드/regex) | 운영 |
+| `version` | 버전 및 백엔드 정보 출력 | 운영 |
+| `completions {bash\|zsh}` | 셸 자동완성 스크립트 출력 | 운영 |
+| `stats` | NuFi 설정·탐지 역량 요약 통계 | 운영 |
+
 ---
 
 ## §5 운영
