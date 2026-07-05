@@ -1,10 +1,13 @@
-"""tests/test_scan_cmd.py — nufi-egress scan 커맨드 테스트 (patch83).
+"""tests/test_scan_cmd.py — nufi-egress scan 커맨드 테스트 (patch85).
 
-4가지 시나리오:
+시나리오:
 1. 단일 파일 스캔 → PII 발견
 2. 디렉터리 재귀 스캔 → 여러 파일에서 PII 발견
 3. --fail-on-pii → exit code 1
 4. 클린 디렉터리 → exit code 0
+5. .nufiignore 패턴 준수
+6. --exclude 플래그 동작
+7. .nufiignore 없을 때 기본 동작
 """
 from __future__ import annotations
 
@@ -14,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from enforcement.scan_cmd import scan_path
+from enforcement.scan_cmd import scan_path, load_nufiignore
 
 
 # ---------------------------------------------------------------------------
@@ -84,6 +87,7 @@ def test_fail_on_pii_returns_exit_code_1(pii_file: Path):
         check_injection=False,
         json=True,
         fail_on_pii=True,
+        exclude=None,
     )
     rc = cmd_scan(args)
     assert rc == 1
@@ -100,6 +104,77 @@ def test_clean_directory_returns_exit_code_0(clean_dir: Path):
         check_injection=False,
         json=True,
         fail_on_pii=True,
+        exclude=None,
     )
     rc = cmd_scan(args)
     assert rc == 0
+
+
+# ---------------------------------------------------------------------------
+# .nufiignore / --exclude tests (patch85)
+# ---------------------------------------------------------------------------
+
+def test_nufiignore_patterns_respected(tmp_path: Path):
+    """.nufiignore 에 명시된 패턴과 매칭되는 파일은 스캔에서 제외된다."""
+    # Create a .nufiignore in the scan root
+    (tmp_path / ".nufiignore").write_text(
+        "# comments are ignored\n"
+        "secret/**\n"
+        "*.log\n",
+        encoding="utf-8",
+    )
+    # Create files that should be excluded
+    secret_dir = tmp_path / "secret"
+    secret_dir.mkdir()
+    (secret_dir / "pii.txt").write_text(
+        "주민번호 900101-1234567\n", encoding="utf-8"
+    )
+    (tmp_path / "app.log").write_text(
+        "이메일: test@example.com\n", encoding="utf-8"
+    )
+    # Create a file that should be scanned
+    (tmp_path / "main.txt").write_text("Hello world\n", encoding="utf-8")
+
+    # exclude=None triggers .nufiignore loading
+    result = scan_path(tmp_path, exclude=None)
+    # main.txt + .nufiignore scanned (secret/pii.txt and app.log excluded)
+    assert result.files_scanned == 2  # main.txt + .nufiignore itself
+    assert not result.has_pii
+
+
+def test_exclude_flag_works(tmp_path: Path):
+    """--exclude 플래그로 전달된 패턴이 스캔에서 제외된다."""
+    # No .nufiignore — use explicit exclude list
+    sub = tmp_path / "logs"
+    sub.mkdir()
+    (sub / "audit.txt").write_text(
+        "주민번호 900101-1234567\n", encoding="utf-8"
+    )
+    (tmp_path / "data.txt").write_text(
+        "이메일: test@example.com\n", encoding="utf-8"
+    )
+
+    # Exclude logs/** via explicit parameter
+    result = scan_path(tmp_path, exclude=["logs/**"])
+    # Only data.txt scanned
+    assert result.files_scanned == 1
+    scanned_files = {f.file for f in result.findings}
+    assert all("logs" not in f for f in scanned_files)
+
+
+def test_default_scan_without_nufiignore(tmp_path: Path):
+    """.nufiignore 가 없으면 모든 파일이 스캔된다."""
+    # No .nufiignore in tmp_path
+    (tmp_path / "a.txt").write_text(
+        "주민번호 900101-1234567\n", encoding="utf-8"
+    )
+    sub = tmp_path / "sub"
+    sub.mkdir()
+    (sub / "b.txt").write_text(
+        "이메일: test@example.com\n", encoding="utf-8"
+    )
+
+    # exclude=None but no .nufiignore → scan all
+    result = scan_path(tmp_path, exclude=None)
+    assert result.files_scanned == 2
+    assert result.has_pii

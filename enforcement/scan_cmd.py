@@ -1,10 +1,13 @@
-"""``nufi-egress scan`` — 파일/디렉터리 PII + 인젝션 스캐너 (patch83).
+"""``nufi-egress scan`` — 파일/디렉터리 PII + 인젝션 스캐너 (patch85).
 
 CI/pre-commit 훅에서 사용 가능한 파일·디렉터리 재귀 스캔 명령.
 SDK 에서도 ``from nufi import scan_dir`` 로 사용 가능.
+
+.nufiignore 파일 또는 --exclude 플래그로 스캔 대상에서 제외할 패턴 지정 가능.
 """
 from __future__ import annotations
 
+import fnmatch
 import json
 import os
 from dataclasses import dataclass, field
@@ -14,6 +17,48 @@ from typing import Any, Dict, List, Optional, Sequence
 
 from egress_audit.pipeline import DetectionPipeline, Finding
 from egress_audit.detectors.prompt_injection import PromptInjectionDetector
+
+
+# ---------------------------------------------------------------------------
+# .nufiignore support
+# ---------------------------------------------------------------------------
+
+def load_nufiignore(root: Path) -> List[str]:
+    """Load exclusion patterns from .nufiignore in the given directory.
+
+    Returns an empty list if the file does not exist.
+    """
+    ignore_file = root / ".nufiignore"
+    if not ignore_file.is_file():
+        return []
+    patterns: List[str] = []
+    for line in ignore_file.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        patterns.append(stripped)
+    return patterns
+
+
+def _is_excluded(path: Path, root: Path, exclude_patterns: List[str]) -> bool:
+    """Check if a path should be excluded based on glob patterns.
+
+    Patterns are matched against the path relative to the scan root.
+    """
+    if not exclude_patterns:
+        return False
+    try:
+        rel = path.relative_to(root)
+    except ValueError:
+        rel = path
+    rel_str = str(rel)
+    for pat in exclude_patterns:
+        if fnmatch.fnmatch(rel_str, pat):
+            return True
+        # Also match against just the filename for simple patterns like *.pyc
+        if fnmatch.fnmatch(path.name, pat):
+            return True
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -102,6 +147,7 @@ def scan_path(
     *,
     patterns: Optional[List[str]] = None,
     check_injection: bool = False,
+    exclude: Optional[List[str]] = None,
 ) -> ScanResult:
     """Scan a file or directory for PII (and optionally injection patterns).
 
@@ -109,6 +155,8 @@ def scan_path(
         target: Path to a file or directory.
         patterns: Glob patterns to filter files (e.g. ["*.py", "*.md"]).
         check_injection: Whether to also detect prompt injection patterns.
+        exclude: Glob patterns to exclude files/directories from scanning.
+            If None, will attempt to load .nufiignore from the target dir.
 
     Returns:
         ScanResult with all findings.
@@ -119,12 +167,24 @@ def scan_path(
     pipeline = DetectionPipeline()
     injection_detector = PromptInjectionDetector() if check_injection else None
 
+    # Determine scan root for .nufiignore and relative path computation
+    scan_root = target if target.is_dir() else target.parent
+
+    # Build exclusion patterns: explicit exclude > .nufiignore > empty
+    if exclude is None:
+        exclude_patterns = load_nufiignore(scan_root)
+    else:
+        exclude_patterns = list(exclude)
+
     if target.is_file():
-        _scan_file(target, pipeline, injection_detector, result, patterns)
+        if not _is_excluded(target, scan_root, exclude_patterns):
+            _scan_file(target, pipeline, injection_detector, result, patterns)
     elif target.is_dir():
         for root, _dirs, files in os.walk(target):
             for fname in sorted(files):
                 fpath = Path(root) / fname
+                if _is_excluded(fpath, scan_root, exclude_patterns):
+                    continue
                 _scan_file(fpath, pipeline, injection_detector, result, patterns)
     else:
         result.errors.append({"path": str(target), "error": "Path does not exist"})
@@ -206,10 +266,16 @@ def cmd_scan(args) -> int:
     if getattr(args, "pattern", None):
         patterns = [p.strip() for p in args.pattern.split(",") if p.strip()]
 
+    # Parse exclude patterns
+    exclude: Optional[List[str]] = None
+    if getattr(args, "exclude", None):
+        exclude = [p.strip() for p in args.exclude.split(",") if p.strip()]
+
     result = scan_path(
         target,
         patterns=patterns,
         check_injection=getattr(args, "check_injection", False),
+        exclude=exclude,
     )
 
     if getattr(args, "json", False):
