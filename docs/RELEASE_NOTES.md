@@ -6,6 +6,29 @@
 
 ---
 
+## v0.4.17 (patch123) — **export patterns + audit verify + SDK explain + summary-only**
+
+> 패턴 내보내기 · 감사 해시체인 검증 · SDK explain 노출 · 스캔 요약 전용 모드 · CLI 문서 갱신. (2026-07-05)
+
+### 이번 릴리스에 포함된 것 (patch118~122)
+
+| 계층 | 기능 |
+|---|---|
+| **패턴 내보내기** | `export patterns [--format yaml\|json\|regex]` — PII + 인젝션 탐지 패턴 표준 형식 내보내기. 팀 공유·백업·grep 연동 (patch122) |
+| **CLI 문서** | CLI.md 에 explain·stats·audit verify 레퍼런스 추가 (patch121) |
+| **감사 검증** | `audit verify` — JSONL 감사 로그 해시체인 무결성 검증. 변조 시 위치 보고 (patch120) |
+| **스캔 요약** | `scan --summary-only` — CI 빠른 체크용 한줄 요약 + explain 자동완성 등록 (patch119) |
+| **SDK explain** | `from nufi import explain` — 텍스트 탐지 이유 상세 분석 SDK 노출 (patch118) |
+
+### 누구에게 유용한가
+
+- **팀 공유/외부 연동** — `export patterns --format regex` 로 패턴을 ripgrep/grep 에 직접 전달. YAML/JSON 으로 백업·버전관리.
+- **감사/컴플라이언스** — `audit verify` 로 감사 로그 변조 여부를 즉시 확인(CI 게이트 가능).
+- **CI/자동화** — `scan --summary-only` 로 파일별 상세 없이 합격/불합격만 빠르게 확인.
+- **SDK 개발** — `explain()` 편의 함수로 탐지 근거를 프로그래밍 방식으로 접근.
+
+---
+
 ## v0.4.17 (patch117) — **explain 디버깅 명령 + stats + MANUAL + CLI smoke tests + HANDS_ON**
 
 > explain 탐지 근거 설명 · stats 개요 · 매뉴얼 빠른 참조 · CLI 스모크 15건 · 실습 가이드. (2026-07-05)

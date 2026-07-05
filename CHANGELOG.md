@@ -4,6 +4,37 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch118-123)
+
+> **v0.4.17-patch118~123 — SDK explain + summary-only + audit verify + CLI docs + export patterns + CHANGELOG sweep**
+> SDK explain 노출, 스캔 요약 전용 모드, 감사 로그 해시체인 검증, CLI 레퍼런스 갱신, 패턴 내보내기.
+
+### Added (patch122)
+- **enforcement/export_cmd.py** — `nufi-egress export patterns [--format yaml|json|regex]`: PII + 인젝션 탐지 패턴을 YAML/JSON/regex(라인별) 형식으로 내보내기. 팀 공유·백업·외부 도구(grep/ripgrep) 연동 용도.
+- **enforcement/cli.py** — `export` 서브커맨드 + `patterns` 하위 커맨드 + 도움말 카테고리(운영) 추가.
+- **tests/test_export_cmd.py** — YAML/JSON/regex 내보내기 + PII·인젝션 포함 검증 테스트 2건.
+
+### Added (patch121)
+- **docs/CLI.md** — `explain`·`stats`·`audit verify` 서브커맨드 레퍼런스 문서 추가.
+
+### Added (patch120)
+- **enforcement/audit_cmd.py** — `nufi-egress audit verify`: JSONL 감사 로그의 해시체인 무결성 검증. 변조 시 위치 보고. exit 0=정상, 1=변조.
+- **enforcement/cli.py** — `audit verify` 액션 추가.
+- **tests/test_audit_cmd.py** — 해시체인 정상·변조 검증 테스트 2건.
+
+### Added (patch119)
+- **enforcement/scan_cmd.py** — `scan --summary-only`: 요약만 출력(파일수·발견·위험도·상태). CI 빠른 체크 용도.
+- **enforcement/completions_cmd.py** — `explain` 서브커맨드 셸 자동완성 등록.
+- **tests/test_scan_cmd.py** — summary-only 출력 테스트 1건.
+
+### Added (patch118)
+- **nufi/__init__.py** — `from nufi import explain`: 텍스트 탐지 이유 상세 분석 SDK 편의 함수 노출.
+- **tests/test_explain_cmd.py** — SDK explain() 호출 테스트 1건.
+
+### Changed (patch123)
+- **CHANGELOG.md** — patch118~122 엔트리 추가.
+- **docs/RELEASE_NOTES.md** — patch118~122 반영.
+
 ## [0.4.17] - 2026-07-05 (patch112-117)
 
 > **v0.4.17-patch112~117 — stats + MANUAL + CLI smoke tests + HANDS_ON + explain + CHANGELOG sweep**
