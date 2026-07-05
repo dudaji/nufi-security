@@ -1,4 +1,4 @@
-"""tests/test_scan_cmd.py — nufi-egress scan 커맨드 테스트 (patch86).
+"""tests/test_scan_cmd.py — nufi-egress scan 커맨드 테스트 (patch86, patch88).
 
 시나리오:
 1. 단일 파일 스캔 → PII 발견
@@ -8,6 +8,9 @@
 5. .nufiignore 패턴 준수
 6. --exclude 플래그 동작
 7. .nufiignore 없을 때 기본 동작
+8. --dry-run 모드: 파일 미수정
+9. --redact 모드: 파일 수정 + 백업 생성
+10. --redact --no-backup: 백업 없이 수정
 """
 from __future__ import annotations
 
@@ -17,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from enforcement.scan_cmd import scan_path, load_nufiignore, scan_result_to_sarif
+from enforcement.scan_cmd import scan_path, load_nufiignore, scan_result_to_sarif, redact_path
 
 
 # ---------------------------------------------------------------------------
@@ -242,3 +245,65 @@ def test_sarif_results_contain_expected_fields(tmp_path: Path):
         assert "startLine" in phys["region"]
         assert phys["region"]["startLine"] >= 1
         assert "startColumn" in phys["region"]
+
+
+# ---------------------------------------------------------------------------
+# Redact mode tests (patch88)
+# ---------------------------------------------------------------------------
+
+def test_dry_run_shows_redactions_without_modifying(tmp_path: Path):
+    """--dry-run 모드: 파일을 수정하지 않고 치환 대상만 보여준다."""
+    f = tmp_path / "personal.txt"
+    original = "김민수님 계좌 110-123-456789\n"
+    f.write_text(original, encoding="utf-8")
+
+    result = redact_path(f, dry_run=True)
+
+    # Should report redactions
+    assert result.total_redactions >= 1
+    assert result.files_modified >= 1
+    # File must NOT be modified
+    assert f.read_text(encoding="utf-8") == original
+    # No backups created
+    assert result.backups_created == []
+
+
+def test_redact_modifies_file_and_creates_backup(tmp_path: Path):
+    """--redact 모드: PII 를 치환하고 .bak 백업을 생성한다."""
+    f = tmp_path / "personal.txt"
+    original = "김민수님 계좌 110-123-456789\n"
+    f.write_text(original, encoding="utf-8")
+
+    result = redact_path(f, dry_run=False, no_backup=False)
+
+    # File should be modified
+    modified = f.read_text(encoding="utf-8")
+    assert modified != original
+    assert "[REDACTED:" in modified
+    # Backup should exist
+    backup = Path(str(f) + ".bak")
+    assert backup.exists()
+    assert backup.read_text(encoding="utf-8") == original
+    # Result stats
+    assert result.files_modified >= 1
+    assert result.total_redactions >= 1
+    assert len(result.backups_created) >= 1
+
+
+def test_redact_no_backup_skips_backup_creation(tmp_path: Path):
+    """--redact --no-backup: 백업 없이 파일을 수정한다."""
+    f = tmp_path / "personal.txt"
+    original = "홍길동 주민번호 900101-1234567\n"
+    f.write_text(original, encoding="utf-8")
+
+    result = redact_path(f, dry_run=False, no_backup=True)
+
+    # File should be modified
+    modified = f.read_text(encoding="utf-8")
+    assert modified != original
+    assert "[REDACTED:" in modified
+    # No backup
+    backup = Path(str(f) + ".bak")
+    assert not backup.exists()
+    assert result.backups_created == []
+    assert result.total_redactions >= 1

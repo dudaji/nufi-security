@@ -5,12 +5,14 @@ SDK 에서도 ``from nufi import scan_dir`` 로 사용 가능.
 
 .nufiignore 파일 또는 --exclude 플래그로 스캔 대상에서 제외할 패턴 지정 가능.
 --format sarif 옵션으로 SARIF 2.1.0 JSON 출력 지원 (GitHub code scanning 호환).
+--redact 모드로 PII 를 자동 치환하여 파일을 재작성 (patch88).
 """
 from __future__ import annotations
 
 import fnmatch
 import json
 import os
+import shutil
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
@@ -255,6 +257,147 @@ def _scan_file(
 
 
 # ---------------------------------------------------------------------------
+# Redact mode (patch88)
+# ---------------------------------------------------------------------------
+
+@dataclass
+class RedactInfo:
+    """Single redaction applied to a file."""
+    file: str
+    line: int
+    entity_type: str
+    original_text: str
+
+
+@dataclass
+class RedactResult:
+    """Result of a redact operation."""
+    files_modified: int = 0
+    total_redactions: int = 0
+    redactions: List[RedactInfo] = field(default_factory=list)
+    backups_created: List[str] = field(default_factory=list)
+
+
+def redact_path(
+    target: str | Path,
+    *,
+    patterns: Optional[List[str]] = None,
+    exclude: Optional[List[str]] = None,
+    dry_run: bool = False,
+    no_backup: bool = False,
+) -> RedactResult:
+    """Scan files for PII and redact findings in-place.
+
+    Only PII findings from DetectionPipeline are redacted (not injection patterns).
+    Redaction is done in reverse order to preserve character positions.
+
+    Args:
+        target: Path to a file or directory.
+        patterns: Glob patterns to filter files.
+        exclude: Glob patterns to exclude.
+        dry_run: If True, report what would be redacted without modifying files.
+        no_backup: If True, skip creating .bak backup files.
+
+    Returns:
+        RedactResult with details of all redactions.
+    """
+    target = Path(target)
+    result = RedactResult()
+    pipeline = DetectionPipeline()
+
+    scan_root = target if target.is_dir() else target.parent
+
+    if exclude is None:
+        exclude_patterns = load_nufiignore(scan_root)
+    else:
+        exclude_patterns = list(exclude)
+
+    files_to_process: List[Path] = []
+    if target.is_file():
+        if not _is_excluded(target, scan_root, exclude_patterns):
+            files_to_process.append(target)
+    elif target.is_dir():
+        for root, _dirs, files in os.walk(target):
+            for fname in sorted(files):
+                fpath = Path(root) / fname
+                if _is_excluded(fpath, scan_root, exclude_patterns):
+                    continue
+                files_to_process.append(fpath)
+
+    for fpath in files_to_process:
+        if not _matches_patterns(fpath, patterns):
+            continue
+        if _is_binary(fpath):
+            continue
+        _redact_file(fpath, pipeline, result, dry_run=dry_run, no_backup=no_backup)
+
+    return result
+
+
+def _redact_file(
+    path: Path,
+    pipeline: DetectionPipeline,
+    result: RedactResult,
+    *,
+    dry_run: bool,
+    no_backup: bool,
+) -> None:
+    """Redact PII in a single file."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError):
+        return
+
+    lines = text.splitlines(keepends=True)
+    file_str = str(path)
+    file_modified = False
+
+    for line_idx in range(len(lines)):
+        line_text = lines[line_idx]
+        # Strip the newline for analysis but keep track of it
+        stripped = line_text.rstrip("\n").rstrip("\r")
+        if not stripped.strip():
+            continue
+
+        findings = pipeline.analyze(stripped)
+        # Only PII findings (ignore injection, confidential etc for redact)
+        pii_findings = [f for f in findings if f.entity_type not in (
+            "PROMPT_INJECTION",
+        )]
+        if not pii_findings:
+            continue
+
+        # Sort by start position descending for safe in-place replacement
+        pii_findings.sort(key=lambda f: f.start, reverse=True)
+
+        new_stripped = stripped
+        for f in pii_findings:
+            marker = f"[REDACTED:{f.entity_type}]"
+            new_stripped = new_stripped[:f.start] + marker + new_stripped[f.end:]
+            result.redactions.append(RedactInfo(
+                file=file_str,
+                line=line_idx + 1,
+                entity_type=f.entity_type,
+                original_text=f.text if len(f.text) <= 40 else f.text[:37] + "...",
+            ))
+            result.total_redactions += 1
+            file_modified = True
+
+        # Preserve original line ending
+        ending = line_text[len(stripped):] if len(line_text) > len(stripped) else ""
+        lines[line_idx] = new_stripped + ending
+
+    if file_modified:
+        result.files_modified += 1
+        if not dry_run:
+            if not no_backup:
+                backup_path = str(path) + ".bak"
+                shutil.copy2(str(path), backup_path)
+                result.backups_created.append(backup_path)
+            path.write_text("".join(lines), encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
 # SARIF 2.1.0 output (patch86)
 # ---------------------------------------------------------------------------
 
@@ -366,6 +509,22 @@ def cmd_scan(args) -> int:
     if getattr(args, "exclude", None):
         exclude = [p.strip() for p in args.exclude.split(",") if p.strip()]
 
+    # Redact mode (patch88)
+    do_redact = getattr(args, "redact", False)
+    dry_run = getattr(args, "dry_run", False)
+    no_backup = getattr(args, "no_backup", False)
+
+    if do_redact or dry_run:
+        redact_result = redact_path(
+            target,
+            patterns=patterns,
+            exclude=exclude,
+            dry_run=dry_run,
+            no_backup=no_backup,
+        )
+        _render_redact(redact_result, dry_run=dry_run)
+        return 0
+
     result = scan_path(
         target,
         patterns=patterns,
@@ -412,3 +571,28 @@ def _render_human(result: ScanResult) -> None:
         print("Errors:")
         for e in result.errors:
             print(f"  {e['path']}: {e['error']}")
+
+
+def _render_redact(result: RedactResult, *, dry_run: bool) -> None:
+    """Render redaction results."""
+    mode = "DRY-RUN" if dry_run else "REDACT"
+    if not result.redactions:
+        print(f"[{mode}] No PII found to redact.")
+        return
+
+    print(f"[{mode}] {result.files_modified} file(s), "
+          f"{result.total_redactions} redaction(s).")
+    print()
+
+    current_file = None
+    for r in result.redactions:
+        if r.file != current_file:
+            current_file = r.file
+            print(f"  {r.file}")
+        print(f"    L{r.line}: [{r.entity_type}] {r.original_text}")
+
+    if not dry_run and result.backups_created:
+        print()
+        print("Backups:")
+        for b in result.backups_created:
+            print(f"  {b}")
