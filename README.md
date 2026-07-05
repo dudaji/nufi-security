@@ -219,7 +219,16 @@ nufi-egress inspect --text "김민수님 주민번호 900101-1234568"
 # 14) 파일/디렉터리 PII 스캔 — CI/pre-commit 통합
 nufi-egress scan path/to/dir --fail-on-pii --format sarif
 
-# 12) 인젝션 탐지 벤치마크 — 재현율·정밀도 측정 (30건 골드셋)
+# 15) 보안 포스처 리포트 — 디렉터리 전체 보안 스캔 요약
+nufi-egress report security path/to/dir --format html --output report.html
+
+# 16) 프로젝트 초기화 — config·.nufiignore·pre-commit 한 번에 설정
+nufi-egress init --install-hook
+
+# 17) 실시간 감시 — 파일 변경 시 PII 자동 탐지
+nufi-egress watch path/to/dir --check-injection --once
+
+# 18) 인젝션 탐지 벤치마크 — 재현율·정밀도 측정 (38건 골드셋)
 python3 scripts/bench_injection.py
 ```
 
