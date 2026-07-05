@@ -4,6 +4,38 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-06 (patch169-175)
+
+> **v0.4.17-patch169~175 — API endpoints + scan --git-staged + Guard + dashboard + CHANGELOG**
+> /pipeline, /explain, /scan REST 엔드포인트, git staged 스캔, Guard 컨텍스트 매니저,
+> ASCII 터미널 대시보드. 테스트 590건.
+
+### Added (patch174)
+- **enforcement/dashboard_cmd.py** — `nufi-egress dashboard`: ASCII box-drawing 터미널 보안 대시보드. 등급·테스트·위험·닥터·활동·인젝션 벤치마크를 한 화면에 표시. `--json` 기계 출력.
+- **enforcement/cli.py** — `dashboard` 서브커맨드 추가.
+- **tests/test_dashboard_cmd.py** — 대시보드 섹션 존재·JSON 모드 테스트 2건.
+
+### Added (patch172-173)
+- **egress_audit/guard.py** — `Guard` 컨텍스트 매니저: `with Guard() as g:` 블록 내부에서 PII·인젝션 자동 감시, 위반 시 예외 발생.
+- **enforcement/serve_cmd.py** — `POST /scan` 엔드포인트: 파일 경로 전달 시 서버 측 PII 스캔 결과 반환.
+- **enforcement/scan_cmd.py** — `scan --git-staged`: git staged 파일만 스캔 (pre-commit hook 연동).
+- **tests/test_guard_context.py** — Guard 컨텍스트 매니저 테스트.
+- **tests/test_scan_endpoint.py** — POST /scan 엔드포인트 테스트.
+- **tests/test_scan_cmd.py** — git-staged 스캔 테스트 추가.
+
+### Added (patch171)
+- **enforcement/scan_cmd.py** — `scan --git-staged` 옵션: git staged 파일만 스캔(pre-commit hook 통합).
+- **enforcement/cli.py** — `--git-staged` 인자 추가.
+
+### Added (patch169-170)
+- **enforcement/serve_cmd.py** — `POST /pipeline`, `POST /explain` REST 엔드포인트. 전체 체인 파이프라인·상세 설명 API 제공.
+- **CHANGELOG.md** — patch166~168 엔트리 추가.
+- **tests/test_serve_cmd.py** — /pipeline·/explain 엔드포인트 테스트 추가.
+
+### Changed (patch175)
+- **CHANGELOG.md** — patch169~174 전체 엔트리 추가.
+- **docs/RELEASE_NOTES.md** — patch169~174 반영.
+
 ## [0.4.17] - 2026-07-06 (patch158-168)
 
 > **v0.4.17-patch158~168 — OpenAPI + executive report + badge + coverage-map + posture**

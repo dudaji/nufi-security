@@ -523,6 +523,12 @@ def cmd_summary(args) -> int:
     return _summary(args)
 
 
+def cmd_dashboard(args) -> int:
+    """ASCII 터미널 보안 대시보드 (patch174)."""
+    from enforcement.dashboard_cmd import cmd_dashboard as _dashboard
+    return _dashboard(args)
+
+
 def cmd_serve(args) -> int:
     """HTTP API 서버 (patch155)."""
     from enforcement.serve_cmd import cmd_serve as _serve
@@ -1436,6 +1442,12 @@ def main(argv: Optional[List[str]] = None) -> int:
                        help="프로젝트 헬스 대시보드 — 설정·활동·위험·닥터·버전 한 화면 요약 (patch147)")
     p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
     p.set_defaults(func=cmd_summary)
+
+    # --- Dashboard (patch174) ------------------------------------------------ #
+    p = sub.add_parser("dashboard",
+                       help="ASCII 터미널 보안 대시보드 — 등급·테스트·위험·닥터·인젝션 한 화면 (patch174)")
+    p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    p.set_defaults(func=cmd_dashboard)
 
     # --- Serve (patch155) ---------------------------------------------------- #
     p = sub.add_parser("serve",

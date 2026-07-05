@@ -6,6 +6,28 @@
 
 ---
 
+## v0.4.17 (patch175) -- **ASCII dashboard + Guard + API endpoints + git-staged scan**
+
+> ASCII 터미널 대시보드, Guard 컨텍스트 매니저, REST API 확장, git staged 스캔. (2026-07-06)
+
+### 이번 릴리스에 포함된 것 (patch169~174)
+
+| 계층 | 기능 |
+|---|---|
+| **Dashboard** | `nufi-egress dashboard` -- ASCII box-drawing 터미널 보안 대시보드. 등급/테스트/위험/닥터/인젝션을 한 화면에 표시. `--json` 지원 (patch174) |
+| **Guard** | `with Guard() as g:` 컨텍스트 매니저 -- 블록 내 PII/인젝션 위반 시 예외 발생. SDK 통합 용이 (patch172-173) |
+| **API** | `POST /scan`, `POST /pipeline`, `POST /explain` REST 엔드포인트 추가. 서버 측 스캔/체인/상세설명 API (patch169-170, 172-173) |
+| **Scan** | `scan --git-staged` -- git staged 파일만 PII 스캔. pre-commit hook 통합용 (patch171) |
+
+### 누구에게 유용한가
+
+- **보안 운영자** -- `dashboard` 로 터미널에서 전체 보안 상태를 한 눈에 확인.
+- **개발자** -- `Guard` 컨텍스트 매니저로 코드 블록 단위 PII 보호.
+- **CI/CD 파이프라인** -- `scan --git-staged` 로 커밋 전 스테이지 파일만 빠르게 스캔.
+- **마이크로서비스** -- `/scan`, `/pipeline`, `/explain` 엔드포인트로 HTTP API 통한 원격 스캔.
+
+---
+
 ## v0.4.17 (patch165) -- **badge generator + executive report + OpenAPI**
 
 > OpenAPI 스키마, 경영진 보안 등급, SVG 배지 생성, HTML 테스트 콘솔. (2026-07-06)
