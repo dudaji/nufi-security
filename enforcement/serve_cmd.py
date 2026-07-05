@@ -125,6 +125,13 @@ class PipelineRequest(BaseModel):
     )
 
 
+class ScanRequest(BaseModel):
+    """Request body for /scan endpoint."""
+    path: str = Field(..., description="Path to file or directory to scan")
+    check_injection: bool = Field(False, description="Whether to check for prompt injection")
+    fail_on_pii: bool = Field(False, description="Whether to treat PII as a failure condition")
+
+
 class ExplainRequest(BaseModel):
     """Request body for /explain endpoint."""
     text: str = Field(..., description="Text to explain detection results for")
@@ -299,6 +306,55 @@ def create_app() -> FastAPI:
         from enforcement.explain_cmd import explain_text
 
         return explain_text(req.text)
+
+    @app.post("/scan")
+    def scan(req: ScanRequest):
+        """Scan a file or directory for PII (and optionally injection patterns).
+
+        Security: only allows scanning paths under the server CWD to prevent
+        path traversal attacks.
+        """
+        import os
+        from enforcement.scan_cmd import scan_path
+
+        cwd = Path(os.getcwd()).resolve()
+        target = Path(req.path).resolve()
+
+        # Security: prevent path traversal — target must be under CWD
+        try:
+            target.relative_to(cwd)
+        except ValueError:
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "Path traversal denied: path must be under server working directory"},
+            )
+
+        if not target.exists():
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=404,
+                content={"detail": f"Path not found: {req.path}"},
+            )
+
+        result = scan_path(str(target), check_injection=req.check_injection)
+        data = result.to_dict()
+
+        # Determine risk level
+        if data["has_injection"]:
+            risk_level = "critical"
+        elif data["has_pii"]:
+            risk_level = "high" if data["total_findings"] > 5 else "medium"
+        else:
+            risk_level = "low"
+
+        return {
+            "files_scanned": data["files_scanned"],
+            "findings": data["findings"],
+            "risk_level": risk_level,
+            "total_findings": data["total_findings"],
+            "failed": req.fail_on_pii and data["has_pii"],
+        }
 
     return app
 

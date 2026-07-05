@@ -221,6 +221,22 @@ def batch_detect(texts: list[str], **kwargs: Any) -> list[list[Finding]]:
 
 
 # ---------------------------------------------------------------------------
+# Guard context manager (patch172)
+# ---------------------------------------------------------------------------
+
+
+def guard_context(*, check_injection: bool = False, **kwargs: Any) -> Guard:
+    """Guard 를 context manager 로 사용하기 위한 편의 팩토리.
+
+    >>> with guard_context(check_injection=True) as g:
+    ...     result = g.inspect("hello")
+    ...     result.blocked
+    False
+    """
+    return Guard(check_injection=check_injection, **kwargs)
+
+
+# ---------------------------------------------------------------------------
 # __all__ — stable 계층만
 # ---------------------------------------------------------------------------
 __all__ = [
@@ -263,6 +279,8 @@ __all__ = [
     # batch helpers
     "batch_route",
     "batch_inspect",
+    # guard context manager
+    "guard_context",
     # security report
     "security_report",
     "render_security_markdown",

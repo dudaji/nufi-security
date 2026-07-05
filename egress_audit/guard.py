@@ -127,3 +127,13 @@ class EgressGuard:
                         })
 
         return GuardResult(blocked=decision.blocked, decision=decision, findings=findings)
+
+    # ------------------------------------------------------------------
+    # Context manager support (patch172)
+    # ------------------------------------------------------------------
+
+    def __enter__(self) -> "EgressGuard":
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # noqa: ANN001
+        return None
