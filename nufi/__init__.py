@@ -128,6 +128,34 @@ from enforcement.inspect_cmd import inspect_text  # noqa: E402
 from enforcement.scan_cmd import scan_path as scan_dir  # noqa: E402
 
 # ---------------------------------------------------------------------------
+# 배치 헬퍼 (Batch helpers) — v0.4.x (patch95)
+# ---------------------------------------------------------------------------
+
+
+def batch_route(texts: list[str], **kwargs: Any) -> list[RoutingDecision]:
+    """여러 텍스트를 한 번에 라우팅 판정한다 — Router 재사용으로 효율적.
+
+    >>> decisions = batch_route(["홍길동 주민번호 900101-1234567", "hello world"])
+    >>> decisions[0].routed_to_local
+    True
+    >>> decisions[1].routed_to_local
+    False
+    """
+    router = PiiRouter(**kwargs) if kwargs else PiiRouter()
+    return [router.route(t) for t in texts]
+
+
+def batch_inspect(texts: list[str]) -> list[dict]:
+    """여러 텍스트를 한 번에 통합 분석한다 — inspect_text 재사용.
+
+    >>> results = batch_inspect(["홍길동 주민번호 900101-1234567", "hello"])
+    >>> results[0]["blocked"]
+    True
+    """
+    return [inspect_text(t) for t in texts]
+
+
+# ---------------------------------------------------------------------------
 # 편의 함수 (Convenience helpers) — v0.4.6
 # ---------------------------------------------------------------------------
 
@@ -202,4 +230,7 @@ __all__ = [
     "scan_dir",
     "guard_file",
     "batch_detect",
+    # batch helpers
+    "batch_route",
+    "batch_inspect",
 ]
