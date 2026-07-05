@@ -38,6 +38,7 @@ python3 -m pip install -r requirements.txt   # PyYAML·fastapi·uvicorn·httpx
 | [`demo_scan.sh`](../scripts/demo_scan.sh) | 파일/디렉터리 PII 스캔 — 디렉터리 재귀 스캔·--fail-on-pii·--redact --dry-run·--format sarif | 4 | `./scripts/demo_scan.sh` | [`CLI.md#scan`](CLI.md) |
 | [`demo_accuracy.sh`](../scripts/demo_accuracy.sh) | 정확도 재현 — KR_PERSON INT8 Wilson CI 하한 ≥ 0.93(v0.4.16: 0.9591) + 온프렘 p95 표 + 단일 명령 벤치마크(`nufi-egress benchmark`: 정확도+가명화 동시 재현) *(측정 산출물 필요)* | 3 | `./scripts/demo_accuracy.sh` | [`HANDS_ON.md#part-j`](HANDS_ON.md) |
 | [`demo_bypass_enforcement.sh`](../scripts/demo_bypass_enforcement.sh) | 우회 차단(ENFORCED) — 격리 netns 에서 실제 egress drop *(root/nft 필요)* | 3 | `sudo bash scripts/demo_bypass_enforcement.sh` | [`history/DEMO_v0.0.5.md`](history/DEMO_v0.0.5.md) |
+| [`demo_getting_started.sh`](../scripts/demo_getting_started.sh) | Getting Started 워크플로우 — init·PII 스캔·redact·inspect·route·doctor 를 순서대로 시연 | 8 | `./scripts/demo_getting_started.sh` | [`CLI.md`](CLI.md) |
 | [`demo_all.sh`](../scripts/demo_all.sh) | 전체 데모 러너 — 위 데모를 차례로 실행하고 집계 PASS/FAIL 출력 | — | `./scripts/demo_all.sh` | 본 문서 |
 
 > `demo_bypass_enforcement.sh` 는 `demo_audit_separation.sh --enforce` 경로가 root/nft 가

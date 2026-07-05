@@ -1049,6 +1049,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="파일 glob 패턴(쉼표 구분, 예: '*.py,*.md')")
     p.add_argument("--once", action="store_true",
                    help="1회 스캔 후 종료(테스트/CI 용)")
+    p.add_argument("--webhook", default=None,
+                   help="PII 탐지 시 JSON 페이로드를 POST 할 URL(Slack/Teams 연동)")
     p.set_defaults(func=cmd_watch)
 
     p = sub.add_parser("inspect",

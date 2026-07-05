@@ -616,6 +616,79 @@ node_modules/**
 
 ---
 
+## `diff`
+
+git 변경 파일(staged + unstaged)만 PII/인젝션 스캔합니다. PR 리뷰·pre-commit 훅에서 전체 트리 스캔 없이 변경분만 빠르게 점검합니다.
+
+```
+usage: nufi-egress diff [--base REF] [--fail-on-pii] [--check-injection] [--json]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--base REF` | 비교 기준 git ref | `HEAD` (미커밋 변경) |
+| `--fail-on-pii` | PII 발견 시 exit code 1(CI 게이트) | off |
+| `--check-injection` | 프롬프트 인젝션 패턴도 함께 탐지 | off |
+| `--json` | 기계용 JSON 출력 | — |
+
+```bash
+nufi-egress diff                              # 미커밋 변경 스캔
+nufi-egress diff --base main --fail-on-pii    # main 대비 변경 스캔, CI 게이트
+```
+
+> 종료코드: `--fail-on-pii` 사용 시 PII 발견이면 1, 아니면 0.
+
+---
+
+## `config validate`
+
+모든 NuFi 설정 파일(`policy.yaml`, `routing.yaml` 등)의 syntax, 필수 필드, 정규식 유효성을 검증합니다. CI 에서 설정 오류를 사전 차단합니다.
+
+```
+usage: nufi-egress config validate [--config-dir DIR] [--json]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--config-dir DIR` | 설정 디렉터리 경로 | `config/` |
+| `--json` | 기계용 JSON 출력 | — |
+
+```bash
+nufi-egress config validate                          # 기본 config/ 검증
+nufi-egress config validate --config-dir ./my-config --json
+```
+
+> 종료코드: 검증 실패 시 1, 정상이면 0.
+
+---
+
+## `watch`
+
+디렉터리를 폴링(또는 inotify) 방식으로 실시간 감시하여 파일 변경 시 PII/인젝션을 자동 스캔합니다. `--webhook` 으로 PII 탐지 시 외부 URL 에 JSON 알림을 전송합니다.
+
+```
+usage: nufi-egress watch DIRECTORY [--interval SEC] [--pattern GLOB]
+                         [--check-injection] [--once] [--webhook URL]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `DIRECTORY` | 감시할 디렉터리 경로(필수) | — |
+| `--interval SEC` | 폴링 간격(초) | `5.0` |
+| `--pattern GLOB` | 파일 glob 패턴(쉼표 구분) | 전체 |
+| `--check-injection` | 프롬프트 인젝션 패턴도 함께 탐지 | off |
+| `--once` | 1회 스캔 후 종료(테스트/CI 용) | off |
+| `--webhook URL` | PII 탐지 시 JSON 페이로드를 POST(Slack/Teams 연동) | — |
+
+```bash
+nufi-egress watch ./src --interval 3 --check-injection
+nufi-egress watch ./data --once --webhook https://hooks.slack.com/...
+```
+
+> 종료코드: `--once` 모드에서 PII 발견 시 1, 아니면 0. 데몬 모드는 Ctrl+C 로 종료.
+
+---
+
 ## PII 기반 하이브리드 LLM 라우팅
 
 PII 감지 엔진을 기존 egress 감사 **앞단의 라우팅 최우선 레이어**로 활용합니다.

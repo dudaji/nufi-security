@@ -6,14 +6,19 @@
 
 ---
 
-## v0.4.17 (patch99) — **HTML 보안 리포트 + 배치 SDK + 병렬 스캔 + 디렉터리 감시**
+## v0.4.17 (patch105) — **config validate + diff + webhook + scan cache**
 
-> report security --format html 자립형 HTML 보안 리포트 · batch API · 멀티스레드 스캔 · watch 모드. (2026-07-05)
+> 설정 검증 CLI · git diff 스캔 · watch --webhook 알림 · scan --cache SHA-256 캐싱. (2026-07-05)
 
-### 이번 릴리스에 포함된 것 (patch92~99)
+### 이번 릴리스에 포함된 것 (patch92~105)
 
 | 계층 | 기능 |
 |---|---|
+| **설정 검증** | `config validate` — policy/routing YAML syntax·필수 필드·regex 유효성 검증 (patch105) |
+| **diff 스캔** | `diff` — git 변경 파일만 PII/인젝션 스캔, PR 리뷰·pre-commit (patch104) |
+| **README** | 데모 섹션에 report·init·watch 추가 (patch103) |
+| **webhook 알림** | `watch --webhook URL` — PII 탐지 시 JSON POST(Slack/Teams 연동) (patch102) |
+| **스캔 캐싱** | `scan --cache` — SHA-256 파일 해시 기반 결과 캐싱으로 반복 스캔 성능 향상 (patch101) |
 | **HTML 리포트** | `report security --format html` — 인라인 CSS, 색상 배지, 외부 의존 없는 자립형 HTML 보안 리포트 (patch99) |
 | **보안 리포트** | `report security` — PII/인젝션 스캔 → 위험도 평가 → Markdown/JSON/HTML 리포트 (patch98) |
 | **병렬 스캔** | `scan --parallel N` — ThreadPoolExecutor 멀티스레드 스캔 (patch97) |
@@ -25,9 +30,10 @@
 
 ### 누구에게 유용한가
 
+- **CI/pre-commit** — `diff --fail-on-pii` 로 변경분만 빠르게 PII 게이트. `config validate` 로 설정 오류 사전 차단.
 - **보안 감사 보고서** — HTML 리포트를 경영진·감사팀에 바로 전달. 색상 배지로 위험도 직관적 파악.
-- **대규모 프로젝트** — `--parallel` 멀티스레드 스캔으로 성능 향상.
-- **CI/CD 파이프라인** — `--format jsonl --output` 으로 후속 처리 연동.
+- **대규모 프로젝트** — `--parallel` 멀티스레드 + `--cache` 로 반복 스캔 성능 향상.
+- **실시간 알림** — `watch --webhook` 으로 PII 탐지 시 Slack/Teams 즉시 통보.
 - **개발 워크플로우** — `watch` 모드로 코드 작성 중 실시간 PII 감시.
 
 ---

@@ -4,6 +4,28 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch101-105)
+
+> **v0.4.17-patch101~105 — config validate + diff + watch --webhook + scan --cache + README 데모 섹션**
+> 설정 검증 CLI, git diff 스캔, webhook 알림, SHA-256 캐싱, README 데모 갱신.
+
+### Added (patch105)
+- **enforcement/config_validate.py** — `nufi-egress config validate`: 모든 NuFi 설정 파일(policy.yaml, routing.yaml 등) syntax·필수 필드·regex 유효성 검증.
+- **enforcement/cli.py** — `config validate` 서브커맨드 + `--config-dir`, `--json` 옵션.
+
+### Added (patch104)
+- **enforcement/diff_cmd.py** — `nufi-egress diff`: git 변경 파일만 PII/인젝션 스캔(PR 리뷰·pre-commit).
+- **enforcement/cli.py** — `diff` 서브커맨드 + `--base`, `--fail-on-pii`, `--check-injection`, `--json` 옵션.
+
+### Changed (patch103)
+- **README.md** — 데모 섹션에 `report security`, `init`, `watch` 추가.
+
+### Changed (patch102)
+- **enforcement/watch_cmd.py** — `watch --webhook URL`: PII 탐지 시 JSON 페이로드를 외부 URL 로 POST(Slack/Teams 연동).
+
+### Changed (patch101)
+- **enforcement/scan_cmd.py** — `scan --cache`: SHA-256 파일 해시 기반 결과 캐싱으로 반복 스캔 성능 향상.
+
 ## [0.4.17] - 2026-07-05 (patch99-100)
 
 > **v0.4.17-patch99~100 — HTML 보안 리포트 + CHANGELOG sweep**
