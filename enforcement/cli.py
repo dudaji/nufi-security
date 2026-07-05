@@ -430,6 +430,12 @@ def cmd_scan(args) -> int:
     return _scan(args)
 
 
+def cmd_watch(args) -> int:
+    """디렉터리 PII 감시 (patch92)."""
+    from enforcement.watch_cmd import cmd_watch as _watch
+    return _watch(args)
+
+
 def cmd_inspect(args) -> int:
     """통합 보안 분석 — PII + 인젝션 + 라우팅 + 위험도 (patch78)."""
     from enforcement.inspect_cmd import inspect_text, render_human
@@ -977,6 +983,19 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--stats", action="store_true",
                    help="스캔 후 요약 통계 출력(엔티티별·위험도별 집계)")
     p.set_defaults(func=cmd_scan)
+
+    p = sub.add_parser("watch",
+                       help="디렉터리 PII 실시간 감시(폴링 · patch92)")
+    p.add_argument("directory", help="감시할 디렉터리 경로")
+    p.add_argument("--interval", type=float, default=5.0,
+                   help="폴링 간격(초, 기본 5)")
+    p.add_argument("--check-injection", action="store_true",
+                   help="프롬프트 인젝션 패턴도 함께 탐지")
+    p.add_argument("--pattern", default=None,
+                   help="파일 glob 패턴(쉼표 구분, 예: '*.py,*.md')")
+    p.add_argument("--once", action="store_true",
+                   help="1회 스캔 후 종료(테스트/CI 용)")
+    p.set_defaults(func=cmd_watch)
 
     p = sub.add_parser("inspect",
                        help="통합 보안 분석 — PII + 인젝션 + 라우팅 + 위험도 (patch78)")
