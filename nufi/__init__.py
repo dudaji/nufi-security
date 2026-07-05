@@ -128,7 +128,7 @@ from enforcement.inspect_cmd import inspect_text  # noqa: E402
 from enforcement.explain_cmd import explain_text as _explain_text  # noqa: E402
 
 
-def explain(text: str, *, min_severity: str = "low") -> dict:
+def explain(text: str, *, min_severity: str = "low") -> dict[str, Any]:
     """텍스트 탐지 결과를 상세 설명한다 — 디버깅·교육용 한 줄 호출.
 
     Returns a dict with risk_level, action, routing, pii_findings,
@@ -173,7 +173,7 @@ def batch_route(texts: list[str], **kwargs: Any) -> list[RoutingDecision]:
     return [router.route(t) for t in texts]
 
 
-def batch_inspect(texts: list[str]) -> list[dict]:
+def batch_inspect(texts: list[str]) -> list[dict[str, Any]]:
     """여러 텍스트를 한 번에 통합 분석한다 — inspect_text 재사용.
 
     >>> results = batch_inspect(["홍길동 주민번호 900101-1234567", "hello"])
@@ -198,7 +198,7 @@ def scan_file(file_path: str | pathlib.Path, **kwargs: Any) -> list[Finding]:
     return detect(text, **kwargs)
 
 
-def guard_file(file_path: str | pathlib.Path, **kwargs: Any) -> "GuardResult":
+def guard_file(file_path: str | pathlib.Path, **kwargs: Any) -> GuardResult:
     """텍스트 파일을 정책 평가한다 — "이 파일을 외부로 보내도 되는가?"
 
     >>> result = guard_file("proposal.md")
