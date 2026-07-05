@@ -1,8 +1,10 @@
-"""Tests for ``nufi-egress serve`` HTTP API (patch155)."""
+"""Tests for ``nufi-egress serve`` HTTP API (patch155/158)."""
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
@@ -10,7 +12,7 @@ if str(_ROOT) not in sys.path:
 
 from fastapi.testclient import TestClient
 
-from enforcement.serve_cmd import create_app
+from enforcement.serve_cmd import create_app, cmd_serve
 
 
 client = TestClient(create_app())
@@ -44,9 +46,25 @@ def test_route_returns_decision():
     resp = client.post("/route", json={"text": "내 전화번호는 010-1234-5678입니다"})
     assert resp.status_code == 200
     data = resp.json()
-    assert "decision" in data
-    decision = data["decision"]
-    assert "target_model" in decision
-    assert "pii_detected" in decision
+    assert "target_model" in data
+    assert "pii_detected" in data
     # Text with phone number should be routed to local
-    assert decision["pii_detected"] is True
+    assert data["pii_detected"] is True
+
+
+def test_docs_endpoint_returns_200():
+    """GET /docs (Swagger UI) returns 200."""
+    resp = client.get("/docs")
+    assert resp.status_code == 200
+
+
+def test_openapi_flag_produces_valid_json(capsys):
+    """--openapi flag outputs valid OpenAPI JSON with version field."""
+    args = SimpleNamespace(openapi=True)
+    rc = cmd_serve(args)
+    assert rc == 0
+    captured = capsys.readouterr()
+    spec = json.loads(captured.out)
+    assert "openapi" in spec
+    # OpenAPI version should start with 3
+    assert spec["openapi"].startswith("3")

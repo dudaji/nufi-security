@@ -1379,6 +1379,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="바인드 호스트(기본 localhost)")
     p.add_argument("--port", type=int, default=8000,
                    help="바인드 포트(기본 8000)")
+    p.add_argument("--openapi", action="store_true", default=False,
+                   help="OpenAPI JSON 스펙을 stdout으로 출력 후 종료")
     p.set_defaults(func=cmd_serve)
 
     # --- Stats (patch112) ---------------------------------------------------- #
