@@ -199,7 +199,12 @@ def cmd_audit(args) -> int:
         return _audit_main(argv)
     if action == "query":
         return _audit_query(args)
-    print("usage: nufi-egress audit {report|daemon|once|query} …", file=sys.stderr)
+    if action == "verify":
+        from enforcement.audit_cmd import cmd_audit_verify
+        # Map --log to log_path for audit_cmd
+        args.log_path = getattr(args, "log", None)
+        return cmd_audit_verify(args)
+    print("usage: nufi-egress audit {report|daemon|once|query|verify} …", file=sys.stderr)
     return 2
 
 
@@ -919,9 +924,10 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     p = sub.add_parser("audit",
                        help="비동기 감사 봇 + §4 감사로그 조회")
-    p.add_argument("action", choices=["report", "daemon", "once", "query"],
+    p.add_argument("action", choices=["report", "daemon", "once", "query", "verify"],
                    help="report=지연 p95 · daemon=상시 폴 · once=큐 1회 드레인 · "
-                        "query=감사로그 집계(outcome/엔티티/체인)")
+                        "query=감사로그 집계(outcome/엔티티/체인) · "
+                        "verify=해시 체인 무결성 검증(patch120)")
     p.add_argument("--profiles", default=None,
                    help="audit_profiles.yaml 경로(report/daemon/once)")
     p.add_argument("--ner-backend", default="gazetteer",
