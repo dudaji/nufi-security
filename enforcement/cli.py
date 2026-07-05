@@ -176,7 +176,11 @@ def cmd_feedback(args) -> int:
 
 
 def cmd_init(args) -> int:
-    # `nufi init <preset>` 와 동일 엔진(egress_audit.init_cli)에 위임.
+    # Quick-start mode: no preset and not --list → new project init (patch90).
+    if not getattr(args, "list", False) and not getattr(args, "preset", None):
+        from enforcement.init_cmd import cmd_quickstart_init
+        return cmd_quickstart_init(args)
+    # Legacy preset mode: `nufi init <preset>` 와 동일 엔진(egress_audit.init_cli)에 위임.
     from egress_audit.init_cli import cmd_init as _init
     return _init(args)
 
@@ -824,9 +828,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--json", action="store_true", help="기계용 JSON 만 출력")
     p.set_defaults(func=cmd_monitor)
 
-    p = sub.add_parser("init", help="프리셋에서 운영 config 구체화")
-    p.add_argument("preset", nargs="?", help="프리셋 이름(생략 시 --list)")
+    p = sub.add_parser("init", help="프로젝트 초기화(quick-start) 또는 프리셋 구체화")
+    p.add_argument("preset", nargs="?", help="프리셋 이름(생략 시 quick-start 초기화)")
     p.add_argument("--list", action="store_true", help="사용 가능한 프리셋 목록")
+    p.add_argument("--dir", default=".", help="초기화 대상 디렉터리(기본 현재 디렉터리)")
+    p.add_argument("--install-hook", action="store_true",
+                   help="git pre-commit hook 설치(PII 스캔)")
     p.add_argument("--out", default="config", help="config 출력 디렉터리(기본 ./config)")
     p.add_argument("--base-dir", default=None, help="오버레이 베이스 config 디렉터리")
     p.add_argument("--set", action="append", metavar="KEY=VALUE", help="허용된 노브 override")
