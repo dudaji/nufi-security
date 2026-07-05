@@ -459,6 +459,18 @@ def cmd_export(args) -> int:
     return _export(args)
 
 
+def cmd_mask(args) -> int:
+    """텍스트 PII 마스킹 (patch124)."""
+    from enforcement.transform_cmd import cmd_mask as _mask
+    return _mask(args)
+
+
+def cmd_redact_text(args) -> int:
+    """텍스트 PII 리댁션 (patch124)."""
+    from enforcement.transform_cmd import cmd_redact as _redact
+    return _redact(args)
+
+
 def cmd_explain(args) -> int:
     """텍스트 탐지 결과 상세 설명 (patch116)."""
     from enforcement.explain_cmd import explain_text, render_human
@@ -1139,6 +1151,23 @@ def main(argv: Optional[List[str]] = None) -> int:
     ep.add_argument("--format", choices=["yaml", "json", "regex"], default="yaml",
                     help="출력 형식(기본 yaml)")
     ep.set_defaults(func=cmd_export)
+
+    # --- Text transform: mask / redact (patch124) ----------------------------- #
+    p = sub.add_parser("mask",
+                       help="텍스트 PII 마스킹 — PII를 asterisk(*)로 가림 (patch124)")
+    p.add_argument("--text", default=None, help="마스킹할 텍스트")
+    p.add_argument("--file", default=None, help="마스킹할 파일 경로(라인별 처리)")
+    p.add_argument("--output", default=None, metavar="PATH",
+                   help="결과를 파일에 기록(stdout 대신)")
+    p.set_defaults(func=cmd_mask)
+
+    p = sub.add_parser("redact",
+                       help="텍스트 PII 리댁션 — PII를 타입 태그([TYPE])로 교체 (patch124)")
+    p.add_argument("--text", default=None, help="리댁션할 텍스트")
+    p.add_argument("--file", default=None, help="리댁션할 파일 경로(라인별 처리)")
+    p.add_argument("--output", default=None, metavar="PATH",
+                   help="결과를 파일에 기록(stdout 대신)")
+    p.set_defaults(func=cmd_redact_text)
 
     p = sub.add_parser("explain",
                        help="텍스트 탐지 결과 상세 설명 — PII·인젝션·정책·라우팅 근거 출력 (patch116)")
