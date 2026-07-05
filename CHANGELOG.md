@@ -4,6 +4,34 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch112-117)
+
+> **v0.4.17-patch112~117 — stats + MANUAL + CLI smoke tests + HANDS_ON + explain + CHANGELOG sweep**
+> 설정·탐지 역량 통계, 매뉴얼 빠른 참조, CLI 통합 스모크 테스트, 실습 가이드, explain 디버깅 명령.
+
+### Added (patch116)
+- **enforcement/explain_cmd.py** — `nufi-egress explain --text "..."`: 텍스트 탐지 결과 상세 설명 명령. 각 PII/인젝션 발견의 엔티티·위치·탐지 방법·신뢰도, 정책 판정(block/pseudonymize/log/allow), 라우팅 결정(local/cloud)과 사유를 교육적 형식으로 출력. `--json` 기계용 출력 지원.
+- **enforcement/cli.py** — `explain` 서브커맨드 + 도움말 카테고리(탐지) 추가.
+- **tests/test_explain_cmd.py** — PII 상세 분해 + 클린 텍스트 "no findings" 테스트 2건.
+
+### Added (patch115)
+- **docs/HANDS_ON.md** — §10 파일 스캔 & CI 연동 실습 가이드.
+
+### Added (patch114)
+- **tests/test_cli_integration.py** — CLI 전 서브커맨드 통합 스모크 테스트 15건.
+
+### Added (patch113)
+- **docs/MANUAL.md** — v0.4.17 신규 CLI 커맨드 빠른 참조 매뉴얼.
+
+### Added (patch112)
+- **enforcement/stats_cmd.py** — `nufi-egress stats`: 설정 파일·탐지 패턴·스캔 프로파일·캐시·감사 로그 상태 개요. `--json` 지원.
+- **enforcement/cli.py** — `stats` 서브커맨드 추가.
+- **tests/test_stats_cmd.py** — stats 수집·렌더·JSON 테스트 3건.
+
+### Changed (patch117)
+- **CHANGELOG.md** — patch112~116 엔트리 추가.
+- **docs/RELEASE_NOTES.md** — patch112~116 반영.
+
 ## [0.4.17] - 2026-07-05 (patch107-110)
 
 > **v0.4.17-patch107~110 — E2E 테스트 + SDK 예시 + shell completions + scan profiles**
