@@ -6,6 +6,28 @@
 
 ---
 
+## v0.4.17 (patch65) — **프롬프트 인젝션 가드레일 완성**
+
+> 한국어·영어 프롬프트 인젝션/탈옥 18종 패턴 탐지 — SDK·CLI·Guard·게이트웨이·LiteLLM 전 계층 통합. (2026-07-05)
+
+### 이번 릴리스에 포함된 것 (patch60~65)
+
+| 계층 | 기능 |
+|---|---|
+| **SDK** | `from nufi import detect_injection` · `Guard(check_injection=True)` |
+| **CLI** | `nufi-egress route --check-injection` (--text, --file 모두) |
+| **게이트웨이** | `NUFI_CHECK_INJECTION=1` → HTTP 403 `injection_blocked` |
+| **LiteLLM** | pre_call_hook Phase 0 인젝션 차단 + 감사 로깅 |
+| **데모** | `demo_prompt_injection.sh` (31건 PASS) + SDK 예시 |
+
+### 누구에게 유용한가
+
+- **LLM 서비스 운영자** — 프롬프트 인젝션을 게이트웨이/프록시 레벨에서 차단.
+- **보안 감사** — PII + 인젝션 동시 탐지 증빙.
+- **에어갭 환경** — 순수 정규식, 외부 의존 0.
+
+---
+
 ## v0.4.17 (patch61) — **한국어 프롬프트 인젝션 탐지 + Guard 통합**
 
 > 한국어·영어 프롬프트 인젝션/탈옥 패턴을 감지하고 차단하는 가드레일 기능. (2026-07-05)

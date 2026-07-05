@@ -4,6 +4,43 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch65)
+
+> **v0.4.17-patch65 — LiteLLM 훅 프롬프트 인젝션 차단**
+> LiteLLM Proxy 콜백에서 PII 라우팅 전 인젝션 탐지 Phase 0. check_injection: true 시 HTTP 403 + audit 로깅.
+
+### Changed (게이트웨이)
+- **gateway/litellm_hook.py** — `async_pre_call_hook`에 인젝션 탐지 Phase 0 추가. 감지 시 403 + outcome `blocked_injection`.
+
+### Added (테스트)
+- **tests/test_litellm_hook_injection.py** — LiteLLM 훅 인젝션 테스트 2건.
+
+## [0.4.17] - 2026-07-05 (patch64)
+
+> **v0.4.17-patch64 — 게이트웨이 프롬프트 인젝션 차단**
+> NUFI_CHECK_INJECTION=1 또는 config check_injection: true 로 게이트웨이에서 인젝션 HTTP 403 차단. 기본 비활성.
+
+### Changed (게이트웨이)
+- **gateway/core.py** — `process()`에 인젝션 탐지 추가. 감지 시 403 `injection_blocked`. 라우팅 전 fail-fast.
+- **config/pii_routing.yaml** — `check_injection: false` 설정 항목 추가.
+
+### Added (테스트)
+- **tests/test_gateway_injection.py** — 게이트웨이 인젝션 테스트 3건.
+
+## [0.4.17] - 2026-07-05 (patch63)
+
+> **v0.4.17-patch63 — 프롬프트 인젝션 데모 + SDK 예시**
+> demo_prompt_injection.sh (6시나리오 31건 PASS/FAIL) + examples/sdk_prompt_injection.py.
+
+### Added (스크립트)
+- **scripts/demo_prompt_injection.py** — 인젝션 탐지 데모 (6시나리오 31건).
+- **scripts/demo_prompt_injection.sh** — 셸 래퍼.
+- **examples/sdk_prompt_injection.py** — SDK 인젝션 예시.
+
+### Changed (스크립트)
+- **scripts/demo_all.sh** — demo_prompt_injection.sh 등록.
+- **examples/README.md** — sdk_prompt_injection.py 등록.
+
 ## [0.4.17] - 2026-07-05 (patch61)
 
 > **v0.4.17-patch61 — Guard 프롬프트 인젝션 탐지 통합**
