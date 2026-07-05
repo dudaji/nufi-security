@@ -21,6 +21,7 @@
   pipeline  체인 파이프라인 — detect→decide→transform→route 한 번에(patch139).
   history   최근 활동 로그 조회 — 스캔·차단·라우팅 이벤트(patch141).
   route     PII 라우팅 결정 테스트 — 텍스트의 PII 감지·모델 라우팅 판정 출력(CMP-270).
+  playground 인터랙티브 PII 분석 REPL — 실시간 텍스트 분석·마스킹·리댁션 실험(patch145).
 
 설치형 진입점(pyproject.toml console_scripts): ``pip install -e .`` 후 ``nufi-egress``
 (별칭 ``nufi``) 로 PATH 에서 직접 실행. 레거시 ``python3 -m enforcement.cli`` 동치 유지.
@@ -507,6 +508,12 @@ def cmd_history(args) -> int:
     """활동 로그 조회 (patch141)."""
     from enforcement.history_cmd import cmd_history as _history
     return _history(args)
+
+
+def cmd_playground(args) -> int:
+    """인터랙티브 PII 분석 REPL (patch145)."""
+    from enforcement.playground_cmd import cmd_playground as _playground
+    return _playground(args)
 
 
 def cmd_explain(args) -> int:
@@ -1309,6 +1316,14 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="이벤트 유형 필터(기본 all)")
     p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
     p.set_defaults(func=cmd_history)
+
+    # --- Playground (patch145) ------------------------------------------------ #
+    p = sub.add_parser("playground",
+                       help="인터랙티브 PII 분석 REPL — 실시간 텍스트 분석 실험 (patch145)")
+    p.add_argument("--text", default=None, help="분석할 텍스트(비인터랙티브)")
+    p.add_argument("--mode", choices=["inspect", "mask", "redact"], default="inspect",
+                   help="출력 모드(기본 inspect)")
+    p.set_defaults(func=cmd_playground)
 
     # --- Stats (patch112) ---------------------------------------------------- #
     from enforcement.stats_cmd import cmd_stats
