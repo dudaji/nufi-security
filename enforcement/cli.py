@@ -972,7 +972,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                     help="파일 glob 패턴(쉼표 구분, 예: '*.py,*.md')")
     rp.add_argument("--exclude", default=None,
                     help="제외할 glob 패턴(쉼표 구분)")
-    rp.add_argument("--format", choices=["md", "json"], default="md",
+    rp.add_argument("--format", choices=["md", "json", "html"], default="md",
                     help="출력 형식(기본 md)")
     rp.add_argument("--output", default=None, metavar="PATH",
                     help="출력 파일 경로(생략 시 stdout)")

@@ -6,6 +6,32 @@
 
 ---
 
+## v0.4.17 (patch99) — **HTML 보안 리포트 + 배치 SDK + 병렬 스캔 + 디렉터리 감시**
+
+> report security --format html 자립형 HTML 보안 리포트 · batch API · 멀티스레드 스캔 · watch 모드. (2026-07-05)
+
+### 이번 릴리스에 포함된 것 (patch92~99)
+
+| 계층 | 기능 |
+|---|---|
+| **HTML 리포트** | `report security --format html` — 인라인 CSS, 색상 배지, 외부 의존 없는 자립형 HTML 보안 리포트 (patch99) |
+| **보안 리포트** | `report security` — PII/인젝션 스캔 → 위험도 평가 → Markdown/JSON/HTML 리포트 (patch98) |
+| **병렬 스캔** | `scan --parallel N` — ThreadPoolExecutor 멀티스레드 스캔 (patch97) |
+| **Getting Started** | 워크플로우 데모 스크립트 + SDK batch 문서 (patch96) |
+| **SDK batch** | `batch_route()` · `batch_inspect()` 일괄 처리 (patch95) |
+| **scan 출력** | `--output PATH` + `--format jsonl` 스트리밍 (patch94) |
+| **데모 카탈로그** | DEMO.md 인젝션·스캔·벤치 데모 등록 (patch93) |
+| **디렉터리 감시** | `watch` — inotify/polling 기반 파일 변경 실시간 감시 + 자동 스캔 (patch92) |
+
+### 누구에게 유용한가
+
+- **보안 감사 보고서** — HTML 리포트를 경영진·감사팀에 바로 전달. 색상 배지로 위험도 직관적 파악.
+- **대규모 프로젝트** — `--parallel` 멀티스레드 스캔으로 성능 향상.
+- **CI/CD 파이프라인** — `--format jsonl --output` 으로 후속 처리 연동.
+- **개발 워크플로우** — `watch` 모드로 코드 작성 중 실시간 PII 감시.
+
+---
+
 ## v0.4.17 (patch91) — **인젝션 가드레일 + 파일 스캔 + CI 연동 + 스캔 통계**
 
 > 프롬프트 인젝션 탐지 전 계층 + 디렉터리 스캔 + pre-commit/CI + SARIF + redact + init quick-start + scan --stats. (2026-07-05)

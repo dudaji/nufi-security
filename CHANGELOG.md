@@ -4,6 +4,86 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch99-100)
+
+> **v0.4.17-patch99~100 — HTML 보안 리포트 + CHANGELOG sweep**
+> report security --format html 자립형(self-contained) HTML 리포트. CHANGELOG/RELEASE_NOTES patch93~99 반영.
+
+### Added (patch99)
+- **enforcement/security_report.py** — `render_html(report)`: 인라인 CSS, 외부 의존 없는 자립형 HTML 보안 리포트 렌더러.
+  - 위험도별 색상 배지 (red=critical, orange=high, yellow=medium, blue=low).
+  - Executive Summary 헤더 + 리스크 배너.
+  - 엔티티 타입·인젝션 패턴·권고사항 테이블.
+  - 생성 타임스탬프 + NuFi 버전 푸터.
+- **enforcement/cli.py** — `report security --format html` 옵션 추가.
+- **tests/test_security_report.py** — HTML 구조 검증 테스트 1건.
+
+### Changed (patch100)
+- **CHANGELOG.md** — patch93~99 엔트리 추가.
+- **docs/RELEASE_NOTES.md** — patch93~99 반영.
+
+## [0.4.17] - 2026-07-05 (patch98)
+
+> **v0.4.17-patch98 — report security 보안 포스처 리포트**
+> 디렉터리 스캔 → PII/인젝션 탐지 → 위험도 평가 → Markdown/JSON 리포트.
+
+### Added
+- **enforcement/security_report.py** — `generate_security_report()`, `render_markdown()`, `render_json()`, `cmd_report_security()`.
+- **enforcement/cli.py** — `report security` 서브커맨드 + `--format md|json` + `--output`.
+- **tests/test_security_report.py** — Markdown/JSON/SDK 테스트 5건.
+
+## [0.4.17] - 2026-07-05 (patch97)
+
+> **v0.4.17-patch97 — scan --parallel N 멀티스레드 스캔**
+> ThreadPoolExecutor 기반 병렬 스캔으로 대규모 디렉터리 성능 향상.
+
+### Changed
+- **enforcement/scan_cmd.py** — `--parallel N` 옵션, ThreadPoolExecutor 기반 병렬 파일 스캔.
+- **enforcement/cli.py** — `scan --parallel` 인자 추가.
+
+## [0.4.17] - 2026-07-05 (patch96)
+
+> **v0.4.17-patch96 — Getting Started 워크플로우 데모 + SDK batch 문서**
+> 초보자용 워크플로우 데모 스크립트 + SDK batch API 문서화.
+
+### Added
+- **examples/getting_started.sh** — 종합 워크플로우 데모 스크립트.
+- **docs/SDK.md** — batch_route/batch_inspect 섹션 추가.
+
+## [0.4.17] - 2026-07-05 (patch95)
+
+> **v0.4.17-patch95 — SDK batch_route + batch_inspect 일괄 처리**
+> 여러 텍스트를 한 번에 라우팅·검사하는 배치 API.
+
+### Added
+- **nufi/__init__.py** — `batch_route()`, `batch_inspect()` 일괄 처리 함수.
+
+## [0.4.17] - 2026-07-05 (patch94)
+
+> **v0.4.17-patch94 — scan --output 파일 + --format jsonl 스트리밍**
+> 스캔 결과를 파일에 기록. JSON Lines 형식으로 파이프 연동 용이.
+
+### Changed
+- **enforcement/scan_cmd.py** — `--output PATH` + `--format jsonl` 스트리밍 출력.
+- **enforcement/cli.py** — scan --output, --format jsonl 인자 추가.
+
+## [0.4.17] - 2026-07-05 (patch93)
+
+> **v0.4.17-patch93 — DEMO.md 카탈로그에 인젝션·스캔·벤치 데모 등록**
+> 데모 카탈로그 정리 및 누락 데모 등록.
+
+### Changed
+- **docs/DEMO.md** — 인젝션 탐지·스캔·벤치마크 데모 카탈로그 등록.
+
+## [0.4.17] - 2026-07-05 (patch92)
+
+> **v0.4.17-patch92 — nufi-egress watch 디렉터리 감시 모드**
+> 파일 변경 실시간 감시 + 자동 스캔.
+
+### Added
+- **enforcement/watch_cmd.py** — `cmd_watch()` inotify/polling 기반 디렉터리 감시.
+- **enforcement/cli.py** — `watch` 서브커맨드.
+
 ## [0.4.17] - 2026-07-05 (patch91)
 
 > **v0.4.17-patch91 — scan --stats 요약 통계 + init quick-start 문서**

@@ -137,6 +137,52 @@ class TestSecurityReportJSON:
         assert data["findings_by_severity"] == {}
 
 
+class TestSecurityReportHTML:
+    """HTML format produces valid self-contained output."""
+
+    def test_html_structure(self, tmp_path: Path) -> None:
+        from enforcement.security_report import generate_security_report, render_html
+
+        d = _make_test_dir(tmp_path)
+        report = generate_security_report(d)
+        html = render_html(report)
+
+        # Must be valid HTML document structure
+        assert "<!DOCTYPE html>" in html
+        assert "<html" in html
+        assert "</html>" in html
+        assert "<head>" in html
+        assert "<style>" in html
+
+        # Title and headings
+        assert "<title>Security Posture Report</title>" in html
+        assert "Executive Summary" in html
+        assert "Findings by Severity" in html
+        assert "Top Entity Types" in html
+        assert "Injection Patterns" in html
+        assert "Recommended Actions" in html
+
+        # Risk banner with level
+        assert "Overall Risk Level:" in html
+        assert report.risk_level.upper() in html
+
+        # Severity badges with color coding
+        assert "badge" in html
+
+        # Footer with timestamp
+        assert "<footer>" in html
+        assert report.generated_at in html
+        assert "NuFi" in html
+
+        # Tables present
+        assert "<table>" in html
+        assert "Files scanned" in html
+
+        # No external dependencies (no <link> or external <script>)
+        assert "<link" not in html
+        assert 'src="http' not in html
+
+
 class TestSDKExport:
     """Verify SDK exposure."""
 
