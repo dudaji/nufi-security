@@ -4,6 +4,27 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch151-154)
+
+> **v0.4.17-patch151~154 — quickstart + examples + report diff + CHANGELOG sweep**
+> 퀵스타트 가이드, 예제 README, 스캔 비교 diff 리포트 커맨드, 최종 CHANGELOG.
+
+### Added (patch153)
+- **enforcement/report_diff_cmd.py** — `nufi-egress report diff before.json after.json`: 두 스캔 결과 비교 diff 리포트 생성. `compare_scans()` 재사용. 마크다운/JSON/HTML 렌더링(`--format md|json|html`). `--output` 파일 출력. 요약(N new, N resolved, N unchanged) + 신규/해결/미변경 테이블.
+- **enforcement/cli.py** — `report diff` 서브커맨드 추가.
+- **tests/test_report_diff_cmd.py** — MD/JSON/HTML 렌더링 + CLI --output 테스트 2건.
+
+### Added (patch151)
+- **docs/QUICKSTART.md** — 2분 퀵스타트 가이드 신규.
+
+### Changed (patch152)
+- **examples/README.md** — 12종 예시 전체 목록 갱신.
+
+### Changed (patch154)
+- **CHANGELOG.md** — patch151~153 전체 엔트리 추가.
+- **docs/RELEASE_NOTES.md** — patch151~153 반영.
+- **README.md** — 테스트 수 543건 갱신.
+
 ## [0.4.17] - 2026-07-05 (patch149-150)
 
 > **v0.4.17-patch149~150 — report trends + CHANGELOG sweep**

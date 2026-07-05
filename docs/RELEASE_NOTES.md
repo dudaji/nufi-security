@@ -6,6 +6,26 @@
 
 ---
 
+## v0.4.17 (patch154) -- **report diff + quickstart + examples + CHANGELOG**
+
+> 스캔 비교 diff 리포트, 퀵스타트 가이드, 예제 README 갱신. (2026-07-05)
+
+### 이번 릴리스에 포함된 것 (patch151~153)
+
+| 계층 | 기능 |
+|---|---|
+| **Report Diff** | `report diff before.json after.json` -- 두 스캔 결과를 비교하여 new/resolved/unchanged diff 리포트 생성. `--format md\|json\|html`, `--output` 파일 출력. PR 리뷰 리포트/릴리스 노트에 활용 (patch153) |
+| **Quickstart** | `docs/QUICKSTART.md` -- 2분 퀵스타트 가이드 신규 (patch151) |
+| **Examples** | `examples/README.md` -- 12종 예시 전체 목록 갱신 (patch152) |
+
+### 누구에게 유용한가
+
+- **PR 리뷰** -- `report diff` 로 PR 전후 스캔 결과를 비교하여 신규 PII 유출을 한눈에 확인.
+- **릴리스 노트** -- diff 리포트를 마크다운/HTML로 자동 생성하여 릴리스 문서에 첨부.
+- **신규 사용자** -- 퀵스타트 가이드로 2분 안에 NuFi 설치부터 첫 스캔까지 완료.
+
+---
+
 ## v0.4.17 (patch150) -- **report trends + summary dashboard + CHANGELOG**
 
 > PII 탐지 트렌드 리포트, 프로젝트 헬스 대시보드, CLI 쇼케이스 데모. (2026-07-05)
