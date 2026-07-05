@@ -33,9 +33,10 @@
 
 ## 2. 현재 상태 (한눈에)
 
-- **버전:** `VERSION` 파일 = **v0.4.16** · 패치: v0.4.16-patch51 (2026-07-04 릴리스).
+- **버전:** `VERSION` 파일 = **v0.4.17** · 패치: v0.4.17-patch128 (2026-07-05 릴리스).
 - **성격:** 동작하는 제품. 게이트웨이·탐지·가명화·기밀 탐지·우회 차단·비동기 감사·
-  Python SDK·PII 기반 하이브리드 LLM 라우팅·한국 규제 증빙 48개 통제까지 동작.
+  Python SDK·PII 기반 하이브리드 LLM 라우팅·한국 규제 증빙 48개 통제·
+  **프롬프트 인젝션 탐지·파일/디렉터리 스캔·CI/pre-commit 통합·텍스트 변환(mask/redact/explain)** 까지 동작.
 - **핵심 정확도 수치(v0.4.16, onnx-int8, test n=854):**
   - 한국어 개인정보 재현율(recall, 전체) **0.9908** [신뢰구간 0.9812–0.9956] — 목표 ≥0.90 ✅
   - 인명(KR_PERSON) 재현율 **0.9799** (Wilson 신뢰구간 하한 **0.9591**) — 목표 ≥0.93 ✅
@@ -44,7 +45,7 @@
   - 인라인 지연(p95, 512자, CPU) **41 ms** — 목표 ≤150ms ✅
   - benign_false_block = **0.0** (0/90)
   - (수치의 권위는 `docs/reports/recall-int8.json`. 자세한 버전별 상태는 [`PROJECT_STATE.md`](PROJECT_STATE.md).)
-- **테스트:** 307 passed · **데모:** 11/11 PASS (demo_all.sh)
+- **테스트:** 501 passed · **데모:** 20/20 PASS (demo_all.sh) · **CLI 서브커맨드:** 23개
 - **Python SDK:** `from nufi import detect, Guard, pseudonymize` — 게이트웨이 없이 코드에서
   직접 임포트. 편의 함수: `scan_file`·`guard_file`·`batch_detect`. 예시: `examples/library_detect.py`·`examples/sdk_file_scan.py`·`examples/sdk_compliance_report.py`.
   설계: [`../docs/SDK.md`](../docs/SDK.md).
@@ -57,8 +58,8 @@
 
 | 경로 | 무엇 |
 |---|---|
-| `egress_audit/` | **탐지·가명화·감사의 코어.** detectors/(한국어 PII·비밀 탐지), pseudonymize.py·reversible.py·surrogate.py·vault.py(가명화/원복/매핑), audit.py·checksums.py(해시체인 감사), policy.py·presets.py·enforcement.py·pipeline.py(정책·집행), edm.py(정확 데이터 매칭), reload.py(무재기동 규칙 리로드) |
-| `enforcement/` | **CLI 및 운영 기능.** cli.py(단일 진입점 `nufi-egress`), report.py(컴플라이언스 리포트), policy_ops.py(다중 프로파일 운영), benchmark.py(정확도·가명화 벤치 단일 진입점), compliance_catalog.yaml(규제 매핑 카탈로그), doctor.py(진단), feedback.py, rule_builder.py, applier.py, decision.py |
+| `egress_audit/` | **탐지·가명화·감사의 코어.** detectors/(한국어 PII·비밀 탐지), injection/(프롬프트 인젝션 탐지·심각도·정책), pseudonymize.py·reversible.py·surrogate.py·vault.py(가명화/원복/매핑), audit.py·checksums.py(해시체인 감사), policy.py·presets.py·enforcement.py·pipeline.py(정책·집행), edm.py(정확 데이터 매칭), reload.py(무재기동 규칙 리로드) |
+| `enforcement/` | **CLI 및 운영 기능.** cli.py(단일 진입점 `nufi-egress`, 23개 서브커맨드), report.py(컴플라이언스 리포트), policy_ops.py(다중 프로파일 운영), benchmark.py(정확도·가명화·인젝션 벤치), scan.py(파일/디렉터리 PII 스캔·SARIF·redact·CI 훅), transform.py(mask·redact), explain.py(탐지 이유 설명), watch.py(디렉터리 감시), init_cmd.py(프로젝트 초기화), compliance_catalog.yaml(규제 매핑 카탈로그), doctor.py(진단), feedback.py, rule_builder.py, applier.py, decision.py |
 | `capture/` | **네트워크 커버리지·우회 차단.** flow_tap.py(패킷 탭), bypass_monitor.py(우회 탐지), coverage.py(게이트 통과율), targets.py, content_dump.py |
 | `gateway/` | **실행 경로.** app.py(단독 FastAPI 게이트웨이), litellm_hook.py(LiteLLM Proxy 콜백, 권장 프로덕션), router.py·core.py |
 | `nufi/` | **Python SDK 파사드.** `from nufi import detect, Guard, pseudonymize` — stable 심볼 재노출 + 편의 함수(`scan_file`·`guard_file`·`batch_detect`) |
@@ -91,6 +92,7 @@
 | 로드맵(방향·우선순위) | [`../docs/ROADMAP.md`](../docs/ROADMAP.md) |
 | 릴리스 노트(사람 친화) / 체크리스트 | [`../docs/RELEASE_NOTES.md`](../docs/RELEASE_NOTES.md) · [`../docs/RELEASE_CHECKLIST.md`](../docs/RELEASE_CHECKLIST.md) |
 | **공개 문서 작성 규칙(가드)** | [`../docs/DOC_STYLE.md`](../docs/DOC_STYLE.md) |
+| 프롬프트 인젝션 가이드 | [`../docs/PROMPT_INJECTION.md`](../docs/PROMPT_INJECTION.md) |
 | 설계 배경·마일스톤(역사적) | [`../docs/history/`](../docs/history/) |
 | 측정 리포트(정확도·성능 원자료) | [`../docs/reports/`](../docs/reports/) |
 
