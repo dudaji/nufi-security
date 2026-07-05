@@ -16,6 +16,7 @@
   policy    정책 운영 자동화 — 다중 프로파일·묶기·버전/되돌리기·변경 감사(CMP-144 B1).
   report    규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음 · CMP-150 C1).
   benchmark 정확도(커밋 산출물 게이트) + 가명화 품질(라이브) 벤치마크 단일 재현(CMP-201 I5).
+  inspect   통합 보안 분석 — PII + 인젝션 + 라우팅 + 위험도 한 번에 출력(patch78).
   route     PII 라우팅 결정 테스트 — 텍스트의 PII 감지·모델 라우팅 판정 출력(CMP-270).
 
 설치형 진입점(pyproject.toml console_scripts): ``pip install -e .`` 후 ``nufi-egress``
@@ -416,6 +417,38 @@ def cmd_flow_tap(args) -> int:
         argv += ["--out", args.out]
     return _flow_tap_main(argv)
 
+
+
+def cmd_inspect(args) -> int:
+    """통합 보안 분석 — PII + 인젝션 + 라우팅 + 위험도 (patch78)."""
+    from enforcement.inspect_cmd import inspect_text, render_human
+
+    texts: List[str] = []
+    if args.text:
+        texts = [args.text]
+    elif args.file:
+        p = Path(args.file)
+        if not p.exists():
+            print(f"오류: 파일을 찾을 수 없습니다: {args.file}", file=sys.stderr)
+            return 1
+        texts = [line for line in p.read_text(encoding="utf-8").splitlines() if line.strip()]
+    else:
+        print("오류: --text 또는 --file 을 지정해야 합니다.", file=sys.stderr)
+        return 1
+
+    results = [inspect_text(t) for t in texts]
+
+    if args.json:
+        output = results if len(results) > 1 else results[0]
+        print(json.dumps(output, ensure_ascii=False, indent=2))
+    else:
+        for r in results:
+            print(render_human(r))
+            if len(results) > 1:
+                print("---")
+
+    # Exit code: non-zero if any result is blocked
+    return 1 if any(r["blocked"] for r in results) else 0
 
 
 def cmd_route(args) -> int:
@@ -869,6 +902,13 @@ def main(argv: Optional[List[str]] = None) -> int:
                     help="출력 형식(기본 md)")
     rp.add_argument("--out", default=None, help="출력 파일 경로(생략 시 stdout)")
     rp.set_defaults(func=cmd_report)
+
+    p = sub.add_parser("inspect",
+                       help="통합 보안 분석 — PII + 인젝션 + 라우팅 + 위험도 (patch78)")
+    p.add_argument("--text", default=None, help="분석할 텍스트")
+    p.add_argument("--file", default=None, help="분석할 파일 경로(라인별 처리)")
+    p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    p.set_defaults(func=cmd_inspect)
 
     p = sub.add_parser("route",
                        help="PII 라우팅 결정 테스트 — 텍스트의 PII 감지·모델 라우팅 판정 출력")

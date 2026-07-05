@@ -118,6 +118,11 @@ def route(text: str, **kwargs: Any) -> RoutingDecision:
 
 
 # ---------------------------------------------------------------------------
+# 통합 분석 (Unified Inspect) — v0.4.x (patch78)
+# ---------------------------------------------------------------------------
+from enforcement.inspect_cmd import inspect_text  # noqa: E402
+
+# ---------------------------------------------------------------------------
 # 편의 함수 (Convenience helpers) — v0.4.6
 # ---------------------------------------------------------------------------
 
@@ -185,6 +190,8 @@ __all__ = [
     "route",
     "RoutingDecision",
     "PiiRouter",
+    # unified inspect
+    "inspect_text",
     # convenience
     "scan_file",
     "guard_file",
