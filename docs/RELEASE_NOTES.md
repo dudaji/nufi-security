@@ -6,6 +6,26 @@
 
 ---
 
+## v0.4.17 (patch146) -- **playground + SDK typing + CLI UX + CHANGELOG**
+
+> 인터랙티브 playground REPL, PEP 561 타입 마커, CLI 에러 친화 처리. (2026-07-05)
+
+### 이번 릴리스에 포함된 것 (patch143~145)
+
+| 계층 | 기능 |
+|---|---|
+| **Playground** | `playground` -- 인터랙티브 PII 분석 REPL. 텍스트 입력마다 PII/인젝션/위험도/라우팅/차단 한 줄 요약. `mode mask`/`mode redact` 전환. `--text`/파이프 비인터랙티브 지원 (patch145) |
+| **CLI UX** | scan/route/explain 필수 인자 누락 시 구체적 에러 안내. 전역 예외 처리(FileNotFoundError, PermissionError, KeyboardInterrupt, BrokenPipeError) (patch144) |
+| **SDK Typing** | PEP 561 `py.typed` 마커 + SDK 타입 어노테이션 개선 (patch143) |
+
+### 누구에게 유용한가
+
+- **탐색/학습** -- `playground` 로 텍스트를 실시간 입력하며 NuFi 보안 파이프라인이 무엇을 탐지하고 어떻게 판정하는지 바로 확인.
+- **CI/파이프** -- `playground --text` 또는 stdin 파이프로 비인터랙티브 빠른 분석.
+- **타입 안전** -- SDK 소비자가 mypy/pyright 등 타입 체커로 NuFi API 호출을 검증 가능.
+
+---
+
 ## v0.4.17 (patch142) — **pipeline + history + CHANGELOG**
 
 > 체인 파이프라인 · 활동 로그 조회 · CHANGELOG sweep. (2026-07-05)

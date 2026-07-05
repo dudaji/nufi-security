@@ -4,6 +4,27 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch143-146)
+
+> **v0.4.17-patch143~146 — SDK typing + CLI UX + playground + CHANGELOG sweep**
+> PEP 561 타입 마커, CLI 에러 친화 처리, 인터랙티브 playground REPL, 최종 CHANGELOG.
+
+### Added (patch145)
+- **enforcement/playground_cmd.py** — `nufi-egress playground`: 인터랙티브 PII 분석 REPL. 입력 텍스트마다 `inspect_text` 로 PII·인젝션·위험도·라우팅·차단 여부를 한 줄 요약 출력. `mode mask`/`mode redact` 로 마스킹·리댁션 모드 전환. `--text` 플래그 또는 파이프(stdin) 비인터랙티브 지원.
+- **enforcement/cli.py** — `playground` 서브커맨드 추가.
+- **tests/test_playground_cmd.py** — 파이프 모드·--text·mask·redact 테스트 4건.
+
+### Changed (patch144)
+- **enforcement/cli.py** — CLI 친화 에러 메시지: scan/route/explain 등 필수 인자 누락 시 구체적 안내. 전역 예외 처리(FileNotFoundError, PermissionError, KeyboardInterrupt, BrokenPipeError).
+
+### Added (patch143)
+- **nufi/py.typed** — PEP 561 마커 추가(타입 체커 지원).
+- **nufi/__init__.py** — SDK 공개 API 타입 어노테이션 개선.
+
+### Changed (patch146)
+- **CHANGELOG.md** — patch143~145 엔트리 추가.
+- **docs/RELEASE_NOTES.md** — patch143~145 반영.
+
 ## [0.4.17] - 2026-07-05 (patch139-142)
 
 > **v0.4.17-patch139~142 — pipeline + history + CHANGELOG sweep**
