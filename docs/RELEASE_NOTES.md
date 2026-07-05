@@ -6,6 +6,28 @@
 
 ---
 
+## v0.4.17 (patch134) — **compare + lint + generate + CLI docs + HANDOVER**
+
+> 스캔 비교 커맨드 · 보안 안티패턴 검사 · PII 샘플 생성 · CLI 레퍼런스 갱신 · HANDOVER 현행화. (2026-07-05)
+
+### 이번 릴리스에 포함된 것 (patch129~133)
+
+| 계층 | 기능 |
+|---|---|
+| **스캔 비교** | `compare before.sarif after.sarif` — 두 스캔 결과 비교(new/resolved/unchanged). `--fail-on-new` CI 게이트. PR 리뷰용 (patch133) |
+| **CLI 문서** | CLI.md 에 lint·generate·mask·redact 레퍼런스 추가 (patch132) |
+| **샘플 생성** | `generate` — 한국어 PII 샘플 데이터 생성. `--count`/`--seed`/`--include-injection`/`--format` 지원 (patch131) |
+| **안티패턴 검사** | `lint` — hardcoded key/debug/http/eval 등 보안 안티패턴 탐지. `--fix` 자동 수정 (patch130) |
+| **HANDOVER** | v0.4.17-patch128 기준 전체 현행화 (patch129) |
+
+### 누구에게 유용한가
+
+- **PR 리뷰** — `compare` 로 before/after 스캔을 비교해 신규 PII 도입 여부를 즉시 확인. `--fail-on-new` 로 CI 게이트화.
+- **보안 감사** — `lint` 로 하드코딩 키·debug 모드·HTTP·eval 등 보안 안티패턴을 파일/디렉터리 단위로 검사.
+- **테스트** — `generate` 로 현실적 한국어 PII 샘플을 대량 생성. 탐지 파이프라인 테스트·벤치마크 시나리오 구축.
+
+---
+
 ## v0.4.17 (patch128) — **mask/redact + unified benchmark(injection) + 통합 데모**
 
 > 텍스트 PII 마스킹·리댁션 커맨드, 벤치마크에 인젝션 통합, 통합 데모. (2026-07-05)

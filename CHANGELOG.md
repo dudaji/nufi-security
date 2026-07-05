@@ -4,6 +4,36 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch129-134)
+
+> **v0.4.17-patch129~134 — HANDOVER + lint + generate + CLI docs + compare + CHANGELOG sweep**
+> HANDOVER 현행화, 보안 안티패턴 검사, 한국어 PII 샘플 생성, CLI 레퍼런스 갱신, 스캔 비교 커맨드, 최종 CHANGELOG.
+
+### Added (patch133)
+- **enforcement/compare_cmd.py** — `nufi-egress compare before.sarif after.sarif`: 두 스캔 결과(SARIF/JSON) 비교. new(도입)/resolved(해결)/unchanged(유지) 분류. `--json` 기계 출력, `--fail-on-new` CI 게이트(신규 발견 시 exit 1). PR 리뷰에서 "이 변경이 새 PII를 도입했는가?" 확인 용도.
+- **enforcement/cli.py** — `compare` 서브커맨드 + 도움말 카테고리(탐지) 추가.
+- **tests/test_compare_cmd.py** — NuFi JSON 비교 + fail-on-new 테스트 2건.
+
+### Changed (patch132)
+- **docs/CLI.md** — lint·generate·mask·redact 서브커맨드 레퍼런스 문서 추가.
+
+### Added (patch131)
+- **enforcement/generate_cmd.py** — `nufi-egress generate`: 한국어 PII 샘플 데이터 생성(테스트용). `--count`, `--include-injection`, `--seed`, `--format jsonl|text`, `--output` 지원.
+- **enforcement/cli.py** — `generate` 서브커맨드 + 도움말 카테고리(운영) 추가.
+- **tests/test_generate_cmd.py** — 생성 포맷·시드 재현·인젝션 포함 테스트.
+
+### Added (patch130)
+- **enforcement/lint_cmd.py** — `nufi-egress lint`: 보안 안티패턴 검사(hardcoded API key, debug mode, http://, eval/exec, SSL 미검증, 비밀번호). `--fix` 자동 수정(http→https), `--json`, `--exclude` 지원.
+- **enforcement/cli.py** — `lint` 서브커맨드 + 도움말 카테고리(운영) 추가.
+- **tests/test_lint_cmd.py** — API key 탐지·debug 탐지·클린 파일 테스트 3건.
+
+### Changed (patch129)
+- **HANDOVER** — v0.4.17-patch128 기준 전체 현행화.
+
+### Changed (patch134)
+- **CHANGELOG.md** — patch129~133 엔트리 추가.
+- **docs/RELEASE_NOTES.md** — patch129~133 반영.
+
 ## [0.4.17] - 2026-07-05 (patch124-128)
 
 > **v0.4.17-patch124~128 — mask/redact + 통합 데모 + unified benchmark(injection) + CHANGELOG sweep**
