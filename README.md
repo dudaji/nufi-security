@@ -147,6 +147,7 @@ API 전체 목록·안정성 계층은 [`docs/SDK.md`](docs/SDK.md), 데모는 `
 
 | 하고 싶은 것 | 가이드 |
 |---|---|
+| **2분 안에 첫 스캔 돌려 보기** (설치→초기화→스캔→탐색 최단 경로) | [`docs/QUICKSTART.md`](docs/QUICKSTART.md) |
 | **이번 버전이 우리에게 뭘 해주나** (사람 친화 릴리스 노트, 비개발자 친화) | [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md) |
 | **손으로 따라하며 익히기** (토이 프로젝트 하나를 끝까지, 20~30분, 관리자 권한 불필요) | [`docs/HANDS_ON.md`](docs/HANDS_ON.md) |
 | **내 LLM 서비스 앞단에 붙이기** (통합 경로·프리셋·점검·결정 트리) | [`docs/INTEGRATION_GUIDE.md`](docs/INTEGRATION_GUIDE.md) |
@@ -158,7 +159,7 @@ API 전체 목록·안정성 계층은 [`docs/SDK.md`](docs/SDK.md), 데모는 `
 | **내부 구조·다이어그램** 보기 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) |
 | **온프렘/에어갭 설치** | [`deploy/README.md`](deploy/README.md) · [`deploy/airgap/INSTALL.md`](deploy/airgap/INSTALL.md) |
 | **Python SDK (라이브러리 임포트 API)** — `from nufi import detect, Guard, ...` | [`docs/SDK.md`](docs/SDK.md) · 데모 `./scripts/demo_sdk.sh` |
-| **SDK 한 줄 통합 예제** — 게이트웨이 없이 라이브러리 직접 임포트 (`detect` · `pseudonymize` · `Guard`) | [`examples/README.md`](examples/README.md) · 7종 예시 스크립트 |
+| **SDK 한 줄 통합 예제** — 게이트웨이 없이 라이브러리 직접 임포트 (`detect` · `pseudonymize` · `Guard`) | [`examples/README.md`](examples/README.md) · 12종 예시 스크립트 |
 | **CI/pre-commit 통합** — 커밋·PR 단계에서 PII 유출 자동 차단 (pre-commit 훅 + GitHub Actions) | [`docs/INTEGRATION_GUIDE.md §6`](docs/INTEGRATION_GUIDE.md#6-pre-commit-훅--cicd-통합) · [`examples/ci-github-actions.yml`](examples/ci-github-actions.yml) |
 
 > **⚠️ 운영(ops) 레이어 제외 안내** — 방향 재설정([`docs/ROADMAP.md`](docs/ROADMAP.md) §3)에 따라
