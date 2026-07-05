@@ -128,6 +128,16 @@ from enforcement.inspect_cmd import inspect_text  # noqa: E402
 from enforcement.scan_cmd import scan_path as scan_dir  # noqa: E402
 
 # ---------------------------------------------------------------------------
+# 보안 포스처 리포트 (Security Posture Report) — v0.4.x (patch98)
+# ---------------------------------------------------------------------------
+from enforcement.security_report import (  # noqa: E402
+    generate_security_report as security_report,
+    render_markdown as render_security_markdown,
+    render_json as render_security_json,
+    SecurityReport,
+)
+
+# ---------------------------------------------------------------------------
 # 배치 헬퍼 (Batch helpers) — v0.4.x (patch95)
 # ---------------------------------------------------------------------------
 
@@ -233,4 +243,9 @@ __all__ = [
     # batch helpers
     "batch_route",
     "batch_inspect",
+    # security report
+    "security_report",
+    "render_security_markdown",
+    "render_security_json",
+    "SecurityReport",
 ]

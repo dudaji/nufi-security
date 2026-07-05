@@ -706,7 +706,11 @@ def cmd_report(args) -> int:
         # 해시체인 변조가 탐지되면 비0(무결성 게이트).
         return 0 if rep["integrity_ok"] else 1
 
-    print("usage: nufi-egress report {compliance} …", file=sys.stderr)
+    if args.report_kind == "security":
+        from enforcement.security_report import cmd_report_security
+        return cmd_report_security(args)
+
+    print("usage: nufi-egress report {compliance|security} …", file=sys.stderr)
     return 2
 
 
@@ -958,6 +962,20 @@ def main(argv: Optional[List[str]] = None) -> int:
     rp.add_argument("--format", choices=["md", "html", "json"], default="md",
                     help="출력 형식(기본 md)")
     rp.add_argument("--out", default=None, help="출력 파일 경로(생략 시 stdout)")
+    rp.set_defaults(func=cmd_report)
+
+    rp = rsub.add_parser("security",
+                         help="보안 포스처 요약 리포트 — PII/인젝션 스캔 + 위험도 평가")
+    rp.add_argument("directory", nargs="?", default=".",
+                    help="스캔할 디렉터리 경로(기본 현재 디렉터리)")
+    rp.add_argument("--pattern", default=None,
+                    help="파일 glob 패턴(쉼표 구분, 예: '*.py,*.md')")
+    rp.add_argument("--exclude", default=None,
+                    help="제외할 glob 패턴(쉼표 구분)")
+    rp.add_argument("--format", choices=["md", "json"], default="md",
+                    help="출력 형식(기본 md)")
+    rp.add_argument("--output", default=None, metavar="PATH",
+                    help="출력 파일 경로(생략 시 stdout)")
     rp.set_defaults(func=cmd_report)
 
     p = sub.add_parser("scan",
