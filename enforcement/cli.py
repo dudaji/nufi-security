@@ -453,6 +453,12 @@ def cmd_watch(args) -> int:
     return _watch(args)
 
 
+def cmd_export(args) -> int:
+    """탐지 패턴 내보내기 (patch122)."""
+    from enforcement.export_cmd import cmd_export as _export
+    return _export(args)
+
+
 def cmd_explain(args) -> int:
     """텍스트 탐지 결과 상세 설명 (patch116)."""
     from enforcement.explain_cmd import explain_text, render_human
@@ -810,6 +816,7 @@ _HELP_EPILOG = """\
     diff            git 변경 파일만 PII/인젝션 스캔
 
   [운영]
+    export          탐지 패턴 내보내기 (YAML/JSON/regex)
     watch           디렉터리 PII 실시간 감시
     init            프로젝트 초기화 또는 프리셋 구체화
     config          설정 파일 검증
@@ -1123,6 +1130,15 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--file", default=None, help="분석할 파일 경로(라인별 처리)")
     p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
     p.set_defaults(func=cmd_inspect)
+
+    # --- Export (patch122) ---------------------------------------------------- #
+    p = sub.add_parser("export",
+                       help="탐지 패턴 내보내기(YAML/JSON/regex)")
+    esub = p.add_subparsers(dest="export_action", required=True)
+    ep = esub.add_parser("patterns", help="PII + 인젝션 탐지 패턴 내보내기")
+    ep.add_argument("--format", choices=["yaml", "json", "regex"], default="yaml",
+                    help="출력 형식(기본 yaml)")
+    ep.set_defaults(func=cmd_export)
 
     p = sub.add_parser("explain",
                        help="텍스트 탐지 결과 상세 설명 — PII·인젝션·정책·라우팅 근거 출력 (patch116)")
