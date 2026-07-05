@@ -250,6 +250,11 @@ nufi-egress explain --text "김민수님 주민번호 900101-1234568" --json
 # 23) 파이프라인 — detect→decide→transform→route 체인 처리
 nufi-egress pipeline --text "김민수님 주민번호 900101-1234568" --json
 nufi-egress pipeline --text "오늘 날씨 어때" --actions detect,route --json
+
+# 24) HTTP API 서버 — REST 엔드포인트로 마이크로서비스 연동
+nufi-egress serve --port 8000 &
+curl -s localhost:8000/detect -H "Content-Type: application/json" \
+  -d '{"text":"김민수님 전화 010-1234-5678"}'
 ```
 
 > 운영(ops) 데모(`demo_report`·`demo_multitenancy`·`demo_dashboards`)와

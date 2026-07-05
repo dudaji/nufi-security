@@ -97,6 +97,18 @@ nufi-egress watch src/ --once
 
 ---
 
+## 9. HTTP API 모드
+
+```bash
+nufi-egress serve --port 8000 &
+curl -s localhost:8000/detect -H "Content-Type: application/json" \
+  -d '{"text":"김민수님 전화 010-1234-5678"}'
+```
+
+NuFi 기능을 REST API 로 노출하여 다른 마이크로서비스에서 HTTP 호출로 PII 탐지·라우팅·마스킹을 사용합니다. 엔드포인트: `/detect`, `/route`, `/inspect`, `/mask`, `/redact`, `/health`.
+
+---
+
 ## 다음 단계
 
 | 하고 싶은 것 | 문서 |

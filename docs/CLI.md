@@ -58,6 +58,7 @@ usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
 | [`redact`](#redact-text) | 텍스트 PII 리댁션(타입 태그 교체) | 불필요 |
 | [`compare`](#compare) | 두 스캔 결과(SARIF/JSON) 비교 — new/resolved/unchanged | 불필요 |
 | [`test`](#test) | 자가 검증 — PII·인젝션·라우팅·Guard·설정·버전 6체크 | 불필요 |
+| [`serve`](#serve) | HTTP API 서버 — REST 엔드포인트로 마이크로서비스 연동 | 불필요 |
 
 > **신규 도입 5분 경로:** `init audit-only` → SDK/게이트웨이 배선 → `doctor`(core-3 GREEN 확인) → `status`/감사 로그 관찰 → 준비되면 `apply`. 자세한 결정 트리는 [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md).
 
@@ -1042,5 +1043,105 @@ nufi-egress self-test
 | [`OPS_POLICY_AT_SCALE.md`](OPS_POLICY_AT_SCALE.md) | 대규모 정책 운영 자동화 |
 | [`REPORTING.md`](REPORTING.md) | 한국 규제 5종 48개 통제 컴플라이언스 리포트 |
 | [`DEMO.md`](DEMO.md) | 전체 기능 데모 카탈로그 |
+
+## `serve`
+
+HTTP API 모드 — NuFi 탐지·라우팅·마스킹 기능을 REST 엔드포인트로 노출하여 마이크로서비스에서 연동합니다. FastAPI + uvicorn 기반.
+
+```
+usage: nufi-egress serve [-h] [--host HOST] [--port PORT]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--host HOST` | 바인딩 호스트 | `localhost` |
+| `--port PORT` | 포트 번호 | `8000` |
+
+### 엔드포인트
+
+| Method | 경로 | 설명 |
+|---|---|---|
+| `GET` | `/health` | 헬스 체크 — `{"status":"ok","version":"..."}` |
+| `POST` | `/detect` | PII 탐지 — 엔티티 목록 반환 |
+| `POST` | `/route` | PII 라우팅 결정 — 로컬/클라우드 판정 |
+| `POST` | `/inspect` | 통합 분석 — PII·인젝션·위험도·정책·라우팅 |
+| `POST` | `/mask` | PII 마스킹 — `***` 가림 |
+| `POST` | `/redact` | PII 리댁션 — `[TYPE]` 태그 교체 |
+
+### Request/Response 형식
+
+모든 POST 엔드포인트는 동일한 요청 형식을 사용합니다:
+
+```json
+// Request (POST)
+{"text": "분석할 텍스트"}
+
+// Response — /detect
+{
+  "findings": [
+    {"entity_type": "KR_PERSON", "text": "김민수", "start": 0, "end": 3},
+    {"entity_type": "KR_PHONE", "text": "010-1234-5678", "start": 8, "end": 21}
+  ]
+}
+
+// Response — /route
+{
+  "decision": {
+    "routed_to_local": true,
+    "target_model": "nufi-local",
+    "reason": "pii_detected",
+    "pii_detected": true,
+    "entities": ["KR_PERSON", "KR_PHONE"]
+  }
+}
+
+// Response — /mask
+{"result": "*** 전화 ***-****-****"}
+
+// Response — /redact
+{"result": "[KR_PERSON] 전화 [KR_PHONE]"}
+
+// Response — /health (GET)
+{"status": "ok", "version": "0.4.17"}
+```
+
+### curl 예시
+
+```bash
+# 서버 시작
+nufi-egress serve --port 8000 &
+
+# 헬스 체크
+curl -s localhost:8000/health
+
+# PII 탐지
+curl -s localhost:8000/detect \
+  -H "Content-Type: application/json" \
+  -d '{"text":"김민수님 전화 010-1234-5678"}'
+
+# 라우팅 결정
+curl -s localhost:8000/route \
+  -H "Content-Type: application/json" \
+  -d '{"text":"김민수님 계좌 110-123-456789"}'
+
+# 통합 분석
+curl -s localhost:8000/inspect \
+  -H "Content-Type: application/json" \
+  -d '{"text":"주민번호 900101-1234568"}'
+
+# 마스킹
+curl -s localhost:8000/mask \
+  -H "Content-Type: application/json" \
+  -d '{"text":"김민수님 전화 010-1234-5678"}'
+
+# 리댁션
+curl -s localhost:8000/redact \
+  -H "Content-Type: application/json" \
+  -d '{"text":"김민수님 전화 010-1234-5678"}'
+```
+
+> 종료코드: 항상 0(서버 시작 성공). Ctrl+C 로 종료.
+
+---
 
 *작성: 2026-06-28 — v0.0.2 기준. 통합 CLI(`enforcement/cli.py`) 표면을 `--help` 실측으로 기술. 단독 진입점(`enforcement.doctor`·`egress_audit.init_cli`)은 동치로 병기. v0.4.9 — PII 라우팅 설정 섹션 추가. v0.4.11 — RBAC/멀티테넌시·SLA 리포팅 제거. v0.4.16 — KR_PERSON recall 0.9799, CI 하한 0.9591.*
