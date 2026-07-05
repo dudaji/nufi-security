@@ -4,6 +4,55 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch73)
+
+> **v0.4.17-patch73 — 인젝션 정책(block/warn/log) + 벤치 데모 등록**
+> config/policy.yaml injection.action 으로 차단 정책 제어. demo_all 에 벤치마크 등록.
+
+### Changed (엔진)
+- **egress_audit/guard.py** — 인젝션 정책 action(block/warn/log) + min_severity 적용.
+- **config/policy.yaml** — `injection:` 섹션 추가 (action: block, min_severity: medium).
+
+### Added (스크립트)
+- **scripts/demo_bench_injection.sh** — 인젝션 벤치마크 래퍼 (demo_all 등록).
+
+### Added (테스트)
+- **tests/test_injection_policy.py** — 정책 기반 인젝션 테스트 2건.
+
+## [0.4.17] - 2026-07-05 (patch72)
+
+> **v0.4.17-patch72 — 인젝션 탐지 벤치마크 골드셋**
+> samples/injection_gold.jsonl (30건) + bench_injection.py (recall/precision 게이트).
+
+### Added (벤치마크)
+- **samples/injection_gold.jsonl** — 인젝션 15건 + 무해 15건 골드셋.
+- **scripts/bench_injection.py** — 재현율·정밀도·F1 측정 (게이트: ≥0.90).
+- **tests/test_bench_injection.py** — 벤치마크 통과 검증.
+
+## [0.4.17] - 2026-07-05 (patch71)
+
+> **v0.4.17-patch71 — 사용자 정의 인젝션 패턴 YAML 설정**
+> config/injection_patterns.yaml 로 커스텀 패턴 추가 가능. 내장 패턴과 병합.
+
+### Added (설정)
+- **config/injection_patterns.yaml** — 사용자 정의 인젝션 패턴 예시.
+
+### Changed (엔진)
+- **egress_audit/detectors/prompt_injection.py** — `custom_patterns_path` 파라미터, YAML 로딩.
+- **config/pii_routing.yaml** — `injection_patterns_path` 필드 추가.
+
+### Added (테스트)
+- **tests/test_prompt_injection.py** — 커스텀 패턴 테스트 3건.
+
+## [0.4.17] - 2026-07-05 (patch70)
+
+> **v0.4.17-patch70 — ARCHITECTURE 인젝션 레이어 + CHANGELOG patch67~69**
+
+### Changed (문서)
+- **docs/ARCHITECTURE.md** — Mermaid 다이어그램에 PromptInjectionDetector Phase 0 추가.
+- **CHANGELOG.md** — patch67~69 엔트리.
+- **docs/RELEASE_NOTES.md** — v0.4.17 범위 갱신.
+
 ## [0.4.17] - 2026-07-05 (patch69)
 
 > **v0.4.17-patch69 — severity levels + min_severity filter**

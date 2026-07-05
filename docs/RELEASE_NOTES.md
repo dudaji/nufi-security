@@ -6,11 +6,11 @@
 
 ---
 
-## v0.4.17 (patch69) — **프롬프트 인젝션 가드레일 완성 + severity 필터**
+## v0.4.17 (patch73) — **프롬프트 인젝션 가드레일 완성**
 
-> 한국어·영어 프롬프트 인젝션/탈옥 18종 패턴 탐지 — SDK·CLI·Guard·게이트웨이·LiteLLM 전 계층 통합 + severity 기반 필터링. (2026-07-05)
+> 한국어·영어 프롬프트 인젝션/탈옥 탐지 — SDK·CLI·Guard·게이트웨이·LiteLLM 전 계층 통합. 정책 기반(block/warn/log) + severity 필터 + 커스텀 패턴 + 벤치마크. (2026-07-05)
 
-### 이번 릴리스에 포함된 것 (patch60~69)
+### 이번 릴리스에 포함된 것 (patch59~73)
 
 | 계층 | 기능 |
 |---|---|
@@ -19,6 +19,9 @@
 | **게이트웨이** | `NUFI_CHECK_INJECTION=1` → Phase 0 인젝션 차단 (PII 탐지 전 선행) |
 | **LiteLLM** | pre_call_hook Phase 0 인젝션 차단 + 감사 로깅 |
 | **severity** | 패턴별 critical/high/medium/low 분류 · `min_severity` 임계 필터 |
+| **정책** | `config/policy.yaml` injection.action (block/warn/log) + min_severity |
+| **커스텀** | `config/injection_patterns.yaml` 로 운영자 정의 패턴 추가 |
+| **벤치마크** | `bench_injection.py` — 골드셋 30건 recall/precision 게이트 (현재 1.0/1.0) |
 | **문서** | `PROMPT_INJECTION.md` 가이드 · `HANDS_ON.md` 실습 |
 | **데모** | `demo_prompt_injection.sh` (31건 PASS) + SDK 예시 |
 
