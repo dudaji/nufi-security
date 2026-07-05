@@ -38,6 +38,7 @@ flowchart TB
   end
 
   subgraph DET["Detection + Policy (egress_audit/)"]
+    inj["injection.py: PromptInjectionDetector<br/>Phase 0 — 인젝션 탐지 (PII 전)"]
     guard["guard.py: EgressGuard.inspect()"]
     pipe["pipeline.py: DetectionPipeline.analyze()"]
     pii["detectors/korean_pii · secrets · ner"]
@@ -80,7 +81,8 @@ flowchart TB
   upPub["Public LLM<br/>(Claude/OpenAI)"]
 
   client --> app --> core --> router
-  core --> guard --> pipe
+  core --> inj
+  inj -->|pass| guard --> pipe
   pipe --> pii
   pipe --> conf
   guard --> policy
@@ -115,6 +117,7 @@ flowchart TB
 | capture (게이트웨이 진입) | `gateway/app.py`, `gateway/litellm_hook.py` | `EgressAuditHook.async_pre_call_hook` |
 | gateway 코어 | `gateway/core.py` | `Gateway.process()` |
 | 라우팅 | `gateway/router.py` | `Router.resolve()` (private 기본, public 폴백) |
+| 프롬프트 인젝션 탐지 (Phase 0) | `egress_audit/injection.py` | `PromptInjectionDetector.detect()` — PII 탐지 전 선행, 감지 시 즉시 차단 |
 | detection (PII/secret) | `egress_audit/pipeline.py` | `DetectionPipeline.analyze()` |
 | detection (기밀, M4) | `egress_audit/detectors/confidential.py`, `egress_audit/edm.py` | `EdmMatcher.match()` |
 | 정책 판정 | `egress_audit/policy.py` | `PolicyEngine.apply()` |

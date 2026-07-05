@@ -4,6 +4,37 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch69)
+
+> **v0.4.17-patch69 — severity levels + min_severity filter**
+> 인젝션 탐지 결과에 severity(critical/high/medium/low) 부여. `min_severity` 파라미터로 임계 이하 무시.
+
+### Changed (엔진)
+- **egress_audit/injection.py** — 패턴별 severity 레벨 매핑 추가. `detect()` 반환값에 `severity` 필드 포함.
+- **egress_audit/guard.py** — `min_severity` 파라미터: 임계 미만 인젝션 findings 필터링.
+
+### Added (테스트)
+- **tests/test_injection_severity.py** — severity 레벨 + min_severity 필터 테스트.
+
+## [0.4.17] - 2026-07-05 (patch68)
+
+> **v0.4.17-patch68 — doctor injection check + HANDS_ON 가이드**
+> `nufi-egress doctor --check-injection` 서브커맨드로 인젝션 탐지 상태 진단. HANDS_ON.md 실습 추가.
+
+### Added (CLI)
+- **enforcement/cli.py** — `doctor --check-injection` 서브커맨드 (설정·패턴·게이트웨이 상태 점검).
+
+### Added (문서)
+- **docs/HANDS_ON.md** — 인젝션 탐지 실습 섹션 추가.
+
+## [0.4.17] - 2026-07-05 (patch67)
+
+> **v0.4.17-patch67 — PROMPT_INJECTION.md 가이드**
+> 프롬프트 인젝션 탐지 기능의 설계·사용법·운영 가이드 문서.
+
+### Added (문서)
+- **docs/PROMPT_INJECTION.md** — 프롬프트 인젝션 탐지 가이드 (설계·패턴 목록·SDK/CLI/게이트웨이 사용법·운영 권고).
+
 ## [0.4.17] - 2026-07-05 (patch65)
 
 > **v0.4.17-patch65 — LiteLLM 훅 프롬프트 인젝션 차단**
