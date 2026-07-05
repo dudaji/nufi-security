@@ -1270,6 +1270,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="발견 건수만 출력(상세 없음, CI 빠른 상태 체크용)")
     p.add_argument("--min-score", type=float, default=0.0, metavar="THRESHOLD",
                    help="최소 신뢰도 점수 (0.0~1.0); 이하 발견 제외 (기본: 0.0)")
+    p.add_argument("--only-types", default=None, metavar="TYPES",
+                   help="특정 엔티티 타입만 보고(쉼표 구분, 예: KR_RRN,SECRET,CREDIT_CARD)")
     p.set_defaults(func=cmd_scan)
 
     p = sub.add_parser("diff",
@@ -1298,13 +1300,18 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.set_defaults(func=cmd_test)
 
     p = sub.add_parser("config",
-                       help="설정 파일 검증(syntax·필수 필드·regex · patch105)")
+                       help="설정 파일 검증/조회(syntax·필수 필드·regex · patch105, patch187)")
     csub = p.add_subparsers(dest="config_action", required=True)
     cp = csub.add_parser("validate", help="모든 NuFi 설정 파일 유효성 검증")
     cp.add_argument("--config-dir", default=None,
                     help="설정 디렉터리 경로(기본 config/)")
     cp.add_argument("--json", action="store_true", help="기계용 JSON 출력")
     cp.set_defaults(func=cmd_config)
+    cs = csub.add_parser("show", help="현재 유효 설정 표시(defaults 적용 후)")
+    cs.add_argument("--config-dir", default=None,
+                    help="설정 디렉터리 경로(기본 config/)")
+    cs.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    cs.set_defaults(func=cmd_config)
 
     p = sub.add_parser("watch",
                        help="디렉터리 PII 실시간 감시(폴링 · patch92)")

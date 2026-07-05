@@ -494,6 +494,15 @@ def scan_path(
     return result
 
 
+def _extract_entity_type(finding_type: str) -> str:
+    """Extract the entity type from a finding_type string.
+
+    E.g. 'PII:KR_RRN' -> 'KR_RRN', 'INJECTION:ignore_previous' -> 'IGNORE_PREVIOUS'.
+    """
+    part = finding_type.split(":", 1)[1] if ":" in finding_type else finding_type
+    return part.upper()
+
+
 def _classify_detection_method(source: str) -> str:
     """Map a Finding.source value to a human-friendly detection method."""
     if not source:
@@ -1084,6 +1093,16 @@ def cmd_scan(args) -> int:
     baseline_path = getattr(args, "baseline", None)
     if baseline_path:
         result = _apply_baseline(result, baseline_path)
+
+    # --only-types: filter to specific entity types (patch188)
+    only_types_raw = getattr(args, "only_types", None)
+    if only_types_raw:
+        allowed = {t.strip().upper() for t in only_types_raw.split(",") if t.strip()}
+        result.findings = [
+            f for f in result.findings
+            if _extract_entity_type(f.finding_type) in allowed
+        ]
+        result.files_with_findings = len(set(f.file for f in result.findings))
 
     # --min-score: filter findings below confidence threshold (patch186)
     min_score = getattr(args, "min_score", 0.0)

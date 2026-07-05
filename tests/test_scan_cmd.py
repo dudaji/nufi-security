@@ -904,3 +904,70 @@ def test_min_score_filters_low_confidence_findings(pii_file: Path, capsys):
     captured = capsys.readouterr()
     data = json.loads(captured.out)
     assert data["total_findings"] == 0
+
+
+# ---------------------------------------------------------------------------
+# --only-types tests (patch188)
+# ---------------------------------------------------------------------------
+
+def test_only_types_filters_to_specified_entities(pii_file: Path, capsys):
+    """--only-types: 지정한 엔티티 타입만 보고한다."""
+    import argparse
+    from enforcement.scan_cmd import cmd_scan
+
+    # First scan without filter to see all findings
+    args = argparse.Namespace(
+        target=str(pii_file),
+        pattern=None,
+        check_injection=False,
+        json=True,
+        format=None,
+        output=None,
+        fail_on_pii=False,
+        exclude=None,
+        redact=False,
+        dry_run=False,
+        no_backup=False,
+        stats=False,
+        summary_only=False,
+        verbose=False,
+        git_staged=False,
+        profile=None,
+        clear_cache=False,
+        parallel=1,
+        cache=False,
+        ignore_file=None,
+        baseline=None,
+        count_only=False,
+        min_score=0.0,
+        only_types=None,
+    )
+    rc = cmd_scan(args)
+    assert rc == 0
+    captured = capsys.readouterr()
+    data = json.loads(captured.out)
+    all_count = data["total_findings"]
+    assert all_count > 0
+
+    # Get all entity types found
+    all_types = set()
+    for f in data["findings"]:
+        ft = f["finding_type"]
+        entity = ft.split(":", 1)[1] if ":" in ft else ft
+        all_types.add(entity.upper())
+
+    # Now filter to a non-existent type — should return 0 findings
+    args.only_types = "NONEXISTENT_TYPE"
+    rc = cmd_scan(args)
+    assert rc == 0
+    captured = capsys.readouterr()
+    data = json.loads(captured.out)
+    assert data["total_findings"] == 0
+
+    # Filter to the actual types found — should return same count
+    args.only_types = ",".join(all_types)
+    rc = cmd_scan(args)
+    assert rc == 0
+    captured = capsys.readouterr()
+    data = json.loads(captured.out)
+    assert data["total_findings"] == all_count

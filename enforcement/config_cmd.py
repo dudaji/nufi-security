@@ -1,9 +1,11 @@
-"""``nufi-egress config validate`` -- validate NuFi config files (patch105).
+"""``nufi-egress config validate|show`` -- validate/show NuFi config files (patch105, patch187).
 
 Checks policy.yaml, pii_routing.yaml, injection_patterns.yaml for:
 - YAML syntax errors
 - Missing required fields
 - Invalid regex patterns in injection_patterns.yaml
+
+``config show`` displays the current effective configuration with defaults applied.
 """
 from __future__ import annotations
 
@@ -267,34 +269,166 @@ def validate_config(
 
 
 # ---------------------------------------------------------------------------
+# Config show (patch187)
+# ---------------------------------------------------------------------------
+
+# Default values applied when a config file is missing or fields are absent.
+_POLICY_DEFAULTS: Dict[str, Any] = {
+    "version": 1,
+    "default_action": "warn",
+    "blocking_actions": ["block"],
+    "entities": {},
+}
+
+_PII_ROUTING_DEFAULTS: Dict[str, Any] = {
+    "enabled": False,
+    "local_model": "none",
+    "cloud_model": "none",
+}
+
+_INJECTION_PATTERNS_DEFAULTS: Dict[str, Any] = {
+    "custom_patterns": [],
+}
+
+_SCAN_PROFILES_DEFAULTS: Dict[str, Any] = {
+    "profiles": {},
+}
+
+
+def _merge_defaults(data: Optional[Dict[str, Any]], defaults: Dict[str, Any]) -> Dict[str, Any]:
+    """Merge loaded data over defaults (shallow)."""
+    merged = dict(defaults)
+    if data and isinstance(data, dict):
+        merged.update(data)
+    return merged
+
+
+def show_config(
+    config_dir: Optional[str | Path] = None,
+) -> Dict[str, Any]:
+    """Load and return the effective configuration with defaults applied.
+
+    Reads: policy.yaml, pii_routing.yaml, injection_patterns.yaml, scan_profiles.yaml.
+
+    Args:
+        config_dir: Directory containing config files (default: ``config/``
+            relative to project root).
+
+    Returns:
+        Dictionary with effective config for each file.
+    """
+    if config_dir is None:
+        config_dir = Path(__file__).resolve().parent.parent / "config"
+    else:
+        config_dir = Path(config_dir)
+
+    effective: Dict[str, Any] = {}
+
+    # policy.yaml
+    policy_path = config_dir / "policy.yaml"
+    policy_data = None
+    if policy_path.is_file():
+        try:
+            policy_data = _load_yaml(policy_path)
+        except Exception:
+            policy_data = None
+    effective["policy"] = _merge_defaults(policy_data, _POLICY_DEFAULTS)
+
+    # pii_routing.yaml
+    routing_path = config_dir / "pii_routing.yaml"
+    routing_data = None
+    if routing_path.is_file():
+        try:
+            routing_data = _load_yaml(routing_path)
+        except Exception:
+            routing_data = None
+    effective["pii_routing"] = _merge_defaults(routing_data, _PII_ROUTING_DEFAULTS)
+
+    # injection_patterns.yaml
+    injection_path = config_dir / "injection_patterns.yaml"
+    injection_data = None
+    if injection_path.is_file():
+        try:
+            injection_data = _load_yaml(injection_path)
+        except Exception:
+            injection_data = None
+    effective["injection_patterns"] = _merge_defaults(injection_data, _INJECTION_PATTERNS_DEFAULTS)
+
+    # scan_profiles.yaml
+    profiles_path = config_dir / "scan_profiles.yaml"
+    profiles_data = None
+    if profiles_path.is_file():
+        try:
+            profiles_data = _load_yaml(profiles_path)
+        except Exception:
+            profiles_data = None
+    effective["scan_profiles"] = _merge_defaults(profiles_data, _SCAN_PROFILES_DEFAULTS)
+
+    effective["_meta"] = {
+        "config_dir": str(config_dir),
+        "files_loaded": [
+            str(p) for p in [policy_path, routing_path, injection_path, profiles_path]
+            if p.is_file()
+        ],
+    }
+
+    return effective
+
+
+# ---------------------------------------------------------------------------
 # CLI handler
 # ---------------------------------------------------------------------------
 
 def cmd_config(args) -> int:
-    """``nufi-egress config validate`` CLI handler."""
+    """``nufi-egress config validate|show`` CLI handler."""
     action = getattr(args, "config_action", None)
-    if action != "validate":
-        print("Unknown config action", file=sys.stderr)
-        return 2
 
-    config_dir = getattr(args, "config_dir", None)
-    use_json = getattr(args, "json", False)
+    if action == "show":
+        config_dir = getattr(args, "config_dir", None)
+        use_json = getattr(args, "json", False)
+        effective = show_config(config_dir=config_dir)
 
-    result = validate_config(config_dir=config_dir)
-
-    if use_json:
-        print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
-    else:
-        if not result.issues:
-            print(f"Config validation: {result.files_checked} files checked, no issues.")
+        if use_json:
+            print(json.dumps(effective, ensure_ascii=False, indent=2))
         else:
-            error_count = sum(1 for i in result.issues if i.severity == "error")
-            warn_count = sum(1 for i in result.issues if i.severity == "warning")
-            print(f"Config validation: {result.files_checked} files checked, "
-                  f"{error_count} error(s), {warn_count} warning(s).")
+            # Human-friendly output
+            print(f"Config directory: {effective['_meta']['config_dir']}")
+            print(f"Files loaded: {len(effective['_meta']['files_loaded'])}")
             print()
-            for issue in result.issues:
-                tag = "ERROR" if issue.severity == "error" else "WARN"
-                print(f"  [{tag}] {issue.file}: {issue.message}")
+            for section in ("policy", "pii_routing", "injection_patterns", "scan_profiles"):
+                print(f"[{section}]")
+                data = effective[section]
+                for key, value in data.items():
+                    # Truncate long values for readability
+                    val_str = str(value)
+                    if len(val_str) > 80:
+                        val_str = val_str[:77] + "..."
+                    print(f"  {key}: {val_str}")
+                print()
+        return 0
 
-    return 1 if result.has_errors else 0
+    if action == "validate":
+        config_dir = getattr(args, "config_dir", None)
+        use_json = getattr(args, "json", False)
+
+        result = validate_config(config_dir=config_dir)
+
+        if use_json:
+            print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            if not result.issues:
+                print(f"Config validation: {result.files_checked} files checked, no issues.")
+            else:
+                error_count = sum(1 for i in result.issues if i.severity == "error")
+                warn_count = sum(1 for i in result.issues if i.severity == "warning")
+                print(f"Config validation: {result.files_checked} files checked, "
+                      f"{error_count} error(s), {warn_count} warning(s).")
+                print()
+                for issue in result.issues:
+                    tag = "ERROR" if issue.severity == "error" else "WARN"
+                    print(f"  [{tag}] {issue.file}: {issue.message}")
+
+        return 1 if result.has_errors else 0
+
+    print("Unknown config action", file=sys.stderr)
+    return 2
