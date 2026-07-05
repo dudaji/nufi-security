@@ -4,12 +4,18 @@ Watches a directory for file changes (create/modify) using mtime polling.
 When PII is detected in a changed file, prints an alert to stdout.
 
 No external dependencies — uses os.stat mtime tracking with configurable interval.
+--webhook URL posts JSON payloads on PII detection (patch102).
 """
 from __future__ import annotations
 
 import fnmatch
+import json
+import logging
 import os
 import time
+import urllib.request
+import urllib.error
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -70,6 +76,37 @@ def _print_alert(path: Path, result: ScanResult) -> None:
         print(f"[ALERT] {path}: L{f.line} [{f.finding_type}] {f.text}")
 
 
+logger = logging.getLogger(__name__)
+
+
+def _post_webhook(url: str, path: Path, result: ScanResult) -> None:
+    """POST a JSON payload to the webhook URL (non-blocking on failure)."""
+    payload = {
+        "event": "pii_detected",
+        "file": str(path),
+        "findings": [
+            {
+                "line": f.line,
+                "finding_type": f.finding_type,
+                "text": f.text,
+            }
+            for f in result.findings
+        ],
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        urllib.request.urlopen(req, timeout=10)
+    except (urllib.error.URLError, OSError) as e:
+        logger.warning("Webhook POST to %s failed: %s", url, e)
+
+
 def watch_directory(
     directory: str | Path,
     *,
@@ -77,6 +114,7 @@ def watch_directory(
     check_injection: bool = False,
     patterns: Optional[List[str]] = None,
     once: bool = False,
+    webhook: Optional[str] = None,
 ) -> int:
     """Watch a directory for file changes and alert on PII detection.
 
@@ -86,6 +124,7 @@ def watch_directory(
         check_injection: Also check for prompt injection patterns.
         patterns: Glob patterns to filter files (e.g. ["*.py", "*.md"]).
         once: Scan all matching files once and exit.
+        webhook: URL to POST JSON payload on PII detection.
 
     Returns:
         Exit code: 1 if PII found (in --once mode), 0 otherwise.
@@ -104,7 +143,7 @@ def watch_directory(
 
     # --once mode: scan all files once and exit
     if once:
-        return _scan_once(directory, pipeline, injection_detector, patterns, exclude_patterns)
+        return _scan_once(directory, pipeline, injection_detector, patterns, exclude_patterns, webhook=webhook)
 
     # Continuous watch mode
     mtime_cache: Dict[str, float] = {}
@@ -134,6 +173,8 @@ def watch_directory(
                     result = _scan_single_file(f, pipeline, injection_detector)
                     if result.findings:
                         _print_alert(f, result)
+                        if webhook:
+                            _post_webhook(webhook, f, result)
                     mtime_cache[fkey] = mt
     except KeyboardInterrupt:
         print("\n[watch] Stopped.")
@@ -146,6 +187,8 @@ def _scan_once(
     injection_detector: Optional[PromptInjectionDetector],
     patterns: Optional[List[str]],
     exclude_patterns: List[str],
+    *,
+    webhook: Optional[str] = None,
 ) -> int:
     """Scan all matching files once and exit."""
     files = _collect_files(directory, patterns, exclude_patterns)
@@ -155,6 +198,8 @@ def _scan_once(
         result = _scan_single_file(f, pipeline, injection_detector)
         if result.findings:
             _print_alert(f, result)
+            if webhook:
+                _post_webhook(webhook, f, result)
             found_any = True
 
     if not found_any:
@@ -176,4 +221,5 @@ def cmd_watch(args) -> int:
         check_injection=getattr(args, "check_injection", False),
         patterns=patterns,
         once=getattr(args, "once", False),
+        webhook=getattr(args, "webhook", None),
     )
