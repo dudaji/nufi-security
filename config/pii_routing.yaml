@@ -19,3 +19,8 @@ fail_closed: true
 # 특정 엔티티만 지정하면 해당 엔티티 감지 시에만 로컬 라우팅.
 # 예: [KR_RRN, SECRET, CREDIT_CARD]
 force_local_entities: null
+
+# 프롬프트 인젝션 검사 활성화 여부 (patch64).
+# true 이면 게이트웨이에서 PII 검사 이전에 인젝션 패턴을 탐지하여 차단.
+# 환경변수 NUFI_CHECK_INJECTION=1 로도 활성화 가능.
+check_injection: false

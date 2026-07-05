@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 from egress_audit import EgressGuard, AuditLogger, MessageStore
+from egress_audit.detectors.prompt_injection import PromptInjectionDetector
 from capture import ContentDumpWriter
 from gateway.router import Router, RouteDecision
 
@@ -21,6 +22,8 @@ from gateway.router import Router, RouteDecision
 _DETECT_TIMEOUT_MS = int(os.environ.get("NUFI_DETECT_TIMEOUT_MS", "5000"))
 # 프롬프트 최대 길이 (바이트). OOM 방어. 초과 시 잘라서 탐지.
 _MAX_PROMPT_BYTES = int(os.environ.get("NUFI_MAX_PROMPT_BYTES", str(512 * 1024)))
+# 프롬프트 인젝션 검사 활성화 (opt-in, 기본 OFF). 환경변수 또는 config로 제어.
+_CHECK_INJECTION = os.environ.get("NUFI_CHECK_INJECTION", "0") == "1"
 
 
 class DetectionTimeoutError(Exception):
@@ -94,11 +97,27 @@ def _stub_completion(model: str, content: str) -> Dict[str, Any]:
     }
 
 
+def _load_check_injection_config() -> bool:
+    """config/pii_routing.yaml 에서 check_injection 설정을 로드. 없으면 False."""
+    from pathlib import Path
+    import yaml
+    cfg_path = Path(__file__).resolve().parent.parent / "config" / "pii_routing.yaml"
+    if cfg_path.exists():
+        try:
+            with open(cfg_path, "r", encoding="utf-8") as f:
+                cfg = yaml.safe_load(f) or {}
+            return bool(cfg.get("check_injection", False))
+        except Exception:
+            return False
+    return False
+
+
 class Gateway:
     def __init__(self, guard: Optional[EgressGuard] = None, router: Optional[Router] = None,
                  audit: Optional[AuditLogger] = None, ner_backend: Optional[str] = None,
                  messages: Optional[MessageStore] = None,
-                 content_dump: Optional[ContentDumpWriter] = None):
+                 content_dump: Optional[ContentDumpWriter] = None,
+                 check_injection: Optional[bool] = None):
         self.guard = guard or EgressGuard(
             ner_backend=ner_backend or os.environ.get("EGRESS_NER_BACKEND", "auto"))
         self.router = router or Router()
@@ -107,6 +126,16 @@ class Gateway:
         self.messages = messages or MessageStore()
         # P1(a): public 출구 평문 content dump(TLS 직전 직렬화 요청).
         self.content_dump = content_dump or ContentDumpWriter()
+        # patch64: 프롬프트 인젝션 검사. 환경변수 > 생성자 인자 > config 파일 순으로 결정.
+        if check_injection is not None:
+            self._check_injection = check_injection
+        elif _CHECK_INJECTION:
+            self._check_injection = True
+        else:
+            self._check_injection = _load_check_injection_config()
+        self._injection_detector: Optional[PromptInjectionDetector] = (
+            PromptInjectionDetector() if self._check_injection else None
+        )
 
     @property
     def ner_backend(self) -> str:
@@ -218,6 +247,33 @@ class Gateway:
         prompt_text = extract_text(body.get("messages", []))
         conv_id = self._conversation_id(body)
         turn = int(body.get("turn", 1))
+
+        # patch64: 프롬프트 인젝션 검사 (opt-in, PII/라우팅 이전에 실행)
+        if self._check_injection and self._injection_detector:
+            injection_findings = self._injection_detector.detect(prompt_text)
+            if injection_findings:
+                elapsed_ms = (time.monotonic() - t0) * 1000
+                err_body = {
+                    "error": {
+                        "type": "injection_blocked",
+                        "message": "프롬프트 인젝션이 감지되어 요청이 차단되었습니다.",
+                        "findings_count": len(injection_findings),
+                    }
+                }
+                # 라우팅 전 차단이므로 최소한의 route 정보만 구성
+                private_down = os.environ.get("EGRESS_PRIVATE_DOWN", "0") == "1"
+                route = self.router.resolve(requested_model, force_fallback=private_down)
+                self.audit.log(
+                    model=route.backend, provider=route.provider,
+                    is_public=route.is_public,
+                    request_body={"model": requested_model, "redacted": True},
+                    decision_summary={"blocked": True, "injection": True},
+                    findings=[], outcome="injection_blocked")
+                return GatewayResponse(
+                    403, route, "blocked", None, err_body,
+                    ["PROMPT_INJECTION"],
+                    conversation_id=conv_id,
+                    latency_ms=elapsed_ms)
 
         # 라우팅: 기본 private, private 불가 시 public 폴백
         private_down = os.environ.get("EGRESS_PRIVATE_DOWN", "0") == "1"
