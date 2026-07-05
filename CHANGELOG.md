@@ -4,6 +4,14 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.16] - 2026-07-04 (patch52)
+
+> **v0.4.16-patch52 — README.md 경쟁 위치 섹션 추가**
+> "왜 NuFi인가" 절 신설: 영어권 오픈소스·상용 DLP 대비 비교표(7개 항목), 적합 조직 유형 4가지, 직접 구현의 의미(보안 표면·hot-reload·가독성) 문서화. VERSION 변경 없음.
+
+### Changed (문서)
+- **README.md** — §설정~§현재상태 사이에 "왜 NuFi인가 — 경쟁 위치" 절 추가(비교표·적합 조직·직접 구현 의미).
+
 ## [0.4.16] - 2026-07-04 (patch51)
 
 > **v0.4.16-patch51 — SDK.md §2.4 GuardResult·Decision 필드 상세 표 추가**
