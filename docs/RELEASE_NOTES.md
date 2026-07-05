@@ -6,6 +6,30 @@
 
 ---
 
+## v0.4.18 (patch177) -- **안정 릴리스: 인젝션 가드레일 + 파일 스캔 + REST API + CLI 확장**
+
+> patch55~175 전체를 아우르는 마일스톤 릴리스. (2026-07-05)
+
+### 주요 기능
+
+| 계층 | 기능 |
+|---|---|
+| **인젝션 가드레일** | 한국어 프롬프트 인젝션 28종 패턴 탐지. Guard 통합으로 PII+인젝션 동시 차단 |
+| **REST API** | `nufi-egress serve` — OpenAPI/Swagger, 6개 엔드포인트(/detect, /injection, /pipeline, /explain, /scan, /completions) |
+| **파일 스캔** | `scan --recursive --redact --dry-run --git-staged --stats` 전체 옵션 세트 |
+| **CLI 37개+** | dashboard, report(executive/badge/posture/coverage-map), doctor, init, watch 등 |
+| **SDK 20개+ 함수** | detect, route, explain, batch_*, security_report, guard_context 등 |
+| **보안 대시보드** | ASCII 터미널 대시보드, 경영진 등급 리포트, SVG 배지 |
+
+### 누구에게 유용한가
+
+- **보안 운영자** -- 터미널 대시보드와 경영진 리포트로 전체 보안 상태를 즉시 파악.
+- **개발자** -- SDK 20개+ 함수와 Guard 컨텍스트 매니저로 코드 레벨 PII 보호.
+- **CI/CD** -- `scan --git-staged`, pre-commit hook, SVG 배지로 파이프라인 통합.
+- **마이크로서비스** -- REST API 6개 엔드포인트로 원격 스캔·판정.
+
+---
+
 ## v0.4.17 (patch175) -- **ASCII dashboard + Guard + API endpoints + git-staged scan**
 
 > ASCII 터미널 대시보드, Guard 컨텍스트 매니저, REST API 확장, git staged 스캔. (2026-07-06)

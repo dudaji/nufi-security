@@ -4,6 +4,22 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.18] - 2026-07-05 (patch55~177)
+
+> **v0.4.18 — 프롬프트 인젝션 가드레일 + 파일 스캔 + REST API + CLI 확장**
+> patch55~175 전 시리즈를 포함하는 안정 릴리스. 테스트 590건+.
+
+### Highlights
+
+- **프롬프트 인젝션 탐지** — 한국어 탈옥/인젝션 패턴 28종 룰 엔진 + Guard 통합. `detect_injection()` SDK 함수.
+- **REST API 서버** — `nufi-egress serve`: OpenAPI/Swagger, `/detect`, `/injection`, `/pipeline`, `/explain`, `/scan` 엔드포인트.
+- **파일·디렉터리 스캔** — `scan --recursive`, `--redact`, `--dry-run`, `--git-staged`, `--stats` 옵션.
+- **CLI 확장** — 37개+ 서브커맨드: dashboard, report(executive/badge/posture/coverage-map), doctor, init, watch 등.
+- **SDK 20개+ 공개 함수** — detect, route, explain, batch_detect, batch_route, batch_inspect, security_report, guard_context 등.
+- **보안 포스처·대시보드** — ASCII 터미널 대시보드, 경영진 보안 등급 리포트, SVG 배지 생성.
+
+---
+
 ## [0.4.17] - 2026-07-06 (patch169-175)
 
 > **v0.4.17-patch169~175 — API endpoints + scan --git-staged + Guard + dashboard + CHANGELOG**
