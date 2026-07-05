@@ -1,4 +1,4 @@
-"""tests/test_scan_cmd.py — nufi-egress scan 커맨드 테스트 (patch86, patch88, patch91).
+"""tests/test_scan_cmd.py — nufi-egress scan 커맨드 테스트 (patch86, patch88, patch91, patch97).
 
 시나리오:
 1. 단일 파일 스캔 → PII 발견
@@ -12,6 +12,7 @@
 9. --redact 모드: 파일 수정 + 백업 생성
 10. --redact --no-backup: 백업 없이 수정
 11. --stats 플래그: 요약 통계 출력
+12. --parallel N: 멀티스레드 스캔 결과가 순차 스캔과 동일
 """
 from __future__ import annotations
 
@@ -420,3 +421,32 @@ def test_format_jsonl_produces_valid_json_lines(pii_file: Path, capsys):
         assert "entity_type" in obj
         assert "text" in obj
         assert "score" in obj
+
+
+# ---------------------------------------------------------------------------
+# Parallel scan tests (patch97)
+# ---------------------------------------------------------------------------
+
+def test_parallel_scan_produces_same_results_as_sequential(tmp_path: Path):
+    """--parallel N: 멀티스레드 스캔 결과가 순차 스캔과 동일하다."""
+    # Create multiple files with PII
+    for i in range(5):
+        f = tmp_path / f"file_{i}.txt"
+        f.write_text(f"사용자{i} 주민번호 900101-123456{i}\n", encoding="utf-8")
+
+    # Sequential scan (parallel=1)
+    seq_result = scan_path(tmp_path, parallel=1)
+
+    # Parallel scan (parallel=4)
+    par_result = scan_path(tmp_path, parallel=4)
+
+    # Same number of files scanned
+    assert par_result.files_scanned == seq_result.files_scanned
+    # Same number of files with findings
+    assert par_result.files_with_findings == seq_result.files_with_findings
+    # Same total findings count
+    assert len(par_result.findings) == len(seq_result.findings)
+    # Same finding types (order may differ due to threading)
+    seq_types = sorted((f.file, f.line, f.finding_type) for f in seq_result.findings)
+    par_types = sorted((f.file, f.line, f.finding_type) for f in par_result.findings)
+    assert par_types == seq_types

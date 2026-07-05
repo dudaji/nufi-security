@@ -6,6 +6,7 @@ SDK 에서도 ``from nufi import scan_dir`` 로 사용 가능.
 .nufiignore 파일 또는 --exclude 플래그로 스캔 대상에서 제외할 패턴 지정 가능.
 --format sarif 옵션으로 SARIF 2.1.0 JSON 출력 지원 (GitHub code scanning 호환).
 --redact 모드로 PII 를 자동 치환하여 파일을 재작성 (patch88).
+--parallel N 으로 멀티스레드 스캔 지원 (patch97).
 """
 from __future__ import annotations
 
@@ -13,6 +14,7 @@ import fnmatch
 import json
 import os
 import shutil
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
@@ -145,12 +147,41 @@ class ScanResult:
 # Core scan logic
 # ---------------------------------------------------------------------------
 
+def _scan_file_isolated(
+    path: Path,
+    check_injection: bool,
+    patterns: Optional[List[str]],
+) -> ScanResult:
+    """Scan a single file in isolation (thread-safe).
+
+    Creates its own DetectionPipeline and optional PromptInjectionDetector
+    so that each thread has independent state.
+    """
+    result = ScanResult()
+    pipeline = DetectionPipeline()
+    injection_detector = PromptInjectionDetector() if check_injection else None
+    _scan_file(path, pipeline, injection_detector, result, patterns)
+    return result
+
+
+def _merge_results(results: List[ScanResult]) -> ScanResult:
+    """Merge multiple ScanResult instances into one."""
+    merged = ScanResult()
+    for r in results:
+        merged.files_scanned += r.files_scanned
+        merged.files_with_findings += r.files_with_findings
+        merged.findings.extend(r.findings)
+        merged.errors.extend(r.errors)
+    return merged
+
+
 def scan_path(
     target: str | Path,
     *,
     patterns: Optional[List[str]] = None,
     check_injection: bool = False,
     exclude: Optional[List[str]] = None,
+    parallel: int = 1,
 ) -> ScanResult:
     """Scan a file or directory for PII (and optionally injection patterns).
 
@@ -160,15 +191,13 @@ def scan_path(
         check_injection: Whether to also detect prompt injection patterns.
         exclude: Glob patterns to exclude files/directories from scanning.
             If None, will attempt to load .nufiignore from the target dir.
+        parallel: Number of threads to use for scanning (default 1 = sequential).
 
     Returns:
         ScanResult with all findings.
     """
     target = Path(target)
     result = ScanResult()
-
-    pipeline = DetectionPipeline()
-    injection_detector = PromptInjectionDetector() if check_injection else None
 
     # Determine scan root for .nufiignore and relative path computation
     scan_root = target if target.is_dir() else target.parent
@@ -179,20 +208,38 @@ def scan_path(
     else:
         exclude_patterns = list(exclude)
 
+    # Collect files to scan
+    files_to_scan: List[Path] = []
     if target.is_file():
         if not _is_excluded(target, scan_root, exclude_patterns):
-            _scan_file(target, pipeline, injection_detector, result, patterns)
+            files_to_scan.append(target)
     elif target.is_dir():
         for root, _dirs, files in os.walk(target):
             for fname in sorted(files):
                 fpath = Path(root) / fname
                 if _is_excluded(fpath, scan_root, exclude_patterns):
                     continue
-                _scan_file(fpath, pipeline, injection_detector, result, patterns)
+                files_to_scan.append(fpath)
     else:
         result.errors.append({"path": str(target), "error": "Path does not exist"})
+        return result
 
-    return result
+    if parallel > 1 and len(files_to_scan) > 1:
+        # Parallel scan: each thread creates its own pipeline instance
+        with ThreadPoolExecutor(max_workers=parallel) as executor:
+            futures = [
+                executor.submit(_scan_file_isolated, fpath, check_injection, patterns)
+                for fpath in files_to_scan
+            ]
+            sub_results = [f.result() for f in futures]
+        return _merge_results(sub_results)
+    else:
+        # Sequential scan (original behaviour)
+        pipeline = DetectionPipeline()
+        injection_detector = PromptInjectionDetector() if check_injection else None
+        for fpath in files_to_scan:
+            _scan_file(fpath, pipeline, injection_detector, result, patterns)
+        return result
 
 
 def _scan_file(
@@ -530,6 +577,7 @@ def cmd_scan(args) -> int:
         patterns=patterns,
         check_injection=getattr(args, "check_injection", False),
         exclude=exclude,
+        parallel=getattr(args, "parallel", 1),
     )
 
     # Output format

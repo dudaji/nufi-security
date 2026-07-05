@@ -984,6 +984,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="redact 시 .bak 백업 파일 생성 생략")
     p.add_argument("--stats", action="store_true",
                    help="스캔 후 요약 통계 출력(엔티티별·위험도별 집계)")
+    p.add_argument("--parallel", type=int, default=1, metavar="N",
+                   help="멀티스레드 스캔 워커 수(기본 1 = 순차)")
     p.set_defaults(func=cmd_scan)
 
     p = sub.add_parser("watch",
