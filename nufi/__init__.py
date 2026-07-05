@@ -123,6 +123,11 @@ def route(text: str, **kwargs: Any) -> RoutingDecision:
 from enforcement.inspect_cmd import inspect_text  # noqa: E402
 
 # ---------------------------------------------------------------------------
+# 디렉터리/파일 스캔 (Directory/File Scan) — v0.4.x (patch83)
+# ---------------------------------------------------------------------------
+from enforcement.scan_cmd import scan_path as scan_dir  # noqa: E402
+
+# ---------------------------------------------------------------------------
 # 편의 함수 (Convenience helpers) — v0.4.6
 # ---------------------------------------------------------------------------
 
@@ -194,6 +199,7 @@ __all__ = [
     "inspect_text",
     # convenience
     "scan_file",
+    "scan_dir",
     "guard_file",
     "batch_detect",
 ]

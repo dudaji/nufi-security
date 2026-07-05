@@ -420,6 +420,12 @@ def cmd_flow_tap(args) -> int:
 
 
 
+def cmd_scan(args) -> int:
+    """파일/디렉터리 PII + 인젝션 스캔 (patch83)."""
+    from enforcement.scan_cmd import cmd_scan as _scan
+    return _scan(args)
+
+
 def cmd_inspect(args) -> int:
     """통합 보안 분석 — PII + 인젝션 + 라우팅 + 위험도 (patch78)."""
     from enforcement.inspect_cmd import inspect_text, render_human
@@ -940,6 +946,18 @@ def main(argv: Optional[List[str]] = None) -> int:
                     help="출력 형식(기본 md)")
     rp.add_argument("--out", default=None, help="출력 파일 경로(생략 시 stdout)")
     rp.set_defaults(func=cmd_report)
+
+    p = sub.add_parser("scan",
+                       help="파일/디렉터리 PII + 인젝션 스캔(CI/pre-commit · patch83)")
+    p.add_argument("target", help="스캔할 파일 또는 디렉터리 경로")
+    p.add_argument("--pattern", default=None,
+                   help="파일 glob 패턴(쉼표 구분, 예: '*.py,*.md,*.txt')")
+    p.add_argument("--check-injection", action="store_true",
+                   help="프롬프트 인젝션 패턴도 함께 탐지")
+    p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    p.add_argument("--fail-on-pii", action="store_true",
+                   help="PII 발견 시 exit code 1 (CI 게이트)")
+    p.set_defaults(func=cmd_scan)
 
     p = sub.add_parser("inspect",
                        help="통합 보안 분석 — PII + 인젝션 + 라우팅 + 위험도 (patch78)")
