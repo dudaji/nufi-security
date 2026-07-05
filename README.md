@@ -102,6 +102,11 @@ token = pseudonymize("KR_PERSON", "김민수")  # <KR_PERSON_fa2a85f7c4>
 result = Guard().inspect("김민수님 계좌번호 110-123-456789")
 if result.blocked:
     print("차단:", result.decision.actions)
+
+# PII 라우팅 — PII 포함 시 로컬 모델, 없으면 클라우드 허용
+from nufi import route
+decision = route("김민수님 계좌번호 110-123-456789")
+print(decision.routed_to_local)  # True — 로컬 모델로 강제 라우팅
 ```
 
 파일 단위·일괄 탐지도 가능합니다.
@@ -168,6 +173,10 @@ nufi-egress monitor  --simulate samples/flow_bypass_burst.jsonl --threshold 1
 
 # 4) PII 라우팅 데모 — PII 포함 → 로컬 모델, PII 없음 → 클라우드 허용
 ./scripts/demo_pii_routing.sh                # 매뉴얼: docs/PII_ROUTING.md
+
+# 4b) PII 라우팅 CLI — 텍스트의 라우팅 판정을 즉시 확인
+nufi-egress route --text "김민수님 계좌 110-123-456789"       # → 로컬 라우팅
+nufi-egress route --text "오늘 날씨 어때" --json             # → 클라우드 허용 (JSON)
 
 # 5) Python SDK 데모 — from nufi import ... 탐지·가명화·정책 평가
 ./scripts/demo_sdk.sh                         # 매뉴얼: docs/SDK.md
@@ -299,6 +308,7 @@ Wilson CI95 하한은 점추정이 아닌 **통계적 하한**으로, 이 값이
 | `config/policy.yaml` | 차단/마스킹/가명화/경고 동작 |
 | `config/routing.yaml` | 사내/외부 라우팅·분류 |
 | `config/audit_profiles.yaml` | 메시지 저장·본문 보존·차등 감사 프로파일 |
+| `config/pii_routing.yaml` | PII 라우팅 — 로컬/클라우드 모델명·대상 엔티티·fail-closed |
 | `config/litellm_config.yaml` | LiteLLM Proxy 연동 콜백 |
 
 본문 보존 기본값은 **사내(private) = 원문 보존**, **외부(public) = 가명화된 통과본만 보존** 입니다.

@@ -4,6 +4,14 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.4.17] - 2026-07-05 (patch58)
+
+> **v0.4.17-patch58 — README.md PII 라우팅 표면 반영**
+> SDK route() 예시·CLI route 사용법·설정 파일 테이블에 pii_routing.yaml 추가. patch55~57 결과물을 최상위 README에 반영.
+
+### Changed (문서)
+- **README.md** — SDK 섹션에 `route()` 예시 추가, 데모 섹션에 `nufi-egress route` 사용법 추가, 설정 테이블에 `config/pii_routing.yaml` 행 추가.
+
 ## [0.4.17] - 2026-07-05 (patch56)
 
 > **v0.4.17-patch56 — config/pii_routing.yaml 설정 파일 도입**

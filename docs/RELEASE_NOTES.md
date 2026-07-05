@@ -6,6 +6,12 @@
 
 ---
 
+## v0.4.17 (patch58) — **README.md PII 라우팅 표면 반영**
+
+> patch55~57 결과물(CLI route·설정 파일·SDK route)을 최상위 README.md에 반영. (2026-07-05)
+
+---
+
 ## v0.4.17 (patch56) — **config/pii_routing.yaml 설정 파일 도입**
 
 > PII 라우팅을 코드 수정 없이 YAML 설정 파일로 제어할 수 있습니다. (2026-07-05)
