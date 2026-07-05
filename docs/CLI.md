@@ -52,6 +52,10 @@ usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
 | [`route`](#route) | PII 라우팅 결정 테스트 — 텍스트의 PII 감지·모델 라우팅 판정 출력 | 불필요 |
 | [`benchmark`](#benchmark) | 정확도+가명화 벤치마크 재현(커밋 증거 대조 + 라이브 하니스) | 불필요 |
 | [`scan`](#scan) | 파일/디렉터리 PII+인젝션 스캔(CI/pre-commit · SARIF · redact) | 불필요 |
+| [`lint`](#lint) | 보안 안티패턴 검사(하드코딩 키·디버그·HTTP·eval) | 불필요 |
+| [`generate`](#generate) | 테스트용 한국어 PII 샘플 데이터 생성 | 불필요 |
+| [`mask`](#mask) | 텍스트 PII 마스킹(asterisk 가림) | 불필요 |
+| [`redact`](#redact-text) | 텍스트 PII 리댁션(타입 태그 교체) | 불필요 |
 
 > **신규 도입 5분 경로:** `init audit-only` → SDK/게이트웨이 배선 → `doctor`(core-3 GREEN 확인) → `status`/감사 로그 관찰 → 준비되면 `apply`. 자세한 결정 트리는 [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md).
 
@@ -840,6 +844,111 @@ python3 scripts/demo_pii_routing.py    # 4 시나리오 PASS, LiteLLM 불필요
 전체 예시 목록: [`examples/README.md`](../examples/README.md).
 
 > 레거시 모듈 진입점(`python3 -m capture.targets`·`python3 -m capture.flow_tap`·`python3 -m egress_audit.audit_bot`)은 하위호환으로 유지되나, 신규 사용은 위 통합 CLI 서브커맨드(`targets`·`flow-tap`·`audit`)를 권장합니다.
+
+---
+
+## `lint`
+
+보안 안티패턴을 검사합니다. Python/YAML/JSON 파일에서 하드코딩된 API 키·토큰·비밀번호, 디버그 모드 활성화, 비보안 URL(`http://`), SSL 검증 비활성화, `eval()`/`exec()` 사용을 탐지합니다. `.nufiignore` 제외 패턴을 존중합니다.
+
+```
+usage: nufi-egress lint TARGET [--fix] [--json] [--exclude GLOB]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `TARGET` | 검사할 파일 또는 디렉터리 경로(필수) | — |
+| `--fix` | 자동 수정 가능한 항목 적용(예: `http://` → `https://`) | off |
+| `--json` | 기계용 JSON 출력 | — |
+| `--exclude GLOB` | 제외할 glob 패턴(쉼표 구분) | `.nufiignore` |
+
+```bash
+nufi-egress lint ./src                          # 디렉터리 전체 검사
+nufi-egress lint ./config --json                # JSON 출력
+nufi-egress lint ./src --fix                    # 자동 수정 적용
+nufi-egress lint . --exclude "venv/**,*.log"    # 패턴 제외
+```
+
+> 종료코드: 안티패턴 발견 시 1, 없으면 0.
+
+---
+
+## `generate`
+
+테스트용 한국어 PII 샘플 데이터를 생성합니다. 기존 gazetteer 의 한국 성씨·이름 사전과 유효 형식의 전화번호·계좌번호·이메일·주민등록번호 등을 조합하여 현실적인 PII 포함 텍스트를 만듭니다. `--include-injection` 으로 인젝션 시도 샘플도 추가할 수 있습니다.
+
+```
+usage: nufi-egress generate [--count N] [--include-injection]
+                            [--output PATH] [--format {jsonl,text}]
+                            [--seed N]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--count N` | 생성할 PII 샘플 수 | `10` |
+| `--include-injection` | 인젝션 시도 샘플 추가 | off |
+| `--output PATH` | 출력 파일 경로(생략 시 stdout) | — |
+| `--format {jsonl,text}` | 출력 형식. `jsonl` 은 메타데이터(entity_types, severity, language) 포함, `text` 는 텍스트만 | `jsonl` |
+| `--seed N` | 랜덤 시드(재현 가능한 생성) | — |
+
+```bash
+nufi-egress generate                                 # 10개 JSONL 출력
+nufi-egress generate --count 50 --output test.jsonl  # 50개 파일 기록
+nufi-egress generate --include-injection --format text
+nufi-egress generate --seed 42 --count 5             # 재현 가능
+```
+
+> 종료코드: 항상 0.
+
+---
+
+## `mask`
+
+텍스트의 PII 를 asterisk(`*`)로 가립니다. 원본 파일을 수정하지 않으며 stdout 으로 출력합니다.
+
+```
+usage: nufi-egress mask [--text TEXT] [--file PATH] [--output PATH]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--text TEXT` | 마스킹할 텍스트 | — |
+| `--file PATH` | 마스킹할 파일 경로(라인별 처리) | — |
+| `--output PATH` | 결과를 파일에 기록(생략 시 stdout) | — |
+
+```bash
+nufi-egress mask --text "고객 김민수님 전화번호 010-1234-5678"
+# → 고객 ***님 전화번호 ***-****-****
+
+nufi-egress mask --file input.txt --output masked.txt
+```
+
+> 종료코드: 항상 0. `--text` 또는 `--file` 중 하나를 지정해야 합니다.
+
+---
+
+## `redact` (text)
+
+텍스트의 PII 를 타입 태그(`[TYPE]`)로 교체합니다. `scan --redact`(파일 인플레이스 재작성)와 달리 stdout 출력 전용이며 원본을 수정하지 않습니다.
+
+```
+usage: nufi-egress redact [--text TEXT] [--file PATH] [--output PATH]
+```
+
+| 옵션 | 무엇 | 기본 |
+|---|---|---|
+| `--text TEXT` | 리댁션할 텍스트 | — |
+| `--file PATH` | 리댁션할 파일 경로(라인별 처리) | — |
+| `--output PATH` | 결과를 파일에 기록(생략 시 stdout) | — |
+
+```bash
+nufi-egress redact --text "고객 김민수님 전화번호 010-1234-5678"
+# → 고객 [KR_PERSON]님 전화번호 [KR_PHONE]
+
+nufi-egress redact --file input.txt --output redacted.txt
+```
+
+> 종료코드: 항상 0. `--text` 또는 `--file` 중 하나를 지정해야 합니다.
 
 ---
 
