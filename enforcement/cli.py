@@ -18,6 +18,7 @@
   report    규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음 · CMP-150 C1).
   benchmark 정확도(커밋 산출물 게이트) + 가명화 품질(라이브) 벤치마크 단일 재현(CMP-201 I5).
   inspect   통합 보안 분석 — PII + 인젝션 + 라우팅 + 위험도 한 번에 출력(patch78).
+  pipeline  체인 파이프라인 — detect→decide→transform→route 한 번에(patch139).
   route     PII 라우팅 결정 테스트 — 텍스트의 PII 감지·모델 라우팅 판정 출력(CMP-270).
 
 설치형 진입점(pyproject.toml console_scripts): ``pip install -e .`` 후 ``nufi-egress``
@@ -495,6 +496,12 @@ def cmd_redact_text(args) -> int:
     return _redact(args)
 
 
+def cmd_pipeline(args) -> int:
+    """파이프라인 체인 처리 (patch139)."""
+    from enforcement.pipeline_cmd import cmd_pipeline as _pipeline
+    return _pipeline(args)
+
+
 def cmd_explain(args) -> int:
     """텍스트 탐지 결과 상세 설명 (patch116)."""
     from enforcement.explain_cmd import explain_text, render_human
@@ -848,6 +855,7 @@ _HELP_EPILOG = """\
     scan            파일/디렉터리 PII + 인젝션 스캔
     inspect         통합 보안 분석 (PII + 인젝션 + 라우팅 + 위험도)
     explain         텍스트 탐지 결과 상세 설명 (디버깅/교육용)
+    pipeline        체인 파이프라인 (detect→decide→transform→route 한 번에)
     route           PII 라우팅 결정 테스트
     diff            git 변경 파일만 PII/인젝션 스캔
     compare         두 스캔 결과 비교 (new/resolved/unchanged)
@@ -1240,6 +1248,15 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--text", required=True, help="분석할 텍스트")
     p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
     p.set_defaults(func=cmd_explain)
+
+    p = sub.add_parser("pipeline",
+                       help="체인 파이프라인 — detect→decide→transform→route 한 번에 (patch139)")
+    p.add_argument("--text", required=True, help="처리할 텍스트")
+    p.add_argument("--actions", default=None,
+                   help="실행할 액션(쉼표 구분: detect,mask,redact,pseudonymize,route,block-check). "
+                        "생략 시 전체 실행")
+    p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    p.set_defaults(func=cmd_pipeline)
 
     p = sub.add_parser("route",
                        help="PII 라우팅 결정 테스트 — 텍스트의 PII 감지·모델 라우팅 판정 출력")
