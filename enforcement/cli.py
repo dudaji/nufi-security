@@ -459,6 +459,12 @@ def cmd_lint(args) -> int:
     return _lint(args)
 
 
+def cmd_generate(args) -> int:
+    """샘플 PII 데이터 생성 (patch131)."""
+    from enforcement.generate_cmd import cmd_generate as _generate
+    return _generate(args)
+
+
 def cmd_export(args) -> int:
     """탐지 패턴 내보내기 (patch122)."""
     from enforcement.export_cmd import cmd_export as _export
@@ -1151,6 +1157,20 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--exclude", default=None,
                    help="제외할 glob 패턴(쉼표 구분)")
     p.set_defaults(func=cmd_lint)
+
+    p = sub.add_parser("generate",
+                       help="샘플 PII 데이터 생성 — 테스트용 한국어 PII 텍스트 생성 (patch131)")
+    p.add_argument("--count", type=int, default=10,
+                   help="생성할 샘플 수(기본 10)")
+    p.add_argument("--include-injection", action="store_true",
+                   help="인젝션 시도 샘플도 포함")
+    p.add_argument("--output", default=None, metavar="PATH",
+                   help="출력 파일 경로(생략 시 stdout)")
+    p.add_argument("--format", choices=["jsonl", "text"], default="jsonl",
+                   help="출력 형식(기본 jsonl: 메타데이터 포함, text: 텍스트만)")
+    p.add_argument("--seed", type=int, default=None,
+                   help="랜덤 시드(재현 가능한 생성)")
+    p.set_defaults(func=cmd_generate)
 
     p = sub.add_parser("inspect",
                        help="통합 보안 분석 — PII + 인젝션 + 라우팅 + 위험도 (patch78)")
