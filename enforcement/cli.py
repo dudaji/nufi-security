@@ -771,13 +771,47 @@ def cmd_version(args) -> int:
     return 0
 
 
+class _GroupedHelpFormatter(argparse.RawDescriptionHelpFormatter):
+    """서브커맨드를 카테고리별로 묶어 표시하는 헬프 포매터."""
+    pass
+
+
+_HELP_EPILOG = """\
+서브커맨드 (카테고리별):
+
+  [탐지]
+    scan            파일/디렉터리 PII + 인젝션 스캔
+    inspect         통합 보안 분석 (PII + 인젝션 + 라우팅 + 위험도)
+    route           PII 라우팅 결정 테스트
+    diff            git 변경 파일만 PII/인젝션 스캔
+
+  [운영]
+    watch           디렉터리 PII 실시간 감시
+    init            프로젝트 초기화 또는 프리셋 구체화
+    config          설정 파일 검증
+    doctor          하이브리드 배선 진단
+    version         버전 및 백엔드 정보 출력
+    completions     셸 자동완성 스크립트 출력
+
+  [보고]
+    report          규정준수 리포트 산출
+    benchmark       정확도 + 가명화 벤치마크
+
+각 서브커맨드의 상세 도움말: nufi-egress <subcommand> --help
+"""
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     # Read VERSION for --version flag
     _ver_file = _ROOT / "VERSION"
     _version_str = _ver_file.read_text().strip() if _ver_file.exists() else "unknown"
 
-    ap = argparse.ArgumentParser(prog="nufi-egress",
-                                 description="NuFi Egress Enforcement CLI")
+    ap = argparse.ArgumentParser(
+        prog="nufi-egress",
+        description="NuFi Egress Enforcement CLI — LLM 이그레스 보안 관제 도구",
+        epilog=_HELP_EPILOG,
+        formatter_class=_GroupedHelpFormatter,
+    )
     ap.add_argument("--version", action="version", version=f"nufi-egress {_version_str}")
     ap.add_argument("--routing", default=None, help="routing.yaml 경로")
     ap.add_argument("--policy", default=None, help="policy.yaml 경로")
@@ -1093,6 +1127,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--json-out", default=None,
                    help="JSON 리포트를 파일로도 기록(경로)")
     p.set_defaults(func=cmd_benchmark)
+
+    # --- Shell completions (patch109) ---------------------------------------- #
+    from enforcement.completions_cmd import cmd_completions
+    p = sub.add_parser("completions",
+                       help="셸 자동완성 스크립트 출력(bash/zsh)")
+    p.add_argument("shell", choices=["bash", "zsh"],
+                   help="대상 셸(bash 또는 zsh)")
+    p.set_defaults(func=cmd_completions)
 
     args = ap.parse_args(argv)
     return args.func(args)
