@@ -412,6 +412,48 @@ nufi-egress audit query
 
 ---
 
+## 6. Pre-commit 훅 & CI/CD 통합
+
+### Pre-commit 훅 설정
+
+커밋 전에 staged 파일의 PII 를 자동 스캔해 유출을 원천 차단합니다.
+
+```bash
+# 설치 (프로젝트 루트에서)
+cp scripts/pre-commit-hook.sh .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+
+# 긴급 시 바이패스
+NUFI_SKIP_PRECOMMIT=1 git commit -m "긴급 패치"
+```
+
+스캔 대상은 텍스트 파일만(`*.py, *.md, *.txt, *.yaml, *.json, *.js, *.ts`).
+PII 가 발견되면 커밋이 차단되고 어떤 파일·엔티티가 문제인지 안내합니다.
+
+### CI/CD 통합 (GitHub Actions)
+
+PR/push 마다 자동으로 PII 스캔을 돌려 코드 리뷰 전에 유출을 잡습니다.
+
+```yaml
+# .github/workflows/nufi-scan.yml (예시: examples/ci-github-actions.yml)
+name: NuFi Security Scan
+on: [push, pull_request]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -r requirements.txt
+      - run: nufi-egress scan . --fail-on-pii --pattern "*.py,*.md,*.txt"
+      - run: nufi-egress doctor
+```
+
+`--fail-on-pii` 플래그가 PII 발견 시 exit 1 을 반환해 CI 를 실패시킵니다.
+
+---
+
 ---
 
 ## 관련 문서
