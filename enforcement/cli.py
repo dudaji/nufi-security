@@ -1268,6 +1268,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="베이스라인 파일(JSON/JSONL)과 비교하여 신규 발견만 출력")
     p.add_argument("--count-only", action="store_true",
                    help="발견 건수만 출력(상세 없음, CI 빠른 상태 체크용)")
+    p.add_argument("--min-score", type=float, default=0.0, metavar="THRESHOLD",
+                   help="최소 신뢰도 점수 (0.0~1.0); 이하 발견 제외 (기본: 0.0)")
     p.set_defaults(func=cmd_scan)
 
     p = sub.add_parser("diff",

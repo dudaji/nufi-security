@@ -1085,6 +1085,12 @@ def cmd_scan(args) -> int:
     if baseline_path:
         result = _apply_baseline(result, baseline_path)
 
+    # --min-score: filter findings below confidence threshold (patch186)
+    min_score = getattr(args, "min_score", 0.0)
+    if min_score > 0.0:
+        result.findings = [f for f in result.findings if f.score >= min_score]
+        result.files_with_findings = len(set(f.file for f in result.findings))
+
     # --count-only: print summary count and exit (patch182)
     if getattr(args, "count_only", False):
         count = len(result.findings)

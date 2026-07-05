@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from pydantic import BaseModel, Field
 
 _ROOT = Path(__file__).resolve().parent.parent
@@ -389,6 +389,27 @@ def create_app() -> FastAPI:
             "total_findings": data["total_findings"],
             "failed": req.fail_on_pii and data["has_pii"],
         }
+
+    @app.get("/badge/{badge_type}")
+    def badge(badge_type: str):
+        """Return an SVG badge image for the given type (grade|recall|injection|tests)."""
+        from enforcement.badge_cmd import badge_grade, badge_recall, badge_injection, badge_tests
+
+        generators = {
+            "grade": badge_grade,
+            "recall": badge_recall,
+            "injection": badge_injection,
+            "tests": badge_tests,
+        }
+        gen = generators.get(badge_type)
+        if gen is None:
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=400,
+                content={"detail": f"Unknown badge type: {badge_type}. Valid: grade, recall, injection, tests"},
+            )
+        svg = gen()
+        return Response(content=svg, media_type="image/svg+xml")
 
     return app
 

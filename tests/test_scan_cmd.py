@@ -853,3 +853,54 @@ def test_count_only_prints_summary(pii_file: Path, capsys):
     assert "Found:" in captured.out
     assert "PII findings" in captured.out
     assert "files" in captured.out
+
+
+# ---------------------------------------------------------------------------
+# --min-score tests (patch186)
+# ---------------------------------------------------------------------------
+
+def test_min_score_filters_low_confidence_findings(pii_file: Path, capsys):
+    """--min-score: 낮은 신뢰도 발견을 필터링한다."""
+    import argparse
+    from enforcement.scan_cmd import cmd_scan
+
+    # First verify findings exist without min-score filter
+    args = argparse.Namespace(
+        target=str(pii_file),
+        pattern=None,
+        check_injection=False,
+        json=True,
+        format=None,
+        output=None,
+        fail_on_pii=False,
+        exclude=None,
+        redact=False,
+        dry_run=False,
+        no_backup=False,
+        stats=False,
+        summary_only=False,
+        verbose=False,
+        git_staged=False,
+        profile=None,
+        clear_cache=False,
+        parallel=1,
+        cache=False,
+        ignore_file=None,
+        baseline=None,
+        count_only=False,
+        min_score=0.0,
+    )
+    rc = cmd_scan(args)
+    assert rc == 0
+    captured = capsys.readouterr()
+    data = json.loads(captured.out)
+    all_count = data["total_findings"]
+    assert all_count > 0
+
+    # Now with impossibly high min-score — should filter all findings
+    args.min_score = 99.0
+    rc = cmd_scan(args)
+    assert rc == 0
+    captured = capsys.readouterr()
+    data = json.loads(captured.out)
+    assert data["total_findings"] == 0

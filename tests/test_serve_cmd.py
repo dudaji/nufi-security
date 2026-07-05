@@ -143,3 +143,18 @@ def test_summary_endpoint():
     assert "version" in data
     assert "ts" in data
     assert "doctor" in data
+
+
+def test_badge_endpoint_returns_svg():
+    """GET /badge/grade returns SVG image with correct content type."""
+    resp = client.get("/badge/grade")
+    assert resp.status_code == 200
+    assert "image/svg+xml" in resp.headers["content-type"]
+    assert "<svg" in resp.text
+    assert "NuFi" in resp.text
+
+
+def test_badge_endpoint_invalid_type():
+    """GET /badge/invalid returns 400 error."""
+    resp = client.get("/badge/invalid")
+    assert resp.status_code == 400
