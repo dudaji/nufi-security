@@ -1324,6 +1324,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("target", help="검사할 파일 또는 디렉터리 경로")
     p.add_argument("--fix", action="store_true",
                    help="자동 수정 가능한 항목 적용(예: http→https)")
+    p.add_argument("--fix-report", action="store_true",
+                   help="수정 가능 항목을 before/after 미리보기로 출력(수정 미적용)")
     p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
     p.add_argument("--exclude", default=None,
                    help="제외할 glob 패턴(쉼표 구분)")

@@ -215,6 +215,17 @@ def lint_file(path: Path) -> List[LintFinding]:
     return findings
 
 
+@dataclass
+class FixPreview:
+    """A single fixable issue with before/after preview."""
+    file: str
+    line: int
+    rule_id: str
+    rule_name: str
+    before: str
+    after: str
+
+
 def fix_file(path: Path) -> bool:
     """Apply auto-fixes to a file. Returns True if the file was modified."""
     if _is_binary(path):
@@ -230,6 +241,46 @@ def fix_file(path: Path) -> bool:
         path.write_text(fixed, encoding="utf-8")
         return True
     return False
+
+
+def fix_report_file(path: Path) -> List[FixPreview]:
+    """Generate fix previews for a file without modifying it (dry-run)."""
+    if _is_binary(path):
+        return []
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return []
+
+    previews: List[FixPreview] = []
+    fixable = [ap for ap in _PATTERNS if ap.fix is not None]
+
+    for lineno, line in enumerate(text.splitlines(), start=1):
+        for ap in fixable:
+            m = ap.pattern.search(line)
+            if m:
+                # Apply the sed-like fix spec to the line
+                from_str, to_str = _parse_fix_spec(ap.fix)
+                after_line = line.replace(from_str, to_str, 1)
+                if after_line != line:
+                    previews.append(FixPreview(
+                        file=str(path),
+                        line=lineno,
+                        rule_id=ap.id,
+                        rule_name=ap.name,
+                        before=line.strip(),
+                        after=after_line.strip(),
+                    ))
+    return previews
+
+
+def _parse_fix_spec(fix_spec: str) -> tuple:
+    """Parse a sed-like s|from|to| spec and return (from_str, to_str)."""
+    # Format: s|pattern|replacement|
+    parts = fix_spec.split("|")
+    if len(parts) >= 3:
+        return parts[1], parts[2]
+    return "", ""
 
 
 # ---------------------------------------------------------------------------
@@ -293,6 +344,23 @@ def lint_path(
     return result
 
 
+def fix_report_path(
+    target: Path,
+    *,
+    exclude: Optional[List[str]] = None,
+) -> List[FixPreview]:
+    """Generate fix previews for all fixable issues under *target* (dry-run)."""
+    root = target if target.is_dir() else target.parent
+    nufiignore = load_nufiignore(root)
+    all_exclude = nufiignore + (exclude or [])
+    files = _collect_files(target, all_exclude)
+
+    previews: List[FixPreview] = []
+    for fp in files:
+        previews.extend(fix_report_file(fp))
+    return previews
+
+
 # ---------------------------------------------------------------------------
 # CLI entry point
 # ---------------------------------------------------------------------------
@@ -306,6 +374,28 @@ def cmd_lint(args) -> int:
         return 1
 
     exclude = args.exclude.split(",") if getattr(args, "exclude", None) else None
+
+    # --fix-report mode: show what would be fixed without modifying files
+    if getattr(args, "fix_report", False):
+        previews = fix_report_path(target, exclude=exclude)
+        if getattr(args, "json", False):
+            data = [
+                {"file": p.file, "line": p.line, "rule_id": p.rule_id,
+                 "rule_name": p.rule_name, "before": p.before, "after": p.after}
+                for p in previews
+            ]
+            print(json.dumps(data, ensure_ascii=False, indent=2))
+        else:
+            if not previews:
+                print("fix-report: no fixable issues found")
+            else:
+                for p in previews:
+                    print(f"{p.file}:{p.line} [{p.rule_id}] {p.rule_name}")
+                    print(f"  - {p.before}")
+                    print(f"  + {p.after}")
+                    print()
+                print(f"fix-report: {len(previews)} fixable issue(s) found")
+        return 0
 
     result = lint_path(target, fix=getattr(args, "fix", False), exclude=exclude)
 

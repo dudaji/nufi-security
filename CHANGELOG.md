@@ -4,10 +4,33 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
-## [0.4.18] - 2026-07-05 (patch55~177)
+## [0.4.18] - 2026-07-05 (patch55~184)
 
 > **v0.4.18 — 프롬프트 인젝션 가드레일 + 파일 스캔 + REST API + CLI 확장**
-> patch55~175 전 시리즈를 포함하는 안정 릴리스. 테스트 590건+.
+> patch55~184 전 시리즈를 포함하는 안정 릴리스. 테스트 595건+.
+
+### Added (patch183-184)
+- **enforcement/lint_cmd.py** — `lint --fix-report` 모드: 수정 가능 이슈를 before/after 미리보기로 출력(파일 미수정 dry-run). `FixPreview` 데이터클래스, `fix_report_file()`, `fix_report_path()` 함수 추가.
+- **enforcement/cli.py** — `--fix-report` CLI 인자 등록.
+- **tests/test_lint_cmd.py** — fix-report before/after 미리보기 테스트 1건 추가.
+- **CHANGELOG.md** — v0.4.18 최종 릴리스 엔트리(patch176~184).
+
+### Added (patch181-182)
+- **enforcement/scan_cmd.py** — `scan --baseline FILE`: 기준선 대비 신규 탐지만 출력. `scan --count-only`: 카운트만 반환(CI 최적화).
+- **tests/test_scan_cmd.py** — baseline·count-only 테스트 추가.
+
+### Added (patch179-180)
+- **enforcement/serve_cmd.py** — `GET /posture`, `GET /summary`, `GET /stats` REST 엔드포인트 추가.
+- **enforcement/scan_cmd.py** — `scan --format csv` CSV 출력 모드.
+- **tests/test_serve_cmd.py** — /posture·/summary·/stats 테스트.
+
+### Added (patch178)
+- **enforcement/scan_cmd.py** — `.nufi_ignore_findings.yaml` 기반 오탐 억제(false-positive suppression). 특정 파일+패턴 조합을 무시 목록에 등록 가능.
+- **tests/test_scan_cmd.py** — 오탐 억제 테스트.
+
+### Changed (patch176-177)
+- **CHANGELOG.md** — v0.4.18 버전 범프, 릴리스 노트 정리.
+- **README.md** — 최종 수치(테스트·서브커맨드·SDK 함수) 반영.
 
 ### Highlights
 
