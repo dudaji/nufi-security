@@ -833,7 +833,11 @@ def cmd_report(args) -> int:
         from enforcement.executive_report import cmd_report_executive
         return cmd_report_executive(args)
 
-    print("usage: nufi-egress report {compliance|security|trends|diff|executive} …", file=sys.stderr)
+    if args.report_kind == "badge":
+        from enforcement.badge_cmd import cmd_report_badge
+        return cmd_report_badge(args)
+
+    print("usage: nufi-egress report {compliance|security|trends|diff|executive|badge} …", file=sys.stderr)
     return 2
 
 
@@ -1171,6 +1175,15 @@ def main(argv: Optional[List[str]] = None) -> int:
                     help="출력 형식(기본 text)")
     rp.add_argument("--output", default=None, metavar="PATH",
                     help="출력 파일 경로(생략 시 stdout)")
+    rp.set_defaults(func=cmd_report)
+
+    rp = rsub.add_parser("badge",
+                         help="SVG 배지 생성 — README/CI 대시보드용 (patch164)")
+    rp.add_argument("--type", dest="badge_type", default="grade",
+                    choices=["grade", "recall", "injection", "tests"],
+                    help="배지 종류(기본 grade)")
+    rp.add_argument("--output", default=None, metavar="PATH",
+                    help="SVG 파일 출력 경로(생략 시 stdout)")
     rp.set_defaults(func=cmd_report)
 
     p = sub.add_parser("scan",

@@ -4,10 +4,31 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
-## [0.4.17] - 2026-07-06 (patch158-160)
+## [0.4.17] - 2026-07-06 (patch158-165)
 
-> **v0.4.17-patch158~160 — OpenAPI 스키마 + /injection 엔드포인트 + 문서**
-> Swagger UI·ReDoc 자동생성, Pydantic 스키마, /injection API, 테스트 550건.
+> **v0.4.17-patch158~165 — OpenAPI + executive report + badge generator + docs**
+> Swagger UI·ReDoc, Pydantic 스키마, /injection API, HTML 테스트 콘솔,
+> 경영진용 보안 등급 리포트, SVG 배지 생성, 테스트 571건.
+
+### Changed (patch165)
+- **CHANGELOG.md** — patch158~164 전체 엔트리 추가.
+- **docs/RELEASE_NOTES.md** — patch158~164 반영.
+
+### Added (patch164)
+- **enforcement/badge_cmd.py** — `nufi-egress report badge`: shields.io-style SVG 배지 생성기. `--type grade|recall|injection|tests`, `--output badge.svg`. README/CI 대시보드 임베딩용.
+- **tests/test_badge_cmd.py** — badge 생성·CLI 테스트 7건 추가.
+
+### Added (patch163)
+- **enforcement/executive_report.py** — `nufi-egress report executive`: 1페이지 경영진용 보안 요약. 등급(A-F)·지표·위험·권고. `--format text|json|md`.
+- **tests/test_executive_report.py** — 등급·포맷 테스트.
+
+### Added (patch162)
+- **enforcement/serve_cmd.py** — HTML 테스트 콘솔(`/` 루트 페이지). `completions` 커맨드에 전체 서브커맨드 목록 등록.
+
+### Added (patch161)
+- **CHANGELOG.md** — patch158~160 최종 엔트리 정리.
+
+### Added (patch158-160)
 
 ### Added (API)
 - **enforcement/serve_cmd.py** — Pydantic 모델 기반 OpenAPI 스키마 자동생성. `POST /injection` 엔드포인트. `--openapi` JSON 스펙 내보내기.

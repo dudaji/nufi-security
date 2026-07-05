@@ -6,6 +6,27 @@
 
 ---
 
+## v0.4.17 (patch165) -- **badge generator + executive report + OpenAPI**
+
+> OpenAPI 스키마, 경영진 보안 등급, SVG 배지 생성, HTML 테스트 콘솔. (2026-07-06)
+
+### 이번 릴리스에 포함된 것 (patch158~164)
+
+| 계층 | 기능 |
+|---|---|
+| **Badge** | `nufi-egress report badge --type grade\|recall\|injection\|tests` -- shields.io-style SVG 배지 생성. `--output badge.svg` 로 README/CI 대시보드에 임베딩 (patch164) |
+| **Executive** | `nufi-egress report executive` -- 1페이지 경영진용 보안 요약: 등급(A-F)·핵심 지표·위험·권고. `--format text\|json\|md` (patch163) |
+| **Serve** | HTML 테스트 콘솔(루트 `/`), `completions` 전 커맨드 등록 (patch162) |
+| **OpenAPI** | Pydantic 모델 기반 OpenAPI/Swagger 스키마 자동생성. `POST /injection` 엔드포인트. `--openapi` JSON 스펙 내보내기 (patch158-160) |
+
+### 누구에게 유용한가
+
+- **보안 팀 리드** -- `report executive` 로 경영진에게 보안 포스처를 A-F 등급 한 장으로 보고.
+- **CI/CD 파이프라인** -- `report badge` 로 README 뱃지 자동 갱신. 그린/오렌지 색상으로 상태 직관 표시.
+- **API 연동 개발자** -- Swagger UI(`/docs`) 에서 엔드포인트를 브라우저에서 직접 테스트.
+
+---
+
 ## v0.4.17 (patch157) -- **serve HTTP API + docs + CHANGELOG**
 
 > HTTP REST API 서버 모드, API 문서·데모·퀵스타트 보강. (2026-07-05)
