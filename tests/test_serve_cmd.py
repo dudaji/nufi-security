@@ -98,3 +98,29 @@ def test_root_returns_html_test_console():
     assert resp.status_code == 200
     assert "text/html" in resp.headers["content-type"]
     assert "<title>NuFi API Test Console</title>" in resp.text
+
+
+def test_pipeline_endpoint():
+    """POST /pipeline returns full pipeline result with requested actions."""
+    resp = client.post("/pipeline", json={
+        "text": "내 전화번호는 010-1234-5678입니다",
+        "actions": ["detect", "mask", "route"],
+    })
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "detect" in data
+    assert data["detect"]["pii_count"] > 0
+    assert "route" in data
+    assert "transformed_text" in data
+
+
+def test_explain_endpoint():
+    """POST /explain returns detailed explanation of detection results."""
+    resp = client.post("/explain", json={"text": "내 전화번호는 010-1234-5678입니다"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["has_findings"] is True
+    assert "risk_level" in data
+    assert "pii_findings" in data
+    assert len(data["pii_findings"]) > 0
+    assert "summary" in data

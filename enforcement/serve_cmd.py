@@ -1,4 +1,4 @@
-"""``nufi-egress serve`` — HTTP API 모드 (patch155/158/159).
+"""``nufi-egress serve`` — HTTP API 모드 (patch155/158/159/170).
 
 FastAPI 기반 REST API로 NuFi 탐지 기능을 마이크로서비스에 제공한다.
 
@@ -9,6 +9,8 @@ Endpoints:
   POST /mask      — PII 마스킹
   POST /redact    — PII 리댁션
   POST /injection — 프롬프트 인젝션 탐지
+  POST /pipeline  — 전체 파이프라인 실행
+  POST /explain   — 탐지 결과 상세 설명
   GET  /health    — 헬스 체크
   GET  /docs      — Swagger UI (auto)
   GET  /redoc     — ReDoc (auto)
@@ -112,6 +114,20 @@ class InjectionResponse(BaseModel):
     injection_detected: bool = Field(..., description="Whether injection patterns were found")
     findings: List[InjectionFindingItem] = Field(default_factory=list, description="List of injection findings")
     severity: str = Field("none", description="Highest severity level among findings")
+
+
+class PipelineRequest(BaseModel):
+    """Request body for /pipeline endpoint."""
+    text: str = Field(..., description="Text to process through pipeline")
+    actions: List[str] = Field(
+        default_factory=lambda: ["detect", "mask", "route"],
+        description="Pipeline actions to execute (detect, mask, redact, pseudonymize, route, block-check)",
+    )
+
+
+class ExplainRequest(BaseModel):
+    """Request body for /explain endpoint."""
+    text: str = Field(..., description="Text to explain detection results for")
 
 
 # Keep backward-compatible alias
@@ -271,6 +287,18 @@ def create_app() -> FastAPI:
             "findings": items,
             "severity": highest,
         }
+
+    @app.post("/pipeline")
+    def pipeline(req: PipelineRequest):
+        from enforcement.pipeline_cmd import run_pipeline
+
+        return run_pipeline(req.text, actions=req.actions)
+
+    @app.post("/explain")
+    def explain(req: ExplainRequest):
+        from enforcement.explain_cmd import explain_text
+
+        return explain_text(req.text)
 
     return app
 

@@ -4,11 +4,20 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
-## [0.4.17] - 2026-07-06 (patch158-165)
+## [0.4.17] - 2026-07-06 (patch158-168)
 
-> **v0.4.17-patch158~165 — OpenAPI + executive report + badge generator + docs**
+> **v0.4.17-patch158~168 — OpenAPI + executive report + badge + coverage-map + posture**
 > Swagger UI·ReDoc, Pydantic 스키마, /injection API, HTML 테스트 콘솔,
-> 경영진용 보안 등급 리포트, SVG 배지 생성, 테스트 571건.
+> 경영진 보안 등급 리포트, SVG 배지 생성, 커버리지 맵, 보안 포스처. 테스트 582건.
+
+### Added (patch168)
+- **enforcement/posture_cmd.py** — `nufi-egress report posture`: 보안 포스처 스냅샷 캡처(등급·수치·분포·벤치마크·doctor). `--save` 이력 저장, `--compare` 마지막 대비 개선/퇴보 비교.
+- **tests/test_posture_cmd.py** — 포스처 캡처·저장·비교 테스트 9건.
+
+### Added (patch166-167)
+- **enforcement/coverage_map_cmd.py** — `nufi-egress report coverage-map`: 파일×엔티티 유형 PII 노출 매트릭스 출력. `--format text|json|csv` 지원.
+- **tests/test_coverage_map_cmd.py** — 커버리지 맵 테스트.
+- **README.md** — 테스트 573·서브커맨드 37종 갱신, serve 퀵스타트 추가.
 
 ### Changed (patch165)
 - **CHANGELOG.md** — patch158~164 전체 엔트리 추가.
