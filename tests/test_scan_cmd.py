@@ -23,7 +23,10 @@ from pathlib import Path
 
 import pytest
 
-from enforcement.scan_cmd import scan_path, load_nufiignore, scan_result_to_sarif, redact_path
+from enforcement.scan_cmd import (
+    scan_path, load_nufiignore, scan_result_to_sarif, redact_path,
+    load_suppressions, apply_suppressions, ScanFinding, ScanResult,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -658,3 +661,70 @@ def test_git_staged_scans_only_staged_files(tmp_path: Path, capsys):
         rc = cmd_scan(args)
         assert rc == 1  # fail-on-pii should trigger
         mock_scan_staged.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# False positive suppression tests (patch178)
+# ---------------------------------------------------------------------------
+
+def test_suppression_by_file_and_entity_type(pii_dir: Path):
+    """file + entity_type 매칭으로 특정 파일의 특정 엔티티 발견을 억제한다."""
+    # First, scan and confirm there are findings
+    result = scan_path(pii_dir)
+    assert result.has_pii
+    original_count = len(result.findings)
+
+    # Find a finding to suppress
+    first_finding = result.findings[0]
+    entity = first_finding.finding_type.split(":", 1)[1]
+    rel_file = str(Path(first_finding.file).relative_to(pii_dir))
+
+    # Create suppression file
+    ignore_file = pii_dir / ".nufi_ignore_findings.yaml"
+    ignore_file.write_text(
+        f"suppressions:\n"
+        f"  - file: \"{rel_file}\"\n"
+        f"    entity_type: \"{entity}\"\n"
+        f"    reason: \"Test suppression\"\n",
+        encoding="utf-8",
+    )
+
+    # Re-scan and apply suppressions
+    result2 = scan_path(pii_dir)
+    suppressions = load_suppressions(ignore_file)
+    suppressed = apply_suppressions(result2, suppressions, pii_dir)
+
+    assert suppressed >= 1
+    assert len(result2.findings) < original_count
+
+
+def test_suppression_by_glob_pattern(pii_dir: Path):
+    """pattern (glob) 매칭으로 파일명 패턴 기반 발견을 억제한다."""
+    # Create a test file that matches a glob pattern
+    test_file = pii_dir / "test_sample.txt"
+    test_file.write_text("홍길동의 전화번호 010-9999-8888\n", encoding="utf-8")
+
+    # Scan to confirm findings in test_sample.txt
+    result = scan_path(pii_dir)
+    test_findings = [f for f in result.findings if "test_sample.txt" in f.file]
+    assert len(test_findings) >= 1
+
+    # Create suppression with glob pattern
+    ignore_file = pii_dir / ".nufi_ignore_findings.yaml"
+    ignore_file.write_text(
+        "suppressions:\n"
+        "  - pattern: \"test_*\"\n"
+        "    reason: \"All test files contain sample data\"\n",
+        encoding="utf-8",
+    )
+
+    # Re-scan and apply suppressions
+    result2 = scan_path(pii_dir)
+    total_before = len(result2.findings)
+    suppressions = load_suppressions(ignore_file)
+    suppressed = apply_suppressions(result2, suppressions, pii_dir)
+
+    # The test_sample.txt findings should be suppressed
+    remaining_test = [f for f in result2.findings if "test_sample.txt" in f.file]
+    assert len(remaining_test) == 0
+    assert suppressed >= 1

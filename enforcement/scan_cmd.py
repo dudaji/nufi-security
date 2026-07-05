@@ -11,6 +11,7 @@ SDK 에서도 ``from nufi import scan_dir`` 로 사용 가능.
 --profile NAME 으로 사전 정의 스캔 프로파일 적용 (patch110).
 --verbose 로 발견 항목별 상세 정보 출력 (patch137).
 --git-staged 로 git staged 파일만 스캔 (pre-commit 통합, patch171).
+--ignore-file PATH 로 false positive 억제 (patch178).
 """
 from __future__ import annotations
 
@@ -26,6 +27,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
+
+import yaml
 
 from egress_audit.pipeline import DetectionPipeline, Finding
 from egress_audit.detectors.prompt_injection import PromptInjectionDetector
@@ -71,6 +74,129 @@ def _is_excluded(path: Path, root: Path, exclude_patterns: List[str]) -> bool:
         if fnmatch.fnmatch(path.name, pat):
             return True
     return False
+
+
+# ---------------------------------------------------------------------------
+# False positive suppression (.nufi_ignore_findings.yaml) — patch178
+# ---------------------------------------------------------------------------
+
+@dataclass
+class Suppression:
+    """A single suppression rule from .nufi_ignore_findings.yaml."""
+    file: Optional[str] = None
+    pattern: Optional[str] = None
+    entity_type: Optional[str] = None
+    reason: str = ""
+
+
+def load_suppressions(path: str | Path) -> List[Suppression]:
+    """Load suppression rules from a YAML file.
+
+    Expected format::
+
+        suppressions:
+          - file: "tests/test_data.py"
+            entity_type: "KR_PHONE"
+            reason: "Test fixture"
+          - pattern: "test_*"
+            entity_type: "KR_PERSON"
+            reason: "Sample names"
+
+    Returns an empty list if the file does not exist or is empty.
+    """
+    p = Path(path)
+    if not p.is_file():
+        return []
+    try:
+        data = yaml.safe_load(p.read_text(encoding="utf-8"))
+    except (yaml.YAMLError, OSError):
+        return []
+    if not data or not isinstance(data, dict):
+        return []
+    raw_list = data.get("suppressions")
+    if not raw_list or not isinstance(raw_list, list):
+        return []
+    result: List[Suppression] = []
+    for item in raw_list:
+        if not isinstance(item, dict):
+            continue
+        result.append(Suppression(
+            file=item.get("file"),
+            pattern=item.get("pattern"),
+            entity_type=item.get("entity_type"),
+            reason=item.get("reason", ""),
+        ))
+    return result
+
+
+def _is_suppressed(finding: "ScanFinding", suppressions: List[Suppression], scan_root: Path) -> bool:
+    """Check if a finding matches any suppression rule.
+
+    Matching logic:
+    - If suppression has ``file``, the finding's file path (relative to scan_root)
+      must match exactly.
+    - If suppression has ``pattern``, the finding's file path (relative to scan_root)
+      or filename must match the glob pattern.
+    - If suppression has ``entity_type``, the finding's entity_type (the part after
+      'PII:' or 'INJECTION:') must match.
+    - All specified fields must match (AND logic).
+    """
+    finding_path = Path(finding.file)
+    try:
+        rel_path = str(finding_path.relative_to(scan_root))
+    except ValueError:
+        rel_path = str(finding_path)
+    filename = finding_path.name
+
+    # Extract entity type from finding_type (e.g. "PII:KR_PHONE" -> "KR_PHONE")
+    finding_entity = finding.finding_type.split(":", 1)[1] if ":" in finding.finding_type else finding.finding_type
+
+    for s in suppressions:
+        file_match = True
+        pattern_match = True
+        entity_match = True
+
+        if s.file is not None:
+            file_match = (rel_path == s.file or str(finding_path) == s.file)
+
+        if s.pattern is not None:
+            pattern_match = (
+                fnmatch.fnmatch(rel_path, s.pattern) or
+                fnmatch.fnmatch(filename, s.pattern)
+            )
+
+        if s.entity_type is not None:
+            entity_match = (finding_entity == s.entity_type)
+
+        # All specified conditions must match
+        if file_match and pattern_match and entity_match:
+            return True
+
+    return False
+
+
+def apply_suppressions(
+    result: "ScanResult",
+    suppressions: List[Suppression],
+    scan_root: Path,
+) -> int:
+    """Remove suppressed findings from a ScanResult in-place.
+
+    Returns the number of suppressed findings.
+    """
+    if not suppressions:
+        return 0
+    original_count = len(result.findings)
+    result.findings = [
+        f for f in result.findings
+        if not _is_suppressed(f, suppressions, scan_root)
+    ]
+    suppressed = original_count - len(result.findings)
+    # Recompute files_with_findings
+    if suppressed:
+        files_with = len(set(f.file for f in result.findings))
+        result.files_with_findings = files_with
+    return suppressed
 
 
 # ---------------------------------------------------------------------------
@@ -869,6 +995,20 @@ def cmd_scan(args) -> int:
         cache=getattr(args, "cache", False),
     )
 
+    # --ignore-file: apply false positive suppressions (patch178)
+    ignore_file = getattr(args, "ignore_file", None)
+    suppressed_count = 0
+    if ignore_file is None:
+        # Auto-detect .nufi_ignore_findings.yaml in scan root
+        scan_root = Path(target) if Path(target).is_dir() else Path(target).parent
+        default_ignore = scan_root / ".nufi_ignore_findings.yaml"
+        if default_ignore.is_file():
+            ignore_file = str(default_ignore)
+    if ignore_file:
+        suppressions = load_suppressions(ignore_file)
+        scan_root = Path(target) if Path(target).is_dir() else Path(target).parent
+        suppressed_count = apply_suppressions(result, suppressions, scan_root)
+
     # Output format
     output_format = getattr(args, "format", None)
     output_path = getattr(args, "output", None)
@@ -901,6 +1041,10 @@ def cmd_scan(args) -> int:
         _render_verbose(result)
     else:
         _render_human(result)
+
+    # Suppression notice
+    if suppressed_count > 0:
+        print(f"{suppressed_count} findings suppressed")
 
     # Stats summary
     if getattr(args, "stats", False):

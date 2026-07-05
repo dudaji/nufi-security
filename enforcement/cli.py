@@ -1262,6 +1262,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="발견 항목별 상세 출력(파일/줄/컬럼/엔티티/점수/탐지방법/전후 컨텍스트)")
     p.add_argument("--git-staged", action="store_true",
                    help="git staged 파일만 스캔(pre-commit 훅 통합용, target 불필요)")
+    p.add_argument("--ignore-file", default=None, metavar="PATH",
+                   help="false positive 억제 파일 경로(기본 .nufi_ignore_findings.yaml)")
     p.set_defaults(func=cmd_scan)
 
     p = sub.add_parser("diff",
