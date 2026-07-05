@@ -216,6 +216,9 @@ python3 scripts/bench_injection.py
 # 13) 통합 보안 스캔 — PII+인젝션+라우팅+위험도를 한 번에
 nufi-egress inspect --text "김민수님 주민번호 900101-1234568"
 
+# 14) 파일/디렉터리 PII 스캔 — CI/pre-commit 통합
+nufi-egress scan path/to/dir --fail-on-pii --format sarif
+
 # 12) 인젝션 탐지 벤치마크 — 재현율·정밀도 측정 (30건 골드셋)
 python3 scripts/bench_injection.py
 ```

@@ -78,6 +78,7 @@ run_demo demo_sdk_helpers.sh      "SDK 편의 함수(scan_file·guard_file·batc
 run_demo demo_pii_routing.sh     "PII 라우팅(PII 포함→로컬, PII 없음→클라우드)"
 run_demo demo_prompt_injection.sh "프롬프트 인젝션 탐지(한/영 패턴·Guard 차단·혼합)"
 run_demo demo_bench_injection.sh "인젝션 탐지 벤치마크(재현율·정밀도 측정 30건 골드셋)"
+run_demo demo_scan.sh            "파일/디렉터리 PII 스캔(CI/pre-commit · --redact · SARIF)"
 run_demo demo_litellm_e2e.sh     "LiteLLM Proxy E2E(프록시 기동→PII 라우팅→감사 검증)"
 
 # 정확도 데모는 커밋된 측정 산출물(docs/reports/*.json)이 있어야 재현 가능하다.

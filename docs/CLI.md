@@ -51,6 +51,7 @@ usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
 | [`report`](#report) | 규정준수 리포트 산출(기존 측정 재사용, 새 측정 없음) | 불필요 |
 | [`route`](#route) | PII 라우팅 결정 테스트 — 텍스트의 PII 감지·모델 라우팅 판정 출력 | 불필요 |
 | [`benchmark`](#benchmark) | 정확도+가명화 벤치마크 재현(커밋 증거 대조 + 라이브 하니스) | 불필요 |
+| [`scan`](#scan) | 파일/디렉터리 PII+인젝션 스캔(CI/pre-commit · SARIF · redact) | 불필요 |
 
 > **신규 도입 5분 경로:** `init audit-only` → SDK/게이트웨이 배선 → `doctor`(core-3 GREEN 확인) → `status`/감사 로그 관찰 → 준비되면 `apply`. 자세한 결정 트리는 [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md).
 
@@ -515,6 +516,83 @@ nufi-egress benchmark --only accuracy --json-out reports/bench.json
 
 > 종료코드: 게이트 충족 0 / 미충족 1. 상세 지표·리포트 스키마는 [`SDK.md`](SDK.md)(§벤치마크).
 > 1-명령 데모는 [`DEMO.md`](DEMO.md) 참조.
+
+---
+
+## `scan`
+
+파일 또는 디렉터리를 재귀 스캔해 **한국어 PII** 를 탐지합니다. CI/pre-commit 훅에서 유출을 사전 차단하거나, `--redact` 모드로 PII 를 자동 치환합니다. SARIF 2.1.0 출력(`--format sarif`)으로 GitHub Code Scanning 에 직접 업로드할 수 있습니다.
+
+```
+usage: nufi-egress scan [-h] [--pattern PATTERN] [--exclude EXCLUDE]
+                        [--check-injection] [--json] [--format {sarif}]
+                        [--fail-on-pii] [--redact] [--dry-run] [--no-backup]
+                        target
+```
+
+| 인자/옵션 | 무엇 | 기본 |
+|---|---|---|
+| `target` | 스캔할 파일 또는 디렉터리 경로(필수) | — |
+| `--pattern GLOB` | 파일 glob 패턴(쉼표 구분, 예: `*.py,*.md,*.txt`) | 전체 |
+| `--exclude GLOB` | 제외할 glob 패턴(쉼표 구분, 예: `*.log,node_modules/**`) | `.nufiignore` 에서 로드 |
+| `--check-injection` | 프롬프트 인젝션 패턴도 함께 탐지 | off |
+| `--json` | 기계용 JSON 출력 | — |
+| `--format sarif` | SARIF 2.1.0 JSON 출력(GitHub code scanning 호환) | — |
+| `--fail-on-pii` | PII 발견 시 exit code 1(CI 게이트) | off |
+| `--redact` | PII 를 `[REDACTED:TYPE]` 으로 치환하여 파일 재작성 | off |
+| `--dry-run` | redact 모드에서 실제 파일 수정 없이 결과만 출력 | off |
+| `--no-backup` | redact 시 `.bak` 백업 파일 생성 생략 | off |
+
+### 사용 예시
+
+```bash
+# 디렉터리 전체 스캔 (사람 친화 출력)
+nufi-egress scan ./src
+
+# Python 파일만 스캔, PII 발견 시 CI 실패
+nufi-egress scan ./src --pattern "*.py" --fail-on-pii
+
+# SARIF 출력 → GitHub code scanning 업로드
+nufi-egress scan . --format sarif > results.sarif
+gh code-scanning upload-sarif --sarif results.sarif
+
+# 인젝션 패턴도 함께 탐지
+nufi-egress scan ./prompts --check-injection --json
+
+# PII 자동 치환 (dry-run 으로 미리보기)
+nufi-egress scan ./data --redact --dry-run
+
+# PII 자동 치환 (실제 적용, 백업 생성)
+nufi-egress scan ./data --redact
+
+# 백업 없이 치환 (Git 등으로 복원 가능할 때)
+nufi-egress scan ./data --redact --no-backup
+
+# 특정 패턴 제외
+nufi-egress scan . --exclude "*.log,venv/**,node_modules/**"
+```
+
+### 종료 코드
+
+| 코드 | 의미 |
+|---|---|
+| `0` | 스캔 정상 완료(PII 미발견, 또는 `--fail-on-pii` 미사용) |
+| `1` | `--fail-on-pii` 사용 시 PII 발견됨(CI 게이트 실패) |
+| `2` | 인자 오류 |
+
+### `.nufiignore`
+
+스캔 루트에 `.nufiignore` 파일을 두면 `--exclude` 없이도 패턴을 제외할 수 있습니다. 문법은 `.gitignore` 와 유사합니다(glob 패턴, `#` 주석, 빈 줄 무시).
+
+```text
+# .nufiignore 예시
+*.log
+venv/**
+node_modules/**
+*.min.js
+```
+
+> 1-명령 데모: `./scripts/demo_scan.sh`(4 시나리오 PASS/FAIL).
 
 ---
 

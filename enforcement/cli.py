@@ -961,6 +961,12 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="제외할 glob 패턴(쉼표 구분, 예: '*.log,node_modules/**,venv/**')")
     p.add_argument("--fail-on-pii", action="store_true",
                    help="PII 발견 시 exit code 1 (CI 게이트)")
+    p.add_argument("--redact", action="store_true",
+                   help="PII 를 [REDACTED:TYPE] 으로 치환하여 파일 재작성")
+    p.add_argument("--dry-run", action="store_true",
+                   help="redact 모드에서 실제 파일 수정 없이 결과만 출력")
+    p.add_argument("--no-backup", action="store_true",
+                   help="redact 시 .bak 백업 파일 생성 생략")
     p.set_defaults(func=cmd_scan)
 
     p = sub.add_parser("inspect",
