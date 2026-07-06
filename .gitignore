@@ -19,3 +19,6 @@ demo_outputs/**/*.html
 demo_outputs/**/*.stderr
 demo_outputs/compliance_mapping/
 demo_outputs/multitenancy/
+
+# pytest-benchmark 로컬 결과 (CI 에서만 cache 로 관리)
+.benchmarks/
