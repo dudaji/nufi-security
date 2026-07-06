@@ -1,5 +1,12 @@
 # NuFi Egress-Audit — 에어갭(오프라인) 설치 가이드
 
+| 항목 | 값 |
+|---|---|
+| **NuFi 버전** | v0.4.18 |
+| **Docker Engine** | ≥ 24.0 |
+| **Docker Compose** | v2.x (`docker compose` 서브커맨드) |
+| **Python (빌드 호스트)** | ≥ 3.10 |
+
 대상: 인터넷이 차단된 온프렘/폐쇄망 호스트. 레지스트리·PyPI 접근 없이
 `docker save`/`docker load` 기반으로 게이트웨이+탐지코어+감사봇을 기동한다.
 외부 브로커·DB·레지스트리 0 (NFR1).
@@ -8,7 +15,7 @@
 
 ## 0. 사전 요건 (에어갭 호스트)
 
-- Docker Engine ≥ 24, Docker Compose v2 (`docker compose version`).
+- Docker Engine ≥ 24.0, Docker Compose v2 (`docker compose version`).
 - 게이트웨이 노출 포트(기본 4000) 사용 가능.
 - 무거운 NER 백엔드는 **선택**. 코어는 gazetteer 로 외부 호출 0.
 
@@ -26,7 +33,7 @@ bash deploy/airgap/build-bundle.sh
 bash deploy/airgap/build-bundle.sh --heavy
 ```
 
-산출물: `dist/nufi-egress-audit-<tag>[-heavy]-airgap.tar.gz`
+산출물: `dist/nufi-egress-audit-v0.4.18[-heavy]-airgap.tar.gz`
 (이미지 `images.tar` + compose/Helm + 본 가이드 + `MANIFEST.txt` 무결성).
 
 USB/내부 전송 등 **물리/단방향 경로**로 에어갭 호스트에 옮긴다.
@@ -36,7 +43,7 @@ USB/내부 전송 등 **물리/단방향 경로**로 에어갭 호스트에 옮�
 ## 2. 에어갭 호스트에서 로드 + 기동
 
 ```bash
-mkdir -p nufi && tar -xzf nufi-egress-audit-<tag>-airgap.tar.gz -C nufi
+mkdir -p nufi && tar -xzf nufi-egress-audit-v0.4.18-airgap.tar.gz -C nufi
 cd nufi
 
 # docker load + sha256 무결성 검증
