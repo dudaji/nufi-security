@@ -53,7 +53,7 @@ CLI(`nufi-egress`)에 더해, 엔진·게이트웨이를 코드에서 직접 임
 
 - **v0.4.1:** `from nufi import detect, Guard, pseudonymize` 파사드 패키지(`nufi/`).
 - **v0.4.6:** `scan_file`·`guard_file`·`batch_detect` 편의 함수 추가.
-- **v0.4.16 패치:** 7종 독립 실행 예시(`examples/`), `Finding.__repr__` 개선, 문서 교차링크.
+- **v0.4.16 패치:** 12종 독립 실행 예시(`examples/`), `Finding.__repr__` 개선, 문서 교차링크.
 
 ### 차기(옵션) — LLM 라우팅 레이어 (M)
 
@@ -105,7 +105,7 @@ P0(코어 정확도)를 먼저 끌어올려 해자를 굳히고, P1로 한국 �
 | 오탐(benign false-positive) | 낮을수록 ✅ | **0 / 90** ✅ | `recall-int8.json` |
 | 12개 클래스 Wilson CI95 하한 ≥ 0.90 | 전부 | **12 / 12** ✅ | `recall-int8.json` |
 | 한국 규제 증빙 통제 | 48개 | **48개 완성** (direct 25 / partial 11 / oos 12) ✅ | `compliance_catalog.yaml` |
-| SDK 예시 | — | **7종** 독립 실행 가능 ✅ | `examples/README.md` |
+| SDK 예시 | — | **12종** 독립 실행 가능 ✅ | `examples/README.md` |
 | 테스트 통과 | — | **307 passed** ✅ | `pytest` |
 | 데모 PASS | — | **11 / 11** ✅ | `demo_all.sh` |
 
@@ -113,7 +113,7 @@ P0(코어 정확도)를 먼저 끌어올려 해자를 굳히고, P1로 한국 �
 
 - **설계·구현 분리:** 설계·명세와 구현 트랙을 분리해, 명세 확정 후 구현을 진행한다.
 - **OKR 연결 공백:** 본 로드맵은 아직 회사 목표·핵심결과에 연결되어 있지 않다(goalId=null). 리더십 연결 결정 필요.
-- **포지셔닝 정합:** README·MANUAL 의 "엔터프라이즈 게이트웨이" 서술을 본 경량·CLI/SDK·한국특화 방향으로 후속 정렬한다(별도 문서 트랙).
+- ~~**포지셔닝 정합:**~~ ✅ 완료 — README·문서 전반이 경량·CLI/SDK·한국특화 방향으로 정렬됨.
 
 ---
 

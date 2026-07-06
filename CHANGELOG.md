@@ -9,6 +9,11 @@
 > **v0.4.18 — 프롬프트 인젝션 가드레일 + 파일 스캔 + REST API + CLI 확장**
 > patch55~184 전 시리즈를 포함하는 안정 릴리스. 테스트 595건+.
 
+### Changed (patch193-194)
+- **docs/ROADMAP.md** — SDK 예시 카운트 7종→12종 동기화(실제 `examples/` 파일 수 반영). 거버넌스 §7 "포지셔닝 정합" 완료 표기.
+- **examples/README.md** — `api_client.py` 누락 항목 추가.
+- **docs/DEMO.md** — 스모크 카운트 7종→9종, 예시 인덱스 7종→12종, 누락 예시 3종 테이블 추가.
+
 ### Added (patch183-184)
 - **enforcement/lint_cmd.py** — `lint --fix-report` 모드: 수정 가능 이슈를 before/after 미리보기로 출력(파일 미수정 dry-run). `FixPreview` 데이터클래스, `fix_report_file()`, `fix_report_path()` 함수 추가.
 - **enforcement/cli.py** — `--fix-report` CLI 인자 등록.

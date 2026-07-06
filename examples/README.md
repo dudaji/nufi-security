@@ -20,6 +20,7 @@
 | [`sdk_compliance_report.py`](sdk_compliance_report.py) | 한국 규제 5종 통제 커버리지 출력 | `compliance_report`, `render_report`, `load_catalog` |
 | [`sdk_security_report.py`](sdk_security_report.py) | 디렉터리 스캔 → 보안 리포트(Markdown/JSON) 생성 | `security_report`, `render_security_markdown`, `render_security_json` |
 | [`sdk_ci_integration.py`](sdk_ci_integration.py) | CI/pre-commit 통합 — PII·인젝션 검사 + 종료 코드 | `detect`, `detect_injection`, `scan_file` |
+| [`api_client.py`](api_client.py) | NuFi HTTP API 직접 호출 클라이언트 예시 | `httpx` |
 | [`ci-github-actions.yml`](ci-github-actions.yml) | GitHub Actions 워크플로 예시 — PR/push 시 PII 스캔 자동화 | (YAML 설정) |
 
 ## 실행 방법

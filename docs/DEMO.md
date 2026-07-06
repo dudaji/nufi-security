@@ -53,7 +53,7 @@ python3 -m pip install -r requirements.txt   # PyYAML·fastapi·uvicorn·httpx
 
 셸 데모(`scripts/demo_*.sh`)와 달리, `examples/` 는 **Python 코드 안에서 SDK 를 직접
 임포트해 쓰는 방법**을 보여주는 독립 실행 스크립트다. `test_examples_smoke.py` 가 전체를
-자동 검증한다(스모크 7종).
+자동 검증한다(스모크 9종).
 
 | 파일 | 목적 |
 |---|---|
@@ -66,6 +66,9 @@ python3 -m pip install -r requirements.txt   # PyYAML·fastapi·uvicorn·httpx
 | [`sdk_compliance_report.py`](../examples/sdk_compliance_report.py) | `compliance_report`·`render_report`·`load_catalog` — 한국 규제 5종 통제 커버리지 출력 |
 | [`sdk_pii_routing.py`](../examples/sdk_pii_routing.py) | `route` — PII 라우팅 결정 (PII→로컬, 클린→클라우드, to_dict) |
 | [`sdk_prompt_injection.py`](../examples/sdk_prompt_injection.py) | `detect_injection`·`Guard(check_injection=True)`·`PromptInjectionDetector.is_injection()` — 프롬프트 인젝션 탐지 |
+| [`sdk_security_report.py`](../examples/sdk_security_report.py) | 디렉터리 스캔 → 보안 리포트(Markdown/JSON) 생성 |
+| [`sdk_ci_integration.py`](../examples/sdk_ci_integration.py) | CI/pre-commit 통합 — PII·인젝션 검사 + 종료 코드 |
+| [`api_client.py`](../examples/api_client.py) | NuFi HTTP API 직접 호출 클라이언트 예시 |
 
 ```bash
 # 전체 예시 한 번에 검증 (스모크)
@@ -151,7 +154,7 @@ HTTP 200   ← 전화/이메일은 pseudonymize(비차단) 정책 → 본문 가
 | 문서 | 역할 |
 |---|---|
 | [`HANDS_ON.md`](HANDS_ON.md) | Part F(게이트웨이 e2e)·G(SDK 직접 임포트)·H(강건성)·I(편의함수)·J(벤치마크) — 실습 정주행 |
-| [`examples/README.md`](../examples/README.md) | Python SDK 독립 실행 예시 7종 인덱스 |
+| [`examples/README.md`](../examples/README.md) | Python SDK 독립 실행 예시 12종 인덱스 |
 | [`CLI.md`](CLI.md) | 데모에서 쓰는 모든 서브커맨드 전체 플래그·종료코드 |
 | [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md) | 데모 확인 후 실서비스 배선으로 넘어가는 통합 진입점 |
 | [`REPORTING.md`](REPORTING.md) | `demo_report.sh`·`demo_compliance_mapping.sh` 배경: 컴플라이언스 리포팅 |
