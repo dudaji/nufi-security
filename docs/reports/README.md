@@ -77,6 +77,55 @@ SDK 에서 접근: `from nufi import compliance_report` — 리포트 집계에�
 
 ---
 
+## 주요 리포트 상세 — 목적 · 생성 · 참조
+
+### recall-int8.json
+
+| 항목 | 내용 |
+|---|---|
+| **목적** | KoELECTRA INT8(ONNX) 모델의 PII 엔터티별 재현율·정밀도·신뢰구간을 측정하여 릴리스 게이트 판정 근거를 제공 |
+| **생성 시점** | 모델 업데이트 또는 골드셋 변경 시 CI/수동 실행 |
+| **생성 명령** | `python3 scripts/demo_accuracy.sh` 또는 `nufi-egress benchmark accuracy --json-out docs/reports/recall-int8.json` |
+| **참조 문서** | [`../HANDS_ON.md`](../HANDS_ON.md) Part J, [`../SDK.md`](../SDK.md) `compliance_report` |
+
+### pseudonymize-quality.json
+
+| 항목 | 내용 |
+|---|---|
+| **목적** | 가명화(pseudonymization) 품질 게이팅 — 변환 정확성·포맷 보존·역변환 가능 여부 벤치마크 |
+| **생성 시점** | 가명화 로직 변경 시 |
+| **생성 명령** | `python3 scripts/bench_pseudonymize.py --json-out docs/reports/pseudonymize-quality.json` |
+| **참조 문서** | [`../HANDS_ON.md`](../HANDS_ON.md), `scripts/demo_pseudonymize.sh` |
+
+### load-p95.json
+
+| 항목 | 내용 |
+|---|---|
+| **목적** | 인라인 지연 측정(p95) — 동시성 스윕별 레이턴시를 기록하여 성능 SLA 판정 근거 제공 |
+| **생성 시점** | 성능 관련 변경 또는 릴리스 전 |
+| **생성 명령** | `python3 scripts/bench_load.py --requests 200 --sustain-seconds 10 --json-out docs/reports/load-p95.json` |
+| **참조 문서** | [`../HANDS_ON.md`](../HANDS_ON.md), [`../SDK.md`](../SDK.md) |
+
+### kr-location-gate.json / kr-location-gate.md
+
+| 항목 | 내용 |
+|---|---|
+| **목적** | KR_LOCATION 주소 유니온(모델∪규칙) 경로의 재현율·CI 하한을 측정하여 릴리스 게이트 판정 |
+| **생성 시점** | 주소 패턴·모델 변경 시 |
+| **생성 명령** | `python3 scripts/demo_accuracy.sh` (recall-int8 과 함께 산출) |
+| **참조 문서** | [`kr-location-ci-narrowing.md`](kr-location-ci-narrowing.md), [`kr-location-error-analysis.md`](kr-location-error-analysis.md) |
+
+### accuracy-integrity-audit.md
+
+| 항목 | 내용 |
+|---|---|
+| **목적** | 공개 문서에 인용된 정확도 수치가 근거 리포트(JSON)와 일치하는지 무결성 감사 |
+| **생성 시점** | v0.2.2 시점 1회 감사 완료(역사적) |
+| **생성 명령** | 수동 작성 (정합성 검사는 `python3 scripts/check_docs.py` 로 자동 수행) |
+| **참조 문서** | [`../ARCHITECTURE.md`](../ARCHITECTURE.md), `scripts/check_docs.py` |
+
+---
+
 ## 관련 문서
 
 | 문서 | 역할 |

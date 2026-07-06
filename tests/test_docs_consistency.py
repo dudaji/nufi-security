@@ -129,6 +129,38 @@ def test_number_integrity_missing_report_and_path():
     assert errs2 and "경로 없음" in errs2[0]
 
 
+# --- 3. CLI 서브커맨드 ↔ docs/CLI.md 동기화 (CMP-282) -------------------------
+import re as _re
+
+
+def _cli_registered_subcommands() -> set[str]:
+    """enforcement/cli.py 에서 `sub.add_parser(...)` 로 등록된 최상위 서브커맨드 집합."""
+    cli_src = (ROOT / "enforcement" / "cli.py").read_text()
+    # 패턴: `p = sub.add_parser("name"` — 최상위 서브파서만 매칭
+    return set(_re.findall(r'p\s*=\s*sub\.add_parser\(\s*"([^"]+)"', cli_src))
+
+
+def _cli_md_subcommands() -> set[str]:
+    """docs/CLI.md 서브커맨드 표에서 행을 추출."""
+    cli_md = (ROOT / "docs" / "CLI.md").read_text()
+    # 패턴: `| [`name`](...) |` 형태의 테이블 행
+    return set(_re.findall(r'^\|\s*\[`([a-z][\w-]*)`\]', cli_md, _re.MULTILINE))
+
+
+def test_cli_subcommand_sync():
+    """enforcement/cli.py 서브커맨드 수와 docs/CLI.md 서브커맨드 표 행 수가 일치해야 한다."""
+    code_cmds = _cli_registered_subcommands()
+    doc_cmds = _cli_md_subcommands()
+    missing_in_docs = code_cmds - doc_cmds
+    extra_in_docs = doc_cmds - code_cmds
+    msgs: list[str] = []
+    if missing_in_docs:
+        msgs.append(f"CLI.md 에 누락된 서브커맨드({len(missing_in_docs)}): {sorted(missing_in_docs)}")
+    if extra_in_docs:
+        msgs.append(f"CLI.md 에 코드에 없는 서브커맨드({len(extra_in_docs)}): {sorted(extra_in_docs)}")
+    assert not msgs, "CLI 서브커맨드 동기화 실패:\n" + "\n".join(msgs)
+
+
 if __name__ == "__main__":
     import traceback
     fns = [v for k, v in sorted(globals().items()) if k.startswith("test_") and callable(v)]
