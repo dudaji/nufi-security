@@ -7,7 +7,11 @@
 ## [0.4.18] - 2026-07-06 (patch55~184)
 
 > **v0.4.18 — 프롬프트 인젝션 가드레일 + 파일 스캔 + REST API + CLI 확장**
-> patch55~184 전 시리즈를 포함하는 안정 릴리스. 테스트 595건+.
+> patch55~184 전 시리즈를 포함하는 안정 릴리스. 테스트 603건+.
+
+### Changed (patch213-214)
+- **.github/workflows/docs-guard.yml** — Python 버전 매트릭스 확장 (3.9, 3.12). `pyproject.toml` requires-python ≥3.9 범위 검증.
+- **examples/ci-github-actions.yml** — step 이름 추가, `continue-on-error: false` 명시, `nufi-egress doctor` step 명칭 보강.
 
 ### Changed (patch193-194)
 - **docs/ROADMAP.md** — SDK 예시 카운트 7종→12종 동기화(실제 `examples/` 파일 수 반영). 거버넌스 §7 "포지셔닝 정합" 완료 표기.
