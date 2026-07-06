@@ -1,30 +1,36 @@
-"""M5 산출물 A — 한국어 PII 골드셋 생성기 (합성).
+"""M5 산출물 A — 한국어 PII 골드셋 생성기 (합성 + 외부 데이터셋).
 
 설계: docs/design/gateway/m5-bench-hardening-spec.md §1 (CMP-78).
 구현·측정: CMP-99 (Engineer, 보안 상시승인 CMP-96).
+외부 데이터셋 고도화: CMP-307, CMP-310 (KDPII 53k 한국어 PII).
 
 원칙
 -----
-- **실고객 데이터 0** — 전량 합성. 체크섬이 필요한 식별번호(RRN/BRN/카드)는 유효 검증숫자로 생성해
-  탐지기 선필터→체크섬 경로를 실제로 통과시킨다(과적합 아닌 진짜 탐지 측정).
+- **실고객 데이터 0** — 합성 + 공개 데이터셋만 사용. 체크섬이 필요한 식별번호(RRN/BRN/카드)는
+  유효 검증숫자로 생성해 탐지기 선필터→체크섬 경로를 실제로 통과시킨다(과적합 아닌 진짜 탐지 측정).
 - **누수 방지 핵심:** KR_PERSON 표본의 ≥ 50% 는 gazetteer 성씨 사전(`detectors/ner.py:_SURNAMES`)에
   **미수록 성씨**(희귀 단성·복성)로 구성한다. gazetteer 백엔드는 이들을 구조적으로 못 잡으므로,
   M2 PoC 의 recall 1.000 이 사전 과적합이었음을 드러내고 KoELECTRA 의 필요를 실측으로 정당화한다.
 - **결정성:** 고정 시드. 동일 실행 → 동일 골드셋(§4.3 재현성).
-- **스키마:** `{"id","prompt","expect":[type...],"spans":[[start,end,type]...],"source":"synth"}`.
+- **스키마:** `{"id","prompt","expect":[type...],"spans":[[start,end,type]...],"source":"synth|external:*"}`.
 - **분할:** 클래스별 층화 dev 40% / test 60%. test 는 튜닝 중 열람 금지(누수 방지).
+- **외부 데이터 슬라이스(CMP-307):** 외부 공신력 데이터셋은 `source: "external:*"`, `_cls: "zzz_ext_*"`
+  로 별도 슬라이스에 추가한다. 기존 합성 sealed test 의 content_hash 와 독립이며,
+  `--external` 플래그로 활성화한다.
 
 공개 배포 형태(CMP-197 I1)
 -------------------------
-- **라이선스:** `samples/gold/LICENSE` (CC0 1.0 — 전량 합성이므로 퍼블릭 도메인 헌정).
+- **라이선스:** `samples/gold/LICENSE` (CC0 1.0 — 합성 부분). 외부 데이터는 각 데이터셋 라이선스.
 - **README:** `samples/gold/README.md` — 스키마·클래스 커버리지·재현 명령.
 - **결정적 재현 검증:** manifest 에 `content_hash`(dev+test 직렬화 바이트의 SHA-256)를 기록한다.
   재생성 → 동일 바이트 → 동일 해시. `python3 goldset/generate.py --verify` 는 커밋된
   산출물을 재생성·대조해 불일치 시 비-0 종료(CI/배포 게이트).
 
 실행:
-  python3 goldset/generate.py            # 평가셋 + manifest(해시 포함) 재생성
-  python3 goldset/generate.py --verify   # 커밋본과 결정적 재현 일치 검증(비-0=불일치)
+  python3 goldset/generate.py                    # 합성 평가셋 재생성 (기존 동작)
+  python3 goldset/generate.py --verify           # 합성 결정적 재현 검증
+  python3 goldset/generate.py --external         # 합성 + 외부 데이터셋 병합 생성
+  python3 goldset/generate.py --external-only    # 외부 데이터셋만 별도 파일로 생성
 """
 from __future__ import annotations
 
@@ -829,9 +835,92 @@ def verify():
     return 0
 
 
+def build_external():
+    """외부 공신력 데이터셋에서 NuFi 골드셋 스키마 행을 로드한다 (CMP-307, CMP-310).
+
+    합성 골드셋과 독립적으로 동작하며, 기존 sealed test 의 content_hash 에 영향 없다.
+    외부 행은 _cls 접두사 "zzz_ext_*" 로 기존 "zz_*" 뒤에 정렬된다.
+
+    데이터셋: ai4privacy(~414k), KLUE-NER(~100), KDPII(~7k 매핑 가능).
+    """
+    from goldset.external_loader import load_external_rows
+    return load_external_rows(max_ai4privacy=0, max_klue_ner=100, max_kdpii=0, full=True)
+
+
+def split_and_write_external(ext_rows):
+    """외부 데이터셋 행을 별도 파일로 저장한다 (samples/gold/external_*.jsonl)."""
+    if not ext_rows:
+        print("외부 데이터셋 행 0건 — 네트워크 접근 또는 캐시 확인 필요.")
+        return None
+
+    ext_dev, ext_test = stratify(ext_rows)
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    for name, split in (("external_dev", ext_dev), ("external_test", ext_test)):
+        with open(OUT_DIR / f"{name}.jsonl", "w", encoding="utf-8") as f:
+            for r in split:
+                f.write(_serialize_row(r) + "\n")
+
+    # 외부 데이터 manifest
+    from goldset.external_loader import get_external_manifest_info
+    ext_info = get_external_manifest_info(ext_rows)
+
+    h = hashlib.sha256()
+    for split in (ext_dev, ext_test):
+        for r in split:
+            h.update((_serialize_row(r) + "\n").encode("utf-8"))
+
+    ext_manifest = {
+        "schema_version": 1,
+        "source": "external",
+        "total": len(ext_rows),
+        "dev_size": len(ext_dev),
+        "test_size": len(ext_test),
+        "content_hash": "sha256:" + h.hexdigest(),
+        **ext_info,
+    }
+
+    with open(OUT_DIR / "external_manifest.json", "w", encoding="utf-8") as f:
+        json.dump(ext_manifest, f, ensure_ascii=False, indent=2)
+
+    return ext_manifest
+
+
+def build_merged():
+    """합성 + 외부 데이터셋을 병합한 전체 골드셋을 생성한다 (CMP-307)."""
+    synth_rows = build()
+    ext_rows = build_external()
+    merged = synth_rows + ext_rows
+    return merged, synth_rows, ext_rows
+
+
 if __name__ == "__main__":
     if "--verify" in _sys.argv[1:]:
         raise SystemExit(verify())
+
+    if "--external-only" in _sys.argv[1:]:
+        # 외부 데이터셋만 별도 파일로 생성
+        ext_rows = build_external()
+        m = split_and_write_external(ext_rows)
+        if m:
+            print(json.dumps(m, ensure_ascii=False, indent=2))
+        raise SystemExit(0 if m else 1)
+
+    if "--external" in _sys.argv[1:]:
+        # 합성 + 외부 병합 생성
+        merged, synth_rows, ext_rows = build_merged()
+        # 합성 부분은 기존 파일로 (sealed test 보존)
+        m = split_and_write(synth_rows)
+        print("=== Synthetic goldset ===")
+        print(json.dumps(m, ensure_ascii=False, indent=2))
+        # 외부 부분은 별도 파일로
+        ext_m = split_and_write_external(ext_rows)
+        if ext_m:
+            print("\n=== External dataset slice ===")
+            print(json.dumps(ext_m, ensure_ascii=False, indent=2))
+        raise SystemExit(0)
+
+    # 기존 동작: 합성만
     rows = build()
     m = split_and_write(rows)
     print(json.dumps(m, ensure_ascii=False, indent=2))
