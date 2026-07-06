@@ -924,15 +924,17 @@ _HELP_EPILOG = """\
     config          설정 파일 검증
     doctor          하이브리드 배선 진단
     test            자가 검증 (PII·인젝션·라우팅·Guard·설정·버전)
-    version         버전 및 백엔드 정보 출력
     history         최근 활동 로그 조회 (스캔·차단·라우팅)
     summary         프로젝트 헬스 대시보드 (설정·활동·위험·닥터·버전)
     stats           NuFi 설정·탐지 역량 요약 통계
-    completions     셸 자동완성 스크립트 출력
 
   [보고]
     report          규정준수 리포트 산출
     benchmark       정확도 + 가명화 벤치마크
+
+  [정보]
+    version         버전 및 백엔드 정보 출력
+    completions     셸 자동완성 스크립트 출력
 
 각 서브커맨드의 상세 도움말: nufi-egress <subcommand> --help
 """

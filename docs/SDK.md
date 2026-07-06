@@ -518,6 +518,39 @@ report.to_dict()   # JSON 직렬화 가능한 딕셔너리
 
 ---
 
+### 2.17 성능·정확도 (Performance & Accuracy, v0.4.x patch217)
+
+SDK 사용자가 탐지 엔진의 품질 수치를 빠르게 파악할 수 있도록 핵심 지표를 요약한다.
+
+#### 핵심 수치 요약
+
+| 지표 | 값 | 비고 |
+|---|---|---|
+| 한국어 PII 전체 재현율 (recall) | **0.9908** | 신뢰구간 0.9812–0.9956 |
+| KR_PERSON 재현율 Wilson CI95 하한 | **0.9591** | 목표 ≥ 0.93 ✅ |
+| 인라인 지연 p95 (512자, CPU) | **41 ms** | 목표 ≤ 150 ms ✅ |
+| 강한 개인정보·비밀 재현율 | **1.000** | 정규식 기반 — FN 0 |
+| 오탐 (benign false-positive) | **0 / 90** | — |
+
+#### 상세 리포트 참조
+
+- 전체 재현율·정밀도: [`docs/reports/recall-int8.json`](../docs/reports/recall-int8.json)
+- KR_LOCATION 유니온 판정: [`docs/reports/kr-location-gate.json`](../docs/reports/kr-location-gate.json)
+- 인라인 지연: [`docs/reports/load-p95.json`](../docs/reports/load-p95.json)
+- 무결성 감사: [`docs/reports/accuracy-integrity-audit.md`](../docs/reports/accuracy-integrity-audit.md)
+- README 성능 섹션: [README.md §성능·정확도](../README.md#성능정확도-performance--accuracy)
+
+#### 벤치마크 재실행
+
+```bash
+python3 scripts/bench.py --ner gazetteer
+```
+
+위 명령은 골드셋 전체를 재평가해 recall/precision/latency 를 재측정한다.
+`docs/reports/` 아래 JSON 파일과 비교하여 회귀를 확인할 수 있다.
+
+---
+
 ## 3. CLI ↔ SDK 동등 매핑
 
 | CLI | SDK 호출 | 기능 |
