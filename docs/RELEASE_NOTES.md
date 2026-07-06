@@ -8,14 +8,14 @@
 
 ## v0.4.18 (patch177) -- **안정 릴리스: 인젝션 가드레일 + 파일 스캔 + REST API + CLI 확장**
 
-> patch55~175 전체를 아우르는 마일스톤 릴리스. (2026-07-05)
+> patch55~175 전체를 아우르는 마일스톤 릴리스. (2026-07-06)
 
 ### 주요 기능
 
 | 계층 | 기능 |
 |---|---|
 | **인젝션 가드레일** | 한국어 프롬프트 인젝션 28종 패턴 탐지. Guard 통합으로 PII+인젝션 동시 차단 |
-| **REST API** | `nufi-egress serve` — OpenAPI/Swagger, 6개 엔드포인트(/detect, /injection, /pipeline, /explain, /scan, /completions) |
+| **REST API** | `nufi-egress serve` — OpenAPI/Swagger, 14개 엔드포인트(/detect, /route, /inspect, /mask, /redact, /injection, /pipeline, /explain, /scan, /posture, /summary, /stats, /badge, /health) |
 | **파일 스캔** | `scan --recursive --redact --dry-run --git-staged --stats` 전체 옵션 세트 |
 | **CLI 37개+** | dashboard, report(executive/badge/posture/coverage-map), doctor, init, watch 등 |
 | **SDK 20개+ 함수** | detect, route, explain, batch_*, security_report, guard_context 등 |

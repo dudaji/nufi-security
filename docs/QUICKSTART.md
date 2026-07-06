@@ -105,7 +105,7 @@ curl -s localhost:8000/detect -H "Content-Type: application/json" \
   -d '{"text":"김민수님 전화 010-1234-5678"}'
 ```
 
-NuFi 기능을 REST API 로 노출하여 다른 마이크로서비스에서 HTTP 호출로 PII 탐지·라우팅·마스킹을 사용합니다. 엔드포인트: `/detect`, `/route`, `/inspect`, `/mask`, `/redact`, `/health`.
+NuFi 기능을 REST API 로 노출하여 다른 마이크로서비스에서 HTTP 호출로 PII 탐지·라우팅·마스킹을 사용합니다. 엔드포인트: `/detect`, `/route`, `/inspect`, `/mask`, `/redact`, `/injection`, `/pipeline`, `/explain`, `/scan`, `/posture`, `/summary`, `/stats`, `/badge/{type}`, `/health`. 전체 상세는 [`CLI.md`](CLI.md) 의 `serve` 섹션을 참고하세요.
 
 ---
 
