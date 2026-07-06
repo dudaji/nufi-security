@@ -6,7 +6,7 @@
 > 다이어그램은 외부 이미지가 아니라 **in-repo Mermaid** 입니다. 코드와 같은 PR 에서 갱신되어 드리프트에
 > 강합니다(아래 [§7 드리프트 방지](#7-드리프트-방지-drift-resistance) 참조).
 >
-> 버전: **v0.0.1** (아키텍처 문서 리비전) — 제품 릴리스 **v0.4.16** ([`../VERSION`](../VERSION)·[`../CHANGELOG.md`](../CHANGELOG.md))
+> 버전: **v0.0.1** (아키텍처 문서 리비전) — 제품 릴리스 **v0.4.18** ([`../VERSION`](../VERSION)·[`../CHANGELOG.md`](../CHANGELOG.md))
 
 ---
 
@@ -127,7 +127,8 @@ flowchart TB
 | 패킷 캡처 | `capture/flow_tap.py`, `capture/content_dump.py` | `FlowTap.classify()`, `ContentDumpWriter.dump()` |
 | 비동기 감사봇 | `egress_audit/audit_bot.py`, `file_queue.py` | `AuditBot.run_once()` |
 | enforcement (nftables) | `enforcement/` | `Applier.apply()`, `render_ruleset()` |
-| Python SDK 파사드 | `nufi/` | `detect()`, `Guard()`, `pseudonymize()`, `scan_file()`, `guard_file()`, `batch_detect()` |
+| Python SDK 파사드 | `nufi/` | `detect()`, `Guard()`, `pseudonymize()`, `scan_file()`, `guard_file()`, `batch_detect()`, `explain()`, `detect_injection()`, `guard_context()` |
+| CLI 서브커맨드 | `enforcement/cli.py` | `inspect`, `pipeline`, `playground`, `summary`, `history`, `export`, `dashboard`, `serve`, `badge`, `trends` |
 | config | `config/*.yaml` | routing·policy·patterns·confidential·audit_profiles·edm |
 
 ---
@@ -425,7 +426,9 @@ sequenceDiagram
 - 기반 명세: [`SPEC.md`](history/SPEC.md)
 - Enforcement(우회 차단): [`SPEC_EGRESS_ENFORCEMENT.md`](history/SPEC_EGRESS_ENFORCEMENT.md)
 - 기밀 1차 탐지: [`SPEC_M4.md`](history/SPEC_M4.md) · [`IMPL_M4.md`](history/IMPL_M4.md)
+- 모듈 인덱스: [`../gateway/README.md`](../gateway/README.md) · [`../egress_audit/detectors/README.md`](../egress_audit/detectors/README.md)
 - 릴리스: [`../CHANGELOG.md`](../CHANGELOG.md) · [`../VERSION`](../VERSION)
 
 *최초 작성: 2026-06-27 — v0.0.1 단일 권위 아키텍처 + 4개 시퀀스 Mermaid. 코드 대조 완료.*
 *갱신: 2026-07-04 — 버전 표기 명확화 (아키텍처 문서 리비전 v0.0.1 / 제품 릴리스 v0.4.16). §2 컴포넌트 표 Python SDK 파사드 행 추가. §8 관련 문서 SDK·REPORTING·PII_ROUTING 링크 추가.*
+*갱신: 2026-07-06 — 제품 릴리스 v0.4.18 반영. §2 컴포넌트 표: SDK 파사드에 explain·detect_injection·guard_context 추가, CLI 서브커맨드 행 신설(inspect·pipeline·playground·summary·history·export·dashboard·serve·badge·trends).*
