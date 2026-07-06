@@ -34,6 +34,28 @@ _WORDCHAR_RE = re.compile(r"[0-9A-Za-z가-힣]")
 _HANGUL_RE = re.compile(r"[가-힣]")
 
 
+def detect_language(text: str) -> str:
+    """텍스트의 주 언어를 Unicode 기반으로 판별 (CMP-309).
+
+    Hangul 비율 기준:
+      > 0.3  → "ko"
+      < 0.05 → "en"
+      그 외   → "mixed" (양쪽 NER 모두 실행)
+
+    오버헤드 < 1ms (순수 stdlib, 정규식 카운트).
+    """
+    if not text:
+        return "en"
+    total = len(text)
+    hangul_count = len(_HANGUL_RE.findall(text))
+    ratio = hangul_count / total
+    if ratio > 0.3:
+        return "ko"
+    if ratio < 0.05:
+        return "en"
+    return "mixed"
+
+
 def normalize(text: str, *, collapse_ws: bool = True, drop_middot: bool = True) -> str:
     """매칭용 정규화 뷰를 만든다.
 
@@ -68,6 +90,112 @@ def normalize_token(value: str) -> str:
 
 def is_wordchar(ch: str) -> bool:
     return bool(_WORDCHAR_RE.match(ch))
+
+
+# ---------------------------------------------------------------------------
+# 프롬프트 인젝션 탐지용 정규화 (Phase 1 — CMP-292)
+# ---------------------------------------------------------------------------
+
+# Fullwidth ASCII 범위 (U+FF01 ~ U+FF5E) → ASCII (U+0021 ~ U+007E)
+_FULLWIDTH_OFFSET = 0xFEE0  # ord('！') - ord('!')
+
+# 한글 자모 → 음절 재조합 (조합형 우회 탐지)
+# NFC 만으로 부족한 경우: 사용자가 공백/비가시 문자를 자모 사이에 삽입
+_JAMO_INITIAL = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"
+_JAMO_MEDIAL = "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ"
+_JAMO_FINAL = "ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ"
+
+# Compatibility Jamo (U+3131..U+3163) → Conjoining Jamo mapping for reassembly
+_COMPAT_INITIAL_MAP = {
+    'ㄱ': 0, 'ㄲ': 1, 'ㄴ': 2, 'ㄷ': 3, 'ㄸ': 4, 'ㄹ': 5,
+    'ㅁ': 6, 'ㅂ': 7, 'ㅃ': 8, 'ㅅ': 9, 'ㅆ': 10, 'ㅇ': 11,
+    'ㅈ': 12, 'ㅉ': 13, 'ㅊ': 14, 'ㅋ': 15, 'ㅌ': 16, 'ㅍ': 17, 'ㅎ': 18,
+}
+_COMPAT_MEDIAL_MAP = {
+    'ㅏ': 0, 'ㅐ': 1, 'ㅑ': 2, 'ㅒ': 3, 'ㅓ': 4, 'ㅔ': 5,
+    'ㅕ': 6, 'ㅖ': 7, 'ㅗ': 8, 'ㅘ': 9, 'ㅙ': 10, 'ㅚ': 11,
+    'ㅛ': 12, 'ㅜ': 13, 'ㅝ': 14, 'ㅞ': 15, 'ㅟ': 16, 'ㅠ': 17,
+    'ㅡ': 18, 'ㅢ': 19, 'ㅣ': 20,
+}
+_COMPAT_FINAL_MAP = {
+    'ㄱ': 1, 'ㄲ': 2, 'ㄳ': 3, 'ㄴ': 4, 'ㄵ': 5, 'ㄶ': 6,
+    'ㄷ': 7, 'ㄹ': 8, 'ㄺ': 9, 'ㄻ': 10, 'ㄼ': 11, 'ㄽ': 12,
+    'ㄾ': 13, 'ㄿ': 14, 'ㅀ': 15, 'ㅁ': 16, 'ㅂ': 17, 'ㅄ': 18,
+    'ㅅ': 19, 'ㅆ': 20, 'ㅇ': 21, 'ㅈ': 22, 'ㅊ': 23, 'ㅋ': 24,
+    'ㅌ': 25, 'ㅍ': 26, 'ㅎ': 27,
+}
+
+# 자모 문자 범위
+_JAMO_RE = re.compile(r"[ㄱ-ㅎㅏ-ㅣ]")
+
+
+def _reassemble_jamo(text: str) -> str:
+    """분리된 자모(ㅌㅏㄹㅗㄱ)를 한글 음절(탈옥)로 재조합.
+
+    공백·비가시 문자가 자모 사이에 삽입된 우회를 탐지하기 위해
+    먼저 자모만 추출하여 재조합한 뒤 원문의 자모 구간을 치환한다.
+    """
+    if not _JAMO_RE.search(text):
+        return text
+
+    result: list[str] = []
+    i = 0
+    chars = list(text)
+    n = len(chars)
+
+    while i < n:
+        ch = chars[i]
+        # 초성 후보
+        if ch in _COMPAT_INITIAL_MAP:
+            # 뒤쪽에서 중성을 찾는다 (공백/비가시 문자 건너뜀)
+            j = i + 1
+            while j < n and (chars[j] in _ZERO_WIDTH or chars[j] == ' '):
+                j += 1
+            if j < n and chars[j] in _COMPAT_MEDIAL_MAP:
+                initial = _COMPAT_INITIAL_MAP[ch]
+                medial = _COMPAT_MEDIAL_MAP[chars[j]]
+                # 종성 후보
+                k = j + 1
+                while k < n and (chars[k] in _ZERO_WIDTH or chars[k] == ' '):
+                    k += 1
+                final_val = 0
+                end = j + 1
+                if k < n and chars[k] in _COMPAT_FINAL_MAP:
+                    # 종성 뒤에 중성이 오면 이 종성은 다음 음절의 초성 → 종성 없음
+                    m = k + 1
+                    while m < n and (chars[m] in _ZERO_WIDTH or chars[m] == ' '):
+                        m += 1
+                    if m < n and chars[m] in _COMPAT_MEDIAL_MAP:
+                        # 종성이 아니라 다음 음절의 초성
+                        end = j + 1
+                    else:
+                        final_val = _COMPAT_FINAL_MAP[chars[k]]
+                        end = k + 1
+                syllable = chr(0xAC00 + initial * 21 * 28 + medial * 28 + final_val)
+                result.append(syllable)
+                i = end
+                continue
+        result.append(ch)
+        i += 1
+
+    return "".join(result)
+
+
+def normalize_for_injection(text: str) -> str:
+    """프롬프트 인젝션 탐지 전 적용하는 공격적 정규화.
+
+    1. NFKC 정규화 (fullwidth → halfwidth, 호환 문자 통일)
+    2. 제로폭 문자 제거
+    3. 자모 재조합 (ㅌㅏㄹㅗㄱ → 탈옥)
+    4. 연속 공백 정리
+    """
+    if not text:
+        return ""
+    t = _ZERO_WIDTH_RE.sub("", text)
+    t = _reassemble_jamo(t)
+    t = unicodedata.normalize("NFKC", t)
+    t = _WS_RE.sub(" ", t).strip()
+    return t
 
 
 def find_word(text: str, term: str, *, case_sensitive: bool = False,

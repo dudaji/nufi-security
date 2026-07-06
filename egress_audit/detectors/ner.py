@@ -395,6 +395,68 @@ class _OnnxInt8Backend(_PipelineBackend):
                               aggregation_strategy="simple")
 
 
+class _MultilingualTransformersBackend(_PipelineBackend):
+    """다국어 NER 백엔드 — 영어/다국어 텍스트용 (CMP-309).
+
+    dslim/bert-base-NER (또는 동급 다국어 모델)을 사용한다.
+    라벨 맵은 CoNLL 표준(PER/LOC/ORG/MISC) → 내부 타입(PERSON/LOCATION).
+    """
+
+    name = "multilingual"
+    source = "ner:multilingual"
+    _LABEL_MAP = {"PER": "PERSON", "LOC": "LOCATION", "ORG": "ORGANIZATION"}
+
+    def __init__(self, model_id: Optional[str] = None):
+        import os
+        from transformers import pipeline  # type: ignore
+        self._pool = BoundedInference()
+        try:
+            import torch  # type: ignore
+            torch.set_num_threads(self._pool.intra_op)
+        except Exception:
+            pass
+        model_id = model_id or os.environ.get(
+            "M5_MULTILINGUAL_NER_MODEL_ID", "dslim/bert-base-NER")
+        self._pipe = pipeline("token-classification", model=model_id,
+                              aggregation_strategy="simple")
+
+
+class MultilingualNerDetector:
+    """영어/다국어 텍스트용 NER 탐지기 (CMP-309).
+
+    KoreanNerDetector 와 동일 인터페이스(detect(text) → Iterator[RawSpan]).
+    백엔드 선택: transformers(dslim/bert-base-NER) 또는 disabled.
+    """
+
+    def __init__(self, backend: str = "auto", model_id: Optional[str] = None):
+        self.backend = self._build_backend(backend, model_id)
+
+    @staticmethod
+    def _build_backend(backend: str, model_id: Optional[str]):
+        if backend in ("auto", "transformers", "multilingual"):
+            try:
+                return _MultilingualTransformersBackend(model_id=model_id)
+            except Exception:
+                if backend in ("transformers", "multilingual"):
+                    raise
+        return None
+
+    @property
+    def backend_name(self) -> str:
+        if self.backend is None:
+            return "disabled"
+        return getattr(self.backend, "name", "unknown")
+
+    @property
+    def pool_config(self):
+        pool = getattr(self.backend, "_pool", None)
+        return pool.config if pool is not None else None
+
+    def detect(self, text: str) -> Iterator[RawSpan]:
+        if self.backend is not None:
+            yield from self.backend.detect(text)
+
+
 class KoreanNerDetector:
     """가능하면 transformers 백엔드, 아니면 gazetteer 폴백.
 

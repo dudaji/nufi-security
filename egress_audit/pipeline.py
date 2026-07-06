@@ -14,7 +14,7 @@ import yaml
 from . import normalize as nz
 from .detectors.korean_pii import KoreanPiiDetector, RawSpan
 from .detectors.secrets import SecretsDetector
-from .detectors.ner import KoreanNerDetector
+from .detectors.ner import KoreanNerDetector, MultilingualNerDetector
 from .detectors.confidential import ConfidentialKeywordDetector
 from .edm import EdmMatcher
 
@@ -68,7 +68,9 @@ class DetectionPipeline:
                  enable_ner: bool = True, model_id: Optional[str] = None,
                  confidential_path: Optional[str] = None, edm_index_path: Optional[str] = None,
                  enable_confidential: bool = True, location_union: bool = False,
-                 person_union: bool = False):
+                 person_union: bool = False,
+                 enable_multilingual_ner: bool = False,
+                 multilingual_model_id: Optional[str] = None):
         patterns_path = patterns_path or str(_CONFIG_DIR / "patterns.yaml")
         with open(patterns_path, "r", encoding="utf-8") as f:
             cfg = yaml.safe_load(f)
@@ -87,6 +89,17 @@ class DetectionPipeline:
             backend=ner_backend, model_id=model_id,
             location_union=location_union or env_loc_union,
             person_union=person_union or env_per_union) if enable_ner else None
+
+        # CMP-309: 다국어 NER — 영어/다국어 텍스트용. env M5_MULTILINGUAL_NER=1 로도 활성화.
+        env_ml_ner = os.environ.get("M5_MULTILINGUAL_NER", "").strip().lower() \
+            in ("1", "true", "yes", "on")
+        self.multilingual_ner = None
+        if (enable_multilingual_ner or env_ml_ner) and enable_ner:
+            try:
+                self.multilingual_ner = MultilingualNerDetector(
+                    model_id=multilingual_model_id)
+            except Exception:
+                pass  # 모델 미가용 시 한국어 NER 만 사용(폴백)
 
         # --- M4 기밀 탐지 ---
         self.confidential = None
@@ -114,9 +127,25 @@ class DetectionPipeline:
         # 1) 결정적 탐지 우선(체크섬·비밀정보) — 병합 시 우선권
         spans.extend(self.pii.detect(text))
         spans.extend(self.secrets.detect(text))
-        # 2) NER 보완
-        if self.ner is not None:
-            spans.extend(self.ner.detect(text))
+        # 2) NER 보완 — 언어 기반 라우팅(CMP-309)
+        if self.ner is not None or self.multilingual_ner is not None:
+            lang = nz.detect_language(text) if self.multilingual_ner else "ko"
+            if lang == "ko":
+                # 한국어 → KoELECTRA/gazetteer
+                if self.ner is not None:
+                    spans.extend(self.ner.detect(text))
+            elif lang == "en":
+                # 영어 → 다국어 NER
+                if self.multilingual_ner is not None:
+                    spans.extend(self.multilingual_ner.detect(text))
+                elif self.ner is not None:
+                    spans.extend(self.ner.detect(text))  # 폴백
+            else:
+                # mixed → 양쪽 모두 실행
+                if self.ner is not None:
+                    spans.extend(self.ner.detect(text))
+                if self.multilingual_ner is not None:
+                    spans.extend(self.multilingual_ner.detect(text))
         merged = self._merge(spans)
         findings = [Finding(s.entity_type, s.text, s.start, s.end, round(s.score, 3), s.source)
                     for s in merged]
