@@ -14,6 +14,12 @@
 11. --stats 플래그: 요약 통계 출력
 12. --parallel N: 멀티스레드 스캔 결과가 순차 스캔과 동일
 13. --verbose 플래그: 발견 항목별 상세 출력
+14. .nufi_ignore_findings.yaml 오탐 억제 (patch178)
+15. --format csv: CSV 출력 (patch180)
+16. --baseline PATH: 이전 결과 대비 신규 발견만 출력 (patch181)
+17. --count-only: 발견 건수만 출력 (patch182)
+18. --min-score FLOAT: 최소 신뢰도 이하 필터링 (patch186)
+19. --only-types LIST: 특정 엔티티 타입만 출력 (patch188)
 """
 from __future__ import annotations
 
