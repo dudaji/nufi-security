@@ -16,12 +16,34 @@ dependencies = [
     "cryptography>=41.0",
 ]
 dynamic = ["version"]
+keywords = [
+    "pii-detection",
+    "korean-nlp",
+    "data-loss-prevention",
+    "egress-audit",
+    "llm-security",
+]
+classifiers = [
+    "License :: Other/Proprietary License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Topic :: Security",
+    "Topic :: System :: Monitoring",
+]
+
+[project.urls]
+Repository = "https://github.com/dudaji/nufi-egress"
+Documentation = "https://github.com/dudaji/nufi-egress/tree/main/docs"
 
 [project.optional-dependencies]
 # 독립 게이트웨이(FastAPI) 구동 시. 코어 CLI 는 이것 없이 동작.
 gateway = [
     "fastapi>=0.110",
     "uvicorn>=0.29",
+    "pydantic>=2.0",
     "httpx>=0.27",
 ]
 
