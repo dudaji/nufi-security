@@ -420,6 +420,102 @@ results[1]["blocked"]   # False
 - **함수 시그니처:** `batch_inspect(texts: list[str]) -> list[dict]`
 - **반환 타입:** `list[dict]` — 각 항목은 §2.11 `inspect_text()` 의 반환 형식과 동일.
 
+### 2.15 `guard_context()` — 컨텍스트 기반 Guard 사용 (v0.4.x patch197)
+
+Guard 를 Python `with` 문으로 사용할 수 있는 편의 팩토리.
+
+```python
+from nufi import guard_context
+
+# with 문으로 Guard 사용 — 스코프 기반 관리
+with guard_context(check_injection=True) as g:
+    result = g.inspect("홍길동 주민번호 900101-1234567")
+    if result.blocked:
+        print("차단:", result.summary)
+
+# 인젝션 검사 없이
+with guard_context() as g:
+    result = g.inspect("hello world")
+    assert not result.blocked
+```
+
+- **함수 시그니처:** `guard_context(*, check_injection: bool = False, **kwargs) -> Guard`
+- **반환 타입:** `Guard` — §2.4 의 `Guard` 인스턴스(context manager 프로토콜 지원).
+- `check_injection`: `True` 이면 인젝션 탐지도 함께 수행.
+- kwargs 는 `Guard` 생성자에 그대로 전달된다.
+- **안정성 계층:** stable
+
+### 2.16 보안 포스처 리포트 (Security posture report, v0.4.x patch197)
+
+디렉터리를 스캔하여 PII/인젝션 패턴을 탐지하고 위험도를 평가해 보안 포스처 리포트를 생성한다.
+
+```python
+from nufi import security_report, render_security_markdown, render_security_json, SecurityReport
+
+# 디렉터리 스캔 → SecurityReport 생성
+report = security_report("./data")
+report.risk_level         # "critical" | "high" | "medium" | "low"
+report.total_findings     # 탐지된 총 건수
+report.files_scanned      # 스캔한 파일 수
+report.recommendations    # 권장 조치 목록
+
+# 마크다운 렌더
+md = render_security_markdown(report)
+print(md)
+
+# JSON 렌더
+json_str = render_security_json(report)
+
+# 파일 패턴·제외 패턴 지정
+report = security_report(
+    "./src",
+    patterns=["*.py", "*.txt"],
+    exclude=["*.log"],
+)
+
+# dict 변환
+report.to_dict()   # JSON 직렬화 가능한 딕셔너리
+```
+
+#### `security_report()`
+
+- **함수 시그니처:** `security_report(directory: str | Path, *, patterns: list[str] | None = None, exclude: list[str] | None = None) -> SecurityReport`
+- **반환 타입:** `SecurityReport`
+- `directory`: 스캔할 디렉터리 경로.
+- `patterns`: 포함할 파일 glob 패턴 목록 (None 이면 전체).
+- `exclude`: 제외할 파일 glob 패턴 목록.
+
+#### `render_security_markdown()`
+
+- **함수 시그니처:** `render_security_markdown(report: SecurityReport) -> str`
+- **반환 타입:** `str` — Markdown 형식의 보안 포스처 리포트.
+
+#### `render_security_json()`
+
+- **함수 시그니처:** `render_security_json(report: SecurityReport) -> str`
+- **반환 타입:** `str` — JSON 형식의 보안 포스처 리포트 (들여쓰기 2).
+
+#### SecurityReport 필드
+
+| 필드 | 타입 | 설명 |
+|---|---|---|
+| `generated_at` | `str` | 리포트 생성 시각 (ISO 8601 UTC) |
+| `directory` | `str` | 스캔 대상 디렉터리 경로 |
+| `files_scanned` | `int` | 스캔한 파일 수 |
+| `files_with_findings` | `int` | 탐지 결과가 있는 파일 수 |
+| `total_findings` | `int` | 총 탐지 건수 |
+| `risk_level` | `str` | `"low"`, `"medium"`, `"high"`, `"critical"` |
+| `findings_by_severity` | `dict[str, int]` | 심각도별 건수 |
+| `top_entity_types` | `list[dict]` | 상위 엔티티 타입 (최대 10건, `{type, count}`) |
+| `injection_patterns` | `list[dict]` | 인젝션 패턴 목록 (`{pattern, file, line, text}`) |
+| `recommendations` | `list[str]` | 권장 조치 목록 |
+
+주요 메서드:
+  - `to_dict()` — JSON 직렬화 가능한 딕셔너리 반환.
+
+- **안정성 계층:** stable
+- CLI 동등: `nufi-egress report security [directory]`
+
 ---
 
 ## 3. CLI ↔ SDK 동등 매핑
@@ -431,6 +527,7 @@ results[1]["blocked"]   # False
 | `nufi-egress` 집행 결정 | `Guard().inspect(text)` | 탐지+정책 평가 |
 | `nufi-egress report compliance` | `compliance_report(...)` + `render_report(...)` | 증빙 리포트 |
 | `nufi-egress report sla` | `build_sla_report(...)` (advanced 계층) | 운영 리포트 |
+| `nufi-egress report security` | `security_report(...)` + `render_security_markdown/json(...)` | 보안 포스처 리포트 |
 | `nufi-egress benchmark` | `run_benchmarks(only=None)` (구현·출하) | 정확도+가명화 벤치마크 재현 |
 
 > 운영(SLA/대시보드/멀티테넌시)은 ROADMAP §3 에서 제외 대상이다. SDK 는 해당 함수를
@@ -482,7 +579,7 @@ results[1]["blocked"]   # False
 
 | 문서 | 역할 |
 |---|---|
-| [`examples/README.md`](../examples/README.md) | 독립 실행 예시 7종 인덱스 — 각 API 의 실행 가능한 코드 |
+| [`examples/README.md`](../examples/README.md) | 독립 실행 예시 12종 인덱스 — 각 API 의 실행 가능한 코드 |
 | [`HANDS_ON.md`](HANDS_ON.md) | Part G·H·I·J — SDK 실습(탐지·가명화·편의함수·벤치마크) |
 | [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md) | 경로 D: Python SDK 직접 임포트로 통합하는 절차 |
 | [`REPORTING.md`](REPORTING.md) | §4 Python SDK API: `compliance_report`·`render_report`·`load_catalog` |
