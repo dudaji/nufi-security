@@ -610,7 +610,7 @@ print(result.decision)       # 정책 판정 (차단/가명화/경고)
 ```
 
 데모: `./scripts/demo_sdk.sh` (4/4 PASS). 전체 API 는 [`SDK.md`](SDK.md) 참고.
-독립 실행 예시 7종은 [`examples/README.md`](../examples/README.md) 를 보세요.
+독립 실행 예시 12종은 [`examples/README.md`](../examples/README.md) 를 보세요.
 
 ---
 
@@ -706,7 +706,7 @@ python3 -m pytest tests/ -q
 | `test_cmp145_int8_consistency.py` | ONNX-int8 재현율 수용 기준 (CI 하한 0.93+) |
 | `test_repo_docs_are_consistent.py` | README·보고서 수치가 recall-int8.json 과 일치 |
 | `test_doc_style_guard.py` | 공개 문서 스타일 가드 |
-| `test_examples_smoke.py` | examples/ 스크립트 스모크 7종 (library_detect·sdk_quickstart·sdk_block_and_audit·sdk_reversible_roundtrip·sdk_streaming·sdk_file_scan·sdk_compliance_report) |
+| `test_examples_smoke.py` | examples/ 스크립트 스모크 9종 (library_detect·sdk_quickstart·sdk_block_and_audit·sdk_reversible_roundtrip·sdk_streaming·sdk_file_scan·sdk_compliance_report·sdk_security_report·sdk_ci_integration) |
 
 ### 전체 벤치마크 재실행 (ONNX 백엔드, ~5분)
 
@@ -860,4 +860,4 @@ git add sensitive_file.py && git commit -m "test"
 | [`SDK.md`](SDK.md) | Python SDK API — `detect`·`Guard`·`scan_file`·`compliance_report` |
 | [`REPORTING.md`](REPORTING.md) | 한국 규제 5종 48개 통제 컴플라이언스 리포트 출력 |
 | [`DEMO.md`](DEMO.md) | 전체 기능 데모 카탈로그·1-명령 PASS/FAIL |
-| [`examples/README.md`](../examples/README.md) | Python SDK 예시 7종 인덱스 |
+| [`examples/README.md`](../examples/README.md) | Python SDK 예시 12종 인덱스 |

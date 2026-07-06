@@ -1,3 +1,4 @@
+version: 1
 # Scan profiles — predefined sets of scan options for common use cases.
 # Usage: nufi-egress scan . --profile ci
 # Profile settings can be overridden by explicit CLI flags.

@@ -3,7 +3,7 @@
 > 이어받는 사람/AI가 "무엇이 되어 있고, 무엇이 남았고, 어디를 조심해야 하나"를 파악하도록
 > 정리했습니다. 수치의 권위는 `docs/reports/*.json`, 변경 이력의 권위는 `CHANGELOG.md` 입니다.
 
-*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-05 · 대상: v0.4.17-patch128 (main, origin 동기화됨)*
+*작성 시점: 2026-07-03 · 최종 갱신: 2026-07-06 · 대상: v0.4.18 (main, origin 동기화됨)*
 
 ---
 
@@ -11,6 +11,7 @@
 
 | 버전 | 테마 | 핵심 내용 |
 |---|---|---|
+| **v0.4.18** | config 통일·데모 등록·배포 문서 동기화 | config version 필드 통일, demo_all.sh 누락 데모 등록, deploy/HANDOVER 버전 v0.4.18 동기화 |
 | **v0.4.17-patch128** | 인젝션·스캔·변환·CI 대규모 기능 추가 | 프롬프트 인젝션 탐지, 파일/디렉터리 스캔, mask/redact/explain, watch/diff/init/stats/export, pre-commit·CI 연동, SARIF 출력, 셸 자동완성 등 70+ 패치 |
 | **v0.4.16-patch51** | SDK GuardResult·Decision 필드 표 | Guard.inspect() 반환값 필드 5+4개 타입·설명·예시 추가 |
 | **v0.4.16-patch50** | REPORTING 감사관 제출 치트시트 | 한국 규제 5종 대응 CLI 흐름·규제별 프레임워크 표 추가 |

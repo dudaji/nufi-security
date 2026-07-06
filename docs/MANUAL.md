@@ -178,7 +178,7 @@ result = Guard().inspect("김민수님 계좌번호 110-123-456789")
 ```
 
 `import nufi` 는 모델·config 를 로딩하지 않습니다(지연 로딩 — 에어갭 안전). 실행 가능한
-완전 예시(7종): [`examples/README.md`](../examples/README.md) · 주요 3종: [`library_detect.py`](../examples/library_detect.py)·[`sdk_file_scan.py`](../examples/sdk_file_scan.py)·[`sdk_compliance_report.py`](../examples/sdk_compliance_report.py). API 전체
+완전 예시(12종): [`examples/README.md`](../examples/README.md) · 주요 3종: [`library_detect.py`](../examples/library_detect.py)·[`sdk_file_scan.py`](../examples/sdk_file_scan.py)·[`sdk_compliance_report.py`](../examples/sdk_compliance_report.py). API 전체
 목록·안정성 계층은 [`SDK.md`](SDK.md), 실습은 [`HANDS_ON.md`](HANDS_ON.md) §7b 참고.
 
 ---

@@ -84,6 +84,8 @@ run_demo demo_getting_started.sh "Getting-started 워크플로(init→scan→red
 run_demo demo_transform.sh      "텍스트 변환(mask·redact·explain — PII 마스킹/리댁션/상세설명)"
 run_demo demo_litellm_e2e.sh     "LiteLLM Proxy E2E(프록시 기동→PII 라우팅→감사 검증)"
 run_demo demo_cli_showcase.sh   "CLI 쇼케이스(playground·summary·pipeline·mask·redact)"
+run_demo demo_injection_e2e.sh  "인젝션 E2E(탐지→차단→감사 전 구간 검증)"
+# NOTE: demo_bypass_enforcement.sh 는 root/nft 권한이 필요하여 의도적으로 제외.
 
 # 정확도 데모는 커밋된 측정 산출물(docs/reports/*.json)이 있어야 재현 가능하다.
 if [ -f "$ROOT/docs/reports/recall-int8.json" ] \

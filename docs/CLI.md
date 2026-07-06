@@ -24,8 +24,13 @@ nufi --help                   # nufi-egress 와 동일(별칭)
 > `sudo python3 -m enforcement.cli …` 로 실행합니다.
 
 ```
-usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
-                   {render,apply,disable,status,feedback,doctor,coverage,monitor,init,audit,targets,flow-tap,policy,report,route,benchmark} ...
+usage: nufi-egress [-h] [--version] [--routing ROUTING] [--policy POLICY]
+                   {version,render,apply,disable,status,feedback,doctor,
+                    coverage,monitor,init,audit,targets,flow-tap,policy,
+                    report,scan,diff,compare,test,config,watch,lint,
+                    generate,inspect,export,mask,redact,explain,pipeline,
+                    route,benchmark,history,playground,summary,dashboard,
+                    serve,stats,completions} ...
 ```
 
 | 전역 옵션 | 무엇 | 기본 |
@@ -59,6 +64,20 @@ usage: nufi-egress [-h] [--routing ROUTING] [--policy POLICY]
 | [`compare`](#compare) | 두 스캔 결과(SARIF/JSON) 비교 — new/resolved/unchanged | 불필요 |
 | [`test`](#test) | 자가 검증 — PII·인젝션·라우팅·Guard·설정·버전 6체크 | 불필요 |
 | [`serve`](#serve) | HTTP API 서버 — REST 엔드포인트로 마이크로서비스 연동 | 불필요 |
+| [`version`](#version) | 버전 및 백엔드 정보 출력 | 불필요 |
+| [`diff`](#diff) | git 변경 파일만 PII/인젝션 스캔(PR 리뷰·pre-commit) | 불필요 |
+| [`config`](#config) | 설정 파일 검증/조회(syntax·필수 필드·regex) | 불필요 |
+| [`watch`](#watch) | 디렉터리 PII 실시간 감시(폴링) | 불필요 |
+| [`inspect`](#inspect) | 통합 보안 분석 — PII+인젝션+라우팅+위험도 | 불필요 |
+| [`export`](#export) | 탐지 패턴 내보내기(YAML/JSON/regex) | 불필요 |
+| [`explain`](#explain) | 텍스트 탐지 결과 상세 설명 — PII·인젝션·정책·라우팅 근거 | 불필요 |
+| [`pipeline`](#pipeline) | 체인 파이프라인 — detect→decide→transform→route 한 번에 | 불필요 |
+| [`history`](#history) | 최근 활동 로그 조회 — 스캔·차단·라우팅 이벤트 | 불필요 |
+| [`playground`](#playground) | 인터랙티브 PII 분석 REPL — 실시간 텍스트 분석 실험 | 불필요 |
+| [`summary`](#summary) | 프로젝트 헬스 대시보드 — 설정·활동·위험·닥터·버전 요약 | 불필요 |
+| [`dashboard`](#dashboard) | ASCII 터미널 보안 대시보드 — 등급·테스트·위험 한 화면 | 불필요 |
+| [`stats`](#stats) | NuFi 설정·탐지 역량 요약 통계 | 불필요 |
+| [`completions`](#completions) | 셸 자동완성 스크립트 출력(bash/zsh) | 불필요 |
 
 > **신규 도입 5분 경로:** `init audit-only` → SDK/게이트웨이 배선 → `doctor`(core-3 GREEN 확인) → `status`/감사 로그 관찰 → 준비되면 `apply`. 자세한 결정 트리는 [`INTEGRATION_GUIDE.md`](INTEGRATION_GUIDE.md).
 

@@ -1,3 +1,4 @@
+version: 1
 # LiteLLM Proxy 설정 — PII 기반 하이브리드 라우팅 (CMP-244).
 #   기동: litellm --config config/litellm_config.yaml
 #   callback: gateway/litellm_hook.py 의 EgressAuditHook (PII 라우팅 + 감사 로깅)

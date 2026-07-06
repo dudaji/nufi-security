@@ -34,5 +34,5 @@
 | 문서 | 역할 |
 |---|---|
 | [`../ARCHITECTURE.md`](../ARCHITECTURE.md) | 현행 아키텍처 단일 권위 (컴포넌트·시퀀스 4종) |
-| [`../DEMO.md`](../DEMO.md) | 현행 데모 카탈로그 (11종 + examples/ 7종) |
+| [`../DEMO.md`](../DEMO.md) | 현행 데모 카탈로그 (11종 + examples/ 12종) |
 | [`../MANUAL.md`](../MANUAL.md) | 한 번에 정주행하는 현행 운영자 매뉴얼 |
