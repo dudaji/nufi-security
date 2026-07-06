@@ -1452,6 +1452,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--text", default=None, help="분석할 텍스트(비인터랙티브)")
     p.add_argument("--mode", choices=["inspect", "mask", "redact"], default="inspect",
                    help="출력 모드(기본 inspect)")
+    p.add_argument("--no-emoji", action="store_true", default=False,
+                   help="이모지 대신 텍스트 대체 출력 (NUFI_NO_EMOJI=1 환경변수도 지원)")
     p.set_defaults(func=cmd_playground)
 
     # --- Summary (patch147) -------------------------------------------------- #

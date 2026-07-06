@@ -16,15 +16,23 @@ Non-interactive usage (pipe / ``--text``):
 """
 from __future__ import annotations
 
+import os
 import sys
 from typing import List, Optional
+
+
+def _use_emoji(args=None) -> bool:
+    """Return False when emoji output should be suppressed."""
+    if args is not None and getattr(args, "no_emoji", False):
+        return False
+    return os.environ.get("NUFI_NO_EMOJI", "") not in ("1", "true", "yes")
 
 
 # ---------------------------------------------------------------------------
 # Compact single-line renderer
 # ---------------------------------------------------------------------------
 
-def _render_compact(result: dict) -> str:
+def _render_compact(result: dict, *, emoji: bool = True) -> str:
     """One-line summary: [PII] entities | [Risk] level | [Route] | [Block]."""
     parts: List[str] = []
 
@@ -50,12 +58,18 @@ def _render_compact(result: dict) -> str:
 
     # Route
     routing = result.get("routing", "cloud")
-    route_icon = "\U0001f512" if routing == "local" else "\u2601\ufe0f"
+    if emoji:
+        route_icon = "\U0001f512" if routing == "local" else "\u2601\ufe0f"
+    else:
+        route_icon = "[L]" if routing == "local" else "[C]"
     parts.append(f"[Route] {route_icon} {routing}")
 
     # Block
     blocked = result.get("blocked", False)
-    block_icon = "\u26d4" if blocked else "\u2705"
+    if emoji:
+        block_icon = "\u26d4" if blocked else "\u2705"
+    else:
+        block_icon = "[!]" if blocked else "[OK]"
     block_text = "yes" if blocked else "no"
     parts.append(f"[Block] {block_icon} {block_text}")
 
@@ -66,12 +80,12 @@ def _render_compact(result: dict) -> str:
 # Process a single line
 # ---------------------------------------------------------------------------
 
-def _process_line(text: str, mode: str) -> str:
+def _process_line(text: str, mode: str, *, emoji: bool = True) -> str:
     """Analyse *text* and return a formatted string based on *mode*."""
     if mode == "inspect":
         from enforcement.inspect_cmd import inspect_text
         result = inspect_text(text)
-        return _render_compact(result)
+        return _render_compact(result, emoji=emoji)
     elif mode in ("mask", "redact"):
         from enforcement.transform_cmd import _transform_text
         return _transform_text(text, mode)
@@ -94,7 +108,7 @@ Type any text to analyse it. Special commands:
   mode redact   Show redacted output (PII → [TYPE])."""
 
 
-def _run_repl() -> int:
+def _run_repl(*, emoji: bool = True) -> int:
     """Interactive REPL loop.  Returns exit code."""
     mode = "inspect"
     print("NuFi Playground (type 'quit' to exit)")
@@ -126,7 +140,7 @@ def _run_repl() -> int:
             continue
 
         # Normal input → process
-        print(_process_line(stripped, mode))
+        print(_process_line(stripped, mode, emoji=emoji))
 
     return 0
 
@@ -137,12 +151,13 @@ def _run_repl() -> int:
 
 def cmd_playground(args) -> int:
     """``nufi-egress playground`` CLI handler."""
+    emoji = _use_emoji(args)
     text: Optional[str] = getattr(args, "text", None)
 
     # Non-interactive: --text flag
     if text:
         mode = getattr(args, "mode", None) or "inspect"
-        print(_process_line(text, mode))
+        print(_process_line(text, mode, emoji=emoji))
         return 0
 
     # Non-interactive: piped stdin (not a TTY)
@@ -151,8 +166,8 @@ def cmd_playground(args) -> int:
         for line in sys.stdin:
             line = line.rstrip("\n")
             if line.strip():
-                print(_process_line(line.strip(), mode))
+                print(_process_line(line.strip(), mode, emoji=emoji))
         return 0
 
     # Interactive REPL
-    return _run_repl()
+    return _run_repl(emoji=emoji)

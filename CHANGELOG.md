@@ -9,6 +9,11 @@
 > **v0.4.18 — 프롬프트 인젝션 가드레일 + 파일 스캔 + REST API + CLI 확장**
 > patch55~184 전 시리즈를 포함하는 안정 릴리스. 테스트 603건+.
 
+### Added (patch215)
+- **enforcement/playground_cmd.py** — `--no-emoji` CLI 플래그 + `NUFI_NO_EMOJI` 환경변수 지원. 이모지 비활성 시 텍스트 대체: 🔒→[L], ☁️→[C], ⛔→[!], ✅→[OK].
+- **enforcement/cli.py** — playground 서브커맨드에 `--no-emoji` 인자 등록.
+- **tests/test_playground_cmd.py** — no-emoji 플래그·환경변수·기본 이모지 동작 테스트 3건 추가.
+
 ### Changed (patch213-214)
 - **.github/workflows/docs-guard.yml** — Python 버전 매트릭스 확장 (3.9, 3.12). `pyproject.toml` requires-python ≥3.9 범위 검증.
 - **examples/ci-github-actions.yml** — step 이름 추가, `continue-on-error: false` 명시, `nufi-egress doctor` step 명칭 보강.
