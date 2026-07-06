@@ -21,6 +21,10 @@ from .edm import EdmMatcher, EdmIndex
 from .reload import (ReloadableGuard, RuleSetPaths, RuleValidationError,
                      ReloadResult, ReloadDiff, RuleSetReport, validate_ruleset,
                      KNOWN_ACTIONS)
+from .output_guard import OutputGuard, OutputGuardResult
+from .detectors.output_scanners import (
+    SystemPromptLeakDetector, HarmfulContentDetector,
+)
 
 __all__ = [
     "DetectionPipeline", "Finding", "CONF_SOURCES", "PolicyEngine", "Decision",
@@ -33,4 +37,6 @@ __all__ = [
     "ReversibleEgress", "RevResult",
     "ReloadableGuard", "RuleSetPaths", "RuleValidationError", "ReloadResult",
     "ReloadDiff", "RuleSetReport", "validate_ruleset", "KNOWN_ACTIONS",
+    "OutputGuard", "OutputGuardResult",
+    "SystemPromptLeakDetector", "HarmfulContentDetector",
 ]

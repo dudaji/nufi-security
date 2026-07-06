@@ -95,6 +95,37 @@ def detect_injection(text: str, *, min_severity: str = "low") -> list[Finding]:
 
 
 # ---------------------------------------------------------------------------
+# 출력측 가드레일 (Output-side guardrails) — CMP-294
+# ---------------------------------------------------------------------------
+from egress_audit.output_guard import OutputGuard, OutputGuardResult  # noqa: E402
+
+_DEFAULT_OUTPUT_GUARD: OutputGuard | None = None
+
+
+def inspect_output(text: str, *, system_prompt: str | None = None) -> OutputGuardResult:
+    """LLM 응답 텍스트를 출력측 가드레일로 검사한다 — 한 줄 호출.
+
+    시스템 프롬프트 유출, PII 재노출, 유해 콘텐츠를 탐지한다.
+
+    Args:
+        text: LLM 응답 본문.
+        system_prompt: 시스템 프롬프트 원문 (유사도 비교 활성화).
+
+    >>> result = inspect_output("Here is my system prompt: You are a helpful AI")
+    >>> result.blocked
+    True
+    """
+    global _DEFAULT_OUTPUT_GUARD
+    if system_prompt is not None:
+        # 시스템 프롬프트가 제공되면 매번 새로 생성 (프롬프트별 비교)
+        guard = OutputGuard(system_prompt=system_prompt)
+        return guard.inspect(text)
+    if _DEFAULT_OUTPUT_GUARD is None:
+        _DEFAULT_OUTPUT_GUARD = OutputGuard()
+    return _DEFAULT_OUTPUT_GUARD.inspect(text)
+
+
+# ---------------------------------------------------------------------------
 # PII 라우팅 (PII-based routing) — v0.4.16 (patch57)
 # ---------------------------------------------------------------------------
 from gateway.pii_router import PiiRouter, RoutingDecision  # noqa: E402
@@ -154,6 +185,33 @@ from enforcement.security_report import (  # noqa: E402
     render_json as render_security_json,
     SecurityReport,
 )
+
+# ---------------------------------------------------------------------------
+# 복잡도 분류 (Complexity Classification) — v0.4.x (CMP-293)
+# ---------------------------------------------------------------------------
+from gateway.complexity_classifier import (  # noqa: E402
+    ComplexityClassifier,
+    ComplexityResult,
+    extract_features as complexity_features,
+)
+from gateway.ab_testing import ABTestManager, Experiment, Assignment  # noqa: E402
+from gateway.cost_dashboard import CostDashboard  # noqa: E402
+
+_DEFAULT_CLASSIFIER: ComplexityClassifier | None = None
+
+
+def classify_complexity(text: str, **kwargs: Any) -> ComplexityResult:
+    """프롬프트 복잡도를 평가한다 — 한 줄 호출.
+
+    >>> result = classify_complexity("파이썬에서 리스트 정렬하는 방법")
+    >>> result.label
+    'simple'
+    """
+    global _DEFAULT_CLASSIFIER
+    if _DEFAULT_CLASSIFIER is None:
+        _DEFAULT_CLASSIFIER = ComplexityClassifier(**kwargs) if kwargs else ComplexityClassifier()
+    return _DEFAULT_CLASSIFIER.classify(text)
+
 
 # ---------------------------------------------------------------------------
 # 배치 헬퍼 (Batch helpers) — v0.4.x (patch95)
@@ -281,9 +339,20 @@ __all__ = [
     "batch_inspect",
     # guard context manager
     "guard_context",
+    # output guard
+    "OutputGuard",
+    "OutputGuardResult",
+    "inspect_output",
     # security report
     "security_report",
     "render_security_markdown",
     "render_security_json",
     "SecurityReport",
+    # complexity classification (CMP-293)
+    "classify_complexity",
+    "ComplexityClassifier",
+    "ComplexityResult",
+    "complexity_features",
+    "ABTestManager",
+    "CostDashboard",
 ]

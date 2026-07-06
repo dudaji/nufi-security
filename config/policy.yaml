@@ -68,3 +68,17 @@ enforcement:
   cgroup_level: 2
   # 운영 예외(임시 허용) — "host:port"/"ip:port". 변경 시 CPO 리뷰·사유 기록(§5.3).
   allow_extra: []
+
+# --- 출력측(Output-side) 가드레일 정책 ---
+# OutputGuard 가 LLM 응답 본문 검사 시 적용하는 동작.
+output_guard:
+  # 시스템 프롬프트 유출 탐지
+  leak_action: block            # block | warn | log
+  leak_min_severity: medium     # low | medium | high | critical
+
+  # 응답 내 PII 재노출 처리
+  pii_action: redact            # block | redact | warn
+
+  # 유해 콘텐츠 필터링
+  harmful_action: block         # block | warn | log
+  harmful_min_severity: medium  # low | medium | high | critical

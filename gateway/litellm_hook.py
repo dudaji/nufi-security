@@ -21,8 +21,12 @@ from typing import Any, Optional
 
 from egress_audit import ReversibleEgress, AuditLogger
 from egress_audit.detectors.prompt_injection import PromptInjectionDetector
+from egress_audit.output_guard import OutputGuard
 from gateway.router import Router
 from gateway.pii_router import PiiRouter, RoutingDecision, CostRecord, load_pii_routing_config
+from gateway.complexity_classifier import ComplexityClassifier, ComplexityResult
+from gateway.ab_testing import ABTestManager
+from gateway.cost_dashboard import CostDashboard
 
 logger = logging.getLogger("nufi.litellm_hook")
 
@@ -146,6 +150,17 @@ class EgressAuditHook(_Base):
             self._check_injection = bool(cfg.get("check_injection", False))
         self._injection_detector = PromptInjectionDetector() if self._check_injection else None
 
+        # Phase 2: 복잡도 분류기 + A/B 테스트 + 비용 대시보드 (CMP-293)
+        complexity_config = os.environ.get("NUFI_COMPLEXITY_CONFIG")
+        self.complexity_classifier = ComplexityClassifier(config_path=complexity_config)
+        self.ab_manager = ABTestManager(config_path=complexity_config)
+        self.cost_dashboard = CostDashboard()
+
+        # Output-side guardrails (CMP-294)
+        env_output_guard = os.environ.get("NUFI_OUTPUT_GUARD", "1")
+        self._output_guard_enabled = env_output_guard != "0"
+        self._output_guard = OutputGuard() if self._output_guard_enabled else None
+
     def _log_routing(self, decision: RoutingDecision, data: dict) -> None:
         """라우팅 결정을 감사 로그에 기록."""
         self.audit.log(
@@ -210,7 +225,31 @@ class EgressAuditHook(_Base):
                             [f.entity_type for f in routing.findings])
                 return data
 
-        # --- Phase 2: 클라우드 허용 → 기존 egress audit 적용 ---
+        # --- Phase 2: 복잡도 기반 모델 선택 (CMP-293) ---
+        if self.complexity_classifier.enabled:
+            complexity = self.complexity_classifier.classify(text, requested_model=data.get("model", ""))
+            data["metadata"]["complexity"] = complexity.to_dict()
+
+            # A/B 테스트 실험이 있으면 실험 그룹에 따라 모델 결정
+            session_id = _session_id(data)
+            ab_assignment = None
+            for exp_id in self.ab_manager.experiments:
+                assignment = self.ab_manager.assign(exp_id, session_id)
+                if assignment:
+                    ab_assignment = assignment
+                    data["metadata"]["ab_test"] = assignment.to_dict()
+                    break  # 첫 번째 활성 실험만 적용
+
+            if ab_assignment is None:
+                # A/B 테스트 없음 → 복잡도 분류기 결과 적용
+                if complexity.target_model != data.get("model", ""):
+                    data["model"] = complexity.target_model
+                    data["metadata"]["complexity_routed"] = True
+                    logger.info("Complexity routing: %s → %s (score=%.3f, label=%s)",
+                                complexity.original_model, complexity.target_model,
+                                complexity.score, complexity.label)
+
+        # --- Phase 2+: 클라우드 허용 → 기존 egress audit 적용 ---
         model = data.get("model", "")
         if not _is_public(model, data.get("metadata")):
             self._log_routing(routing, data)
@@ -259,6 +298,7 @@ class EgressAuditHook(_Base):
                          "completion_tokens": getattr(usage_obj, "completion_tokens", 0)}
         routing_info = meta.get("pii_routing", {})
         is_local = routing_info.get("routed_to_local", False)
+        complexity_info = meta.get("complexity", {})
         self.pii_router.record_cost(
             model=model,
             provider="local" if is_local else "cloud",
@@ -267,6 +307,57 @@ class EgressAuditHook(_Base):
             completion_tokens=usage.get("completion_tokens", 0),
             routing_reason=routing_info.get("reason", ""),
         )
+
+        # Phase 2: 비용 대시보드 기록 (CMP-293)
+        self.cost_dashboard.record(
+            model=model,
+            prompt_tokens=usage.get("prompt_tokens", 0),
+            completion_tokens=usage.get("completion_tokens", 0),
+            routing_reason=routing_info.get("reason", ""),
+            complexity_label=complexity_info.get("label", ""),
+            is_local=is_local,
+        )
+
+        # A/B 테스트 메트릭 기록
+        ab_info = meta.get("ab_test")
+        if ab_info:
+            cost = self.pii_router.estimate_cost(
+                model, usage.get("prompt_tokens", 0), usage.get("completion_tokens", 0))
+            self.ab_manager.record_metric(
+                experiment_id=ab_info["experiment_id"],
+                variant=ab_info["variant"],
+                model=model,
+                cost_usd=cost,
+                prompt_tokens=usage.get("prompt_tokens", 0),
+                completion_tokens=usage.get("completion_tokens", 0),
+            )
+
+        # Output-side guardrails (CMP-294): LLM 응답 검사
+        if self._output_guard:
+            response_text = self._extract_response_text(response)
+            if response_text:
+                output_result = self._output_guard.inspect(response_text)
+                if output_result.blocked:
+                    self.audit.log(
+                        model=model, provider="public" if not is_local else "local",
+                        is_public=not is_local,
+                        request_body={"model": model},
+                        decision_summary=output_result.summary,
+                        findings=[{"entity_type": f.entity_type, "score": f.score,
+                                   "source": f.source} for f in output_result.findings],
+                        outcome="output_blocked",
+                    )
+                    logger.warning("Output guard blocked response (model=%s): %s",
+                                   model, output_result.summary)
+                    raise HTTPException(status_code=451, detail={
+                        "error": "output_blocked",
+                        "reasons": [a.get("reason", a.get("action", ""))
+                                    for a in output_result.actions],
+                    })
+                elif output_result.findings:
+                    # PII redaction 등 변환이 있으면 응답에 적용
+                    if output_result.transformed_text != response_text:
+                        self._apply_transformed_response(response, output_result.transformed_text)
 
         # 기존 원복 로직
         session_id = meta.get("egress_vault_ref")
@@ -297,6 +388,38 @@ class EgressAuditHook(_Base):
                 cur = _chunk_text(prev)
                 _set_chunk_text(prev, (cur or "") + tail)
             yield prev
+
+    @staticmethod
+    def _extract_response_text(response) -> Optional[str]:
+        """비스트리밍 응답에서 content 텍스트 추출."""
+        choices = getattr(response, "choices", None)
+        if choices is None and isinstance(response, dict):
+            choices = response.get("choices")
+        parts = []
+        for ch in choices or []:
+            msg = getattr(ch, "message", None) or (ch.get("message") if isinstance(ch, dict) else None)
+            if msg is None:
+                continue
+            content = getattr(msg, "content", None) or (msg.get("content") if isinstance(msg, dict) else None)
+            if isinstance(content, str) and content:
+                parts.append(content)
+        return "\n".join(parts) if parts else None
+
+    @staticmethod
+    def _apply_transformed_response(response, transformed: str) -> None:
+        """변환된 텍스트를 응답에 반영 (첫 번째 choice message)."""
+        choices = getattr(response, "choices", None)
+        if choices is None and isinstance(response, dict):
+            choices = response.get("choices")
+        for ch in choices or []:
+            msg = getattr(ch, "message", None) or (ch.get("message") if isinstance(ch, dict) else None)
+            if msg is None:
+                continue
+            if isinstance(msg, dict):
+                msg["content"] = transformed
+            else:
+                setattr(msg, "content", transformed)
+            break  # 첫 번째 choice만
 
     async def async_log_success_event(self, kwargs, response_obj, start_time, end_time):
         await self._audit_event(kwargs, "forwarded")
