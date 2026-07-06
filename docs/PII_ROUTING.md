@@ -231,7 +231,7 @@ PII 라우팅이 활성화되면 민감 요청이 로컬로 분배되어 `cloud_
 
 ---
 
-## Phase 2: RouteLLM 복잡도 라우팅 (CMP-293)
+## Phase 2: RouteLLM 복잡도 라우팅
 
 Phase 1(PII 기반 분배) 위에 비용-품질 최적화를 추가한다.
 
