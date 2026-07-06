@@ -7,7 +7,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
-      - run: pip install -r requirements.txt
-      - run: nufi-egress scan . --fail-on-pii --pattern "*.py,*.md,*.txt"
-      - run: nufi-egress doctor
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: NuFi PII scan
+        run: nufi-egress scan . --fail-on-pii --pattern "*.py,*.md,*.txt"
+        continue-on-error: false
+      - name: NuFi environment doctor check
+        run: nufi-egress doctor
+        continue-on-error: false

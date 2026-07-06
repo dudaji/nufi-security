@@ -22,11 +22,14 @@ on:
 jobs:
   docs-consistency:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
       # stdlib 만 사용 → 의존성 설치 불필요.
       - name: docs 정합성 가드 (Mermaid · 식별자 · 버전 · 링크)
         run: python scripts/check_docs.py --verbose
