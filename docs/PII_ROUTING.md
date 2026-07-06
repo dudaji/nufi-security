@@ -35,20 +35,31 @@ PII 라우팅의 모든 파라미터를 코드 수정 없이 YAML로 제어할 �
 
 ```yaml
 # config/pii_routing.yaml
+version: 1                       # config 스키마 버전
 enabled: true                    # PII 라우팅 활성화 여부
 local_model: nufi-local          # PII 감지 시 로컬 모델명
 cloud_model: nufi-cloud          # PII 미감지 시 클라우드 모델명
 fail_closed: true                # 감지 오류 시 로컬 폴백
 force_local_entities: null       # null=전부, 또는 [KR_RRN, SECRET, ...]
+check_injection: false           # PII 라우팅 전 인젝션 체크 여부
+injection_patterns_path: config/injection_patterns.yaml  # 커스텀 인젝션 패턴 파일
+injection_categories:            # 체크할 인젝션 카테고리 필터
+  - korean
+  - english
+  - indirect
 ```
 
 | 키 | 타입 | 기본값 | 설명 |
 |----|------|--------|------|
+| `version` | int | `1` | config 스키마 버전 |
 | `enabled` | bool | `true` | `false` 이면 PII 감지 생략, 모든 요청 클라우드 허용 |
 | `local_model` | str | `nufi-local` | PII 포함 요청을 보낼 LiteLLM 모델명 |
 | `cloud_model` | str | `nufi-cloud` | PII 없는 요청을 허용할 클라우드 모델명 |
 | `fail_closed` | bool | `true` | 감지 파이프라인 오류 시 로컬 강제 여부 |
 | `force_local_entities` | list\|null | `null` | 로컬 강제 엔티티 목록. `null`이면 모든 PII |
+| `check_injection` | bool | `false` | PII 라우팅 전 프롬프트 인젝션 검사 활성화 여부 |
+| `injection_patterns_path` | str | `config/injection_patterns.yaml` | 커스텀 인젝션 패턴 YAML 파일 경로. 파일이 없으면 내장 패턴만 사용 |
+| `injection_categories` | list\|null | `null` | 활성화할 인젝션 카테고리 필터. `null`이면 모든 카테고리. 유효값: `korean`, `english`, `indirect`, `role_override` |
 
 환경변수 `NUFI_PII_ROUTING_CONFIG` 로 설정 파일 경로를 오버라이드할 수 있다.
 
