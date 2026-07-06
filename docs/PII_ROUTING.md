@@ -231,11 +231,77 @@ PII 라우팅이 활성화되면 민감 요청이 로컬로 분배되어 `cloud_
 
 ---
 
-## Phase 2+ 로드맵
+## Phase 2: RouteLLM 복잡도 라우팅 (CMP-293)
 
-- RouteLLM 분류기 도입 (비용-품질 최적화)
-- 한국어 프롬프트 복잡도 분류
-- 실시간 비용/품질 모니터링 대시보드
+Phase 1(PII 기반 분배) 위에 비용-품질 최적화를 추가한다.
+
+### 라우팅 흐름
+
+```
+Request → [Phase 0: Injection Detection] → BLOCKED (403)
+              ↓ (pass)
+         [Phase 1: PII Detection] → PII → LOCAL MODEL (강제)
+              ↓ (no PII)
+         [Phase 2: Complexity Classification] → score 계산
+              ↓ (score < threshold)         ↓ (score >= threshold)
+         저비용 모델 (gpt-4o-mini)     고성능 모델 (gpt-4o)
+```
+
+### 복잡도 분류기 (`gateway/complexity_classifier.py`)
+
+한국어 프롬프트에 특화된 휴리스틱 피처 기반 복잡도 점수(0.0~1.0)를 산출:
+
+| 피처 | 설명 |
+|------|------|
+| `technical_density` | 전문 용어 밀도 (기술/법률/의료) |
+| `multi_step_count` | 다단계 지시 패턴 ("먼저 … 그 다음 … 마지막으로") |
+| `code_block_count` | 코드 블록 포함 여부 |
+| `conditional_count` | 조건/논리 구조 복잡도 |
+| `comparison_count` | 비교/분석 요청 |
+| `token_count` | 토큰 수 (프롬프트 길이) |
+
+```python
+from nufi import classify_complexity
+
+result = classify_complexity("파이썬에서 리스트 정렬하는 방법")
+# result.label == "simple", result.target_model == "gpt-4o-mini"
+
+result = classify_complexity("마이크로서비스 아키텍처에서 Saga 패턴과 2PC를 비교 분석해주세요")
+# result.label == "complex", result.target_model == "gpt-4o"
+```
+
+### A/B 테스트 프레임워크 (`gateway/ab_testing.py`)
+
+모델 선택 전략을 실험적으로 검증:
+
+- 결정론적 분배: session ID 해싱으로 같은 사용자는 같은 그룹
+- 다중 실험 동시 실행 가능
+- 비용·지연·품질 메트릭 수집
+
+설정: `config/complexity_routing.yaml` 의 `ab_tests` 섹션.
+
+### 비용 대시보드 (`gateway/cost_dashboard.py`)
+
+PII 라우팅 + 복잡도 라우팅의 비용 절감 효과를 실시간 추적:
+
+```python
+from nufi import CostDashboard
+
+dashboard = CostDashboard(baseline_model="gpt-4o")
+dashboard.record("gpt-4o-mini", prompt_tokens=1000, completion_tokens=500,
+                 complexity_label="simple")
+print(dashboard.render_ascii())   # 터미널 대시보드
+print(dashboard.summary())        # JSON 요약
+```
+
+### 설정 (`config/complexity_routing.yaml`)
+
+```yaml
+enabled: true
+strong_model: gpt-4o         # 복잡한 요청용
+weak_model: gpt-4o-mini      # 단순한 요청용
+threshold: 0.5                # 복잡도 임계값
+```
 
 ---
 
