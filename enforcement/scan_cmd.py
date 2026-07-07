@@ -16,6 +16,8 @@ SDK 에서도 ``from nufi import scan_dir`` 로 사용 가능.
 --count-only 로 발견 건수만 빠르게 출력 (patch182).
 --watch 모드로 디렉터리 실시간 파일 모니터링 + PII 탐지 (v0.7.3).
 --recursive 로 디렉터리 재귀 스캔 + 집계 리포트 출력 (v0.7.4).
+--profile NAME 으로 스캔 프로파일 프리셋 적용 (strict/standard/minimal/financial, v0.7.7).
+--summary 로 집계 대시보드 출력 (타입별·심각도별 ASCII 바 차트, v0.7.7).
 """
 from __future__ import annotations
 
@@ -1435,8 +1437,10 @@ def cmd_scan(args) -> int:
         else:
             print(text, end=end)
 
+    do_summary = getattr(args, "summary", False)
+
     if output_format == "json":
-        text_out = _render_json(result, target=target)
+        text_out = _render_json(result, target=target, summary=do_summary)
         _write_or_print(text_out)
     elif output_format == "csv":
         text_out = _render_csv(result)
@@ -1464,6 +1468,10 @@ def cmd_scan(args) -> int:
     # Stats summary
     if getattr(args, "stats", False):
         _render_stats(result)
+
+    # --summary: summary dashboard with ASCII bar charts (v0.7.7)
+    if getattr(args, "summary", False):
+        _render_summary_dashboard(result)
 
     # --pseudonymize: show pseudonymized text after normal output (v0.6.0)
     if do_pseudonymize and pseudonymized_texts and not output_path:
@@ -1912,10 +1920,12 @@ def _watch_with_polling(
     return 0
 
 
-def _render_json(result: ScanResult, *, target: str = "") -> str:
-    """Render scan result as structured JSON (v0.7.0).
+def _render_json(result: ScanResult, *, target: str = "", summary: bool = False) -> str:
+    """Render scan result as structured JSON (v0.7.0, v0.7.7 --summary).
 
     Schema: version, scan_target, findings[], summary.
+    When *summary* is True, the summary dict is enriched with by_severity
+    and per-file counts (v0.7.7).
     """
     import collections
 
@@ -1938,14 +1948,22 @@ def _render_json(result: ScanResult, *, target: str = "") -> str:
         et = _extract_entity_type(f.finding_type)
         by_type[et] = by_type.get(et, 0) + 1
 
+    summary_dict: Dict[str, Any] = {
+        "total": len(result.findings),
+        "by_type": dict(sorted(by_type.items())),
+    }
+
+    if summary:
+        full = _build_summary_dict(result)
+        summary_dict["files_scanned"] = full["files_scanned"]
+        summary_dict["files_with_findings"] = full["files_with_findings"]
+        summary_dict["by_severity"] = full["by_severity"]
+
     doc = {
         "version": _nufi_version(),
         "scan_target": target or "",
         "findings": findings_out,
-        "summary": {
-            "total": len(result.findings),
-            "by_type": dict(sorted(by_type.items())),
-        },
+        "summary": summary_dict,
     }
     return json.dumps(doc, ensure_ascii=False, indent=2)
 
@@ -2108,6 +2126,124 @@ def _render_stats(result: ScanResult) -> None:
         for level in ("critical", "high", "medium", "low"):
             if risk_counter[level]:
                 print(f"    {level:<12} {risk_counter[level]}")
+
+
+def _render_summary_dashboard(result: ScanResult) -> None:
+    """Print summary dashboard with ASCII bar charts to stderr (v0.7.7).
+
+    Outputs: total scanned, PII found, type distribution, severity distribution.
+    """
+    import collections
+    import sys as _sys
+
+    total_findings = len(result.findings)
+    files_pct = (
+        round(result.files_with_findings / result.files_scanned * 100, 1)
+        if result.files_scanned else 0.0
+    )
+
+    # Entity type breakdown
+    entity_counter: "collections.Counter[str]" = collections.Counter()
+    for f in result.findings:
+        et = _extract_entity_type(f.finding_type)
+        entity_counter[et] += 1
+
+    # Severity breakdown
+    severity_counter: "collections.Counter[str]" = collections.Counter()
+    for f in result.findings:
+        level = _sarif_level(f.finding_type)
+        if level == "error":
+            entity = f.finding_type.split(":", 1)[1] if ":" in f.finding_type else f.finding_type
+            if f.finding_type.startswith("INJECTION:") or entity in _STRONG_PII:
+                severity_counter["critical"] += 1
+            else:
+                severity_counter["high"] += 1
+        else:
+            severity_counter["medium"] += 1
+
+    BAR_MAX = 30  # max bar width in characters
+
+    def _bar(count: int, max_count: int) -> str:
+        if max_count == 0:
+            return ""
+        width = max(1, round(count / max_count * BAR_MAX))
+        return "█" * width
+
+    w = _sys.stderr.write
+
+    w("\n")
+    w("╔══════════════════════════════════════════════════════╗\n")
+    w("║           NuFi Scan Summary Dashboard               ║\n")
+    w("╠══════════════════════════════════════════════════════╣\n")
+    w(f"║  총 스캔 건수:     {result.files_scanned:>6} files                    ║\n")
+    w(f"║  PII 발견 건수:    {total_findings:>6} findings                 ║\n")
+    w(f"║  발견 파일 비율:   {files_pct:>6.1f}%                         ║\n")
+    w("╠══════════════════════════════════════════════════════╣\n")
+
+    if entity_counter:
+        w("║  타입별 분포 (Entity Type Distribution)              ║\n")
+        w("║──────────────────────────────────────────────────────║\n")
+        max_count = entity_counter.most_common(1)[0][1] if entity_counter else 1
+        for etype, count in entity_counter.most_common():
+            bar = _bar(count, max_count)
+            label = etype[:18].ljust(18)
+            count_str = str(count).rjust(4)
+            bar_str = bar.ljust(BAR_MAX)
+            line = f"║  {label} {count_str} {bar_str}║\n"
+            w(line)
+        w("╠══════════════════════════════════════════════════════╣\n")
+
+    if severity_counter:
+        w("║  심각도 분포 (Severity Distribution)                 ║\n")
+        w("║──────────────────────────────────────────────────────║\n")
+        sev_max = max(severity_counter.values()) if severity_counter else 1
+        for level in ("critical", "high", "medium", "low"):
+            cnt = severity_counter.get(level, 0)
+            if cnt == 0:
+                continue
+            bar = _bar(cnt, sev_max)
+            label = level[:18].ljust(18)
+            count_str = str(cnt).rjust(4)
+            bar_str = bar.ljust(BAR_MAX)
+            w(f"║  {label} {count_str} {bar_str}║\n")
+
+    w("╚══════════════════════════════════════════════════════╝\n")
+    w("\n")
+    _sys.stderr.flush()
+
+
+def _build_summary_dict(result: ScanResult) -> Dict[str, Any]:
+    """Build summary dict for JSON output (v0.7.7)."""
+    import collections
+
+    entity_counter: "collections.Counter[str]" = collections.Counter()
+    for f in result.findings:
+        et = _extract_entity_type(f.finding_type)
+        entity_counter[et] += 1
+
+    severity_counter: "collections.Counter[str]" = collections.Counter()
+    for f in result.findings:
+        level = _sarif_level(f.finding_type)
+        if level == "error":
+            entity = f.finding_type.split(":", 1)[1] if ":" in f.finding_type else f.finding_type
+            if f.finding_type.startswith("INJECTION:") or entity in _STRONG_PII:
+                severity_counter["critical"] += 1
+            else:
+                severity_counter["high"] += 1
+        else:
+            severity_counter["medium"] += 1
+
+    return {
+        "files_scanned": result.files_scanned,
+        "files_with_findings": result.files_with_findings,
+        "total_findings": len(result.findings),
+        "by_type": dict(sorted(entity_counter.items())),
+        "by_severity": {
+            k: severity_counter.get(k, 0)
+            for k in ("critical", "high", "medium", "low")
+            if severity_counter.get(k, 0) > 0
+        },
+    }
 
 
 def _render_redact(result: RedactResult, *, dry_run: bool) -> None:

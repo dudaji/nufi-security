@@ -17,6 +17,18 @@ scan_profiles:
     format: sarif
   strict:
     check_injection: true
-    min_severity: low
+    min_score: 0.5
     fail_on_pii: true
     parallel: 4
+  standard:
+    only_types: "KR_RRN,CREDIT_CARD,KR_ACCOUNT,EMAIL"
+    min_score: 0.7
+    fail_on_pii: false
+  minimal:
+    only_types: "KR_RRN,CREDIT_CARD"
+    min_score: 0.9
+    fail_on_pii: false
+  financial:
+    only_types: "KR_ACCOUNT,CREDIT_CARD,KR_RRN"
+    min_score: 0.7
+    fail_on_pii: true

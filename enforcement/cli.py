@@ -1305,6 +1305,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="--watch 폴링 간격(초, 기본 1.0)")
     p.add_argument("--diff", nargs="?", const="HEAD", default=None, metavar="REF",
                    help="git diff 기반 변경 행만 스캔 (기본 HEAD=staged, 예: HEAD~1, main) (v0.7.5)")
+    p.add_argument("--summary", action="store_true",
+                   help="스캔 후 집계 대시보드 출력 (타입별·심각도별 ASCII 바 차트, v0.7.7)")
     p.add_argument("-r", "--recursive", action="store_true",
                    help="디렉터리 재귀 스캔 + 집계 리포트 (v0.7.4)")
     p.add_argument("--include", default=None,
