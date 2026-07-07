@@ -79,5 +79,8 @@ def test_committed_report_matches_current_measurement():
     assert REPORT.exists(), f"측정 리포트 자산 누락: {REPORT}"
     committed = json.loads(REPORT.read_text(encoding="utf-8"))
     fresh = B.run_all()
+    # latency 섹션은 환경 의존적이므로 비교에서 제외.
+    committed_cmp = {k: v for k, v in committed.items() if k != "latency"}
+    fresh_cmp = {k: v for k, v in fresh.items() if k != "latency"}
     # 결정적 하니스이므로 커밋본과 현행 측정이 완전 일치해야(리포트 최신성 게이트).
-    assert committed == fresh, "커밋된 리포트가 현행 측정과 불일치 — 재생성 후 커밋 필요"
+    assert committed_cmp == fresh_cmp, "커밋된 리포트가 현행 측정과 불일치 — 재생성 후 커밋 필요"

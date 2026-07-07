@@ -184,5 +184,46 @@
     "irreversible_structure_preserved==1.0": true,
     "irreversible_non_restorable": true
   },
-  "acceptance_pass": true
+  "acceptance_pass": true,
+  "latency": {
+    "sizes": {
+      "256": {
+        "input_chars": 256,
+        "repeats": 20,
+        "p50_ms": 1.82,
+        "p95_ms": 1.88,
+        "p99_ms": 1.88,
+        "min_ms": 1.79,
+        "max_ms": 1.88
+      },
+      "1024": {
+        "input_chars": 1024,
+        "repeats": 20,
+        "p50_ms": 6.52,
+        "p95_ms": 7.15,
+        "p99_ms": 7.15,
+        "min_ms": 6.45,
+        "max_ms": 7.15
+      },
+      "4096": {
+        "input_chars": 4096,
+        "repeats": 20,
+        "p50_ms": 23.91,
+        "p95_ms": 26.41,
+        "p99_ms": 26.41,
+        "min_ms": 23.67,
+        "max_ms": 26.41
+      },
+      "16384": {
+        "input_chars": 16384,
+        "repeats": 20,
+        "p50_ms": 103.35,
+        "p95_ms": 191.67,
+        "p99_ms": 191.67,
+        "min_ms": 102.58,
+        "max_ms": 191.67
+      }
+    },
+    "ci_gate_16k_p95_le_200ms": true
+  }
 }

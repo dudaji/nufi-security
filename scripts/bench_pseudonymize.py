@@ -380,7 +380,7 @@ def run_all():
         "irreversible_structure_preserved==1.0": irreversible["irreversible_structure_preserved"] >= 1.0,
         "irreversible_non_restorable": bool(irreversible["irreversible_non_restorable"]),
     }
-    return {
+    report = {
         "benchmark": "pseudonymize-quality",
         "surface": ["egress_audit/surrogate.py", "egress_audit/pseudonymize.py",
                     "config/presets/pseudonymize-roundtrip.yaml"],
@@ -392,18 +392,91 @@ def run_all():
         "acceptance": acceptance,
         "acceptance_pass": all(acceptance.values()),
     }
+    return report
+
+
+# --------------------------------------------------------------------------- 레이턴시 측정
+def measure_latency(sizes=(256, 1024, 4096, 16384), repeats=20):
+    """입력 크기별 가명화 latency 측정 — p50/p95/p99."""
+    import statistics
+    rng = random.Random(SEED + 99)
+    # PII가 포함된 텍스트 생성 (크기별)
+    base_phrases = [
+        "고객 {name}님 연락처 {phone} 으로 안내드립니다. ",
+        "담당자 {name} 이메일 {email} 로 회신 바랍니다. ",
+        "사업자등록번호 {brn} 세금계산서 발행 요청합니다. ",
+    ]
+    results = {}
+    for sz in sizes:
+        # 합성 텍스트 구성
+        text = ""
+        while len(text) < sz:
+            phrase = rng.choice(base_phrases).format(
+                name=_person(rng),
+                phone=G.make_phone(rng),
+                email=G.make_email(rng),
+                brn=G.make_brn(rng),
+            )
+            text += phrase
+        text = text[:sz]
+        timings = []
+        for r in range(repeats):
+            rev = ReversibleEgress()
+            sid = f"lat-{sz}-{r}"
+            import time
+            t0 = time.perf_counter()
+            res = rev.pseudonymize(text, sid)
+            if not res.blocked:
+                rev.deanonymize(res.transformed_text, sid)
+            elapsed_ms = (time.perf_counter() - t0) * 1000
+            timings.append(elapsed_ms)
+            rev.end_session(sid)
+        timings.sort()
+        n = len(timings)
+        results[str(sz)] = {
+            "input_chars": sz,
+            "repeats": repeats,
+            "p50_ms": round(timings[n // 2], 2),
+            "p95_ms": round(timings[int(n * 0.95)], 2),
+            "p99_ms": round(timings[int(n * 0.99)], 2),
+            "min_ms": round(timings[0], 2),
+            "max_ms": round(timings[-1], 2),
+        }
+    # CI 게이트: p95 <= 200ms (16K자)
+    gate_key = str(max(sizes))
+    gate_pass = results[gate_key]["p95_ms"] <= 200.0
+    return {"sizes": results, "ci_gate_16k_p95_le_200ms": gate_pass}
 
 
 def main():
     ap = argparse.ArgumentParser(description="I4 가명화 품질 벤치마크")
     ap.add_argument("--json-out")
+    ap.add_argument("--latency", action="store_true",
+                    help="레이턴시 벤치마크 모드 (입력 크기별 p50/p95/p99)")
     args = ap.parse_args()
     report = run_all()
+
+    if args.latency:
+        latency = measure_latency()
+        report["latency"] = latency
+        # 레이턴시 결과 요약 출력
+        print("=== Pseudonymize Latency Benchmark ===")
+        for sz, data in latency["sizes"].items():
+            print(f"  {sz:>5} chars: p50={data['p50_ms']:.1f}ms  "
+                  f"p95={data['p95_ms']:.1f}ms  p99={data['p99_ms']:.1f}ms")
+        gate = "PASS" if latency["ci_gate_16k_p95_le_200ms"] else "FAIL"
+        print(f"  CI gate (16K p95 <= 200ms): {gate}")
+        print()
+
     out = json.dumps(report, ensure_ascii=False, indent=2)
     print(out)
     if args.json_out:
         Path(args.json_out).write_text(out + "\n", encoding="utf-8")
-    return 0 if report["acceptance_pass"] else 1
+
+    ok = report["acceptance_pass"]
+    if args.latency and not report.get("latency", {}).get("ci_gate_16k_p95_le_200ms", True):
+        ok = False
+    return 0 if ok else 1
 
 
 if __name__ == "__main__":

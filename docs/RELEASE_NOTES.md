@@ -6,6 +6,31 @@
 
 ---
 
+## v0.6.2 -- **test self-check 가명화 검증 + 가명화 레이턴시 벤치마크**
+
+> self-test에 가명화 라운드트립 검증이 추가되고, 가명화 처리량 벤치마크가 강화되었습니다. (2026-07-07)
+
+### 주요 변경
+
+| 항목 | 내용 |
+|---|---|
+| **`test` 7번째 체크: Pseudonymize** | `nufi-egress test`에 가역 가명화 라운드트립 검증 추가 — pseudonymize → deanonymize → 원본 일치 확인 |
+| **가명화 레이턴시 벤치마크** | `bench_pseudonymize.py --latency` — 입력 크기별(256~16K자) p50/p95/p99 레이턴시 측정 |
+| **CI 게이트** | 16K자 기준 p95 ≤ 200ms 게이트 추가 |
+
+### 누구에게 유용한가
+
+- **운영자** -- `nufi-egress test` 한 줄로 가명화 포함 7가지 핵심 기능을 자가 검증.
+- **성능 모니터링** -- `--latency` 벤치마크로 가명화 처리 성능을 정량적으로 추적.
+
+### 검증
+
+- selftest 7/7 체크 통과 (pseudonymize roundtrip 포함)
+- 가명화 품질 벤치마크 + 레이턴시 벤치마크 통과
+- 기존 테스트 전체 회귀 없음
+
+---
+
 ## v0.6.1 -- **pre-commit 프레임워크 통합 + diff --pseudonymize**
 
 > pre-commit 훅 패키지와 diff 커맨드의 가명화 옵션이 추가되었습니다. (2026-07-07)

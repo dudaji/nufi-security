@@ -1,15 +1,16 @@
 """``nufi-egress test`` -- self-verification command (patch135).
 
-Runs 6 quick checks to verify NuFi is installed and working correctly:
+Runs 7 quick checks to verify NuFi is installed and working correctly:
   1. PII detection works (detects KR_PERSON in test text)
   2. Injection detection works (detects known pattern)
   3. Route decision works (PII -> local)
   4. Guard blocks PII correctly
   5. Config files parseable
   6. Version matches
+  7. Pseudonymize roundtrip (reversible pseudonymize → deanonymize)
 
 Each check: PASS/FAIL with timing.
-Summary: "6/6 checks passed in X.XXs"
+Summary: "7/7 checks passed in X.XXs"
 Exit 0 if all pass, 1 otherwise.
 """
 from __future__ import annotations
@@ -131,6 +132,26 @@ def _check_version_matches() -> CheckResult:
         return CheckResult("version_match", False, _ms(t0), f"error: {exc}")
 
 
+def _check_pseudonymize_roundtrip() -> CheckResult:
+    """Check 7: Pseudonymize roundtrip -- reversible pseudonymize → deanonymize matches original."""
+    t0 = time.monotonic()
+    try:
+        from egress_audit.reversible import ReversibleEgress
+        rev = ReversibleEgress()
+        sample = "고객 홍길동님 연락처 010-1234-5678 로 안내드립니다"
+        sid = "selftest-roundtrip"
+        res = rev.pseudonymize(sample, sid)
+        if res.blocked:
+            return CheckResult("pseudonymize", False, _ms(t0), "sample was unexpectedly blocked")
+        restored, _ = rev.deanonymize(res.transformed_text, sid)
+        rev.end_session(sid)
+        ok = restored == sample
+        detail = "roundtrip OK" if ok else f"mismatch: restored={restored!r}"
+        return CheckResult("pseudonymize", ok, _ms(t0), detail)
+    except Exception as exc:
+        return CheckResult("pseudonymize", False, _ms(t0), f"error: {exc}")
+
+
 def _ms(t0: float) -> float:
     return (time.monotonic() - t0) * 1000
 
@@ -146,6 +167,7 @@ ALL_CHECKS = [
     _check_guard_blocks,
     _check_config_parseable,
     _check_version_matches,
+    _check_pseudonymize_roundtrip,
 ]
 
 
