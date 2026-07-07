@@ -90,7 +90,7 @@ def cmd_status(args) -> int:
 
 
 def cmd_doctor(args) -> int:
-    # 하이브리드 배선 1회 진단(5체크 PASS/WARN/FAIL). doctor 모듈에 위임(CMP-120).
+    # 자가진단 (11체크 PASS/WARN/FAIL). doctor 모듈에 위임(CMP-120 + CMP-341).
     from enforcement.doctor import (DoctorContext, run_checks, build_report,
                                     render_human)
     ctx = DoctorContext(routing_path=getattr(args, "routing", None),
@@ -98,11 +98,15 @@ def cmd_doctor(args) -> int:
                         ner_backend=args.ner_backend,
                         connect_timeout=args.connect_timeout)
     report = build_report(run_checks(ctx))
-    if args.json:
+    # --format takes precedence over --json/--no-json
+    out_fmt = getattr(args, "output_format", None)
+    use_json = (out_fmt == "json") or (not out_fmt and args.json)
+    use_text_only = (out_fmt == "text") or (not out_fmt and args.no_json)
+    if use_json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
         print(render_human(report))
-        if not args.no_json:
+        if not use_text_only:
             print("\n--- JSON ---")
             print(json.dumps(report, ensure_ascii=False, indent=2))
     return 1 if report["summary"]["fail"] else 0
@@ -180,7 +184,7 @@ def cmd_feedback(args) -> int:
 
 
 def cmd_init(args) -> int:
-    # Quick-start mode: no preset and not --list → new project init (patch90).
+    # Quick-start mode: no preset and not --list → new project init (patch90 + CMP-341).
     if not getattr(args, "list", False) and not getattr(args, "preset", None):
         from enforcement.init_cmd import cmd_quickstart_init
         return cmd_quickstart_init(args)
@@ -994,11 +998,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--no-reinject", action="store_true", help="카운터만, flow 미기록")
     p.set_defaults(func=cmd_feedback)
 
-    p = sub.add_parser("doctor", help="하이브리드 배선 1회 진단(5체크 PASS/WARN/FAIL)")
+    p = sub.add_parser("doctor", help="자가진단 (11체크 PASS/WARN/FAIL)")
     p.add_argument("--ner-backend", default="gazetteer",
                    help="탐지 NER 백엔드(기본 gazetteer — 결정론적·경량)")
     p.add_argument("--connect-timeout", type=float, default=2.0,
                    help="도달성 점검 TCP 타임아웃(초)")
+    p.add_argument("--format", choices=["text", "json"], default=None,
+                   dest="output_format",
+                   help="출력 포맷 (text | json)")
     g = p.add_mutually_exclusive_group()
     g.add_argument("--json", action="store_true", help="기계용 JSON 만 출력")
     g.add_argument("--no-json", action="store_true", help="사람읽기만 출력(JSON 생략)")
@@ -1041,11 +1048,15 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--dir", default=".", help="초기화 대상 디렉터리(기본 현재 디렉터리)")
     p.add_argument("--install-hook", action="store_true",
                    help="git pre-commit hook 설치(PII 스캔)")
+    p.add_argument("--ci", choices=["github", "gitlab"], default=None,
+                   help="CI 플랫폼별 워크플로우 자동 생성 (github | gitlab)")
+    p.add_argument("--default", action="store_true", dest="use_default",
+                   help="인터랙티브 프롬프트 없이 기본값으로 설정 생성")
     p.add_argument("--out", default="config", help="config 출력 디렉터리(기본 ./config)")
     p.add_argument("--base-dir", default=None, help="오버레이 베이스 config 디렉터리")
     p.add_argument("--set", action="append", metavar="KEY=VALUE", help="허용된 노브 override")
     p.add_argument("--force", action="store_true", help="기존 config 덮어쓰기")
-    p.add_argument("--dry-run", action="store_true", help="구체화 결과만 출력")
+    p.add_argument("--dry-run", action="store_true", help="생성될 파일 미리보기(실제 생성 안함)")
     p.set_defaults(func=cmd_init)
 
     p = sub.add_parser("audit",

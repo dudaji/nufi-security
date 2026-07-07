@@ -512,6 +512,192 @@ def _isolated_gateway(tmpdir: str, ctx: "DoctorContext"):
     return gw
 
 
+# --------------------------------------------------------------------------- 체크 7 (CMP-341)
+def check_python_version(ctx: "DoctorContext") -> CheckResult:
+    """Python 버전 호환성 확인 (≥3.9 필수)."""
+    import platform
+    ver = platform.python_version()
+    parts = tuple(int(x) for x in ver.split(".")[:2])
+    data = {"python_version": ver, "version_tuple": list(parts)}
+    if parts >= (3, 9):
+        return CheckResult("python", "Python 버전 호환성", PASS,
+                           f"Python {ver} — 호환 (≥3.9)", data)
+    return CheckResult("python", "Python 버전 호환성", FAIL,
+                       f"Python {ver} — 비호환 (≥3.9 필수)", data,
+                       remediation="Python 3.9 이상을 설치하십시오.")
+
+
+# --------------------------------------------------------------------------- 체크 8 (CMP-341)
+def check_dependencies(ctx: "DoctorContext") -> CheckResult:
+    """필수 의존성 설치 상태 확인."""
+    required = ["yaml", "egress_audit", "gateway", "enforcement", "capture"]
+    installed: List[str] = []
+    missing: List[str] = []
+    for mod in required:
+        try:
+            __import__(mod)
+            installed.append(mod)
+        except ImportError:
+            missing.append(mod)
+    data = {"installed": installed, "missing": missing}
+    if not missing:
+        return CheckResult("dependencies", "필수 의존성 설치", PASS,
+                           f"필수 모듈 {len(installed)}개 모두 설치됨: {', '.join(installed)}", data)
+    return CheckResult("dependencies", "필수 의존성 설치", FAIL,
+                       f"미설치 모듈 {len(missing)}개: {', '.join(missing)}", data,
+                       remediation=f"pip install 로 누락 패키지를 설치하십시오: {', '.join(missing)}")
+
+
+# --------------------------------------------------------------------------- 체크 9 (CMP-341)
+def check_nufi_yaml(ctx: "DoctorContext") -> CheckResult:
+    """nufi.yaml 설정 파일 유효성 확인."""
+    import yaml as _yaml
+
+    nufi_yaml = _ROOT / "nufi.yaml"
+    if not nufi_yaml.exists():
+        return CheckResult("nufi_yaml", "nufi.yaml 설정 유효성", WARN,
+                           "nufi.yaml 없음 — nufi-egress init 으로 생성 가능",
+                           {"exists": False},
+                           remediation="nufi-egress init 을 실행하여 nufi.yaml 을 생성하십시오.")
+    try:
+        with open(nufi_yaml, encoding="utf-8") as f:
+            cfg = _yaml.safe_load(f)
+        if not isinstance(cfg, dict):
+            return CheckResult("nufi_yaml", "nufi.yaml 설정 유효성", FAIL,
+                               "nufi.yaml 이 유효한 YAML dict 가 아님",
+                               {"exists": True, "valid": False},
+                               remediation="nufi.yaml 형식을 확인하십시오.")
+        data: Dict[str, Any] = {"exists": True, "valid": True, "version": cfg.get("version")}
+        issues: List[str] = []
+        if "version" not in cfg:
+            issues.append("version 필드 누락")
+        scan = cfg.get("scan", {})
+        if isinstance(scan, dict):
+            data["exclude_count"] = len(scan.get("exclude", []))
+        else:
+            issues.append("scan 섹션이 dict 가 아님")
+        if issues:
+            return CheckResult("nufi_yaml", "nufi.yaml 설정 유효성", WARN,
+                               f"nufi.yaml 경고: {'; '.join(issues)}", data,
+                               remediation="nufi.yaml 의 누락 필드를 추가하십시오.")
+        return CheckResult("nufi_yaml", "nufi.yaml 설정 유효성", PASS,
+                           f"nufi.yaml 유효 (version={cfg.get('version')}, "
+                           f"exclude {data.get('exclude_count', 0)}개)", data)
+    except Exception as e:
+        return CheckResult("nufi_yaml", "nufi.yaml 설정 유효성", FAIL,
+                           f"nufi.yaml 파싱 실패: {type(e).__name__}: {e}",
+                           {"exists": True, "valid": False},
+                           remediation="nufi.yaml 의 YAML 문법을 점검하십시오.")
+
+
+# --------------------------------------------------------------------------- 체크 10 (CMP-341)
+def check_git_hook(ctx: "DoctorContext") -> CheckResult:
+    """git pre-commit hook 설치 상태 확인."""
+    git_dir = _ROOT / ".git"
+    if not git_dir.exists():
+        return CheckResult("git_hook", "git hook 설치 상태", WARN,
+                           "git 저장소 아님 — hook 점검 생략",
+                           {"git_repo": False})
+    # Handle worktrees
+    actual_git = git_dir
+    if git_dir.is_file():
+        text = git_dir.read_text().strip()
+        if text.startswith("gitdir:"):
+            actual_git = Path(text.split(":", 1)[1].strip())
+            if not actual_git.is_absolute():
+                actual_git = (_ROOT / actual_git).resolve()
+    hook_path = actual_git / "hooks" / "pre-commit"
+    pre_commit_cfg = _ROOT / ".pre-commit-config.yaml"
+
+    data: Dict[str, Any] = {"git_repo": True}
+    checks_passed: List[str] = []
+    checks_warn: List[str] = []
+
+    # Check git hook
+    if hook_path.exists():
+        content = hook_path.read_text(encoding="utf-8", errors="replace")
+        if "nufi" in content.lower():
+            checks_passed.append("git hook 에 nufi 스캔 포함")
+            data["hook_has_nufi"] = True
+        else:
+            checks_warn.append("git hook 존재하나 nufi 스캔 미포함")
+            data["hook_has_nufi"] = False
+    else:
+        checks_warn.append("pre-commit hook 미설치")
+        data["hook_exists"] = False
+
+    # Check .pre-commit-config.yaml
+    if pre_commit_cfg.exists():
+        content = pre_commit_cfg.read_text(encoding="utf-8", errors="replace")
+        if "nufi-scan" in content:
+            checks_passed.append(".pre-commit-config.yaml 에 nufi-scan 훅 포함")
+            data["pre_commit_config_has_nufi"] = True
+        else:
+            checks_warn.append(".pre-commit-config.yaml 에 nufi-scan 훅 미포함")
+            data["pre_commit_config_has_nufi"] = False
+    else:
+        checks_warn.append(".pre-commit-config.yaml 미존재")
+        data["pre_commit_config_exists"] = False
+
+    if checks_passed and not checks_warn:
+        return CheckResult("git_hook", "git hook 설치 상태", PASS,
+                           "; ".join(checks_passed), data)
+    if checks_warn:
+        return CheckResult("git_hook", "git hook 설치 상태", WARN,
+                           "; ".join(checks_warn + checks_passed), data,
+                           remediation="nufi-egress init --install-hook 으로 hook 을 설치하십시오.")
+    return CheckResult("git_hook", "git hook 설치 상태", PASS,
+                       "git hook 정상", data)
+
+
+# --------------------------------------------------------------------------- 체크 11 (CMP-341)
+def check_model_files(ctx: "DoctorContext") -> CheckResult:
+    """모델 파일 존재·무결성 확인."""
+    import hashlib
+
+    models_dir = _ROOT / "models"
+    if not models_dir.is_dir():
+        return CheckResult("model_files", "모델 파일 존재·무결성", WARN,
+                           "models/ 디렉터리 없음 — 모델 점검 생략",
+                           {"models_dir_exists": False},
+                           remediation="모델 파일이 필요한 경우 models/ 디렉터리를 확인하십시오.")
+
+    onnx_files = list(models_dir.glob("**/*.onnx"))
+    data: Dict[str, Any] = {"models_dir_exists": True, "onnx_count": len(onnx_files)}
+
+    if not onnx_files:
+        return CheckResult("model_files", "모델 파일 존재·무결성", WARN,
+                           "models/ 에 ONNX 파일 없음 — gazetteer 백엔드만 사용 가능",
+                           data,
+                           remediation="ONNX 모델이 필요하면 models/ 에 배치하십시오.")
+
+    issues: List[str] = []
+    checked: List[Dict[str, Any]] = []
+    for f in onnx_files:
+        info: Dict[str, Any] = {"file": str(f.relative_to(_ROOT)), "size": f.stat().st_size}
+        if f.stat().st_size == 0:
+            issues.append(f"{f.name}: 파일 크기 0")
+            info["status"] = "empty"
+        else:
+            # Quick integrity: read first 4 bytes for ONNX magic
+            with open(f, "rb") as fh:
+                header = fh.read(4)
+            if len(header) < 4:
+                issues.append(f"{f.name}: 파일 손상(4바이트 미만)")
+                info["status"] = "corrupted"
+            else:
+                info["status"] = "ok"
+        checked.append(info)
+
+    data["files"] = checked
+    if issues:
+        return CheckResult("model_files", "모델 파일 존재·무결성", FAIL,
+                           f"모델 파일 문제 {len(issues)}개: {'; '.join(issues)}", data,
+                           remediation="손상된 모델 파일을 재배포하십시오.")
+    return CheckResult("model_files", "모델 파일 존재·무결성", PASS,
+                       f"ONNX 모델 {len(onnx_files)}개 정상", data)
+
+
 # --------------------------------------------------------------------------- 오케스트레이션
 @dataclass
 class DoctorContext:
@@ -523,12 +709,17 @@ class DoctorContext:
 
 # 체크 등록 순서.
 _CHECKS: List[Callable[["DoctorContext"], CheckResult]] = [
+    check_python_version,
+    check_dependencies,
+    check_nufi_yaml,
     check_config,
     check_reachability,
     check_gateway,
     check_bypass,
     check_canary,
     check_injection,
+    check_git_hook,
+    check_model_files,
 ]
 
 
@@ -595,13 +786,15 @@ def render_human(report: Dict[str, Any]) -> str:
 def main(argv: Optional[List[str]] = None) -> int:
     ap = argparse.ArgumentParser(
         prog="nufi doctor",
-        description="하이브리드 배선(private 기본 + public 폴백) 1회 진단 — 6체크 PASS/WARN/FAIL")
+        description="자가진단 — 11체크 PASS/WARN/FAIL (CMP-341)")
     ap.add_argument("--routing", default=None, help="routing.yaml 경로")
     ap.add_argument("--policy", default=None, help="policy.yaml 경로")
     ap.add_argument("--ner-backend", default="gazetteer",
                     help="탐지 NER 백엔드(기본 gazetteer — 결정론적·경량)")
     ap.add_argument("--connect-timeout", type=float, default=2.0,
                     help="도달성 점검 TCP 타임아웃(초)")
+    ap.add_argument("--format", choices=["text", "json"], default=None,
+                    dest="output_format", help="출력 포맷 (text | json)")
     fmt = ap.add_mutually_exclusive_group()
     fmt.add_argument("--json", action="store_true", help="기계용 JSON 만 출력")
     fmt.add_argument("--no-json", action="store_true", help="사람읽기만 출력(JSON 생략)")
@@ -612,11 +805,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     results = run_checks(ctx)
     report = build_report(results)
 
-    if args.json:
+    use_json = (args.output_format == "json") or (not args.output_format and args.json)
+    use_text_only = (args.output_format == "text") or (not args.output_format and args.no_json)
+    if use_json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:
         print(render_human(report))
-        if not args.no_json:
+        if not use_text_only:
             print("\n--- JSON ---")
             print(json.dumps(report, ensure_ascii=False, indent=2))
 
