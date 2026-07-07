@@ -487,6 +487,12 @@ def cmd_export(args) -> int:
     return _export(args)
 
 
+def cmd_guard(args) -> int:
+    """통합 CI 게이트 — scan + policy + pseudonymize (v0.7.1)."""
+    from enforcement.guard_cmd import cmd_guard as _guard
+    return _guard(args)
+
+
 def cmd_pseudonymize(args) -> int:
     """가역 가명화 / 원복 (v0.6.0)."""
     from enforcement.pseudonymize_cmd import cmd_pseudonymize as _pseudo
@@ -1398,6 +1404,23 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--output", default=None, metavar="PATH",
                    help="결과를 파일에 기록(stdout 대신)")
     p.set_defaults(func=cmd_redact_text)
+
+    # --- Guard (v0.7.1) ------------------------------------------------------- #
+    p = sub.add_parser("guard",
+                       help="통합 CI 게이트 — scan + 정책 판정 + 가명화를 한 번에 수행 (v0.7.1)")
+    p.add_argument("target", nargs="?", default=None,
+                   help="스캔할 파일 경로(생략 시 stdin)")
+    p.add_argument("--policy", dest="policy_action_guard",
+                   choices=["block", "warn", "pseudonymize"],
+                   default="warn",
+                   help="PII 발견 시 정책 액션(기본: warn)")
+    p.add_argument("--format", choices=["text", "json"], default="text",
+                   help="출력 포맷(기본: text)")
+    p.add_argument("--output", default=None, metavar="FILE",
+                   help="가명화 결과 파일 출력(기본 stdout)")
+    p.add_argument("--strict", action="store_true",
+                   help="warn을 block으로 승격")
+    p.set_defaults(func=cmd_guard)
 
     # --- Pseudonymize (v0.6.0) ----------------------------------------------- #
     p = sub.add_parser("pseudonymize",

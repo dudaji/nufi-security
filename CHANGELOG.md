@@ -4,6 +4,25 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.7.1] - 2026-07-07
+
+> **v0.7.1 — guard 통합 CLI 커맨드: scan + enforce + pseudonymize (CMP-336)**
+
+### Added
+- **enforcement/guard_cmd.py** — `nufi-egress guard` 통합 커맨드: PII scan → 정책 판정 → 가명화를 한 번에 수행하는 원스텝 CI 게이트.
+- **`--policy block|warn|pseudonymize`** — PII 발견 시 정책 액션 선택 (기본: warn).
+- **`--format text|json`** — 출력 포맷 선택.
+- **`--output FILE`** — 가명화 결과 파일 출력 (기본 stdout).
+- **`--strict`** — warn 정책을 block으로 승격.
+- **exit code**: 0 (PII 없음 / pseudonymize 완료), 1 (block), 2 (warn).
+- **tests/test_guard_cmd.py** — 정책별 exit code, JSON 출력, --strict 승격, 파일 출력 등 10개 테스트.
+
+### Changed
+- **enforcement/cli.py** — `guard` 서브커맨드 등록.
+- **VERSION** — 0.7.0 → 0.7.1
+
+---
+
 ## [0.7.0] - 2026-07-07
 
 > **v0.7.0 — scan 출력 포맷 다양화: --format json|sarif|csv (CMP-335)**
