@@ -21,8 +21,11 @@
 - **scripts/bench_ai4privacy.py**, **scripts/bench_external.py** — 외부 데이터셋 벤치마크 스크립트.
 - **scripts/train_koelectra_ner.py** — KoELECTRA NER 학습 스크립트.
 - **samples/gold/** — AI4Privacy 벤치마크 골드셋 데이터.
+- **tests/test_injection_gate.py** — 인젝션 CI 게이트 테스트 (recall ≥ 0.95, benign FP ≤ 0.05).
+- **docs/reports/injection-benchmark.json** — 인젝션 벤치마크 결과 (recall 1.0, precision 1.0, F1 1.0).
 
 ### Changed
+- **scripts/bench_injection.py** — severity별 통계, JSON/markdown 출력, argparse CLI 개선.
 - **.gitignore** — 모델 디렉토리 추가.
 - **docs/ROADMAP.md** — 로드맵 업데이트.
 - **docs/research/README.md** — 연구 문서 인덱스 업데이트.

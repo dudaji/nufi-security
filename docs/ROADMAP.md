@@ -117,6 +117,10 @@ P0(코어 정확도)를 먼저 끌어올려 해자를 굳히고, P1로 한국 �
 | 12개 클래스 Wilson CI95 하한 ≥ 0.90 | 전부 | **12 / 12** ✅ | `recall-int8.json` |
 | 한국 규제 증빙 통제 | 48개 | **48개 완성** (direct 25 / partial 11 / oos 12) ✅ | `compliance_catalog.yaml` |
 | SDK 예시 | — | **12종** 독립 실행 가능 ✅ | `examples/README.md` |
+| 인젝션 재현율 (recall) | ≥ 0.95 | **1.0000** ✅ | `injection-benchmark.json` |
+| 인젝션 정밀도 (precision) | ≥ 0.95 | **1.0000** ✅ | `injection-benchmark.json` |
+| 인젝션 F1 | — | **1.0000** ✅ | `injection-benchmark.json` |
+| Benign FP rate | ≤ 0.05 | **0.0000** ✅ | `injection-benchmark.json` |
 | 테스트 통과 | — | **307 passed** ✅ | `pytest` |
 | 데모 PASS | — | **11 / 11** ✅ | `demo_all.sh` |
 
