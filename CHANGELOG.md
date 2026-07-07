@@ -4,6 +4,24 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.7.4] - 2026-07-08
+
+> **v0.7.4 — scan --recursive 디렉터리 재귀 스캔 + 집계 리포트 (CMP-339)**
+
+### Added
+- **`scan --recursive <directory>`** (또는 `-r`) — 디렉터리 내 모든 파일을 재귀 탐색하여 PII 스캔, 바이너리 파일 자동 건너뜀.
+- **`--include <glob>`** — 포함 패턴만 스캔 (쉼표 구분, 예: `*.py,*.md`).
+- **`--exclude <glob>`** — 제외 패턴 (기존 옵션, --recursive 와 함께 동작).
+- **집계 리포트** — 스캔 완료 후 전체 집계 출력: 스캔/건너뛴 파일 수, PII 발견 파일 수, 엔티티 타입별 총 건수, PII 최다 파일 Top 5.
+- **`--format text|json|csv` 지원** — JSON: `files[]` 배열 + `summary` 오브젝트. CSV: `file,line,entity_type,text,score` 컬럼.
+- **SDK `scan_recursive()`** — `from nufi import scan_recursive`; `RecursiveScanResult` 반환.
+- **tests/test_scan_cmd.py** — 디렉터리 재귀 스캔, 바이너리 건너뜀, --exclude/--include 필터, 집계 리포트 정확도, 빈 디렉터리, Top 파일 순서, JSON/CSV 출력 등 10개 테스트 추가.
+
+### Changed
+- **VERSION** — 0.7.3 → 0.7.4
+
+---
+
 ## [0.7.3] - 2026-07-08
 
 > **v0.7.3 — scan --watch 실시간 파일 모니터링 (CMP-338)**

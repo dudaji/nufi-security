@@ -15,6 +15,7 @@ SDK 에서도 ``from nufi import scan_dir`` 로 사용 가능.
 --baseline PATH 로 이전 스캔 결과와 비교하여 신규 발견만 출력 (patch181).
 --count-only 로 발견 건수만 빠르게 출력 (patch182).
 --watch 모드로 디렉터리 실시간 파일 모니터링 + PII 탐지 (v0.7.3).
+--recursive 로 디렉터리 재귀 스캔 + 집계 리포트 출력 (v0.7.4).
 """
 from __future__ import annotations
 
@@ -1004,6 +1005,40 @@ def cmd_scan(args) -> int:
         profile = resolve_profile(profile_name)
         apply_profile_to_args(profile, args)
 
+    # --recursive / -r: recursive directory scan with aggregate report (v0.7.4)
+    if getattr(args, "recursive", False):
+        if not target:
+            print("Error: --recursive requires a target directory")
+            return 2
+        rec_patterns: Optional[List[str]] = None
+        if getattr(args, "pattern", None):
+            rec_patterns = [p.strip() for p in args.pattern.split(",") if p.strip()]
+        rec_exclude: Optional[List[str]] = None
+        if getattr(args, "exclude", None):
+            rec_exclude = [p.strip() for p in args.exclude.split(",") if p.strip()]
+        rec_include: Optional[List[str]] = None
+        if getattr(args, "include", None):
+            rec_include = [p.strip() for p in args.include.split(",") if p.strip()]
+        rec_result = scan_recursive(
+            target,
+            check_injection=getattr(args, "check_injection", False),
+            exclude=rec_exclude,
+            include=rec_include,
+            parallel=getattr(args, "parallel", 1),
+        )
+        output_format = getattr(args, "format", None)
+        if not output_format and getattr(args, "json", False):
+            output_format = "json"
+        if output_format == "json":
+            print(_render_recursive_json(rec_result, target=target))
+        elif output_format == "csv":
+            print(_render_recursive_csv(rec_result), end="")
+        else:
+            _render_recursive_human(rec_result)
+        if getattr(args, "fail_on_pii", False) and rec_result.summary.files_with_pii > 0:
+            return 1
+        return 0
+
     # --watch: real-time file monitoring mode (v0.7.3)
     if getattr(args, "watch", False):
         if not target:
@@ -1237,6 +1272,205 @@ def cmd_scan(args) -> int:
     if getattr(args, "fail_on_pii", False) and result.has_pii:
         return 1
     return 0
+
+
+# ---------------------------------------------------------------------------
+# Recursive directory scan with aggregate report (v0.7.4)
+# ---------------------------------------------------------------------------
+
+@dataclass
+class RecursiveScanSummary:
+    """Aggregate summary for --recursive scan."""
+    files_scanned: int = 0
+    files_skipped: int = 0
+    files_with_pii: int = 0
+    entity_counts: Dict[str, int] = field(default_factory=dict)
+    top_files: List[Dict[str, Any]] = field(default_factory=list)
+
+
+@dataclass
+class RecursiveScanResult:
+    """Result of a --recursive directory scan."""
+    files: List[Dict[str, Any]] = field(default_factory=list)
+    summary: RecursiveScanSummary = field(default_factory=RecursiveScanSummary)
+    errors: List[Dict[str, str]] = field(default_factory=list)
+
+
+def scan_recursive(
+    directory: str | Path,
+    *,
+    check_injection: bool = False,
+    exclude: Optional[List[str]] = None,
+    include: Optional[List[str]] = None,
+    parallel: int = 1,
+) -> RecursiveScanResult:
+    """Recursively scan all files in *directory* and build an aggregate report.
+
+    Args:
+        directory: Root directory to scan.
+        check_injection: Also detect prompt injection patterns.
+        exclude: Glob patterns to exclude (e.g. ``['*.pyc', '.git/*']``).
+        include: Glob patterns to include (only scan matching files).
+        parallel: Thread count (1 = sequential).
+
+    Returns:
+        RecursiveScanResult with per-file findings and aggregate summary.
+    """
+    directory = Path(directory)
+    rec_result = RecursiveScanResult()
+
+    if not directory.is_dir():
+        rec_result.errors.append({"path": str(directory), "error": "Not a directory"})
+        return rec_result
+
+    # Build exclusion patterns
+    if exclude is None:
+        exclude_patterns = load_nufiignore(directory)
+    else:
+        exclude_patterns = list(exclude)
+
+    # Collect files
+    all_files: List[Path] = []
+    skipped = 0
+    for root, _dirs, fnames in os.walk(directory):
+        for fname in sorted(fnames):
+            fpath = Path(root) / fname
+            if _is_excluded(fpath, directory, exclude_patterns):
+                skipped += 1
+                continue
+            if include and not _matches_patterns(fpath, include):
+                skipped += 1
+                continue
+            if _is_binary(fpath):
+                skipped += 1
+                continue
+            all_files.append(fpath)
+
+    rec_result.summary.files_skipped = skipped
+
+    # Scan files
+    if parallel > 1 and len(all_files) > 1:
+        with ThreadPoolExecutor(max_workers=parallel) as executor:
+            futures = [
+                executor.submit(_scan_file_isolated, fpath, check_injection, None)
+                for fpath in all_files
+            ]
+            sub_results = [f.result() for f in futures]
+        merged = _merge_results(sub_results)
+    else:
+        merged = ScanResult()
+        pipeline = DetectionPipeline()
+        injection_detector = PromptInjectionDetector() if check_injection else None
+        for fpath in all_files:
+            _scan_file(fpath, pipeline, injection_detector, merged, None)
+
+    rec_result.summary.files_scanned = merged.files_scanned
+    rec_result.summary.files_with_pii = merged.files_with_findings
+
+    # Build per-file entries and entity counts
+    file_finding_counts: Dict[str, int] = {}
+    entity_counts: Dict[str, int] = {}
+    file_entries: Dict[str, Dict[str, Any]] = {}
+    for f in merged.findings:
+        et = _extract_entity_type(f.finding_type)
+        entity_counts[et] = entity_counts.get(et, 0) + 1
+        file_finding_counts[f.file] = file_finding_counts.get(f.file, 0) + 1
+        if f.file not in file_entries:
+            file_entries[f.file] = {"file": f.file, "findings": []}
+        file_entries[f.file]["findings"].append({
+            "line": f.line,
+            "finding_type": f.finding_type,
+            "text": f.text,
+            "entity_type": et,
+            "score": f.score,
+        })
+
+    rec_result.files = list(file_entries.values())
+    rec_result.summary.entity_counts = dict(sorted(entity_counts.items()))
+
+    # Top 5 files by finding count
+    top_files_sorted = sorted(
+        file_finding_counts.items(), key=lambda x: x[1], reverse=True,
+    )[:5]
+    rec_result.summary.top_files = [
+        {"file": fp, "count": cnt} for fp, cnt in top_files_sorted
+    ]
+    rec_result.errors = merged.errors
+
+    return rec_result
+
+
+def _render_recursive_json(rec: RecursiveScanResult, *, target: str = "") -> str:
+    """Render recursive scan result as JSON."""
+    doc = {
+        "version": _nufi_version(),
+        "scan_target": target,
+        "files": rec.files,
+        "summary": {
+            "files_scanned": rec.summary.files_scanned,
+            "files_skipped": rec.summary.files_skipped,
+            "files_with_pii": rec.summary.files_with_pii,
+            "entity_counts": rec.summary.entity_counts,
+            "top_files": rec.summary.top_files,
+        },
+        "errors": rec.errors,
+    }
+    return json.dumps(doc, ensure_ascii=False, indent=2)
+
+
+def _render_recursive_csv(rec: RecursiveScanResult) -> str:
+    """Render recursive scan findings as CSV."""
+    import csv
+    import io
+
+    output = io.StringIO()
+    writer = csv.writer(output, quoting=csv.QUOTE_NONNUMERIC)
+    writer.writerow(["file", "line", "entity_type", "text", "score"])
+    for fe in rec.files:
+        for f in fe["findings"]:
+            writer.writerow([
+                fe["file"], f["line"], f["entity_type"], f["text"], f["score"],
+            ])
+    return output.getvalue()
+
+
+def _render_recursive_human(rec: RecursiveScanResult) -> None:
+    """Human-readable recursive scan output with aggregate report."""
+    s = rec.summary
+    total_findings = sum(len(fe["findings"]) for fe in rec.files)
+
+    print(f"Recursive scan complete: {s.files_scanned} files scanned, "
+          f"{s.files_skipped} skipped, "
+          f"{s.files_with_pii} with PII, "
+          f"{total_findings} total findings.")
+
+    if rec.files:
+        print()
+        for fe in rec.files:
+            print(f"  {fe['file']}")
+            for f in fe["findings"]:
+                print(f"    L{f['line']}: [{f['finding_type']}] {f['text']}")
+
+    # Aggregate report
+    print()
+    print("── 집계 리포트 (Aggregate Report) ──")
+    print(f"  스캔 파일 수:       {s.files_scanned}")
+    print(f"  건너뛴 파일 수:     {s.files_skipped}")
+    print(f"  PII 발견 파일 수:   {s.files_with_pii}")
+    if s.entity_counts:
+        print(f"  엔티티 타입별 건수:")
+        for etype, count in sorted(s.entity_counts.items(), key=lambda x: -x[1]):
+            print(f"    {etype:<30} {count}")
+    if s.top_files:
+        print(f"  PII 최다 파일 Top {len(s.top_files)}:")
+        for i, tf in enumerate(s.top_files, 1):
+            print(f"    {i}. {tf['file']} ({tf['count']}건)")
+
+    if rec.errors:
+        print()
+        print("Errors:")
+        for e in rec.errors:
+            print(f"  {e['path']}: {e['error']}")
 
 
 # ---------------------------------------------------------------------------

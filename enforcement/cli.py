@@ -1292,6 +1292,10 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="디렉터리 실시간 감시 모드 — 파일 생성/수정 시 자동 스캔 (v0.7.3)")
     p.add_argument("--watch-interval", type=float, default=1.0, metavar="SECONDS",
                    help="--watch 폴링 간격(초, 기본 1.0)")
+    p.add_argument("-r", "--recursive", action="store_true",
+                   help="디렉터리 재귀 스캔 + 집계 리포트 (v0.7.4)")
+    p.add_argument("--include", default=None,
+                   help="포함 패턴만 스캔(쉼표 구분, 예: '*.py,*.md') (v0.7.4)")
     p.set_defaults(func=cmd_scan)
 
     p = sub.add_parser("diff",

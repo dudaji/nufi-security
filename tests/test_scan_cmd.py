@@ -32,6 +32,7 @@ import pytest
 from enforcement.scan_cmd import (
     scan_path, load_nufiignore, scan_result_to_sarif, redact_path,
     load_suppressions, apply_suppressions, ScanFinding, ScanResult,
+    scan_recursive, RecursiveScanResult,
 )
 
 
@@ -213,7 +214,7 @@ def test_sarif_output_valid_json_with_schema(pii_file: Path):
     assert len(sarif["runs"]) == 1
     run = sarif["runs"][0]
     assert run["tool"]["driver"]["name"] == "nufi-egress"
-    assert run["tool"]["driver"]["version"] == "0.7.3"
+    assert run["tool"]["driver"]["version"] == "0.7.4"
     assert isinstance(run["tool"]["driver"]["rules"], list)
     assert len(run["tool"]["driver"]["rules"]) >= 1
 
@@ -1012,7 +1013,7 @@ def test_format_json_schema(pii_file: Path, capsys):
     assert "summary" in data
 
     # Version matches VERSION file
-    assert data["version"] == "0.7.3"
+    assert data["version"] == "0.7.4"
     assert data["scan_target"] == str(pii_file)
 
     # Findings array
@@ -1158,4 +1159,127 @@ def test_format_csv_via_cmd(pii_file: Path, capsys):
     reader = csv.reader(io.StringIO(captured.out))
     rows = list(reader)
     assert rows[0] == ["entity_type", "text", "start", "end", "score"]
+    assert len(rows) >= 2
+
+
+# ---------------------------------------------------------------------------
+# Recursive scan tests (v0.7.4)
+# ---------------------------------------------------------------------------
+
+@pytest.fixture()
+def recursive_dir(tmp_path: Path) -> Path:
+    """디렉터리 재귀 스캔용 테스트 구조."""
+    (tmp_path / "root.txt").write_text("이메일: test@example.com\n", encoding="utf-8")
+    sub = tmp_path / "subdir"
+    sub.mkdir()
+    (sub / "deep.txt").write_text("주민번호 900101-1234567\n", encoding="utf-8")
+    deep = sub / "nested"
+    deep.mkdir()
+    (deep / "more.txt").write_text("전화번호 010-1234-5678\n", encoding="utf-8")
+    return tmp_path
+
+
+def test_recursive_scan_finds_pii_in_all_subdirs(recursive_dir: Path):
+    """--recursive 로 하위 디렉터리까지 모든 PII 를 탐지한다."""
+    rec = scan_recursive(recursive_dir)
+    assert rec.summary.files_scanned >= 3
+    assert rec.summary.files_with_pii >= 2
+    assert len(rec.files) >= 2
+    # entity counts populated
+    assert len(rec.summary.entity_counts) >= 1
+    total = sum(rec.summary.entity_counts.values())
+    assert total >= 2
+
+
+def test_recursive_scan_skips_binary(tmp_path: Path):
+    """바이너리 파일은 건너뛴다."""
+    (tmp_path / "text.txt").write_text("이메일: a@b.com\n", encoding="utf-8")
+    (tmp_path / "binary.bin").write_bytes(b"\x00\x01\x02\x03" * 200)
+    rec = scan_recursive(tmp_path)
+    assert rec.summary.files_skipped >= 1
+    # binary file should not appear in scanned results
+    scanned_files = {fe["file"] for fe in rec.files}
+    assert not any("binary.bin" in f for f in scanned_files)
+
+
+def test_recursive_scan_exclude_filter(recursive_dir: Path):
+    """--exclude 패턴이 파일을 제외한다."""
+    rec = scan_recursive(recursive_dir, exclude=["subdir/*"])
+    # subdir 내 파일이 제외되므로 scanned 수가 줄어야 함
+    scanned_files = {fe["file"] for fe in rec.files}
+    assert not any("deep.txt" in f for f in scanned_files)
+
+
+def test_recursive_scan_include_filter(recursive_dir: Path):
+    """--include 패턴에 매칭되는 파일만 스캔한다."""
+    rec = scan_recursive(recursive_dir, include=["*.txt"])
+    assert rec.summary.files_scanned >= 1
+    # Only .txt files should be scanned
+    all_finding_files = {fe["file"] for fe in rec.files}
+    for f in all_finding_files:
+        assert f.endswith(".txt")
+
+
+def test_recursive_scan_empty_dir(tmp_path: Path):
+    """빈 디렉터리 → 빈 결과."""
+    rec = scan_recursive(tmp_path)
+    assert rec.summary.files_scanned == 0
+    assert rec.summary.files_with_pii == 0
+    assert len(rec.files) == 0
+    assert len(rec.summary.entity_counts) == 0
+    assert len(rec.summary.top_files) == 0
+
+
+def test_recursive_scan_aggregate_report_accuracy(recursive_dir: Path):
+    """집계 리포트의 수치가 정확하다."""
+    rec = scan_recursive(recursive_dir)
+    # files_with_pii should match len(rec.files)
+    assert rec.summary.files_with_pii == len(rec.files)
+    # total entity counts should match sum of all findings
+    total_findings = sum(len(fe["findings"]) for fe in rec.files)
+    total_entity = sum(rec.summary.entity_counts.values())
+    assert total_entity == total_findings
+    # top_files should be <= 5
+    assert len(rec.summary.top_files) <= 5
+
+
+def test_recursive_scan_top_files_order(tmp_path: Path):
+    """Top 파일이 발견 건수 내림차순이다."""
+    # File with many PII
+    (tmp_path / "many.txt").write_text(
+        "email1@a.com email2@b.com email3@c.com\n900101-1234567\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "few.txt").write_text("just one: test@x.com\n", encoding="utf-8")
+    rec = scan_recursive(tmp_path)
+    if len(rec.summary.top_files) >= 2:
+        assert rec.summary.top_files[0]["count"] >= rec.summary.top_files[1]["count"]
+
+
+def test_recursive_scan_json_output(recursive_dir: Path):
+    """JSON 출력에 files[], summary 가 포함된다."""
+    from enforcement.scan_cmd import _render_recursive_json
+    rec = scan_recursive(recursive_dir)
+    out = _render_recursive_json(rec, target=str(recursive_dir))
+    doc = json.loads(out)
+    assert "version" in doc
+    assert "files" in doc
+    assert "summary" in doc
+    assert "files_scanned" in doc["summary"]
+    assert "files_skipped" in doc["summary"]
+    assert "files_with_pii" in doc["summary"]
+    assert "entity_counts" in doc["summary"]
+    assert "top_files" in doc["summary"]
+
+
+def test_recursive_scan_csv_output(recursive_dir: Path):
+    """CSV 출력에 file, line, entity_type, text, score 컬럼이 있다."""
+    import csv
+    import io
+    from enforcement.scan_cmd import _render_recursive_csv
+    rec = scan_recursive(recursive_dir)
+    out = _render_recursive_csv(rec)
+    reader = csv.reader(io.StringIO(out))
+    rows = list(reader)
+    assert rows[0] == ["file", "line", "entity_type", "text", "score"]
     assert len(rows) >= 2

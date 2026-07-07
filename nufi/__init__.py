@@ -226,6 +226,7 @@ def explain(text: str, *, min_severity: str = "low") -> dict[str, Any]:
 # 디렉터리/파일 스캔 (Directory/File Scan) — v0.4.x (patch83)
 # ---------------------------------------------------------------------------
 from enforcement.scan_cmd import scan_path as scan_dir  # noqa: E402
+from enforcement.scan_cmd import scan_recursive  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # 보안 포스처 리포트 (Security Posture Report) — v0.4.x (patch98)
@@ -384,6 +385,7 @@ __all__ = [
     # convenience
     "scan_file",
     "scan_dir",
+    "scan_recursive",
     "guard_file",
     "batch_detect",
     # batch helpers
