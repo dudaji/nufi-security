@@ -103,7 +103,7 @@ P0 (한국어 PII 정확도 엔진, M) ──▶ P1 (한국 규제 증빙 팩, S
 
 P0(코어 정확도)를 먼저 끌어올려 해자를 굳히고, P1로 한국 규제 증빙을 확장, P2로 SDK 사용성을 더한다. 차기 옵션 중 LLM 라우팅은 P0 PII 감지 자산을 레버리지하므로 P0 완료 이후 진행이 자연스럽다.
 
-## 6. 현재 달성 수치 (v0.6.0 기준)
+## 6. 현재 달성 수치 (v0.6.2 기준)
 
 아래 수치는 커밋된 측정 산출물(`docs/reports/`)에서 기계로 추출됩니다.
 
@@ -121,9 +121,12 @@ P0(코어 정확도)를 먼저 끌어올려 해자를 굳히고, P1로 한국 �
 | 인젝션 정밀도 (precision) | ≥ 0.95 | **1.0000** ✅ | `injection-benchmark.json` |
 | 인젝션 F1 | — | **1.0000** ✅ | `injection-benchmark.json` |
 | Benign FP rate | ≤ 0.05 | **0.0000** ✅ | `injection-benchmark.json` |
-| 테스트 통과 | — | **307 passed** ✅ | `pytest` |
+| 테스트 통과 | — | **770 passed** ✅ | `pytest` |
 | 데모 PASS | — | **11 / 11** ✅ | `demo_all.sh` |
-| 가역 가명화 CLI | — | **v0.6.0** ✅ | `pseudonymize` + `scan --pseudonymize` |
+| 가역 가명화 CLI | — | **v0.6.2** ✅ | `pseudonymize` + `scan --pseudonymize` + self-check + latency benchmark |
+| 가역 가명화 latency p95 | ≤ 200 ms (16K자) | **191.7 ms** ✅ | `bench_pseudonymize.py` |
+| pre-commit hooks | — | **v0.6.1** ✅ | `nufi-scan`, `nufi-scan-strict`, `nufi-pseudonymize` |
+| selftest 체크 | — | **7 / 7** ✅ | `nufi-egress test` |
 
 ## 7. 거버넌스 · 리스크
 

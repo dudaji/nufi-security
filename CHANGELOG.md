@@ -4,6 +4,47 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.6.2] - 2026-07-07
+
+> **v0.6.2 — test self-check 가명화 검증 + pseudonymize 벤치마크 (CMP-332)**
+
+### Added
+- **enforcement/selftest.py** — 7번째 self-check: Pseudonymize roundtrip (가명화→복원→원본 일치 검증).
+- **scripts/bench_pseudonymize.py** — `--latency` 벤치마크 추가 (256/1K/4K/16K자 입력 크기별 p50/p95/p99 레이턴시 측정).
+- CI 게이트: 16K자 p95 ≤ 200ms (실측 191.7ms PASS).
+
+### Changed
+- **VERSION** — 0.6.1 → 0.6.2
+
+---
+
+## [0.6.1] - 2026-07-07
+
+> **v0.6.1 — pre-commit 프레임워크 통합 + diff --pseudonymize (CMP-331)**
+
+### Added
+- **.pre-commit-hooks.yaml** — pre-commit 프레임워크 통합: `nufi-scan`, `nufi-scan-strict`, `nufi-pseudonymize` 훅 3종.
+- **enforcement/pseudonymize_cmd.py** — `pseudonymize --check` 모드 추가 (파일별 PII 체크, exit 1 + 가명화 제안).
+- **enforcement/diff_cmd.py** — `diff --pseudonymize` 옵션 추가 (git 변경 파일 PII 탐지 + 가명화 결과 출력).
+
+### Changed
+- **VERSION** — 0.6.0 → 0.6.1
+
+---
+
+## [0.6.0] - 2026-07-07
+
+> **v0.6.0 — 가역 가명화 CLI 커맨드 + scan --pseudonymize (CMP-330)**
+
+### Added
+- **enforcement/pseudonymize_cmd.py** — `nufi-egress pseudonymize` CLI 커맨드 신규 (텍스트/파일 가명화 + 원복).
+- **enforcement/scan_cmd.py** — `scan --pseudonymize` 옵션 추가 (PII 탐지 시 가명화 결과도 출력).
+
+### Changed
+- **VERSION** — 0.5.4 → 0.6.0
+
+---
+
 ## [0.5.4] - 2026-07-07
 
 > **v0.5.4 — KR_PERSON 조사 부착 인명 탐지 개선 (CMP-317)**
