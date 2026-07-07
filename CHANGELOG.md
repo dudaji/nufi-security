@@ -4,6 +4,20 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.5.4] - 2026-07-07
+
+> **v0.5.4 — KR_PERSON 조사 부착 인명 탐지 개선 (CMP-317)**
+> 한국어 조사(에게/은/는/이/가/을/를 등 24종) 부착 인명을 문맥 게이팅 하에서 정확히 탐지.
+
+### Added
+- **egress_audit/detectors/ner.py** — `_PERSON_JOSA` 리스트(24개 조사) + `_PERSON_CAND_RE` 정규식 확장: 조사 부착 인명도 문맥 게이팅 하에서 검출.
+- **tests/test_cmp317_person_josa.py** — 조사 부착 인명 탐지 테스트 11건 (에게/은/를/와/의/에게서/한테 + 기존 honor/title gate 회귀 없음 확인).
+
+### Changed
+- **VERSION** — 0.5.3 → 0.5.4
+
+---
+
 ## [0.5.3] - 2026-07-07
 
 > **v0.5.3 — 인젝션 문서 현행화 + 패턴 카운트 자동 검증**

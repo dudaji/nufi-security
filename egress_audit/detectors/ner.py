@@ -64,7 +64,12 @@ _CONTEXT = ("고객|환자|담당자|직원|대표|발신자|발신|수신자|�
 _NAME = rf"(?:(?:{_COMPOUND_SURNAMES})|(?:{_SURNAMES}))[가-힣]{{1,2}}"
 _PERSON_HONOR_RE = re.compile(rf"(?<![가-힣])(?P<name>{_NAME})(?:{_HONORIFICS})")
 _PERSON_TITLE_RE = re.compile(rf"(?<![가-힣])(?P<name>{_NAME})\s(?:{_TITLES})")
-_PERSON_CAND_RE = re.compile(rf"(?<![가-힣])(?P<name>{_NAME})(?![가-힣])")
+# CMP-317: 조사(에게/은/를 등) 부착 인명도 문맥 게이팅으로 검출.
+# "담당자 겸소율에게" → "겸소율" 매치. 조사 없이 비-한글 경계도 허용.
+_PERSON_JOSA = ("에게서|에게|에서|에는|에도|에만|에|은|는|이|가|을|를|"
+                "과|와|의|도|만|께|한테|보다|처럼|같이|까지|부터|마다")
+_PERSON_CAND_RE = re.compile(
+    rf"(?<![가-힣])(?P<name>{_NAME})(?:(?:{_PERSON_JOSA})(?![가-힣])|(?![가-힣]))")
 _CONTEXT_RE = re.compile(rf"(?:{_CONTEXT})\s*$")
 
 _PLACE_SUFFIX_RE = re.compile(r"(?<![가-힣])([가-힣]{2,4}(?:특별시|광역시|특별자치시|특별자치도))")
