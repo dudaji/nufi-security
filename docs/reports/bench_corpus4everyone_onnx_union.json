@@ -1,0 +1,40 @@
+{
+  "benchmark": "external_korean_ner",
+  "dataset": "datasciathlete/corpus4everyone-korean-NER",
+  "ner_backend": "onnx-int8",
+  "total_rows_evaluated": 3437,
+  "rows_with_pii": 3437,
+  "elapsed_seconds": 29.3,
+  "overall": {
+    "recall": 0.9207,
+    "precision": 0.6182,
+    "f1": 0.7397,
+    "tp": 6239,
+    "fp": 3853,
+    "fn": 537
+  },
+  "per_type": {
+    "KR_LOCATION": {
+      "recall": 0.9246,
+      "precision": 0.5206,
+      "f1": 0.6661,
+      "tp": 4037,
+      "fp": 3718,
+      "fn": 329,
+      "gold": 4366,
+      "pred": 7755,
+      "recall_ci95_low": 0.9164
+    },
+    "KR_PERSON": {
+      "recall": 0.9137,
+      "precision": 0.9422,
+      "f1": 0.9277,
+      "tp": 2202,
+      "fp": 135,
+      "fn": 208,
+      "gold": 2410,
+      "pred": 2337,
+      "recall_ci95_low": 0.9018
+    }
+  }
+}
