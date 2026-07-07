@@ -6,6 +6,33 @@
 
 ---
 
+## v0.6.0 -- **가역 가명화 CLI 커맨드 + scan --pseudonymize**
+
+> PII를 가역적 surrogate로 치환·원복하는 CLI 커맨드가 추가되었습니다. (2026-07-07)
+
+### 주요 변경
+
+| 항목 | 내용 |
+|---|---|
+| **`pseudonymize` 서브커맨드** | `nufi-egress pseudonymize "텍스트"` — PII를 surrogate 토큰(⟦P1⟧)으로 치환하고 세션 ID 발급. `--restore --session <ID>` 로 원복 가능 |
+| **파일 단위 처리** | `--file input.txt --output output.txt` 로 파일 가명화/원복 지원 |
+| **JSON 출력** | `--json` 또는 `--format json` 으로 세션 ID·가명화 결과·통계를 JSON으로 출력 |
+| **`scan --pseudonymize`** | 기존 scan 명령에 `--pseudonymize` 플래그 추가 — PII 발견 시 가명화 텍스트를 함께 출력하고, `--output` 지정 시 가명화 파일 저장 |
+
+### 누구에게 유용한가
+
+- **데이터 전처리** -- 외부 LLM 전송 전 CLI 한 줄로 PII를 가역 가명화하고, 응답 후 원복할 수 있다.
+- **파일 스캔 + 가명화** -- `scan --pseudonymize` 로 PII 탐지와 가명화를 한 번에 수행.
+- **자동화 파이프라인** -- `--json` 출력으로 스크립트·CI에서 세션 ID와 가명화 결과를 프로그래밍 방식으로 처리.
+
+### 검증
+
+- pseudonymize CLI 텍스트/파일/restore/JSON 모드 테스트 통과
+- scan --pseudonymize 테스트 통과
+- 기존 테스트 전체 회귀 없음
+
+---
+
 ## v0.5.4 -- **KR_PERSON 조사 부착 인명 탐지 개선**
 
 > 한국어 조사가 붙은 인명도 정확히 탐지합니다. (2026-07-07)

@@ -487,6 +487,12 @@ def cmd_export(args) -> int:
     return _export(args)
 
 
+def cmd_pseudonymize(args) -> int:
+    """가역 가명화 / 원복 (v0.6.0)."""
+    from enforcement.pseudonymize_cmd import cmd_pseudonymize as _pseudo
+    return _pseudo(args)
+
+
 def cmd_mask(args) -> int:
     """텍스트 PII 마스킹 (patch124)."""
     from enforcement.transform_cmd import cmd_mask as _mask
@@ -1274,6 +1280,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="최소 신뢰도 점수 (0.0~1.0); 이하 발견 제외 (기본: 0.0)")
     p.add_argument("--only-types", default=None, metavar="TYPES",
                    help="특정 엔티티 타입만 보고(쉼표 구분, 예: KR_RRN,SECRET,CREDIT_CARD)")
+    p.add_argument("--pseudonymize", action="store_true",
+                   help="PII 발견 시 가명화된 텍스트도 함께 출력; --output 시 가명화 파일 저장 (v0.6.0)")
     p.set_defaults(func=cmd_scan)
 
     p = sub.add_parser("diff",
@@ -1388,6 +1396,25 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--output", default=None, metavar="PATH",
                    help="결과를 파일에 기록(stdout 대신)")
     p.set_defaults(func=cmd_redact_text)
+
+    # --- Pseudonymize (v0.6.0) ----------------------------------------------- #
+    p = sub.add_parser("pseudonymize",
+                       help="가역 가명화 — PII를 surrogate 토큰(⟦P1⟧)으로 치환, 세션 ID로 원복 가능 (v0.6.0)")
+    p.add_argument("text", nargs="?", default=None,
+                   help="가명화할 텍스트(인라인)")
+    p.add_argument("--file", default=None, metavar="PATH",
+                   help="가명화할 입력 파일 경로")
+    p.add_argument("--output", default=None, metavar="PATH",
+                   help="결과를 파일에 기록(stdout 대신)")
+    p.add_argument("--restore", action="store_true",
+                   help="surrogate → 원본 복원 모드")
+    p.add_argument("--session", default=None, metavar="ID",
+                   help="세션 ID(--restore 시 필수, 가명화 시 자동생성)")
+    p.add_argument("--json", action="store_true",
+                   help="기계용 JSON 출력")
+    p.add_argument("--format", default=None, choices=["text", "json"],
+                   help="출력 형식(text: 기본, json: JSON)")
+    p.set_defaults(func=cmd_pseudonymize)
 
     p = sub.add_parser("explain",
                        help="텍스트 탐지 결과 상세 설명 — PII·인젝션·정책·라우팅 근거 출력 (patch116)")

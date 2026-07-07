@@ -1110,6 +1110,37 @@ def cmd_scan(args) -> int:
         result.findings = [f for f in result.findings if f.score >= min_score]
         result.files_with_findings = len(set(f.file for f in result.findings))
 
+    # Output path (read early for --pseudonymize)
+    output_path = getattr(args, "output", None)
+
+    # --pseudonymize: apply reversible pseudonymization to scanned files (v0.6.0)
+    do_pseudonymize = getattr(args, "pseudonymize", False)
+    pseudonymized_texts: dict = {}  # file_path -> pseudonymized_text
+    if do_pseudonymize and result.findings:
+        import uuid as _uuid
+        from egress_audit.reversible import ReversibleEgress
+        _rev = ReversibleEgress(ner_backend="gazetteer")
+        _psid = f"scan-{_uuid.uuid4().hex[:12]}"
+        # Collect files with PII findings
+        pii_files = sorted(set(
+            f.file for f in result.findings if f.finding_type.startswith("PII:")
+        ))
+        for fpath in pii_files:
+            try:
+                content = Path(fpath).read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                continue
+            r = _rev.pseudonymize(content, _psid)
+            if not r.blocked and r.pseudonymized > 0:
+                pseudonymized_texts[fpath] = r.transformed_text
+        # Write pseudonymized files to --output directory if specified
+        if output_path and pseudonymized_texts:
+            out_dir = Path(output_path)
+            out_dir.mkdir(parents=True, exist_ok=True)
+            for fpath, ptext in pseudonymized_texts.items():
+                out_file = out_dir / Path(fpath).name
+                out_file.write_text(ptext + "\n", encoding="utf-8")
+
     # --count-only: print summary count and exit (patch182)
     if getattr(args, "count_only", False):
         count = len(result.findings)
@@ -1121,35 +1152,37 @@ def cmd_scan(args) -> int:
 
     # Output format
     output_format = getattr(args, "format", None)
-    output_path = getattr(args, "output", None)
+    # When --pseudonymize + --output, output_path is used as dir for pseudonymized
+    # files, so skip writing scan results to output_path as a file.
+    scan_output_path = None if (do_pseudonymize and pseudonymized_texts) else output_path
 
     if output_format == "csv":
         text_out = _render_csv(result)
-        if output_path:
-            Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-            Path(output_path).write_text(text_out, encoding="utf-8")
+        if scan_output_path:
+            Path(scan_output_path).parent.mkdir(parents=True, exist_ok=True)
+            Path(scan_output_path).write_text(text_out, encoding="utf-8")
         else:
             print(text_out, end="")
     elif output_format == "sarif":
         sarif = scan_result_to_sarif(result)
         text_out = json.dumps(sarif, ensure_ascii=False, indent=2)
-        if output_path:
-            Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-            Path(output_path).write_text(text_out + "\n", encoding="utf-8")
+        if scan_output_path:
+            Path(scan_output_path).parent.mkdir(parents=True, exist_ok=True)
+            Path(scan_output_path).write_text(text_out + "\n", encoding="utf-8")
         else:
             print(text_out)
     elif output_format == "jsonl":
         lines = _render_jsonl(result)
-        if output_path:
-            Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-            Path(output_path).write_text(lines, encoding="utf-8")
+        if scan_output_path:
+            Path(scan_output_path).parent.mkdir(parents=True, exist_ok=True)
+            Path(scan_output_path).write_text(lines, encoding="utf-8")
         else:
             print(lines, end="")
-    elif output_path:
+    elif scan_output_path:
         # --output without --format: default to JSON Lines
         lines = _render_jsonl(result)
-        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-        Path(output_path).write_text(lines, encoding="utf-8")
+        Path(scan_output_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(scan_output_path).write_text(lines, encoding="utf-8")
     elif getattr(args, "summary_only", False):
         _render_summary_only(result)
     elif getattr(args, "json", False):
@@ -1166,6 +1199,15 @@ def cmd_scan(args) -> int:
     # Stats summary
     if getattr(args, "stats", False):
         _render_stats(result)
+
+    # --pseudonymize: show pseudonymized text after normal output (v0.6.0)
+    if do_pseudonymize and pseudonymized_texts and not output_path:
+        print()
+        print("── 가명화 결과 (Pseudonymized) ──")
+        for fpath, ptext in pseudonymized_texts.items():
+            print(f"\n  {fpath}:")
+            for line in ptext.splitlines():
+                print(f"    {line}")
 
     # Exit code — with --baseline, no new findings means pass even with --fail-on-pii
     if getattr(args, "fail_on_pii", False) and result.has_pii:
