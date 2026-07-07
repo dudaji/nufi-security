@@ -26,5 +26,6 @@ demo_outputs/multitenancy/
 # 외부 데이터셋 캐시·다운로드 (CMP-307/CMP-308)
 goldset/.cache/
 data/external/
+data/external_datasets/
 data/.hf_cache/
 data/external_datasets/

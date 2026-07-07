@@ -4,6 +4,52 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.5.1] - 2026-07-07
+
+> **v0.5.1 — 프롬프트 인젝션 Phase 2: 동사 활용형 확장, Unicode 우회 탐지, 코드스위칭**
+> CMP-292 Phase 1에서 추가된 인젝션 탐지 기능 정리 + 테스트 보강, 미커밋 문서·스크립트 통합.
+
+### Added
+- **egress_audit/detectors/prompt_injection.py** — 동사 활용형 패턴 확장(`_V_END`, `_V_END2`), `code_switch` 카테고리 추가 (한영 혼합 탐지), Unicode zero-width 우회 탐지 패턴.
+- **egress_audit/normalize.py** — `normalize_for_injection()` 함수: NFKC 정규화, 제로폭 문자 제거, 자모 재조합.
+- **egress_audit/pipeline.py** — 프롬프트 인젝션 탐지 파이프라인 연동 변경.
+- **samples/injection_gold.jsonl** — 인젝션 골드셋 187건 추가.
+- **tests/test_prompt_injection.py** — 코드스위칭 패턴 테스트 6건 + Unicode 정규화 테스트 2건 추가 (총 41건).
+- **docs/NuFi_Security_Overview.md** — 보안 개요 문서.
+- **docs/reports/** — 벤치마크 보고서 (CMP-306, CMP-315, v0.5.0) 및 결과 JSON.
+- **docs/research/HYBRID_LLM_PRIVACY_ACCURACY.md** — 하이브리드 LLM 프라이버시 연구 문서.
+- **scripts/bench_ai4privacy.py**, **scripts/bench_external.py** — 외부 데이터셋 벤치마크 스크립트.
+- **scripts/train_koelectra_ner.py** — KoELECTRA NER 학습 스크립트.
+- **samples/gold/** — AI4Privacy 벤치마크 골드셋 데이터.
+
+### Changed
+- **.gitignore** — 모델 디렉토리 추가.
+- **docs/ROADMAP.md** — 로드맵 업데이트.
+- **docs/research/README.md** — 연구 문서 인덱스 업데이트.
+- **VERSION** — 0.5.0 → 0.5.1.
+
+---
+
+## [0.5.0] - 2026-07-07
+
+> **v0.5.0 — KoELECTRA fine-tuned 모델 릴리즈 + union flags 기본 활성화**
+> CMP-315에서 완성된 KoELECTRA fine-tuned ONNX-INT8 모델을 기본 모델로 통합.
+> `M5_LOCATION_UNION`, `M5_PERSON_UNION` 기본 활성화(on). 전체 acceptance criteria 통과.
+
+### Changed
+- **egress_audit/pipeline.py** — `M5_LOCATION_UNION`, `M5_PERSON_UNION` 환경변수 기본값 off → on 변경 (CMP-315 보드 승인). `=0`/`false`/`no`/`off` 로 비활성화 가능.
+- **VERSION** — 0.4.19 → 0.5.0
+
+### Highlights
+
+- **KoELECTRA fine-tuned 모델** — `Leo97/KoELECTRA-small-v3-modu-ner` 기반, corpus4everyone 117K 데이터로 fine-tuning. ONNX-INT8 14.7MB.
+- **KR_LOCATION F1**: 73.7% → **90.2%** (+16.5p, corpus4everyone 검증)
+- **KR_PERSON F1**: ~96.6% → **98.2%** (corpus4everyone 검증)
+- **내부 골드셋 (union 활성화)**: person_recall 0.9741, location_recall 1.0, pii_recall 0.9882, benign_false_block 0.0 — **ALL PASS**
+- **벤치마크 보고서**: `docs/reports/benchmark_report_v0.5.0.md`
+
+---
+
 ## [0.4.18] - 2026-07-06 (patch55~184)
 
 > **v0.4.18 — 프롬프트 인젝션 가드레일 + 파일 스캔 + REST API + CLI 확장**

@@ -78,13 +78,15 @@ class DetectionPipeline:
         self.secrets = SecretsDetector(cfg.get("secrets", []))
         # location_union(CMP-222 P3): 주소 채널만 모델 백엔드 ∪ 확장 규칙(P2) 유니온.
         # 운영에서 게이트웨이가 파이프라인을 내부 구성하므로 kwarg 미도달 시 env 로도
-        # 활성화한다(M5_LOCATION_UNION=1). 기본 off(하위호환). gazetteer 백엔드는 no-op.
-        env_loc_union = os.environ.get("M5_LOCATION_UNION", "").strip().lower() \
-            in ("1", "true", "yes", "on")
+        # 비활성화한다(M5_LOCATION_UNION=0). v0.5.0부터 기본 on(CMP-315 승인).
+        # gazetteer 백엔드는 no-op.
+        env_loc_union = os.environ.get("M5_LOCATION_UNION", "1").strip().lower() \
+            not in ("0", "false", "no", "off")
         # person_union(CMP-236): 인명 채널만 모델 백엔드 ∪ 규칙(경칭/직함/문맥 게이팅) 유니온.
-        # KR_LOCATION 유니온과 동일 플레이북. env M5_PERSON_UNION=1 로도 활성화.
-        env_per_union = os.environ.get("M5_PERSON_UNION", "").strip().lower() \
-            in ("1", "true", "yes", "on")
+        # KR_LOCATION 유니온과 동일 플레이북. v0.5.0부터 기본 on(CMP-315 승인).
+        # env M5_PERSON_UNION=0 으로 비활성화 가능.
+        env_per_union = os.environ.get("M5_PERSON_UNION", "1").strip().lower() \
+            not in ("0", "false", "no", "off")
         self.ner = KoreanNerDetector(
             backend=ner_backend, model_id=model_id,
             location_union=location_union or env_loc_union,

@@ -13,6 +13,7 @@
 | [`FSEC_AI_GUIDE_2026.md`](FSEC_AI_GUIDE_2026.md) | 금융분야 AI 보안 안내서(2026.6) NuFi 관련 점검항목 분석 — 컴플라이언스 매핑의 입력 원천 | 📄 참조 |
 | [`NUFI_SECURITY_PLANE_CHARTER.md`](NUFI_SECURITY_PLANE_CHARTER.md) | NuFi 보안·증빙 평면 차터 — 통합 플랫폼 내 소유 범위·통합 계약·가드레일 | 📄 참조 |
 | [`SOLUTION_FOCUS_OPTIONS.md`](SOLUTION_FOCUS_OPTIONS.md) | 솔루션 집중 방향 옵션 분석 — 2축 집중(규제 증빙 + 한국어 PII DLP) 보드 결정(2026-06-29) 배경 | 📄 참조 |
+| [`HYBRID_LLM_PRIVACY_ACCURACY.md`](HYBRID_LLM_PRIVACY_ACCURACY.md) | 하이브리드 LLM 파이프라인 — 가명화 환경에서 응답 품질 유지 방안 조사 | 📄 참조 |
 
 ---
 
@@ -26,6 +27,9 @@
 
 - **SOLUTION_FOCUS_OPTIONS.md** — 제품 방향 선택지 5개를 분석하고, 보드가 "규제 준수 증빙 게이트웨이 + 한국어 PII DLP"
   2축에 집중하기로 결정한 근거입니다. ROADMAP.md 의 P1(규제 증빙)·P2(SDK) 우선순위의 배경입니다.
+
+- **HYBRID_LLM_PRIVACY_ACCURACY.md** — 외부 LLM에 가명화된 데이터를 보낼 때 응답 품질 저하를 해소하는 방안을
+  조사한 자료입니다. 가역적 가명화, PRIV-QA, 민감도 기반 라우팅 등 5가지 접근 방식과 관련 논문·오픈소스를 정리합니다.
 
 ---
 
