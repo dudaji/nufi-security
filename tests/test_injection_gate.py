@@ -44,6 +44,36 @@ def test_benign_fp_rate_gate(injection_metrics):
     )
 
 
+def test_pattern_count_minimum():
+    """Built-in pattern count must be >= 40 (drift prevention)."""
+    from egress_audit.detectors.prompt_injection import _PATTERN_DEFS
+    count = len(_PATTERN_DEFS)
+    assert count >= 40, (
+        f"Built-in pattern count {count} < 40 — "
+        "PROMPT_INJECTION.md 문서와 코드가 불일치할 수 있습니다"
+    )
+
+
+def test_pattern_categories_match():
+    """All categories used in _PATTERN_DEFS must match PATTERN_CATEGORIES."""
+    from egress_audit.detectors.prompt_injection import (
+        PATTERN_CATEGORIES,
+        _PATTERN_DEFS,
+    )
+    used_categories = {cat for _, _, _, cat in _PATTERN_DEFS}
+    declared = set(PATTERN_CATEGORIES)
+    missing = used_categories - declared
+    assert not missing, (
+        f"_PATTERN_DEFS uses undeclared categories: {missing} — "
+        "PATTERN_CATEGORIES에 추가하세요"
+    )
+    unused = declared - used_categories
+    assert not unused, (
+        f"PATTERN_CATEGORIES declares unused categories: {unused} — "
+        "사용하지 않는 카테고리를 제거하세요"
+    )
+
+
 def test_run_benchmarks_injection_integration():
     """run_benchmarks(only='injection') returns passing injection results."""
     from enforcement.benchmark import run_benchmarks

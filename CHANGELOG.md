@@ -4,6 +4,20 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.5.3] - 2026-07-07
+
+> **v0.5.3 — 인젝션 문서 현행화 + 패턴 카운트 자동 검증**
+> CMP-324: PROMPT_INJECTION.md를 v0.5.1 코드 상태(45개 패턴, 5개 카테고리)에 맞게 업데이트하고, 문서-코드 드리프트를 CI로 방지.
+
+### Changed
+- **docs/PROMPT_INJECTION.md** — 패턴 카운트 18→45 현행화. 카테고리 목록에 `code_switch`, `indirect` 추가. 동사 활용형(`_V_END`, `_V_END2`), Unicode 정규화(`normalize_for_injection`), severity 체계, 벤치마크 결과 섹션 추가. 내장 패턴 vs 커스텀 패턴 테이블 업데이트.
+
+### Added
+- **tests/test_injection_gate.py** — 드리프트 방지 테스트 2건: `test_pattern_count_minimum` (≥ 40 assertion), `test_pattern_categories_match` (코드-문서 카테고리 일치 검증).
+- **VERSION** — 0.5.1 → 0.5.3.
+
+---
+
 ## [0.5.1] - 2026-07-07
 
 > **v0.5.1 — 프롬프트 인젝션 Phase 2: 동사 활용형 확장, Unicode 우회 탐지, 코드스위칭**
