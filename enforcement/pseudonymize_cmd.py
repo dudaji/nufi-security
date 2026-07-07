@@ -7,14 +7,17 @@
 - pseudonymize --restore: surrogate → 원본 복원
 - --file / --output: 파일 단위 처리
 - --json / --format json: JSON 출력
+- --quality-report: 품질 메트릭 리포트 출력 (v0.7.2)
 """
 from __future__ import annotations
 
 import json
 import sys
+import time
 import uuid
+from collections import defaultdict
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from egress_audit.reversible import ReversibleEgress
 
@@ -31,6 +34,7 @@ def cmd_pseudonymize(args) -> int:
     fmt = getattr(args, "format", None)
     if fmt == "json":
         use_json = True
+    quality_report = getattr(args, "quality_report", False)
 
     # --check mode: check files for PII, fail if found + suggest pseudonymization
     if check:
@@ -39,7 +43,8 @@ def cmd_pseudonymize(args) -> int:
 
     if restore:
         return _do_restore(text, file_path, output_path, session_id, use_json)
-    return _do_pseudonymize(text, file_path, output_path, session_id, use_json)
+    return _do_pseudonymize(text, file_path, output_path, session_id, use_json,
+                            quality_report=quality_report)
 
 
 def _do_pseudonymize(
@@ -48,6 +53,8 @@ def _do_pseudonymize(
     output_path: Optional[str],
     session_id: Optional[str],
     use_json: bool,
+    *,
+    quality_report: bool = False,
 ) -> int:
     if not text and not file_path:
         print("오류: 텍스트 인자 또는 --file 을 지정해야 합니다.", file=sys.stderr)
@@ -57,11 +64,19 @@ def _do_pseudonymize(
     sid = session_id or f"cli-{uuid.uuid4().hex[:12]}"
 
     if text:
+        t0 = time.perf_counter()
         result = rev.pseudonymize(text, sid)
+        elapsed_ms = (time.perf_counter() - t0) * 1000
         if result.blocked:
             return _output_blocked(text, result, sid, use_json)
+        report = None
+        if quality_report:
+            report = _build_quality_report(
+                rev, result, sid, elapsed_ms,
+            )
         return _output_pseudonymized(result.transformed_text, sid,
-                                     result.pseudonymized, use_json, output_path)
+                                     result.pseudonymized, use_json, output_path,
+                                     report=report)
 
     # File mode
     p = Path(file_path)  # type: ignore[arg-type]
@@ -70,11 +85,19 @@ def _do_pseudonymize(
         return 1
 
     content = p.read_text(encoding="utf-8")
+    t0 = time.perf_counter()
     result = rev.pseudonymize(content, sid)
+    elapsed_ms = (time.perf_counter() - t0) * 1000
     if result.blocked:
         return _output_blocked(content, result, sid, use_json)
+    report = None
+    if quality_report:
+        report = _build_quality_report(
+            rev, result, sid, elapsed_ms,
+        )
     return _output_pseudonymized(result.transformed_text, sid,
-                                 result.pseudonymized, use_json, output_path)
+                                 result.pseudonymized, use_json, output_path,
+                                 report=report)
 
 
 def _do_check(filenames: list) -> int:
@@ -192,26 +215,106 @@ def _output_blocked(
     return 0
 
 
+def _build_quality_report(
+    rev: ReversibleEgress,
+    result,
+    session_id: str,
+    elapsed_ms: float,
+) -> Dict[str, Any]:
+    """Build quality metrics for a pseudonymization result."""
+    from egress_audit.surrogate import REVERSIBLE_ENTITIES
+
+    findings = result.findings
+    # Count total PII entities detected (reversible types only)
+    total_entities = len([f for f in findings if f.entity_type in REVERSIBLE_ENTITIES])
+    pseudonymized = result.pseudonymized
+
+    coverage = (pseudonymized / total_entities) if total_entities > 0 else 1.0
+
+    # Per-type statistics
+    by_type: Dict[str, Dict[str, int]] = {}
+    type_counts: Dict[str, int] = defaultdict(int)
+    for f in findings:
+        if f.entity_type in REVERSIBLE_ENTITIES:
+            type_counts[f.entity_type] += 1
+    for etype, cnt in type_counts.items():
+        by_type[etype] = {"count": cnt, "success": cnt}
+
+    # Reversal accuracy: pseudonymize → deanonymize roundtrip check
+    reversal_accuracy = 1.0
+    if pseudonymized > 0:
+        restored, _stats = rev.deanonymize(result.transformed_text, session_id)
+        # Compare restored against original findings
+        matched = 0
+        for f in findings:
+            if f.entity_type in REVERSIBLE_ENTITIES:
+                if f.text in restored:
+                    matched += 1
+                else:
+                    # Mark failure in by_type
+                    if f.entity_type in by_type:
+                        by_type[f.entity_type]["success"] = max(
+                            0, by_type[f.entity_type]["success"] - 1
+                        )
+        reversal_accuracy = (matched / pseudonymized) if pseudonymized > 0 else 1.0
+
+    return {
+        "total_entities": total_entities,
+        "pseudonymized": pseudonymized,
+        "coverage": round(coverage, 4),
+        "reversal_accuracy": round(reversal_accuracy, 4),
+        "by_type": dict(by_type),
+        "elapsed_ms": round(elapsed_ms, 1),
+    }
+
+
+def _render_quality_text(report: Dict[str, Any]) -> str:
+    """Render quality report as human-readable text table."""
+    lines = [
+        "",
+        "── 품질 메트릭 리포트 ──────────────────────────",
+        f"  총 엔티티 수        : {report['total_entities']}",
+        f"  가명화 수           : {report['pseudonymized']}",
+        f"  엔티티 커버리지     : {report['coverage']:.1%}",
+        f"  역변환 정확도       : {report['reversal_accuracy']:.1%}",
+        f"  처리 시간           : {report['elapsed_ms']:.1f} ms",
+    ]
+    if report["by_type"]:
+        lines.append("  타입별 통계:")
+        for etype, stats in sorted(report["by_type"].items()):
+            lines.append(
+                f"    {etype:20s}  건수={stats['count']}  성공={stats['success']}"
+            )
+    lines.append("────────────────────────────────────────────────")
+    return "\n".join(lines)
+
+
 def _output_pseudonymized(
     transformed: str,
     session_id: str,
     count: int,
     use_json: bool,
     output_path: Optional[str],
+    *,
+    report: Optional[Dict[str, Any]] = None,
 ) -> int:
     if use_json:
-        obj = {
+        obj: Dict[str, Any] = {
             "mode": "pseudonymize",
             "blocked": False,
             "session_id": session_id,
             "transformed_text": transformed,
             "pseudonymized_count": count,
         }
+        if report is not None:
+            obj["quality_report"] = report
         out = json.dumps(obj, ensure_ascii=False, indent=2)
     else:
         out = transformed
         # Print session ID to stderr so it doesn't mix with transformed text
         print(f"[session: {session_id}]", file=sys.stderr)
+        if report is not None:
+            print(_render_quality_text(report), file=sys.stderr)
 
     if output_path:
         Path(output_path).parent.mkdir(parents=True, exist_ok=True)

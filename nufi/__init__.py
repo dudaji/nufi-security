@@ -50,6 +50,57 @@ from egress_audit.pseudonymize import (  # noqa: E402
 )
 from egress_audit.reversible import ReversibleEgress  # noqa: E402
 
+
+def pseudonymize_with_report(
+    text: str,
+    *,
+    session_id: str | None = None,
+) -> dict[str, Any]:
+    """가명화 실행 + 품질 메트릭 리포트를 함께 반환한다 — 한 줄 호출.
+
+    Returns a dict with ``transformed_text``, ``session_id``,
+    ``pseudonymized_count``, ``blocked``, and ``quality_report``.
+
+    >>> result = pseudonymize_with_report("김철수 010-1234-5678")
+    >>> result["quality_report"]["coverage"]
+    1.0
+    """
+    import time
+    import uuid
+    from enforcement.pseudonymize_cmd import _build_quality_report
+
+    rev = ReversibleEgress(ner_backend="gazetteer")
+    sid = session_id or f"sdk-{uuid.uuid4().hex[:12]}"
+
+    t0 = time.perf_counter()
+    result = rev.pseudonymize(text, sid)
+    elapsed_ms = (time.perf_counter() - t0) * 1000
+
+    if result.blocked:
+        return {
+            "transformed_text": result.transformed_text,
+            "session_id": sid,
+            "pseudonymized_count": 0,
+            "blocked": True,
+            "quality_report": {
+                "total_entities": 0,
+                "pseudonymized": 0,
+                "coverage": 1.0,
+                "reversal_accuracy": 1.0,
+                "by_type": {},
+                "elapsed_ms": round(elapsed_ms, 1),
+            },
+        }
+
+    report = _build_quality_report(rev, result, sid, elapsed_ms)
+    return {
+        "transformed_text": result.transformed_text,
+        "session_id": sid,
+        "pseudonymized_count": result.pseudonymized,
+        "blocked": False,
+        "quality_report": report,
+    }
+
 # ---------------------------------------------------------------------------
 # 정책 평가 (Policy evaluation) — §2.4
 # ---------------------------------------------------------------------------
@@ -306,6 +357,7 @@ __all__ = [
     "Finding",
     # pseudonymization
     "pseudonymize",
+    "pseudonymize_with_report",
     "mask",
     "redact",
     "ReversibleEgress",

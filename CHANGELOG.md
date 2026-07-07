@@ -4,6 +4,22 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.7.2] - 2026-07-07
+
+> **v0.7.2 — pseudonymize 품질 메트릭 리포트 (CMP-337)**
+
+### Added
+- **`pseudonymize --quality-report`** — 가명화 실행 시 품질 메트릭 리포트 출력: 엔티티 커버리지, 역변환 정확도, 타입별 통계, 처리 시간.
+- **`--format text`** (기본) — 사람이 읽기 좋은 표 형태 stderr 출력.
+- **`--format json`** — `quality_report` 키로 구조화된 JSON 포함.
+- **SDK `pseudonymize_with_report()`** — `from nufi import pseudonymize_with_report`; 반환값에 `quality_report` dict 포함.
+- **tests/test_cmp337_quality_report.py** — JSON 스키마 검증, 역변환 정확도 100% 검증, 타입별 통계, PII 없는 입력 빈 리포트, SDK API 검증 등 7개 테스트.
+
+### Changed
+- **VERSION** — 0.7.1 → 0.7.2
+
+---
+
 ## [0.7.1] - 2026-07-07
 
 > **v0.7.1 — guard 통합 CLI 커맨드: scan + enforce + pseudonymize (CMP-336)**
