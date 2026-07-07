@@ -1288,6 +1288,10 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="특정 엔티티 타입만 보고(쉼표 구분, 예: KR_RRN,SECRET,CREDIT_CARD)")
     p.add_argument("--pseudonymize", action="store_true",
                    help="PII 발견 시 가명화된 텍스트도 함께 출력; --output 시 가명화 파일 저장 (v0.6.0)")
+    p.add_argument("--watch", action="store_true",
+                   help="디렉터리 실시간 감시 모드 — 파일 생성/수정 시 자동 스캔 (v0.7.3)")
+    p.add_argument("--watch-interval", type=float, default=1.0, metavar="SECONDS",
+                   help="--watch 폴링 간격(초, 기본 1.0)")
     p.set_defaults(func=cmd_scan)
 
     p = sub.add_parser("diff",

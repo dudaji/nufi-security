@@ -4,6 +4,22 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.7.3] - 2026-07-08
+
+> **v0.7.3 — scan --watch 실시간 파일 모니터링 (CMP-338)**
+
+### Added
+- **`scan --watch <directory>`** — 디렉터리 실시간 감시 모드: 파일 생성/수정 시 자동 PII 스캔, 결과를 실시간 stdout 출력. Ctrl+C 로 종료.
+- **`--watch-interval <seconds>`** (기본 1초) — 폴링 간격 설정.
+- **watchdog 기반 inotify 감시** — watchdog 라이브러리 설치 시 inotify 기반 고성능 감시, 미설치 시 mtime 폴링 자동 fallback.
+- **`--format text|json` 지원** — watch 모드에서도 기존 scan 포맷 재사용. JSON 출력 시 타임스탬프·파일경로·findings 구조화.
+- **tests/test_scan_watch.py** — watch 모드 시작/종료, 파일 변경 감지, 폴링 fallback, interval 옵션, JSON 출력, exclude 패턴 등 11개 테스트.
+
+### Changed
+- **VERSION** — 0.7.2 → 0.7.3
+
+---
+
 ## [0.7.2] - 2026-07-07
 
 > **v0.7.2 — pseudonymize 품질 메트릭 리포트 (CMP-337)**

@@ -14,6 +14,7 @@ SDK 에서도 ``from nufi import scan_dir`` 로 사용 가능.
 --ignore-file PATH 로 false positive 억제 (patch178).
 --baseline PATH 로 이전 스캔 결과와 비교하여 신규 발견만 출력 (patch181).
 --count-only 로 발견 건수만 빠르게 출력 (patch182).
+--watch 모드로 디렉터리 실시간 파일 모니터링 + PII 탐지 (v0.7.3).
 """
 from __future__ import annotations
 
@@ -23,6 +24,8 @@ import json
 import os
 import shutil
 import subprocess
+import sys
+import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -1001,6 +1004,29 @@ def cmd_scan(args) -> int:
         profile = resolve_profile(profile_name)
         apply_profile_to_args(profile, args)
 
+    # --watch: real-time file monitoring mode (v0.7.3)
+    if getattr(args, "watch", False):
+        if not target:
+            print("Error: --watch requires a target directory")
+            return 2
+        watch_patterns: Optional[List[str]] = None
+        if getattr(args, "pattern", None):
+            watch_patterns = [p.strip() for p in args.pattern.split(",") if p.strip()]
+        watch_exclude: Optional[List[str]] = None
+        if getattr(args, "exclude", None):
+            watch_exclude = [p.strip() for p in args.exclude.split(",") if p.strip()]
+        output_format = getattr(args, "format", None)
+        if not output_format and getattr(args, "json", False):
+            output_format = "json"
+        return scan_watch(
+            target,
+            interval=getattr(args, "watch_interval", 1.0),
+            check_injection=getattr(args, "check_injection", False),
+            patterns=watch_patterns,
+            exclude=watch_exclude,
+            output_format=output_format,
+        )
+
     # --git-staged: scan only staged files (patch171)
     if getattr(args, "git_staged", False):
         patterns_list: Optional[List[str]] = None
@@ -1210,6 +1236,239 @@ def cmd_scan(args) -> int:
     # Exit code — with --baseline, no new findings means pass even with --fail-on-pii
     if getattr(args, "fail_on_pii", False) and result.has_pii:
         return 1
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Watch mode — real-time file monitoring (v0.7.3)
+# ---------------------------------------------------------------------------
+
+def _get_mtime(path: Path) -> Optional[float]:
+    """Get file mtime, returning None if file doesn't exist."""
+    try:
+        return os.stat(path).st_mtime
+    except OSError:
+        return None
+
+
+def _collect_watchable_files(
+    directory: Path,
+    patterns: Optional[List[str]],
+    exclude_patterns: List[str],
+) -> List[Path]:
+    """Collect all matching non-binary files in directory."""
+    files: List[Path] = []
+    for root, _dirs, fnames in os.walk(directory):
+        for fname in sorted(fnames):
+            fpath = Path(root) / fname
+            if _is_excluded(fpath, directory, exclude_patterns):
+                continue
+            if not _matches_patterns(fpath, patterns):
+                continue
+            if _is_binary(fpath):
+                continue
+            files.append(fpath)
+    return files
+
+
+def _format_watch_event(
+    path: Path,
+    result: ScanResult,
+    output_format: Optional[str],
+    timestamp: str,
+) -> str:
+    """Format a watch event for output."""
+    if output_format == "json":
+        event = {
+            "timestamp": timestamp,
+            "file": str(path),
+            "findings": [
+                {
+                    "line": f.line,
+                    "finding_type": f.finding_type,
+                    "text": f.text,
+                    "score": f.score,
+                }
+                for f in result.findings
+            ],
+        }
+        return json.dumps(event, ensure_ascii=False)
+    # text format
+    lines: List[str] = []
+    for f in result.findings:
+        lines.append(f"[{timestamp}] {path}: L{f.line} [{f.finding_type}] {f.text}")
+    return "\n".join(lines)
+
+
+def scan_watch(
+    directory: str | Path,
+    *,
+    interval: float = 1.0,
+    check_injection: bool = False,
+    patterns: Optional[List[str]] = None,
+    exclude: Optional[List[str]] = None,
+    output_format: Optional[str] = None,
+    _stop_after: Optional[int] = None,
+) -> int:
+    """Watch a directory for file changes and scan for PII in real time.
+
+    Uses watchdog (inotify) if available, otherwise falls back to mtime polling.
+
+    Args:
+        directory: Path to directory to watch.
+        interval: Polling interval in seconds (default 1.0).
+        check_injection: Also detect prompt injection patterns.
+        patterns: Glob patterns to filter files.
+        exclude: Glob patterns to exclude files.
+        output_format: Output format — "text" (default) or "json".
+        _stop_after: (testing) Stop after this many scan cycles.
+
+    Returns:
+        Exit code 0.
+    """
+    directory = Path(directory)
+    if not directory.is_dir():
+        print(f"Error: {directory} is not a directory")
+        return 2
+
+    # Build exclusion patterns
+    if exclude is None:
+        exclude_patterns = load_nufiignore(directory)
+    else:
+        exclude_patterns = list(exclude)
+
+    # Try watchdog-based watcher, fall back to polling
+    try:
+        return _watch_with_watchdog(
+            directory, interval=interval, check_injection=check_injection,
+            patterns=patterns, exclude_patterns=exclude_patterns,
+            output_format=output_format, _stop_after=_stop_after,
+        )
+    except ImportError:
+        return _watch_with_polling(
+            directory, interval=interval, check_injection=check_injection,
+            patterns=patterns, exclude_patterns=exclude_patterns,
+            output_format=output_format, _stop_after=_stop_after,
+        )
+
+
+def _on_file_changed(
+    path: Path,
+    pipeline: DetectionPipeline,
+    injection_detector: Optional[PromptInjectionDetector],
+    output_format: Optional[str],
+) -> None:
+    """Scan a changed file and print results if findings exist."""
+    if _is_binary(path):
+        return
+    result = ScanResult()
+    _scan_file(path, pipeline, injection_detector, result, patterns=None)
+    if result.findings:
+        ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        output = _format_watch_event(path, result, output_format, ts)
+        print(output, flush=True)
+
+
+def _watch_with_watchdog(
+    directory: Path,
+    *,
+    interval: float,
+    check_injection: bool,
+    patterns: Optional[List[str]],
+    exclude_patterns: List[str],
+    output_format: Optional[str],
+    _stop_after: Optional[int],
+) -> int:
+    """Watch using watchdog (inotify on Linux)."""
+    from watchdog.observers import Observer  # type: ignore[import-untyped]
+    from watchdog.events import FileSystemEventHandler, FileSystemEvent  # type: ignore[import-untyped]
+
+    pipeline = DetectionPipeline()
+    injection_detector = PromptInjectionDetector() if check_injection else None
+
+    class _Handler(FileSystemEventHandler):
+        def on_created(self, event: FileSystemEvent) -> None:
+            if event.is_directory:
+                return
+            self._handle(event.src_path)
+
+        def on_modified(self, event: FileSystemEvent) -> None:
+            if event.is_directory:
+                return
+            self._handle(event.src_path)
+
+        def _handle(self, src_path: str) -> None:
+            fpath = Path(src_path)
+            if _is_excluded(fpath, directory, exclude_patterns):
+                return
+            if not _matches_patterns(fpath, patterns):
+                return
+            _on_file_changed(fpath, pipeline, injection_detector, output_format)
+
+    observer = Observer()
+    observer.schedule(_Handler(), str(directory), recursive=True)
+    observer.start()
+    print(f"[watch] Monitoring {directory} (watchdog, interval={interval}s)",
+          flush=True)
+    try:
+        if _stop_after is not None:
+            for _ in range(_stop_after):
+                time.sleep(interval)
+            observer.stop()
+        else:
+            while True:
+                time.sleep(interval)
+    except KeyboardInterrupt:
+        observer.stop()
+        print("\n[watch] Stopped.")
+    observer.join()
+    return 0
+
+
+def _watch_with_polling(
+    directory: Path,
+    *,
+    interval: float,
+    check_injection: bool,
+    patterns: Optional[List[str]],
+    exclude_patterns: List[str],
+    output_format: Optional[str],
+    _stop_after: Optional[int],
+) -> int:
+    """Watch using mtime polling fallback."""
+    # Build initial mtime cache BEFORE heavy pipeline init
+    mtime_cache: Dict[str, float] = {}
+    files = _collect_watchable_files(directory, patterns, exclude_patterns)
+    for f in files:
+        mt = _get_mtime(f)
+        if mt is not None:
+            mtime_cache[str(f)] = mt
+
+    pipeline = DetectionPipeline()
+    injection_detector = PromptInjectionDetector() if check_injection else None
+
+    print(f"[watch] Monitoring {directory} (polling, interval={interval}s, "
+          f"{len(mtime_cache)} files tracked)", flush=True)
+
+    cycle = 0
+    try:
+        while True:
+            time.sleep(interval)
+            cycle += 1
+            files = _collect_watchable_files(directory, patterns, exclude_patterns)
+            for f in files:
+                mt = _get_mtime(f)
+                if mt is None:
+                    continue
+                fkey = str(f)
+                prev_mt = mtime_cache.get(fkey)
+                if prev_mt is None or mt > prev_mt:
+                    _on_file_changed(f, pipeline, injection_detector, output_format)
+                    mtime_cache[fkey] = mt
+            if _stop_after is not None and cycle >= _stop_after:
+                break
+    except KeyboardInterrupt:
+        print("\n[watch] Stopped.")
     return 0
 
 
