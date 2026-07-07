@@ -1,6 +1,6 @@
-"""``nufi-egress test`` -- self-verification command (patch135).
+"""``nufi-egress test`` -- self-verification command (patch135, v0.7.8).
 
-Runs 7 quick checks to verify NuFi is installed and working correctly:
+Runs 11 quick checks to verify NuFi is installed and working correctly:
   1. PII detection works (detects KR_PERSON in test text)
   2. Injection detection works (detects known pattern)
   3. Route decision works (PII -> local)
@@ -8,9 +8,13 @@ Runs 7 quick checks to verify NuFi is installed and working correctly:
   5. Config files parseable
   6. Version matches
   7. Pseudonymize roundtrip (reversible pseudonymize → deanonymize)
+  8. Guard command exists (v0.7.8)
+  9. scan --format json output validation (v0.7.8)
+ 10. scan --profile profile loading (v0.7.8)
+ 11. Doctor check count ≥ 11 (v0.7.8)
 
 Each check: PASS/FAIL with timing.
-Summary: "7/7 checks passed in X.XXs"
+Summary: "11/11 checks passed in X.XXs"
 Exit 0 if all pass, 1 otherwise.
 """
 from __future__ import annotations
@@ -152,6 +156,72 @@ def _check_pseudonymize_roundtrip() -> CheckResult:
         return CheckResult("pseudonymize", False, _ms(t0), f"error: {exc}")
 
 
+def _check_guard_command() -> CheckResult:
+    """Check 8: Guard command exists and is importable."""
+    t0 = time.monotonic()
+    try:
+        from enforcement.guard_cmd import cmd_guard
+        ok = callable(cmd_guard)
+        detail = "guard command importable" if ok else "cmd_guard not callable"
+        return CheckResult("guard_command", ok, _ms(t0), detail)
+    except Exception as exc:
+        return CheckResult("guard_command", False, _ms(t0), f"error: {exc}")
+
+
+def _check_scan_format_json() -> CheckResult:
+    """Check 9: scan --format json produces valid JSON output."""
+    t0 = time.monotonic()
+    try:
+        import json as _json
+        import tempfile
+        import os
+        # Write a temp file with PII, scan it, check JSON output
+        sample = "고객 홍길동님 연락처 010-1234-5678"
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as f:
+            f.write(sample)
+            tmp_path = f.name
+        try:
+            from enforcement.scan_cmd import scan_path, _render_json
+            result = scan_path(tmp_path)
+            output = _render_json(result, target=tmp_path)
+            doc = _json.loads(output)
+            ok = "findings" in doc and "summary" in doc
+            detail = f"JSON keys={sorted(doc.keys())}" if ok else f"missing expected keys in {sorted(doc.keys())}"
+            return CheckResult("scan_format_json", ok, _ms(t0), detail)
+        finally:
+            os.unlink(tmp_path)
+    except Exception as exc:
+        return CheckResult("scan_format_json", False, _ms(t0), f"error: {exc}")
+
+
+def _check_scan_profile() -> CheckResult:
+    """Check 10: scan --profile loads built-in profiles."""
+    t0 = time.monotonic()
+    try:
+        from enforcement.scan_profiles import load_profiles
+        profiles = load_profiles()
+        expected = {"strict", "standard", "minimal", "financial"}
+        found = expected & set(profiles.keys())
+        ok = found == expected
+        detail = f"profiles={sorted(profiles.keys())}" if ok else f"missing={sorted(expected - found)}"
+        return CheckResult("scan_profile", ok, _ms(t0), detail)
+    except Exception as exc:
+        return CheckResult("scan_profile", False, _ms(t0), f"error: {exc}")
+
+
+def _check_doctor_count() -> CheckResult:
+    """Check 11: Doctor has ≥ 11 checks."""
+    t0 = time.monotonic()
+    try:
+        from enforcement.doctor import _CHECKS
+        count = len(_CHECKS)
+        ok = count >= 11
+        detail = f"doctor checks={count}" if ok else f"doctor checks={count} (expected ≥11)"
+        return CheckResult("doctor_count", ok, _ms(t0), detail)
+    except Exception as exc:
+        return CheckResult("doctor_count", False, _ms(t0), f"error: {exc}")
+
+
 def _ms(t0: float) -> float:
     return (time.monotonic() - t0) * 1000
 
@@ -168,6 +238,10 @@ ALL_CHECKS = [
     _check_config_parseable,
     _check_version_matches,
     _check_pseudonymize_roundtrip,
+    _check_guard_command,
+    _check_scan_format_json,
+    _check_scan_profile,
+    _check_doctor_count,
 ]
 
 

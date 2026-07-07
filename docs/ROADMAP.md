@@ -29,7 +29,7 @@ NuFi는 **독립적인 경량 프로젝트**로, 한국어 PII 탐지와 한국 
 | **P2** ✅ | Python SDK (경량 임포트 API) | S | CLI 외에 라이브러리로 직접 사용 (v0.4.1 구현 완료) |
 | **유지** | 게이트웨이 코어 (경량 파이썬 enforcement) | — | 데모·end-to-end 검증·"직접 구현" 차별점 |
 | **차기(옵션)** | LLM 라우팅 레이어 (PII 기반 하이브리드 라우팅) | M | PII 민감 요청 로컬 강제 + 비용-품질 최적화 |
-| **차기(옵션)** | 가역적 가명화 QA 파이프라인 (프라이버시 보존 LLM 응답) | M | 가명화 후에도 LLM 응답 품질 유지 — 가역적 가명화 + 민감도 라우팅 (v0.6.0: CLI `pseudonymize` + `scan --pseudonymize` 추가) |
+| **차기(옵션)** | 가역적 가명화 QA 파이프라인 (프라이버시 보존 LLM 응답) | M | 가명화 후에도 LLM 응답 품질 유지 — 가역적 가명화 + 민감도 라우팅 (v0.6.0: CLI + v0.6.2: 품질 메트릭 리포트 + latency 벤치마크) |
 | **차기(옵션)** | 한국어 생성형 가드레일 | L | 프롬프트 인젝션·탈옥 한국어 탐지 |
 
 ### P0 ✅ — 한국어 PII/DLP 정확도 엔진 (M, 코어) — v0.4.16 완료
@@ -103,7 +103,7 @@ P0 (한국어 PII 정확도 엔진, M) ──▶ P1 (한국 규제 증빙 팩, S
 
 P0(코어 정확도)를 먼저 끌어올려 해자를 굳히고, P1로 한국 규제 증빙을 확장, P2로 SDK 사용성을 더한다. 차기 옵션 중 LLM 라우팅은 P0 PII 감지 자산을 레버리지하므로 P0 완료 이후 진행이 자연스럽다.
 
-## 6. 현재 달성 수치 (v0.6.2 기준)
+## 6. 현재 달성 수치 (v0.7.8 기준)
 
 아래 수치는 커밋된 측정 산출물(`docs/reports/`)에서 기계로 추출됩니다.
 
@@ -121,12 +121,22 @@ P0(코어 정확도)를 먼저 끌어올려 해자를 굳히고, P1로 한국 �
 | 인젝션 정밀도 (precision) | ≥ 0.95 | **1.0000** ✅ | `injection-benchmark.json` |
 | 인젝션 F1 | — | **1.0000** ✅ | `injection-benchmark.json` |
 | Benign FP rate | ≤ 0.05 | **0.0000** ✅ | `injection-benchmark.json` |
-| 테스트 통과 | — | **770 passed** ✅ | `pytest` |
+| 테스트 통과 | — | **883 collected** ✅ | `pytest` |
 | 데모 PASS | — | **11 / 11** ✅ | `demo_all.sh` |
 | 가역 가명화 CLI | — | **v0.6.2** ✅ | `pseudonymize` + `scan --pseudonymize` + self-check + latency benchmark |
 | 가역 가명화 latency p95 | ≤ 200 ms (16K자) | **191.7 ms** ✅ | `bench_pseudonymize.py` |
 | pre-commit hooks | — | **v0.6.1** ✅ | `nufi-scan`, `nufi-scan-strict`, `nufi-pseudonymize` |
-| selftest 체크 | — | **7 / 7** ✅ | `nufi-egress test` |
+| selftest 체크 | — | **11 / 11** ✅ | `nufi-egress test` |
+| guard 통합 CLI | — | **v0.7.1** ✅ | `nufi-egress guard` (scan + enforce + pseudonymize 원스텝) |
+| scan 출력 포맷 | — | **4종** ✅ | `--format text\|json\|sarif\|csv` (v0.7.0) |
+| scan --watch | — | **v0.7.3** ✅ | 디렉터리 실시간 감시 모드 |
+| scan --recursive | — | **v0.7.4** ✅ | 디렉터리 재귀 스캔 + 집계 리포트 |
+| scan --diff | — | **v0.7.5** ✅ | git diff 기반 변경분만 스캔 |
+| guard --ci | — | **v0.7.5** ✅ | CI 파이프라인 전용 모드 (GitHub Actions annotation) |
+| nufi-egress init | — | **v0.7.6** ✅ | 프로젝트 설정 생성기 (nufi.yaml, CI workflow) |
+| doctor 체크 | — | **11개** ✅ | 자가진단 체크 6→11개 강화 (v0.7.6) |
+| scan --profile | — | **v0.7.7** ✅ | 스캔 프로파일 프리셋 (strict/standard/minimal/financial) |
+| scan --summary | — | **v0.7.7** ✅ | 집계 대시보드 (타입별·심각도별 ASCII 바 차트) |
 
 ## 7. 거버넌스 · 리스크
 

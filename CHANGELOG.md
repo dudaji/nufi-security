@@ -4,6 +4,66 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.7.8] - 2026-07-08
+
+> **v0.7.8 — CHANGELOG 통합 + ROADMAP 수치 갱신 + selftest 체크 추가 (CMP-344)**
+
+### Added
+- **selftest 체크 4개 추가** — guard 커맨드 존재, scan --format json 출력 검증, scan --profile 프로파일 로딩, doctor 체크 수 ≥11 검증. 총 11개 self-check.
+
+### Changed
+- **CHANGELOG.md** — v0.7.0~v0.7.7 누락 엔트리 보완 (v0.7.6, v0.7.7 추가).
+- **ROADMAP.md §6** — 현재 달성 수치 갱신 (테스트 수, selftest 체크 수, 새 기능 반영).
+- **VERSION** — 0.7.7 → 0.7.8
+
+---
+
+## [0.7.7] - 2026-07-08
+
+> **v0.7.7 — scan --profile (스캔 프로파일 프리셋) + scan --summary 집계 대시보드 (CMP-342)**
+
+### Added
+- **`scan --profile NAME`** — 스캔 프로파일 프리셋 적용: `strict`, `standard`, `minimal`, `financial` 4종 내장 프로파일.
+  - `strict` — 모든 엔티티 타입 스캔, score 임계 0.5, 발견 시 exit 1.
+  - `standard` — 주요 엔티티만 (KR_RRN, CREDIT_CARD, KR_ACCOUNT, EMAIL), score 임계 0.7.
+  - `minimal` — KR_RRN + CREDIT_CARD만, score 임계 0.9.
+  - `financial` — 금융 관련 엔티티 집중 (KR_ACCOUNT, CREDIT_CARD, KR_RRN).
+- **`nufi.yaml` 커스텀 프로파일** — `scan_profiles` 키 아래 사용자 정의 프로파일 지정 가능.
+- **`scan --summary`** — 집계 대시보드 출력: 타입별·심각도별 ASCII 바 차트.
+- **JSON 출력 확장** — `--summary` 사용 시 JSON summary에 `files_scanned`, `files_with_findings`, `by_severity` 추가.
+- **`only_types`, `min_score` 프로파일 키** — 프로파일에서 엔티티 타입 필터·최소 점수 임계값 설정.
+- **tests/test_cmp342_profile_summary.py** — 프로파일 로딩·적용, 내장 프로파일 4종, 커스텀 프로파일, summary 대시보드, JSON summary 확장 등 테스트.
+
+### Changed
+- **VERSION** — 0.7.6 → 0.7.7
+
+---
+
+## [0.7.6] - 2026-07-08
+
+> **v0.7.6 — nufi-egress init 프로젝트 설정 생성기 + doctor 자가진단 강화 (CMP-341)**
+
+### Added
+- **`nufi-egress init` 확장** — 프로젝트 초기 설정 생성기:
+  - `nufi.yaml` — 스캔 설정 (exclude 패턴, 정책, 포맷).
+  - `.pre-commit-config.yaml` — pre-commit hook 추가 (기존 파일이면 nufi 훅만 append).
+  - `.github/workflows/nufi-scan.yml` — GitHub Actions CI 워크플로우.
+- **`init --ci github|gitlab`** — CI 플랫폼별 설정 자동 생성.
+- **`init --dry-run`** — 생성될 파일 미리보기.
+- **`init --default`** — 인터랙티브 프롬프트 없이 기본값 사용.
+- **doctor 체크 5개 추가** (체크 7~11):
+  - Python 버전 호환성 (≥3.9).
+  - 필수 의존성 설치 상태.
+  - nufi.yaml 설정 유효성.
+  - git pre-commit hook 설치 상태.
+  - 모델 파일 존재·무결성.
+- **tests/test_cmp341_init_doctor.py** — init 설정 생성, dry-run, CI 플랫폼별 생성, doctor 신규 체크 등 테스트.
+
+### Changed
+- **VERSION** — 0.7.5 → 0.7.6
+
+---
+
 ## [0.7.5] - 2026-07-08
 
 > **v0.7.5 — scan --diff (git diff 기반 변경분만 스캔) + guard --ci 모드 (CMP-340)**
