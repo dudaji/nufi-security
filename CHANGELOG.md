@@ -4,6 +4,26 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.7.0] - 2026-07-07
+
+> **v0.7.0 — scan 출력 포맷 다양화: --format json|sarif|csv (CMP-335)**
+
+### Added
+- **enforcement/scan_cmd.py** — `scan --format` 옵션 확장: `text` (기본), `json`, `sarif`, `csv` 4종 포맷 지원.
+- **`--format json`** — 구조화 JSON 출력 (`version`, `scan_target`, `findings[]`, `summary`).
+- **`--format sarif`** — SARIF v2.1.0 스키마 준수, `tool.driver.name: nufi-egress` (GitHub Code Scanning 통합).
+- **`--format csv`** — CSV 출력 (`entity_type,text,start,end,score` 헤더).
+- **`--json` 플래그** — `--format json` 별칭으로 동작 (하위 호환).
+- **tests/test_scan_cmd.py** — JSON 스키마 검증, SARIF 검증, CSV 파싱 검증 테스트 추가.
+
+### Changed
+- **enforcement/cli.py** — `--format` 선택지를 `[sarif, jsonl]` → `[text, json, sarif, csv]` 로 변경.
+- **enforcement/scan_cmd.py** — SARIF driver name `NuFi` → `nufi-egress`.
+- **enforcement/scan_cmd.py** — CSV 헤더를 `entity_type,text,start,end,score` 로 변경 (start/end 위치 정보 포함).
+- **VERSION** — 0.6.3 → 0.7.0
+
+---
+
 ## [0.6.2] - 2026-07-07
 
 > **v0.6.2 — test self-check 가명화 검증 + pseudonymize 벤치마크 (CMP-332)**

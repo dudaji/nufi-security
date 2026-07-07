@@ -175,7 +175,7 @@ class TestSarifOutput:
         assert len(sarif["runs"]) == 1
 
         run = sarif["runs"][0]
-        assert run["tool"]["driver"]["name"] == "NuFi"
+        assert run["tool"]["driver"]["name"] == "nufi-egress"
         assert isinstance(run["tool"]["driver"]["rules"], list)
         assert len(run["tool"]["driver"]["rules"]) >= 1
 

@@ -4,8 +4,7 @@ CI/pre-commit 훅에서 사용 가능한 파일·디렉터리 재귀 스캔 명�
 SDK 에서도 ``from nufi import scan_dir`` 로 사용 가능.
 
 .nufiignore 파일 또는 --exclude 플래그로 스캔 대상에서 제외할 패턴 지정 가능.
---format sarif 옵션으로 SARIF 2.1.0 JSON 출력 지원 (GitHub code scanning 호환).
---format csv 옵션으로 CSV 출력 지원 (patch180).
+--format text|json|sarif|csv 옵션으로 출력 포맷 선택 (v0.7.0).
 --redact 모드로 PII 를 자동 치환하여 파일을 재작성 (patch88).
 --parallel N 으로 멀티스레드 스캔 지원 (patch97).
 --cache 로 파일 해시 기반 결과 캐싱 (patch101).
@@ -816,7 +815,7 @@ def scan_result_to_sarif(result: "ScanResult") -> Dict[str, Any]:
         "runs": [{
             "tool": {
                 "driver": {
-                    "name": "NuFi",
+                    "name": "nufi-egress",
                     "version": _nufi_version(),
                     "rules": list(seen_rules.values()),
                 }
@@ -1018,11 +1017,15 @@ def cmd_scan(args) -> int:
             cache=getattr(args, "cache", False),
         )
         output_format = getattr(args, "format", None)
-        if getattr(args, "json", False):
-            print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        if not output_format and getattr(args, "json", False):
+            output_format = "json"
+        if output_format == "json":
+            print(_render_json(result, target="git-staged"))
         elif output_format == "sarif":
             sarif = scan_result_to_sarif(result)
             print(json.dumps(sarif, ensure_ascii=False, indent=2))
+        elif output_format == "csv":
+            print(_render_csv(result), end="")
         elif not result.findings:
             print(f"Staged scan: {result.files_scanned} files scanned, no findings.")
         else:
@@ -1150,34 +1153,31 @@ def cmd_scan(args) -> int:
             return 1
         return 0
 
-    # Output format
+    # Output format — --json flag treated as --format json (v0.7.0)
     output_format = getattr(args, "format", None)
+    if not output_format and getattr(args, "json", False):
+        output_format = "json"
     # When --pseudonymize + --output, output_path is used as dir for pseudonymized
     # files, so skip writing scan results to output_path as a file.
     scan_output_path = None if (do_pseudonymize and pseudonymized_texts) else output_path
 
-    if output_format == "csv":
-        text_out = _render_csv(result)
+    def _write_or_print(text: str, *, end: str = "\n") -> None:
         if scan_output_path:
             Path(scan_output_path).parent.mkdir(parents=True, exist_ok=True)
-            Path(scan_output_path).write_text(text_out, encoding="utf-8")
+            Path(scan_output_path).write_text(text + end, encoding="utf-8")
         else:
-            print(text_out, end="")
+            print(text, end=end)
+
+    if output_format == "json":
+        text_out = _render_json(result, target=target)
+        _write_or_print(text_out)
+    elif output_format == "csv":
+        text_out = _render_csv(result)
+        _write_or_print(text_out, end="")
     elif output_format == "sarif":
         sarif = scan_result_to_sarif(result)
         text_out = json.dumps(sarif, ensure_ascii=False, indent=2)
-        if scan_output_path:
-            Path(scan_output_path).parent.mkdir(parents=True, exist_ok=True)
-            Path(scan_output_path).write_text(text_out + "\n", encoding="utf-8")
-        else:
-            print(text_out)
-    elif output_format == "jsonl":
-        lines = _render_jsonl(result)
-        if scan_output_path:
-            Path(scan_output_path).parent.mkdir(parents=True, exist_ok=True)
-            Path(scan_output_path).write_text(lines, encoding="utf-8")
-        else:
-            print(lines, end="")
+        _write_or_print(text_out)
     elif scan_output_path:
         # --output without --format: default to JSON Lines
         lines = _render_jsonl(result)
@@ -1185,8 +1185,6 @@ def cmd_scan(args) -> int:
         Path(scan_output_path).write_text(lines, encoding="utf-8")
     elif getattr(args, "summary_only", False):
         _render_summary_only(result)
-    elif getattr(args, "json", False):
-        print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
     elif getattr(args, "verbose", False):
         _render_verbose(result)
     else:
@@ -1215,6 +1213,44 @@ def cmd_scan(args) -> int:
     return 0
 
 
+def _render_json(result: ScanResult, *, target: str = "") -> str:
+    """Render scan result as structured JSON (v0.7.0).
+
+    Schema: version, scan_target, findings[], summary.
+    """
+    import collections
+
+    findings_out = []
+    for f in result.findings:
+        entity = _extract_entity_type(f.finding_type)
+        start = f.column
+        end = f.column + max(len(f.text), 1)
+        entry: Dict[str, Any] = {
+            "entity_type": entity,
+            "text": f.text,
+            "start": start,
+            "end": end,
+            "score": f.score,
+        }
+        findings_out.append(entry)
+
+    by_type: Dict[str, int] = {}
+    for f in result.findings:
+        et = _extract_entity_type(f.finding_type)
+        by_type[et] = by_type.get(et, 0) + 1
+
+    doc = {
+        "version": _nufi_version(),
+        "scan_target": target or "",
+        "findings": findings_out,
+        "summary": {
+            "total": len(result.findings),
+            "by_type": dict(sorted(by_type.items())),
+        },
+    }
+    return json.dumps(doc, ensure_ascii=False, indent=2)
+
+
 def _render_jsonl(result: ScanResult) -> str:
     """Render findings as JSON Lines (one JSON object per finding per line)."""
     lines: List[str] = []
@@ -1237,11 +1273,12 @@ def _render_csv(result: ScanResult) -> str:
 
     output = io.StringIO()
     writer = csv.writer(output, quoting=csv.QUOTE_NONNUMERIC)
-    writer.writerow(["file", "line", "entity_type", "text", "score", "severity"])
+    writer.writerow(["entity_type", "text", "start", "end", "score"])
     for f in result.findings:
-        entity_type = f.finding_type
-        severity = "error" if _sarif_level(f.finding_type) == "error" else "warning"
-        writer.writerow([f.file, f.line, entity_type, f.text, f.score, severity])
+        entity_type = _extract_entity_type(f.finding_type)
+        start = f.column
+        end = f.column + max(len(f.text), 1)
+        writer.writerow([entity_type, f.text, start, end, f.score])
     return output.getvalue()
 
 

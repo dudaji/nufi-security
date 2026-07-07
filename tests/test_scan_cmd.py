@@ -1,4 +1,4 @@
-"""tests/test_scan_cmd.py — nufi-egress scan 커맨드 테스트 (patch86, patch88, patch91, patch97, patch137).
+"""tests/test_scan_cmd.py — nufi-egress scan 커맨드 테스트 (patch86, patch88, patch91, patch97, patch137, v0.7.0).
 
 시나리오:
 1. 단일 파일 스캔 → PII 발견
@@ -212,8 +212,8 @@ def test_sarif_output_valid_json_with_schema(pii_file: Path):
     # runs array
     assert len(sarif["runs"]) == 1
     run = sarif["runs"][0]
-    assert run["tool"]["driver"]["name"] == "NuFi"
-    assert run["tool"]["driver"]["version"] == "0.6.0"
+    assert run["tool"]["driver"]["name"] == "nufi-egress"
+    assert run["tool"]["driver"]["version"] == "0.7.0"
     assert isinstance(run["tool"]["driver"]["rules"], list)
     assert len(run["tool"]["driver"]["rules"]) >= 1
 
@@ -399,30 +399,15 @@ def test_output_flag_writes_to_file(pii_file: Path, tmp_path: Path):
         assert "score" in obj
 
 
-def test_format_jsonl_produces_valid_json_lines(pii_file: Path, capsys):
-    """--format jsonl: 각 줄이 유효한 JSON 객체인 JSON Lines 를 출력한다."""
-    import argparse
-    from enforcement.scan_cmd import cmd_scan
+def test_format_jsonl_produces_valid_json_lines(pii_file: Path):
+    """_render_jsonl: 각 줄이 유효한 JSON 객체인 JSON Lines 를 출력한다."""
+    from enforcement.scan_cmd import _render_jsonl
 
-    args = argparse.Namespace(
-        target=str(pii_file),
-        pattern=None,
-        check_injection=False,
-        json=False,
-        format="jsonl",
-        output=None,
-        fail_on_pii=False,
-        exclude=None,
-        redact=False,
-        dry_run=False,
-        no_backup=False,
-        stats=False,
-    )
-    rc = cmd_scan(args)
-    assert rc == 0
+    result = scan_path(pii_file)
+    assert result.findings
 
-    captured = capsys.readouterr()
-    lines = [l for l in captured.out.splitlines() if l.strip()]
+    output = _render_jsonl(result)
+    lines = [l for l in output.splitlines() if l.strip()]
     assert len(lines) >= 1
     for line in lines:
         obj = json.loads(line)
@@ -741,7 +726,7 @@ def test_suppression_by_glob_pattern(pii_dir: Path):
 # ---------------------------------------------------------------------------
 
 def test_format_csv_output(pii_file: Path):
-    """--format csv 옵션: CSV 포맷으로 출력한다."""
+    """--format csv 옵션: CSV 포맷으로 출력한다 (v0.7.0 헤더)."""
     import csv
     import io
     from enforcement.scan_cmd import _render_csv
@@ -753,16 +738,17 @@ def test_format_csv_output(pii_file: Path):
     reader = csv.reader(io.StringIO(csv_text))
     rows = list(reader)
 
-    # Header row
-    assert rows[0] == ["file", "line", "entity_type", "text", "score", "severity"]
+    # Header row — v0.7.0: entity_type,text,start,end,score
+    assert rows[0] == ["entity_type", "text", "start", "end", "score"]
     # One data row per finding
     assert len(rows) == 1 + len(result.findings)
     # Check a data row has correct structure
     data_row = rows[1]
-    assert data_row[0] == result.findings[0].file
-    assert int(data_row[1]) == result.findings[0].line
-    assert data_row[4] != ""  # score
-    assert data_row[5] in ("error", "warning")
+    assert data_row[0] != ""  # entity_type
+    assert data_row[1] != ""  # text
+    assert int(data_row[2]) >= 1  # start
+    assert int(data_row[3]) > int(data_row[2])  # end > start
+    assert float(data_row[4]) >= 0.0  # score
 
 
 # ---------------------------------------------------------------------------
@@ -900,7 +886,7 @@ def test_min_score_filters_low_confidence_findings(pii_file: Path, capsys):
     assert rc == 0
     captured = capsys.readouterr()
     data = json.loads(captured.out)
-    all_count = data["total_findings"]
+    all_count = data["summary"]["total"]
     assert all_count > 0
 
     # Now with impossibly high min-score — should filter all findings
@@ -909,7 +895,7 @@ def test_min_score_filters_low_confidence_findings(pii_file: Path, capsys):
     assert rc == 0
     captured = capsys.readouterr()
     data = json.loads(captured.out)
-    assert data["total_findings"] == 0
+    assert data["summary"]["total"] == 0
 
 
 # ---------------------------------------------------------------------------
@@ -952,15 +938,13 @@ def test_only_types_filters_to_specified_entities(pii_file: Path, capsys):
     assert rc == 0
     captured = capsys.readouterr()
     data = json.loads(captured.out)
-    all_count = data["total_findings"]
+    all_count = data["summary"]["total"]
     assert all_count > 0
 
     # Get all entity types found
     all_types = set()
     for f in data["findings"]:
-        ft = f["finding_type"]
-        entity = ft.split(":", 1)[1] if ":" in ft else ft
-        all_types.add(entity.upper())
+        all_types.add(f["entity_type"].upper())
 
     # Now filter to a non-existent type — should return 0 findings
     args.only_types = "NONEXISTENT_TYPE"
@@ -968,7 +952,7 @@ def test_only_types_filters_to_specified_entities(pii_file: Path, capsys):
     assert rc == 0
     captured = capsys.readouterr()
     data = json.loads(captured.out)
-    assert data["total_findings"] == 0
+    assert data["summary"]["total"] == 0
 
     # Filter to the actual types found — should return same count
     args.only_types = ",".join(all_types)
@@ -976,4 +960,202 @@ def test_only_types_filters_to_specified_entities(pii_file: Path, capsys):
     assert rc == 0
     captured = capsys.readouterr()
     data = json.loads(captured.out)
-    assert data["total_findings"] == all_count
+    assert data["summary"]["total"] == all_count
+
+
+# ---------------------------------------------------------------------------
+# v0.7.0 — --format json|sarif|csv 출력 포맷 다양화 테스트
+# ---------------------------------------------------------------------------
+
+def test_format_json_schema(pii_file: Path, capsys):
+    """--format json: version, scan_target, findings[], summary 스키마 검증."""
+    import argparse
+    from enforcement.scan_cmd import cmd_scan
+
+    args = argparse.Namespace(
+        target=str(pii_file),
+        pattern=None,
+        check_injection=False,
+        json=False,
+        format="json",
+        output=None,
+        fail_on_pii=False,
+        exclude=None,
+        redact=False,
+        dry_run=False,
+        no_backup=False,
+        stats=False,
+        parallel=1,
+        summary_only=False,
+        verbose=False,
+        git_staged=False,
+        profile=None,
+        clear_cache=False,
+        cache=False,
+        ignore_file=None,
+        baseline=None,
+        count_only=False,
+        min_score=0.0,
+        only_types=None,
+        pseudonymize=False,
+    )
+    rc = cmd_scan(args)
+    assert rc == 0
+
+    captured = capsys.readouterr()
+    data = json.loads(captured.out)
+
+    # Top-level fields
+    assert "version" in data
+    assert "scan_target" in data
+    assert "findings" in data
+    assert "summary" in data
+
+    # Version matches VERSION file
+    assert data["version"] == "0.7.0"
+    assert data["scan_target"] == str(pii_file)
+
+    # Findings array
+    assert isinstance(data["findings"], list)
+    assert len(data["findings"]) >= 1
+    for f in data["findings"]:
+        assert "entity_type" in f
+        assert "text" in f
+        assert "start" in f
+        assert "end" in f
+        assert "score" in f
+        assert isinstance(f["start"], int)
+        assert isinstance(f["end"], int)
+        assert f["end"] > f["start"]
+
+    # Summary
+    assert data["summary"]["total"] == len(data["findings"])
+    assert isinstance(data["summary"]["by_type"], dict)
+    assert sum(data["summary"]["by_type"].values()) == data["summary"]["total"]
+
+
+def test_format_json_flag_alias(pii_file: Path, capsys):
+    """--json 플래그가 --format json 과 동일한 구조화 JSON 을 출력한다."""
+    import argparse
+    from enforcement.scan_cmd import cmd_scan
+
+    args = argparse.Namespace(
+        target=str(pii_file),
+        pattern=None,
+        check_injection=False,
+        json=True,
+        format=None,
+        output=None,
+        fail_on_pii=False,
+        exclude=None,
+        redact=False,
+        dry_run=False,
+        no_backup=False,
+        stats=False,
+        parallel=1,
+        summary_only=False,
+        verbose=False,
+        git_staged=False,
+        profile=None,
+        clear_cache=False,
+        cache=False,
+        ignore_file=None,
+        baseline=None,
+        count_only=False,
+        min_score=0.0,
+        only_types=None,
+        pseudonymize=False,
+    )
+    rc = cmd_scan(args)
+    assert rc == 0
+
+    captured = capsys.readouterr()
+    data = json.loads(captured.out)
+    assert "version" in data
+    assert "findings" in data
+    assert "summary" in data
+
+
+def test_format_sarif_v2_schema(pii_file: Path):
+    """SARIF 출력이 v2.1.0 스키마를 준수하고 driver.name 이 nufi-egress 이다."""
+    result = scan_path(pii_file)
+    sarif = scan_result_to_sarif(result)
+
+    assert sarif["version"] == "2.1.0"
+    run = sarif["runs"][0]
+    assert run["tool"]["driver"]["name"] == "nufi-egress"
+    assert len(run["results"]) >= 1
+    for r in run["results"]:
+        assert "ruleId" in r
+        assert "level" in r
+        assert "message" in r
+        assert "locations" in r
+
+
+def test_format_csv_v070_headers(pii_file: Path):
+    """--format csv: entity_type,text,start,end,score 헤더로 출력한다."""
+    import csv
+    import io
+    from enforcement.scan_cmd import _render_csv
+
+    result = scan_path(pii_file)
+    assert result.findings, "Test precondition: at least one finding"
+
+    csv_text = _render_csv(result)
+    reader = csv.reader(io.StringIO(csv_text))
+    rows = list(reader)
+
+    # Header row — v0.7.0 spec
+    assert rows[0] == ["entity_type", "text", "start", "end", "score"]
+    assert len(rows) == 1 + len(result.findings)
+
+    # Data rows
+    for row in rows[1:]:
+        assert len(row) == 5
+        assert int(row[2]) >= 1  # start
+        assert int(row[3]) > int(row[2])  # end > start
+        assert float(row[4]) >= 0.0  # score
+
+
+def test_format_csv_via_cmd(pii_file: Path, capsys):
+    """cmd_scan --format csv 로 CSV 출력이 정상 동작한다."""
+    import argparse
+    from enforcement.scan_cmd import cmd_scan
+
+    args = argparse.Namespace(
+        target=str(pii_file),
+        pattern=None,
+        check_injection=False,
+        json=False,
+        format="csv",
+        output=None,
+        fail_on_pii=False,
+        exclude=None,
+        redact=False,
+        dry_run=False,
+        no_backup=False,
+        stats=False,
+        parallel=1,
+        summary_only=False,
+        verbose=False,
+        git_staged=False,
+        profile=None,
+        clear_cache=False,
+        cache=False,
+        ignore_file=None,
+        baseline=None,
+        count_only=False,
+        min_score=0.0,
+        only_types=None,
+        pseudonymize=False,
+    )
+    rc = cmd_scan(args)
+    assert rc == 0
+
+    import csv
+    import io
+    captured = capsys.readouterr()
+    reader = csv.reader(io.StringIO(captured.out))
+    rows = list(reader)
+    assert rows[0] == ["entity_type", "text", "start", "end", "score"]
+    assert len(rows) >= 2

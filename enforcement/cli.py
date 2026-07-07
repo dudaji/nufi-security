@@ -1243,9 +1243,9 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="파일 glob 패턴(쉼표 구분, 예: '*.py,*.md,*.txt')")
     p.add_argument("--check-injection", action="store_true",
                    help="프롬프트 인젝션 패턴도 함께 탐지")
-    p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
-    p.add_argument("--format", default=None, choices=["sarif", "jsonl"],
-                   help="출력 포맷 (sarif: SARIF 2.1.0 JSON | jsonl: JSON Lines, 파이프 용도)")
+    p.add_argument("--json", action="store_true", help="기계용 JSON 출력 (--format json 과 동일)")
+    p.add_argument("--format", default=None, choices=["text", "json", "sarif", "csv"],
+                   help="출력 포맷 (text: 기본 | json: 구조화 JSON | sarif: SARIF 2.1.0 | csv: CSV)")
     p.add_argument("--output", default=None, metavar="PATH",
                    help="결과를 파일에 기록(stdout 대신). --format 미지정 시 JSON Lines 기본")
     p.add_argument("--exclude", default=None,
