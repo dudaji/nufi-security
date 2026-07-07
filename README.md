@@ -373,6 +373,38 @@ Wilson CI95 하한은 점추정이 아닌 **통계적 하한**으로, 이 값이
 > 채택 모델·도구는 **상업적 사용이 가능한 라이선스만** 씁니다 (Piiranha·gliner_ko·TruffleHog
 > 등 비상업 라이선스 모델·도구는 사용하지 않습니다).
 
+### 외부 데이터셋 벤치마크
+
+자체 골드셋 외에 **공개 한국어 NER/PII 데이터셋 3종**으로 교차 검증했습니다.
+
+| 데이터셋 | 규모 | 라이선스 | KR_PERSON F1 | KR_LOCATION F1 | 비고 |
+|---|---|---|---|---|---|
+| corpus4everyone (val) | 3,437행 · 6,776 엔티티 | CC-BY-4.0 | **98.15%** | **90.23%** | KoELECTRA fine-tuned ONNX-INT8 |
+| KDPII (전체) | 7,766행 · 8,118 엔티티 | CC-BY-4.0 | 32.76% | 53.65% | Gazetteer 단독 (NER 미적용) |
+| AI4Privacy (5k) | 5,000행 | CC-BY-4.0 | — (한국어 없음) | — | EMAIL F1 99.78% (크로스링구얼) |
+
+- **corpus4everyone**: [datasciathlete/corpus4everyone-korean-NER](https://huggingface.co/datasets/datasciathlete/corpus4everyone-korean-NER) — 한국어 NER, 117K 학습 데이터
+- **KDPII**: [korean-guardrail-dataset](https://github.com/skan0779/korean-guardrail-dataset) — 한국어 대화 PII, 53,778건
+- **AI4Privacy**: [ai4privacy/open-pii-masking-500k](https://huggingface.co/datasets/ai4privacy/open-pii-masking-500k) — 다국어 PII, 414K건
+
+근거 파일: [`bench_finetuned_corpus4everyone.json`](docs/reports/bench_finetuned_corpus4everyone.json) ·
+[`bench_kdpii_gazetteer_cmp312.json`](docs/reports/bench_kdpii_gazetteer_cmp312.json) ·
+[`bench_external_gazetteer_5k.json`](docs/reports/bench_external_gazetteer_5k.json)
+
+### 모델별 성능 비교 (corpus4everyone 기준)
+
+동일 데이터셋(corpus4everyone val 3,437행)에서 백엔드별 성능 차이입니다.
+
+| 백엔드 | KR_PERSON recall | KR_LOCATION recall | Overall F1 | 모델 크기 |
+|---|---|---|---|---|
+| Gazetteer (규칙 전용) | 13.28% | 81.54% | 54.89% | — |
+| KoELECTRA ONNX-INT8 + 규칙 union | 91.37% | 92.44% | 74.41% | 14.7 MB |
+| Fine-tuned KoELECTRA | **98.09%** | **89.12%** | **93.07%** | 14.7 MB |
+
+근거 파일: [`bench_corpus4everyone_gazetteer_cmp312.json`](docs/reports/bench_corpus4everyone_gazetteer_cmp312.json) ·
+[`bench_corpus4everyone_onnx_union.json`](docs/reports/bench_corpus4everyone_onnx_union.json) ·
+[`bench_finetuned_corpus4everyone.json`](docs/reports/bench_finetuned_corpus4everyone.json)
+
 ---
 
 ## 설정 (Configuration)
@@ -417,6 +449,16 @@ Wilson CI95 하한은 점추정이 아닌 **통계적 하한**으로, 이 값이
 | **감사 로그** | 없음 | 제품별 | **해시체인 변조탐지 로그, 100% 전수 기록** |
 | **우회 차단** | 없음 | 없음 | **nftables 패킷 레이어 실시간 차단** |
 | **라이선스** | OSS (상업적 제한 모델 혼재) | 상용 | **상업적 가능 라이선스만 채택** |
+
+#### SOTA / 경쟁 도구 대비 한국어 성능 비교
+
+| 도구 | 한국어 인명 탐지 | 한국어 주소 탐지 | 한국 규제 증빙 | 에어갭 | 모델 크기 |
+|---|---|---|---|---|---|
+| Presidio (MS) | ❌ 미지원 | ❌ 미지원 | ❌ | ✅ | — |
+| AWS Comprehend | △ 영어 중심 | △ 영어 중심 | ❌ | ❌ SaaS | 클라우드 |
+| **NuFi v0.5.4** | **F1 98.15%** | **F1 90.23%** | **48개 통제** | ✅ | **14.7 MB** |
+
+> 수치는 corpus4everyone 외부 데이터셋 기준. Presidio·Comprehend는 한국어 인명/주소 전용 인식기가 없어 직접 비교 불가.
 
 ### 어떤 조직에 맞나
 
