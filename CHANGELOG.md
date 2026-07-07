@@ -4,6 +4,27 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.7.5] - 2026-07-08
+
+> **v0.7.5 — scan --diff (git diff 기반 변경분만 스캔) + guard --ci 모드 (CMP-340)**
+
+### Added
+- **`scan --diff [REF]`** — git diff 기반으로 변경된 행만 PII 스캔. 기본 `HEAD`(staged 변경), `HEAD~1`, `main` 등 임의 ref 지정 가능.
+- **변경 행 전용 스캔** — 전체 파일이 아닌 추가/수정된 라인만 스캔하여 CI 파이프라인에서 빠르고 정확한 PII 탐지.
+- **`--format text|json|sarif|csv` 지원** — `scan --diff`에서도 기존 scan 출력 포맷 전체 사용 가능.
+- **`guard --ci`** — CI 파이프라인 전용 모드: git diff 스캔 + GitHub Actions annotation 형식 출력.
+  - PII 없으면 1줄 OK 메시지 + exit 0.
+  - PII 있으면 `::error file=path,line=N::PII detected: TYPE` 형식 + exit 1.
+- **`guard --diff-ref REF`** — `--ci` 모드에서 비교 기준 ref 지정 (기본 HEAD).
+- **`guard --check-injection`** — `--ci` 모드에서 인젝션 패턴 탐지 활성화.
+- **SDK `scan_diff()`** — `from nufi import scan_diff`; `ScanResult` 반환.
+- **tests/test_cmp340_scan_diff_guard_ci.py** — diff 모드 staged 스캔, ref 대비 스캔, 변경 행 전용 검증, JSON 출력, CI OK/FAIL exit code, GitHub Actions annotation 형식 등 12개 테스트.
+
+### Changed
+- **VERSION** — 0.7.4 → 0.7.5
+
+---
+
 ## [0.7.4] - 2026-07-08
 
 > **v0.7.4 — scan --recursive 디렉터리 재귀 스캔 + 집계 리포트 (CMP-339)**

@@ -923,6 +923,181 @@ def scan_staged(
 
 
 # ---------------------------------------------------------------------------
+# Git diff changed-lines scan (v0.7.5)
+# ---------------------------------------------------------------------------
+
+def _git_diff_changed_lines(
+    ref: str = "HEAD",
+    repo: Optional[str] = None,
+) -> Dict[str, List[int]]:
+    """Parse ``git diff`` unified output to find added/modified line numbers.
+
+    Returns a dict mapping file paths (relative to repo root) to a sorted list
+    of 1-based line numbers that were added or modified.
+
+    Args:
+        ref: Git ref to diff against.  ``"HEAD"`` = staged changes only
+             (``git diff --cached``).  Any other value uses ``git diff <ref>``.
+        repo: Repository root directory.
+    """
+    if ref == "HEAD":
+        cmd = ["git", "diff", "--cached", "-U0", "--diff-filter=ACMR"]
+    else:
+        cmd = ["git", "diff", "-U0", "--diff-filter=ACMR", ref, "HEAD"]
+
+    kwargs: Dict[str, Any] = {"capture_output": True, "text": True}
+    if repo:
+        kwargs["cwd"] = repo
+    try:
+        proc = subprocess.run(cmd, **kwargs)  # noqa: S603
+    except FileNotFoundError:
+        return {}
+
+    if proc.returncode != 0:
+        return {}
+
+    file_lines: Dict[str, List[int]] = {}
+    current_file: Optional[str] = None
+
+    for line in proc.stdout.splitlines():
+        # Detect file header: +++ b/path/to/file
+        if line.startswith("+++ b/"):
+            current_file = line[6:]
+            if current_file not in file_lines:
+                file_lines[current_file] = []
+        # Detect hunk header: @@ -old,count +new,count @@
+        elif line.startswith("@@") and current_file is not None:
+            # Parse the +new,count part
+            parts = line.split("+")
+            if len(parts) >= 2:
+                hunk_info = parts[1].split("@@")[0].strip()
+                if "," in hunk_info:
+                    start_str, count_str = hunk_info.split(",", 1)
+                    start = int(start_str)
+                    count = int(count_str)
+                else:
+                    start = int(hunk_info)
+                    count = 1
+                if count > 0:
+                    file_lines[current_file].extend(
+                        range(start, start + count)
+                    )
+
+    # Sort line numbers
+    for f in file_lines:
+        file_lines[f] = sorted(set(file_lines[f]))
+
+    return file_lines
+
+
+def scan_diff(
+    ref: str = "HEAD",
+    *,
+    repo: Optional[str] = None,
+    check_injection: bool = False,
+    format: Optional[str] = None,
+) -> ScanResult:
+    """Scan only changed lines from ``git diff`` for PII/injection.
+
+    Unlike ``scan_git_diff`` (which scans entire changed files), this function
+    scans **only the added/modified lines** identified by the unified diff,
+    providing faster and more precise results for CI pipelines.
+
+    Args:
+        ref: Git ref to diff against.  ``"HEAD"`` (default) = staged changes.
+             Other values: branch name, tag, or commit hash.
+        repo: Git repository root (default: current directory).
+        check_injection: Also detect prompt injection patterns.
+
+    Returns:
+        ScanResult with findings limited to changed lines.
+    """
+    changed_lines = _git_diff_changed_lines(ref, repo=repo)
+    result = ScanResult()
+
+    if not changed_lines:
+        return result
+
+    repo_root = Path(repo) if repo else Path(".")
+    pipeline = DetectionPipeline()
+    injection_detector = PromptInjectionDetector() if check_injection else None
+
+    for rel_path, line_numbers in changed_lines.items():
+        fpath = repo_root / rel_path
+        if not fpath.is_file():
+            continue
+        if _is_binary(fpath):
+            continue
+
+        result.files_scanned += 1
+        try:
+            text = fpath.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as e:
+            result.errors.append({"path": str(fpath), "error": str(e)})
+            continue
+
+        file_str = str(fpath)
+        file_has_findings = False
+        lines = text.splitlines()
+        changed_set = set(line_numbers)
+
+        for line_no in line_numbers:
+            if line_no < 1 or line_no > len(lines):
+                continue
+            line = lines[line_no - 1]
+            if not line.strip():
+                continue
+
+            # PII detection
+            pii_findings = pipeline.analyze(line)
+            for f in pii_findings:
+                snippet = f.text if len(f.text) <= 40 else f.text[:37] + "..."
+                col = f.start + 1
+                ctx_before = line[max(0, f.start - 5):f.start]
+                ctx_after = line[f.end:f.end + 5]
+                method = _classify_detection_method(getattr(f, "source", "regex"))
+                result.findings.append(ScanFinding(
+                    file=file_str,
+                    line=line_no,
+                    finding_type=f"PII:{f.entity_type}",
+                    text=snippet,
+                    column=col,
+                    score=getattr(f, "score", 1.0),
+                    detection_method=method,
+                    context_before=ctx_before,
+                    context_after=ctx_after,
+                ))
+                file_has_findings = True
+
+            # Injection detection
+            if injection_detector:
+                inj_findings = injection_detector.detect(line)
+                for f in inj_findings:
+                    snippet = f.text if len(f.text) <= 40 else f.text[:37] + "..."
+                    col = f.start + 1
+                    ctx_before = line[max(0, f.start - 5):f.start]
+                    ctx_after = line[f.end:f.end + 5]
+                    method = _classify_detection_method(getattr(f, "source", "regex"))
+                    result.findings.append(ScanFinding(
+                        file=file_str,
+                        line=line_no,
+                        finding_type=f"INJECTION:{f.entity_type}",
+                        text=snippet,
+                        column=col,
+                        score=getattr(f, "score", 1.0),
+                        detection_method=method,
+                        context_before=ctx_before,
+                        context_after=ctx_after,
+                    ))
+                    file_has_findings = True
+
+        if file_has_findings:
+            result.files_with_findings += 1
+
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Baseline comparison (patch181)
 # ---------------------------------------------------------------------------
 
@@ -1004,6 +1179,37 @@ def cmd_scan(args) -> int:
         from enforcement.scan_profiles import resolve_profile, apply_profile_to_args
         profile = resolve_profile(profile_name)
         apply_profile_to_args(profile, args)
+
+    # --diff [ref]: scan only changed lines from git diff (v0.7.5)
+    diff_ref = getattr(args, "diff", None)
+    if diff_ref is not None:
+        result = scan_diff(
+            ref=diff_ref if diff_ref else "HEAD",
+            check_injection=getattr(args, "check_injection", False),
+        )
+        output_format = getattr(args, "format", None)
+        if not output_format and getattr(args, "json", False):
+            output_format = "json"
+        diff_label = diff_ref if diff_ref else "HEAD (staged)"
+        if output_format == "json":
+            print(_render_json(result, target=f"diff:{diff_label}"))
+        elif output_format == "sarif":
+            sarif = scan_result_to_sarif(result)
+            print(json.dumps(sarif, ensure_ascii=False, indent=2))
+        elif output_format == "csv":
+            print(_render_csv(result), end="")
+        elif not result.findings:
+            print(f"Diff scan ({diff_label}): {result.files_scanned} changed files, "
+                  f"no PII in changed lines.")
+        else:
+            print(f"Diff scan ({diff_label}): {result.files_scanned} changed files, "
+                  f"{result.files_with_findings} with findings, "
+                  f"{len(result.findings)} total.")
+            print()
+            _render_human(result)
+        if getattr(args, "fail_on_pii", False) and result.has_pii:
+            return 1
+        return 0
 
     # --recursive / -r: recursive directory scan with aggregate report (v0.7.4)
     if getattr(args, "recursive", False):

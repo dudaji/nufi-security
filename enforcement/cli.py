@@ -1292,6 +1292,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="디렉터리 실시간 감시 모드 — 파일 생성/수정 시 자동 스캔 (v0.7.3)")
     p.add_argument("--watch-interval", type=float, default=1.0, metavar="SECONDS",
                    help="--watch 폴링 간격(초, 기본 1.0)")
+    p.add_argument("--diff", nargs="?", const="HEAD", default=None, metavar="REF",
+                   help="git diff 기반 변경 행만 스캔 (기본 HEAD=staged, 예: HEAD~1, main) (v0.7.5)")
     p.add_argument("-r", "--recursive", action="store_true",
                    help="디렉터리 재귀 스캔 + 집계 리포트 (v0.7.4)")
     p.add_argument("--include", default=None,
@@ -1428,6 +1430,12 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="가명화 결과 파일 출력(기본 stdout)")
     p.add_argument("--strict", action="store_true",
                    help="warn을 block으로 승격")
+    p.add_argument("--ci", action="store_true",
+                   help="CI 파이프라인 모드 — git diff 스캔 + GitHub Actions annotation 출력 (v0.7.5)")
+    p.add_argument("--diff-ref", default=None, metavar="REF",
+                   help="--ci 모드에서 비교 기준 ref (기본 HEAD=staged, 예: HEAD~1, main) (v0.7.5)")
+    p.add_argument("--check-injection", action="store_true",
+                   help="프롬프트 인젝션 패턴도 함께 탐지 (--ci 모드)")
     p.set_defaults(func=cmd_guard)
 
     # --- Pseudonymize (v0.6.0) ----------------------------------------------- #

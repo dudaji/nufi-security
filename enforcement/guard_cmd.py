@@ -4,8 +4,12 @@ PII scan -> policy evaluation (block/warn/pseudonymize) -> action in one command
 
 Exit codes:
   0: no PII found, or pseudonymize completed successfully
-  1: PII found + block policy
+  1: PII found + block policy (or --ci mode)
   2: PII found + warn policy
+
+--ci mode (v0.7.5):
+  Runs git-diff-based scan, outputs GitHub Actions / GitLab CI annotations.
+  Exit 0 if clean, exit 1 if PII found.
 """
 from __future__ import annotations
 
@@ -21,6 +25,10 @@ from egress_audit.reversible import ReversibleEgress
 
 def cmd_guard(args) -> int:
     """``nufi-egress guard`` CLI handler."""
+    # --ci mode (v0.7.5): CI pipeline integration
+    if getattr(args, "ci", False):
+        return _cmd_guard_ci(args)
+
     target: Optional[str] = getattr(args, "target", None)
     policy: str = getattr(args, "policy_action_guard", "warn")
     fmt: str = getattr(args, "format", "text") or "text"
@@ -92,6 +100,41 @@ def cmd_guard(args) -> int:
         "findings": [_finding_dict(f) for f in pii_findings],
     })
     return 2
+
+
+# ---------------------------------------------------------------------------
+# --ci mode (v0.7.5)
+# ---------------------------------------------------------------------------
+
+def _cmd_guard_ci(args) -> int:
+    """CI pipeline mode: scan git diff, emit annotations, exit 0/1."""
+    from enforcement.scan_cmd import scan_diff
+
+    diff_ref = getattr(args, "diff_ref", None) or "HEAD"
+    check_injection = getattr(args, "check_injection", False)
+
+    result = scan_diff(
+        ref=diff_ref,
+        check_injection=check_injection,
+    )
+
+    pii_findings = [
+        f for f in result.findings if f.finding_type.startswith("PII:")
+    ]
+
+    if not pii_findings:
+        print(f"nufi guard: OK — {result.files_scanned} files scanned, no PII detected.")
+        return 0
+
+    # Emit GitHub Actions annotation format
+    for f in pii_findings:
+        entity = f.finding_type.split(":", 1)[1] if ":" in f.finding_type else f.finding_type
+        print(f"::error file={f.file},line={f.line}::PII detected: {entity}")
+
+    print(f"\nnufi guard: FAIL — {len(pii_findings)} PII finding(s) "
+          f"in {result.files_with_findings} file(s).",
+          file=sys.stderr)
+    return 1
 
 
 def _read_input(target: Optional[str]) -> Optional[str]:

@@ -214,7 +214,7 @@ def test_sarif_output_valid_json_with_schema(pii_file: Path):
     assert len(sarif["runs"]) == 1
     run = sarif["runs"][0]
     assert run["tool"]["driver"]["name"] == "nufi-egress"
-    assert run["tool"]["driver"]["version"] == "0.7.4"
+    assert run["tool"]["driver"]["version"] == "0.7.5"
     assert isinstance(run["tool"]["driver"]["rules"], list)
     assert len(run["tool"]["driver"]["rules"]) >= 1
 
@@ -1013,7 +1013,7 @@ def test_format_json_schema(pii_file: Path, capsys):
     assert "summary" in data
 
     # Version matches VERSION file
-    assert data["version"] == "0.7.4"
+    assert data["version"] == "0.7.5"
     assert data["scan_target"] == str(pii_file)
 
     # Findings array
