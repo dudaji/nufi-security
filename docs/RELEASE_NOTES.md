@@ -6,6 +6,32 @@
 
 ---
 
+## v0.6.1 -- **pre-commit 프레임워크 통합 + diff --pseudonymize**
+
+> pre-commit 훅 패키지와 diff 커맨드의 가명화 옵션이 추가되었습니다. (2026-07-07)
+
+### 주요 변경
+
+| 항목 | 내용 |
+|---|---|
+| **`nufi-pseudonymize` pre-commit 훅** | `.pre-commit-hooks.yaml` 에 `nufi-pseudonymize` 훅 추가 — 커밋 시 PII가 있으면 fail + 가명화 제안 출력 |
+| **`pseudonymize --check`** | 파일별 PII 체크 모드 — PII 발견 시 exit 1 + 가명화 제안 (pre-commit 훅 진입점) |
+| **`diff --pseudonymize`** | git 변경 파일 스캔에 `--pseudonymize` 플래그 추가 — PII 발견 시 가명화 결과도 함께 출력 |
+| **README pre-commit 사용 예시** | `.pre-commit-config.yaml` 설정 예시를 README에 추가 |
+
+### 누구에게 유용한가
+
+- **pre-commit 프레임워크 사용자** -- `.pre-commit-config.yaml` 한 줄로 NuFi PII 스캔과 가명화 체크를 커밋 훅에 통합.
+- **PR 리뷰** -- `diff --pseudonymize` 로 변경 파일의 PII를 탐지하면서 가명화 제안까지 한 번에 확인.
+
+### 검증
+
+- diff --pseudonymize 테스트 통과
+- pseudonymize --check 테스트 통과
+- 기존 테스트 전체 회귀 없음
+
+---
+
 ## v0.6.0 -- **가역 가명화 CLI 커맨드 + scan --pseudonymize**
 
 > PII를 가역적 surrogate로 치환·원복하는 CLI 커맨드가 추가되었습니다. (2026-07-07)

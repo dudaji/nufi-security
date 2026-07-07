@@ -111,14 +111,39 @@ def cmd_diff(args) -> int:
     check_injection = getattr(args, "check_injection", False)
     use_json = getattr(args, "json", False)
     fail_on_pii = getattr(args, "fail_on_pii", False)
+    do_pseudonymize = getattr(args, "pseudonymize", False)
 
     result = scan_git_diff(
         base=base,
         check_injection=check_injection,
     )
 
+    # --pseudonymize: pseudonymize files with PII findings (v0.6.1)
+    pseudonymized_texts: dict = {}
+    if do_pseudonymize and result.findings:
+        import uuid as _uuid
+        from egress_audit.reversible import ReversibleEgress
+        _rev = ReversibleEgress(ner_backend="gazetteer")
+        _psid = f"diff-{_uuid.uuid4().hex[:12]}"
+        pii_files = sorted(set(
+            f.file for f in result.findings if f.finding_type.startswith("PII:")
+        ))
+        for fpath in pii_files:
+            try:
+                content = Path(fpath).read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                continue
+            r = _rev.pseudonymize(content, _psid)
+            if not r.blocked and r.pseudonymized > 0:
+                pseudonymized_texts[fpath] = r.transformed_text
+
     if use_json:
-        print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        out = result.to_dict()
+        if do_pseudonymize and pseudonymized_texts:
+            out["pseudonymized"] = {
+                fp: pt for fp, pt in pseudonymized_texts.items()
+            }
+        print(json.dumps(out, ensure_ascii=False, indent=2))
     else:
         if not result.findings:
             print(f"Diff scan ({base}): {result.files_scanned} changed files scanned, "
@@ -134,6 +159,15 @@ def cmd_diff(args) -> int:
                     current_file = f.file
                     print(f"  {f.file}")
                 print(f"    L{f.line}: [{f.finding_type}] {f.text}")
+
+        # Show pseudonymized text after normal output
+        if do_pseudonymize and pseudonymized_texts:
+            print()
+            print("── 가명화 결과 (Pseudonymized) ──")
+            for fpath, ptext in pseudonymized_texts.items():
+                print(f"\n  {fpath}:")
+                for line in ptext.splitlines():
+                    print(f"    {line}")
 
     if fail_on_pii and result.has_pii:
         return 1

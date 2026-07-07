@@ -22,6 +22,7 @@ from egress_audit.reversible import ReversibleEgress
 def cmd_pseudonymize(args) -> int:
     """``nufi-egress pseudonymize`` CLI handler."""
     restore = getattr(args, "restore", False)
+    check = getattr(args, "check", False)
     session_id = getattr(args, "session", None)
     text: Optional[str] = getattr(args, "text", None)
     file_path: Optional[str] = getattr(args, "file", None)
@@ -30,6 +31,11 @@ def cmd_pseudonymize(args) -> int:
     fmt = getattr(args, "format", None)
     if fmt == "json":
         use_json = True
+
+    # --check mode: check files for PII, fail if found + suggest pseudonymization
+    if check:
+        filenames = getattr(args, "filenames", [])
+        return _do_check(filenames)
 
     if restore:
         return _do_restore(text, file_path, output_path, session_id, use_json)
@@ -69,6 +75,53 @@ def _do_pseudonymize(
         return _output_blocked(content, result, sid, use_json)
     return _output_pseudonymized(result.transformed_text, sid,
                                  result.pseudonymized, use_json, output_path)
+
+
+def _do_check(filenames: list) -> int:
+    """Check files for PII; exit 1 if found, with pseudonymization suggestions."""
+    from enforcement.scan_cmd import _is_binary, _scan_file, ScanResult
+    from egress_audit.pipeline import DetectionPipeline
+
+    if not filenames:
+        return 0
+
+    pipeline = DetectionPipeline()
+    result = ScanResult()
+    rev = ReversibleEgress(ner_backend="gazetteer")
+    sid = f"check-{uuid.uuid4().hex[:12]}"
+    found_pii = False
+
+    for fname in filenames:
+        p = Path(fname)
+        if not p.is_file() or _is_binary(p):
+            continue
+        _scan_file(p, pipeline, None, result, patterns=None)
+
+    pii_findings = [f for f in result.findings if f.finding_type.startswith("PII:")]
+    if not pii_findings:
+        return 0
+
+    found_pii = True
+    pii_files = sorted(set(f.file for f in pii_findings))
+    print("PII detected — pseudonymization suggested:", file=sys.stderr)
+    for fpath in pii_files:
+        file_findings = [f for f in pii_findings if f.file == fpath]
+        print(f"\n  {fpath}  ({len(file_findings)} PII findings)", file=sys.stderr)
+        for f in file_findings:
+            print(f"    L{f.line}: [{f.finding_type}] {f.text}", file=sys.stderr)
+        try:
+            content = Path(fpath).read_text(encoding="utf-8")
+            r = rev.pseudonymize(content, sid)
+            if not r.blocked and r.pseudonymized > 0:
+                print(f"  → 가명화 제안 (session: {sid}):", file=sys.stderr)
+                for line in r.transformed_text.splitlines()[:5]:
+                    print(f"      {line}", file=sys.stderr)
+                if len(r.transformed_text.splitlines()) > 5:
+                    print("      ...", file=sys.stderr)
+        except (OSError, UnicodeDecodeError):
+            pass
+
+    return 1 if found_pii else 0
 
 
 def _do_restore(

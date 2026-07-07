@@ -1,4 +1,4 @@
-"""pseudonymize CLI 커맨드 + scan --pseudonymize 테스트 (v0.6.0 / CMP-330).
+"""pseudonymize CLI 커맨드 + scan --pseudonymize 테스트 (v0.6.0~v0.6.1 / CMP-330, CMP-331).
 
 pytest 또는 ``python3 tests/test_pseudonymize_cli.py`` 로 실행.
 """
@@ -231,6 +231,54 @@ def test_scan_pseudonymize_output_dir():
         assert out_file.exists()
         content = out_file.read_text(encoding="utf-8")
         assert "010-1234-5678" not in content
+
+
+# ── pseudonymize --check (v0.6.1 / CMP-331) ─────────────────────────────────
+def test_pseudonymize_check_finds_pii():
+    """--check 모드: PII 파일 → exit 1 + 가명화 제안."""
+    from enforcement.pseudonymize_cmd import cmd_pseudonymize
+
+    with tempfile.TemporaryDirectory() as td:
+        f = Path(td) / "data.txt"
+        f.write_text("이메일: hong@test.com\n", encoding="utf-8")
+
+        args = SimpleNamespace(
+            text=None, file=None, output=None, restore=False,
+            session=None, json=False, format=None,
+            check=True, filenames=[str(f)],
+        )
+        rc = cmd_pseudonymize(args)
+        assert rc == 1
+
+
+def test_pseudonymize_check_clean():
+    """--check 모드: PII 없는 파일 → exit 0."""
+    from enforcement.pseudonymize_cmd import cmd_pseudonymize
+
+    with tempfile.TemporaryDirectory() as td:
+        f = Path(td) / "clean.txt"
+        f.write_text("No PII here, just a normal sentence.\n", encoding="utf-8")
+
+        args = SimpleNamespace(
+            text=None, file=None, output=None, restore=False,
+            session=None, json=False, format=None,
+            check=True, filenames=[str(f)],
+        )
+        rc = cmd_pseudonymize(args)
+        assert rc == 0
+
+
+def test_pseudonymize_check_no_files():
+    """--check 모드: 파일 없으면 exit 0."""
+    from enforcement.pseudonymize_cmd import cmd_pseudonymize
+
+    args = SimpleNamespace(
+        text=None, file=None, output=None, restore=False,
+        session=None, json=False, format=None,
+        check=True, filenames=[],
+    )
+    rc = cmd_pseudonymize(args)
+    assert rc == 0
 
 
 def _run():

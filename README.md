@@ -255,6 +255,20 @@ API 전체 목록·안정성 계층은 [`docs/SDK.md`](docs/SDK.md), 데모는 `
 | **SDK 한 줄 통합 예제** — 게이트웨이 없이 라이브러리 직접 임포트 (`detect` · `pseudonymize` · `Guard`) | [`examples/README.md`](examples/README.md) · 12종 예시 스크립트 |
 | **CI/pre-commit 통합** — 커밋·PR 단계에서 PII 유출 자동 차단 (pre-commit 훅 + GitHub Actions) | [`docs/INTEGRATION_GUIDE.md §6`](docs/INTEGRATION_GUIDE.md#6-pre-commit-훅--cicd-통합) · [`examples/ci-github-actions.yml`](examples/ci-github-actions.yml) |
 
+### pre-commit 프레임워크 사용 예시
+
+프로젝트의 `.pre-commit-config.yaml` 에 아래와 같이 추가하면 커밋 시 PII 자동 스캔/가명화 체크가 동작합니다:
+
+```yaml
+repos:
+  - repo: https://github.com/dudaji/nufi-security
+    rev: v0.6.1
+    hooks:
+      - id: nufi-scan              # PII + 인젝션 스캔 (파일별)
+      - id: nufi-pseudonymize      # PII 가명화 체크 (PII 있으면 fail + 가명화 제안)
+      # - id: nufi-scan-strict     # strict 프로파일 (선택)
+```
+
 > **⚠️ 운영(ops) 레이어 제외 안내** — 방향 재설정([`docs/ROADMAP.md`](docs/ROADMAP.md) §3)에 따라
 > 아래 운영 기능은 **유지보수 없이 제외**되었습니다(코드는 당분간 남아 있으나 신규 기능·지원 없음,
 > 필요 시 별도 결정으로 부활). NuFi 는 **게이트웨이 코어(경량 파이썬 enforcement) + 한국어 PII/증빙**

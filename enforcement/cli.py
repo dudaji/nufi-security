@@ -1293,6 +1293,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     p.add_argument("--check-injection", action="store_true",
                    help="프롬프트 인젝션 패턴도 함께 탐지")
     p.add_argument("--json", action="store_true", help="기계용 JSON 출력")
+    p.add_argument("--pseudonymize", action="store_true",
+                   help="PII 발견 시 가명화 결과도 함께 출력 (v0.6.1)")
     p.set_defaults(func=cmd_diff)
 
     p = sub.add_parser("compare",
@@ -1414,6 +1416,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="기계용 JSON 출력")
     p.add_argument("--format", default=None, choices=["text", "json"],
                    help="출력 형식(text: 기본, json: JSON)")
+    p.add_argument("--check", action="store_true",
+                   help="파일별 PII 체크 — PII 발견 시 exit 1 + 가명화 제안 (pre-commit용)")
     p.set_defaults(func=cmd_pseudonymize)
 
     p = sub.add_parser("explain",
