@@ -37,6 +37,96 @@ CLI(`nufi-egress`)와 Python SDK(`from nufi import detect, Guard, pseudonymize`)
 
 ---
 
+## 성능·정확도 (Performance & Accuracy)
+
+확장한 평가셋(golden set)에서 **KoELECTRA ONNX-INT8** 백엔드 실측값입니다.
+
+| 지표 | 값 | 목표 |
+|---|---|---|
+| 한국어 개인정보 재현율 (recall, 전체) | **0.9908** [신뢰구간 0.9812–0.9956] | ≥ 0.90 ✅ |
+| 인명(KR_PERSON) 재현율 (recall) | **0.9799** [Wilson CI 하한 0.9591] | ≥ 0.93 ✅ |
+| 주소(KR_LOCATION) 재현율 (recall) | **1.000** [Wilson 신뢰구간 하한 0.9417] | ≥ 0.90 ✅ |
+| 강한 개인정보 / 비밀 재현율 | **1.000** | — |
+| 정밀도 — span 정확 일치 (span precision) | **0.9066** | — |
+| 오탐 (benign false-positive) | **0 / 90** | 낮을수록 ✅ |
+| 인라인 지연 (latency p95, 512자, 단일 동시성) | **41 ms** (CPU) | ≤ 150 ms ✅ |
+
+### 클래스별 재현율 (v0.4.16, onnx-int8, split=test, n=854)
+
+| 엔티티 클래스 | 적중/전체 | 재현율 | Wilson CI95 하한 |
+|---|---:|---:|---:|
+| KR_PERSON (인명) | 341/348 | 0.9799 | **0.9591** ✅ |
+| KR_LOCATION (주소·지명) | 62/62 | 1.0000 | 0.9417 ✅ |
+| KR_RRN (주민등록번호) | 35/35 | 1.0000 | 0.9011 ✅ |
+| KR_FOREIGNER_REG (외국인등록번호) | 35/35 | 1.0000 | 0.9011 ✅ |
+| KR_PASSPORT (여권) | 35/35 | 1.0000 | 0.9011 ✅ |
+| KR_DRIVER_LICENSE (운전면허) | 35/35 | 1.0000 | 0.9011 ✅ |
+| KR_ACCOUNT (계좌번호) | 36/36 | 1.0000 | 0.9036 ✅ |
+| KR_BRN (사업자등록번호) | 35/35 | 1.0000 | 0.9011 ✅ |
+| KR_PHONE (전화번호) | 36/36 | 1.0000 | 0.9036 ✅ |
+| CREDIT_CARD (신용카드) | 35/35 | 1.0000 | 0.9011 ✅ |
+| EMAIL | 36/36 | 1.0000 | 0.9036 ✅ |
+| SECRET (API 키·토큰) | 36/36 | 1.0000 | 0.9036 ✅ |
+
+Wilson CI95 하한은 점추정이 아닌 **통계적 하한**으로, 이 값이 목표 이상이면 작은 표본의
+행운이 아닌 실제 성능임을 보증합니다.
+
+- **재현율(recall)** = 실제 개인정보 중 잡아낸 비율, **정밀도(precision)** = 잡아냈다고
+  한 것 중 진짜인 비율, **p95** = 100건 중 95건이 이 시간 안에 처리됨.
+- 위 표의 전체 재현율·정밀도는 [`docs/reports/recall-int8.json`](docs/reports/recall-int8.json)
+  (onnx-int8, split=test), **주소(KR_LOCATION) 재현율 1.000·Wilson 하한 0.9417** 은
+  [`docs/reports/kr-location-gate.json`](docs/reports/kr-location-gate.json)(모델∪규칙 유니온
+  경로 — `recall-int8.json` 의 0.7917 은 유니온 이전 모델 단독 baseline), 인라인 지연은
+  [`docs/reports/load-p95.json`](docs/reports/load-p95.json)(단일 동시성 p95)의 커밋된
+  실측값입니다. 대조·무결성 감사는
+  [`docs/reports/accuracy-integrity-audit.md`](docs/reports/accuracy-integrity-audit.md).
+- 보안 하드닝(hardening) 점검 **12/12 통과** (기록 실패 시 차단·감사 해시체인·원문 미저장 등).
+- 사전 기반(gazetteer) 코어 백엔드는 에어갭 최소 보장 라인으로, 샘플셋 기준 지연 p95 < 1ms.
+- 주소(KR_LOCATION)는 규칙 사전 확장(시군구·랜드마크·도로명·상세주소, 28→206항)과
+  모델∪규칙 유니온 경로로 재현율을 **1.000**(Wilson 신뢰구간 하한 0.9417)까지 끌어올렸고
+  무해 입력 오탐은 0을 유지합니다. 판정 증빙은
+  [`docs/reports/kr-location-gate.md`](docs/reports/kr-location-gate.md).
+
+> 한국어 개인정보 재현율 ≥ 0.9 목표는 **KoELECTRA 백엔드**로 달성합니다. 사전 기반은 사전에
+> 없는 인명에서 정확도가 떨어져 에어갭 최소 보장용이며, 프로덕션 정확도는 NER 백엔드가 담당합니다.
+>
+> 채택 모델·도구는 **상업적 사용이 가능한 라이선스만** 씁니다 (Piiranha·gliner_ko·TruffleHog
+> 등 비상업 라이선스 모델·도구는 사용하지 않습니다).
+
+### 외부 데이터셋 벤치마크
+
+자체 골드셋 외에 **공개 한국어 NER/PII 데이터셋 3종**으로 교차 검증했습니다.
+
+| 데이터셋 | 규모 | 라이선스 | KR_PERSON F1 | KR_LOCATION F1 | 비고 |
+|---|---|---|---|---|---|
+| corpus4everyone (val) | 3,437행 · 6,776 엔티티 | CC-BY-4.0 | **98.15%** | **90.23%** | KoELECTRA fine-tuned ONNX-INT8 |
+| KDPII (전체) | 7,766행 · 8,118 엔티티 | CC-BY-4.0 | 32.76% | 53.65% | Gazetteer 단독 (NER 미적용) |
+| AI4Privacy (5k) | 5,000행 | CC-BY-4.0 | — (한국어 없음) | — | EMAIL F1 99.78% (크로스링구얼) |
+
+- **corpus4everyone**: [datasciathlete/corpus4everyone-korean-NER](https://huggingface.co/datasets/datasciathlete/corpus4everyone-korean-NER) — 한국어 NER, 117K 학습 데이터
+- **KDPII**: [korean-guardrail-dataset](https://github.com/skan0779/korean-guardrail-dataset) — 한국어 대화 PII, 53,778건
+- **AI4Privacy**: [ai4privacy/open-pii-masking-500k](https://huggingface.co/datasets/ai4privacy/open-pii-masking-500k) — 다국어 PII, 414K건
+
+근거 파일: [`bench_finetuned_corpus4everyone.json`](docs/reports/bench_finetuned_corpus4everyone.json) ·
+[`bench_kdpii_gazetteer_cmp312.json`](docs/reports/bench_kdpii_gazetteer_cmp312.json) ·
+[`bench_external_gazetteer_5k.json`](docs/reports/bench_external_gazetteer_5k.json)
+
+### 모델별 성능 비교 (corpus4everyone 기준)
+
+동일 데이터셋(corpus4everyone val 3,437행)에서 백엔드별 성능 차이입니다.
+
+| 백엔드 | KR_PERSON recall | KR_LOCATION recall | Overall F1 | 모델 크기 |
+|---|---|---|---|---|
+| Gazetteer (규칙 전용) | 13.28% | 81.54% | 54.89% | — |
+| KoELECTRA ONNX-INT8 + 규칙 union | 91.37% | 92.44% | 74.41% | 14.7 MB |
+| Fine-tuned KoELECTRA | **98.09%** | **89.12%** | **93.07%** | 14.7 MB |
+
+근거 파일: [`bench_corpus4everyone_gazetteer_cmp312.json`](docs/reports/bench_corpus4everyone_gazetteer_cmp312.json) ·
+[`bench_corpus4everyone_onnx_union.json`](docs/reports/bench_corpus4everyone_onnx_union.json) ·
+[`bench_finetuned_corpus4everyone.json`](docs/reports/bench_finetuned_corpus4everyone.json)
+
+---
+
 ## 어떻게 동작하나 (한눈에)
 
 ```
@@ -314,96 +404,6 @@ curl -s localhost:8000/detect -H "Content-Type: application/json" \
 > 자동화 테스트 **603건+** 이 전 기능을 커버합니다. Python SDK 는 **20개+ 공개 함수**를 제공합니다.
 >
 > **v0.4.18** — 프롬프트 인젝션 가드레일, 파일 스캔, REST API, CLI 확장을 포함하는 안정 릴리스입니다.
-
----
-
-## 성능·정확도 (Performance & Accuracy)
-
-확장한 평가셋(golden set)에서 **KoELECTRA ONNX-INT8** 백엔드 실측값입니다.
-
-| 지표 | 값 | 목표 |
-|---|---|---|
-| 한국어 개인정보 재현율 (recall, 전체) | **0.9908** [신뢰구간 0.9812–0.9956] | ≥ 0.90 ✅ |
-| 인명(KR_PERSON) 재현율 (recall) | **0.9799** [Wilson CI 하한 0.9591] | ≥ 0.93 ✅ |
-| 주소(KR_LOCATION) 재현율 (recall) | **1.000** [Wilson 신뢰구간 하한 0.9417] | ≥ 0.90 ✅ |
-| 강한 개인정보 / 비밀 재현율 | **1.000** | — |
-| 정밀도 — span 정확 일치 (span precision) | **0.9066** | — |
-| 오탐 (benign false-positive) | **0 / 90** | 낮을수록 ✅ |
-| 인라인 지연 (latency p95, 512자, 단일 동시성) | **41 ms** (CPU) | ≤ 150 ms ✅ |
-
-### 클래스별 재현율 (v0.4.16, onnx-int8, split=test, n=854)
-
-| 엔티티 클래스 | 적중/전체 | 재현율 | Wilson CI95 하한 |
-|---|---:|---:|---:|
-| KR_PERSON (인명) | 341/348 | 0.9799 | **0.9591** ✅ |
-| KR_LOCATION (주소·지명) | 62/62 | 1.0000 | 0.9417 ✅ |
-| KR_RRN (주민등록번호) | 35/35 | 1.0000 | 0.9011 ✅ |
-| KR_FOREIGNER_REG (외국인등록번호) | 35/35 | 1.0000 | 0.9011 ✅ |
-| KR_PASSPORT (여권) | 35/35 | 1.0000 | 0.9011 ✅ |
-| KR_DRIVER_LICENSE (운전면허) | 35/35 | 1.0000 | 0.9011 ✅ |
-| KR_ACCOUNT (계좌번호) | 36/36 | 1.0000 | 0.9036 ✅ |
-| KR_BRN (사업자등록번호) | 35/35 | 1.0000 | 0.9011 ✅ |
-| KR_PHONE (전화번호) | 36/36 | 1.0000 | 0.9036 ✅ |
-| CREDIT_CARD (신용카드) | 35/35 | 1.0000 | 0.9011 ✅ |
-| EMAIL | 36/36 | 1.0000 | 0.9036 ✅ |
-| SECRET (API 키·토큰) | 36/36 | 1.0000 | 0.9036 ✅ |
-
-Wilson CI95 하한은 점추정이 아닌 **통계적 하한**으로, 이 값이 목표 이상이면 작은 표본의
-행운이 아닌 실제 성능임을 보증합니다.
-
-- **재현율(recall)** = 실제 개인정보 중 잡아낸 비율, **정밀도(precision)** = 잡아냈다고
-  한 것 중 진짜인 비율, **p95** = 100건 중 95건이 이 시간 안에 처리됨.
-- 위 표의 전체 재현율·정밀도는 [`docs/reports/recall-int8.json`](docs/reports/recall-int8.json)
-  (onnx-int8, split=test), **주소(KR_LOCATION) 재현율 1.000·Wilson 하한 0.9417** 은
-  [`docs/reports/kr-location-gate.json`](docs/reports/kr-location-gate.json)(모델∪규칙 유니온
-  경로 — `recall-int8.json` 의 0.7917 은 유니온 이전 모델 단독 baseline), 인라인 지연은
-  [`docs/reports/load-p95.json`](docs/reports/load-p95.json)(단일 동시성 p95)의 커밋된
-  실측값입니다. 대조·무결성 감사는
-  [`docs/reports/accuracy-integrity-audit.md`](docs/reports/accuracy-integrity-audit.md).
-- 보안 하드닝(hardening) 점검 **12/12 통과** (기록 실패 시 차단·감사 해시체인·원문 미저장 등).
-- 사전 기반(gazetteer) 코어 백엔드는 에어갭 최소 보장 라인으로, 샘플셋 기준 지연 p95 < 1ms.
-- 주소(KR_LOCATION)는 규칙 사전 확장(시군구·랜드마크·도로명·상세주소, 28→206항)과
-  모델∪규칙 유니온 경로로 재현율을 **1.000**(Wilson 신뢰구간 하한 0.9417)까지 끌어올렸고
-  무해 입력 오탐은 0을 유지합니다. 판정 증빙은
-  [`docs/reports/kr-location-gate.md`](docs/reports/kr-location-gate.md).
-
-> 한국어 개인정보 재현율 ≥ 0.9 목표는 **KoELECTRA 백엔드**로 달성합니다. 사전 기반은 사전에
-> 없는 인명에서 정확도가 떨어져 에어갭 최소 보장용이며, 프로덕션 정확도는 NER 백엔드가 담당합니다.
->
-> 채택 모델·도구는 **상업적 사용이 가능한 라이선스만** 씁니다 (Piiranha·gliner_ko·TruffleHog
-> 등 비상업 라이선스 모델·도구는 사용하지 않습니다).
-
-### 외부 데이터셋 벤치마크
-
-자체 골드셋 외에 **공개 한국어 NER/PII 데이터셋 3종**으로 교차 검증했습니다.
-
-| 데이터셋 | 규모 | 라이선스 | KR_PERSON F1 | KR_LOCATION F1 | 비고 |
-|---|---|---|---|---|---|
-| corpus4everyone (val) | 3,437행 · 6,776 엔티티 | CC-BY-4.0 | **98.15%** | **90.23%** | KoELECTRA fine-tuned ONNX-INT8 |
-| KDPII (전체) | 7,766행 · 8,118 엔티티 | CC-BY-4.0 | 32.76% | 53.65% | Gazetteer 단독 (NER 미적용) |
-| AI4Privacy (5k) | 5,000행 | CC-BY-4.0 | — (한국어 없음) | — | EMAIL F1 99.78% (크로스링구얼) |
-
-- **corpus4everyone**: [datasciathlete/corpus4everyone-korean-NER](https://huggingface.co/datasets/datasciathlete/corpus4everyone-korean-NER) — 한국어 NER, 117K 학습 데이터
-- **KDPII**: [korean-guardrail-dataset](https://github.com/skan0779/korean-guardrail-dataset) — 한국어 대화 PII, 53,778건
-- **AI4Privacy**: [ai4privacy/open-pii-masking-500k](https://huggingface.co/datasets/ai4privacy/open-pii-masking-500k) — 다국어 PII, 414K건
-
-근거 파일: [`bench_finetuned_corpus4everyone.json`](docs/reports/bench_finetuned_corpus4everyone.json) ·
-[`bench_kdpii_gazetteer_cmp312.json`](docs/reports/bench_kdpii_gazetteer_cmp312.json) ·
-[`bench_external_gazetteer_5k.json`](docs/reports/bench_external_gazetteer_5k.json)
-
-### 모델별 성능 비교 (corpus4everyone 기준)
-
-동일 데이터셋(corpus4everyone val 3,437행)에서 백엔드별 성능 차이입니다.
-
-| 백엔드 | KR_PERSON recall | KR_LOCATION recall | Overall F1 | 모델 크기 |
-|---|---|---|---|---|
-| Gazetteer (규칙 전용) | 13.28% | 81.54% | 54.89% | — |
-| KoELECTRA ONNX-INT8 + 규칙 union | 91.37% | 92.44% | 74.41% | 14.7 MB |
-| Fine-tuned KoELECTRA | **98.09%** | **89.12%** | **93.07%** | 14.7 MB |
-
-근거 파일: [`bench_corpus4everyone_gazetteer_cmp312.json`](docs/reports/bench_corpus4everyone_gazetteer_cmp312.json) ·
-[`bench_corpus4everyone_onnx_union.json`](docs/reports/bench_corpus4everyone_onnx_union.json) ·
-[`bench_finetuned_corpus4everyone.json`](docs/reports/bench_finetuned_corpus4everyone.json)
 
 ---
 
