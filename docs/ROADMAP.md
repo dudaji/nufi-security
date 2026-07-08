@@ -103,7 +103,7 @@ P0 (한국어 PII 정확도 엔진, M) ──▶ P1 (한국 규제 증빙 팩, S
 
 P0(코어 정확도)를 먼저 끌어올려 해자를 굳히고, P1로 한국 규제 증빙을 확장, P2로 SDK 사용성을 더한다. 차기 옵션 중 LLM 라우팅은 P0 PII 감지 자산을 레버리지하므로 P0 완료 이후 진행이 자연스럽다.
 
-## 6. 현재 달성 수치 (v0.7.8 기준)
+## 6. 현재 달성 수치 (v0.8.0 기준)
 
 아래 수치는 커밋된 측정 산출물(`docs/reports/`)에서 기계로 추출됩니다.
 
@@ -121,7 +121,7 @@ P0(코어 정확도)를 먼저 끌어올려 해자를 굳히고, P1로 한국 �
 | 인젝션 정밀도 (precision) | ≥ 0.95 | **1.0000** ✅ | `injection-benchmark.json` |
 | 인젝션 F1 | — | **1.0000** ✅ | `injection-benchmark.json` |
 | Benign FP rate | ≤ 0.05 | **0.0000** ✅ | `injection-benchmark.json` |
-| 테스트 통과 | — | **883 collected** ✅ | `pytest` |
+| 테스트 통과 | — | **926 collected** ✅ | `pytest` |
 | 데모 PASS | — | **11 / 11** ✅ | `demo_all.sh` |
 | 가역 가명화 CLI | — | **v0.6.2** ✅ | `pseudonymize` + `scan --pseudonymize` + self-check + latency benchmark |
 | 가역 가명화 latency p95 | ≤ 200 ms (16K자) | **191.7 ms** ✅ | `bench_pseudonymize.py` |
@@ -137,6 +137,11 @@ P0(코어 정확도)를 먼저 끌어올려 해자를 굳히고, P1로 한국 �
 | doctor 체크 | — | **11개** ✅ | 자가진단 체크 6→11개 강화 (v0.7.6) |
 | scan --profile | — | **v0.7.7** ✅ | 스캔 프로파일 프리셋 (strict/standard/minimal/financial) |
 | scan --summary | — | **v0.7.7** ✅ | 집계 대시보드 (타입별·심각도별 ASCII 바 차트) |
+| E2E 가명화 Utility (ROUGE-L) | ≥ 0.90 | **0.9820** ✅ | `pseudonymize-e2e-quality.json` (mock LLM) |
+| E2E PII Protection Rate | == 1.00 | 0.9138 ❌ | KR_PERSON 복합 성씨 탐지 보완 필요 |
+| E2E Roundtrip Fidelity | ≥ 0.95 | 0.8966 ❌ | KR_LOCATION·EMAIL 원복 개선 필요 |
+| E2E 벤치마크 파이프라인 | — | **v0.8.0** ✅ | `bench_pseudonymize_e2e.py` (mock/claude/openai) |
+| 한국어 PII QA 평가셋 | — | **170건** ✅ | `data/pii_qa_eval.jsonl` (6개 카테고리) |
 
 ## 7. 거버넌스 · 리스크
 

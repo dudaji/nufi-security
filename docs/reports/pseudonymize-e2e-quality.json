@@ -23,8 +23,8 @@
   "latency": {
     "pseudonymize_ms": {
       "p50": 0.41,
-      "p95": 0.53,
-      "p99": 0.72
+      "p95": 0.52,
+      "p99": 0.7
     },
     "deanonymize_ms": {
       "p50": 0.04,

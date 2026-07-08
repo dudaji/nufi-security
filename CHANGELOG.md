@@ -4,6 +4,24 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.8.0] - 2026-07-08
+
+> **v0.8.0 — E2E 가명화 품질 벤치마크 실행 + 결과 리포트 + ROADMAP 갱신 (CMP-352)**
+
+### Added
+- **E2E 가명화 품질 벤치마크 실행** — `scripts/bench_pseudonymize_e2e.py` 파이프라인으로 170건 평가셋 전체 실행 (mock LLM 모드).
+  - Utility Retention (ROUGE-L): **0.9820** (목표 ≥ 0.90 PASS).
+  - PII Protection Rate: **0.9138** (목표 == 1.00 FAIL — KR_PERSON 복합 성씨 탐지 보완 필요).
+  - Roundtrip Fidelity: **0.8966** (목표 ≥ 0.95 FAIL — KR_LOCATION·EMAIL 원복 개선 필요).
+- **벤치마크 결과 리포트** — `docs/reports/benchmark_report_e2e_quality.md` (타입별·카테고리별·실패 케이스 분석 포함).
+- **벤치마크 결과 JSON** — `docs/reports/pseudonymize-e2e-quality.json` (머신 리더블 결과).
+
+### Changed
+- **ROADMAP.md §6** — E2E 가명화 품질 지표 5행 추가 (Utility, PII Protection, Roundtrip Fidelity, 파이프라인, 평가셋).
+- **VERSION** — 0.7.8 → 0.8.0
+
+---
+
 ## [0.7.8] - 2026-07-08
 
 > **v0.7.8 — CHANGELOG 통합 + ROADMAP 수치 갱신 + selftest 체크 추가 (CMP-344)**
