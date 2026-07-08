@@ -74,6 +74,13 @@ _PERSON_JOSA = ("에게서|에게|에서|에는|에도|에만|에|은|는|이|�
                 "과|와|의|도|만|께|한테|보다|처럼|같이|까지|부터|마다")
 _PERSON_CAND_RE = re.compile(
     rf"(?<![가-힣])(?P<name>{_NAME})(?:(?:{_PERSON_JOSA})(?![가-힣])|(?![가-힣]))")
+# CMP-357: 인명 패턴에 매치되지만 실제로는 일반명사인 호모그래프 — 오탐 차단.
+# "담당"(담+당)은 성씨 "담" + 1음절 이름으로 보이지만 "in charge of"라는 일반어.
+# "담당 변호사"가 _PERSON_TITLE_RE 에 매치되어 가명화 시 surrogate 매핑을 교란.
+_PERSON_STOPWORDS = frozenset(
+    "담당 대표 수배 배당 형사 비서 수사 담보 독자 독립 "
+    "효과 효력 효능 율동 율법 겸직 겸손 겸임 몽상 절대 절약 절차".split()
+)
 _CONTEXT_RE = re.compile(rf"(?:{_CONTEXT})\s*$")
 
 _PLACE_SUFFIX_RE = re.compile(r"(?<![가-힣])([가-힣]{2,4}(?:특별시|광역시|특별자치시|특별자치도))")
@@ -283,6 +290,8 @@ def detect_kr_persons(text: str, source: str = "ner:gazetteer") -> Iterator[RawS
 
     def emit_person(start, end, name):
         if (start, end) in seen:
+            return None
+        if name in _PERSON_STOPWORDS:
             return None
         seen.add((start, end))
         return RawSpan("KR_PERSON", name, start, end, 0.75, source=source)
