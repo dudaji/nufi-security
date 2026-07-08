@@ -20,6 +20,8 @@ import argparse
 import json
 import os
 import re
+import shutil
+import subprocess
 import sys
 import time
 from dataclasses import dataclass, field, asdict
@@ -198,6 +200,23 @@ class ClaudeLLM:
         return msg.content[0].text
 
 
+class ClaudeCLI:
+    """Claude CLI (claude --print) 백엔드 — Paperclip 등 이미 인증된 환경에서 사용."""
+
+    def __init__(self):
+        if not shutil.which("claude"):
+            raise RuntimeError("claude CLI 미설치 또는 PATH 에 없음")
+
+    def generate(self, prompt: str) -> str:
+        result = subprocess.run(
+            ["claude", "--print", "-p", prompt],
+            capture_output=True, text=True, timeout=120,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"claude CLI 실패: {result.stderr[:200]}")
+        return result.stdout.strip()
+
+
 class OpenAILLM:
     """OpenAI 호환 API 백엔드."""
 
@@ -266,6 +285,8 @@ def run_benchmark(
             mock_fallback = True
         else:
             llm = ClaudeLLM(model=llm_model or "claude-sonnet-4-20250514")
+    elif llm_backend == "claude-cli":
+        llm = ClaudeCLI()
     elif llm_backend == "openai":
         if not os.environ.get("OPENAI_API_KEY"):
             print("⚠ OPENAI_API_KEY 미설정 → mock 모드로 폴백하여 파이프라인만 검증")
@@ -472,7 +493,7 @@ def _aggregate(results: List[SampleResult], llm_backend: str, mock_fallback: boo
 # ── CLI ───────────────────────────────────────────────────────────────────
 def main():
     ap = argparse.ArgumentParser(description="E2E 가명화 품질 벤치마크 (CMP-351)")
-    ap.add_argument("--llm", default="mock", choices=["mock", "claude", "openai"],
+    ap.add_argument("--llm", default="mock", choices=["mock", "claude", "claude-cli", "openai"],
                     help="LLM 백엔드 (기본: mock)")
     ap.add_argument("--llm-model", default=None,
                     help="LLM 모델 이름 오버라이드")

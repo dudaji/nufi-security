@@ -1472,6 +1472,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                    help="파일별 PII 체크 — PII 발견 시 exit 1 + 가명화 제안 (pre-commit용)")
     p.add_argument("--quality-report", action="store_true",
                    help="품질 메트릭 리포트 출력 (커버리지·역변환 정확도·타입별 통계)")
+    p.add_argument("--stream", action="store_true",
+                   help="스트리밍 원복 모드 — stdin 에서 청크를 읽어 실시간 역치환 (--session 필수)")
     p.set_defaults(func=cmd_pseudonymize)
 
     p = sub.add_parser("explain",

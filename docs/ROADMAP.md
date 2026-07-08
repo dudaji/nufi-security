@@ -103,7 +103,7 @@ P0 (한국어 PII 정확도 엔진, M) ──▶ P1 (한국 규제 증빙 팩, S
 
 P0(코어 정확도)를 먼저 끌어올려 해자를 굳히고, P1로 한국 규제 증빙을 확장, P2로 SDK 사용성을 더한다. 차기 옵션 중 LLM 라우팅은 P0 PII 감지 자산을 레버리지하므로 P0 완료 이후 진행이 자연스럽다.
 
-## 6. 현재 달성 수치 (v0.9.0 기준)
+## 6. 현재 달성 수치 (v0.10.0 기준)
 
 아래 수치는 커밋된 측정 산출물(`docs/reports/`)에서 기계로 추출됩니다.
 
@@ -141,8 +141,10 @@ P0(코어 정확도)를 먼저 끌어올려 해자를 굳히고, P1로 한국 �
 | E2E PII Protection Rate | == 1.00 | **1.0000** ✅ | CMP-353 KR_PERSON 문맥 게이팅 강화 |
 | E2E Roundtrip Fidelity | ≥ 0.95 | **0.9655** ✅ | CMP-354 KR_LOCATION 복합 지명 개선 |
 | E2E 벤치마크 파이프라인 | — | **v0.8.0** ✅ | `bench_pseudonymize_e2e.py` (mock/claude/openai) |
-| 한국어 PII QA 평가셋 | — | **170건** ✅ | `data/pii_qa_eval.jsonl` (6개 카테고리) |
+| 한국어 PII QA 평가셋 | ≥ 250건 | **255건** ✅ | `data/pii_qa_eval.jsonl` (6개 카테고리 + edge case: 복합PII·테이블·코드·장문) |
 | E2E 종합 리포트 | — | **v0.9.0** ✅ | [`PSEUDONYMIZE_E2E_REPORT.md`](reports/PSEUDONYMIZE_E2E_REPORT.md) |
+| 스트리밍 가명화 | — | **v0.10.0** ✅ | `deanonymize_stream()` + CLI `--stream` (청크 경계 버퍼링) |
+| 가명화 REST API | — | **v0.10.0** ✅ | POST /pseudonymize, POST /deanonymize, DELETE /sessions |
 
 ## 7. 거버넌스 · 리스크
 

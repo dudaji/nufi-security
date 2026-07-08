@@ -13,24 +13,24 @@
     "roundtrip_fidelity": 0.95
   },
   "scores": {
-    "utility_retention_rouge_l": 0.9871,
-    "exact_match_rate": 0.9412,
-    "exact_match_n": "160/170",
+    "utility_retention_rouge_l": 0.9971,
+    "exact_match_rate": 0.9706,
+    "exact_match_n": "165/170",
     "pii_protection_rate": 1.0,
     "pii_protection_n": "290/290",
-    "roundtrip_fidelity": 0.9655,
-    "roundtrip_fidelity_n": "280/290"
+    "roundtrip_fidelity": 0.9828,
+    "roundtrip_fidelity_n": "285/290"
   },
   "latency": {
     "pseudonymize_ms": {
-      "p50": 0.42,
-      "p95": 0.54,
-      "p99": 0.65
+      "p50": 0.44,
+      "p95": 0.59,
+      "p99": 0.74
     },
     "deanonymize_ms": {
       "p50": 0.04,
-      "p95": 0.04,
-      "p99": 0.05
+      "p95": 0.06,
+      "p99": 0.08
     }
   },
   "by_type": {
@@ -65,9 +65,9 @@
     "KR_PHONE": {
       "total": 55,
       "leaked": 0,
-      "restored": 50,
+      "restored": 55,
       "protection_rate": 1.0,
-      "roundtrip_fidelity": 0.9091
+      "roundtrip_fidelity": 1.0
     }
   },
   "by_category": {
@@ -91,9 +91,9 @@
     },
     "legal": {
       "n": 28,
-      "em": 23,
-      "avg_rouge_l": 0.9394,
-      "em_rate": 0.8214
+      "em": 28,
+      "avg_rouge_l": 1.0,
+      "em_rate": 1.0
     },
     "medical": {
       "n": 28,
@@ -108,63 +108,7 @@
       "em_rate": 1.0
     }
   },
-  "degraded_samples": [
-    {
-      "id": "pii_qa_029",
-      "category": "legal",
-      "rouge_l": 0.6250000000000001,
-      "pii_leaked": [],
-      "pii_restored": [
-        "어금지원",
-        "수원시"
-      ],
-      "pii_total": 3
-    },
-    {
-      "id": "pii_qa_059",
-      "category": "legal",
-      "rouge_l": 0.7142857142857143,
-      "pii_leaked": [],
-      "pii_restored": [
-        "제갈준호",
-        "청주시"
-      ],
-      "pii_total": 3
-    },
-    {
-      "id": "pii_qa_089",
-      "category": "legal",
-      "rouge_l": 0.6250000000000001,
-      "pii_leaked": [],
-      "pii_restored": [
-        "몽소율",
-        "롯데월드타워"
-      ],
-      "pii_total": 3
-    },
-    {
-      "id": "pii_qa_119",
-      "category": "legal",
-      "rouge_l": 0.7142857142857143,
-      "pii_leaked": [],
-      "pii_restored": [
-        "동방서준",
-        "동대문디자인플라자"
-      ],
-      "pii_total": 3
-    },
-    {
-      "id": "pii_qa_149",
-      "category": "legal",
-      "rouge_l": 0.6250000000000001,
-      "pii_leaked": [],
-      "pii_restored": [
-        "절현서",
-        "부산광역시"
-      ],
-      "pii_total": 3
-    }
-  ],
+  "degraded_samples": [],
   "acceptance": {
     "rouge_l>=0.9": true,
     "pii_protection_rate==1.0": true,

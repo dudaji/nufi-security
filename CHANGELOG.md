@@ -6,13 +6,16 @@
 
 ## [0.10.0] - 2026-07-09
 
-> **v0.10.0 — 가명화 REST API 엔드포인트 추가 (CMP-367)**
+> **v0.10.0 — 가명화 파이프라인 고도화: 스트리밍 가명화 + 평가셋 확장 + 테스트 보강 (CMP-367, CMP-368)**
 
 ### Added
-- **POST /pseudonymize** — 텍스트 가역 가명화 API. session_id 자동 발급(UUID), 선택적 명시 지원. 응답: transformed_text, session_id, pseudonymized_count, blocked.
-- **POST /deanonymize** — 가명화 서로게이트 원복 API. session_id 기반 Vault 조회로 원본 복원. 응답: restored_text, stats(restored, fallback).
-- **DELETE /sessions/{session_id}** — 세션 종료 및 Vault 매핑 secure wipe API.
-- **테스트 5건** — pseudonymize/deanonymize 라운드트립, 명시적 session_id, 세션 삭제, 삭제 후 fallback 검증.
+- **스트리밍 가명화 지원 (CMP-368)** — `ReversibleEgress.deanonymize_stream()` 메서드: 청크 이터러블을 받아 실시간 역치환. 청크 경계 surrogate 분할 자동 버퍼링.
+- **CLI `pseudonymize --stream` 옵션 (CMP-368)** — stdin 에서 청크를 읽어 실시간 스트리밍 원복. LLM SSE/chunked 응답 파이프 연동.
+- **평가셋 250건+ 확장 (CMP-368)** — `data/pii_qa_eval.jsonl` 170건 → 255건. edge case 추가: 복합 PII(3종+), 테이블/CSV, 코드 스니펫, 긴 문서(2000자+).
+- **테스트 24건 추가 (CMP-368)** — 스트리밍 단위/통합 테스트 11건, 대규모 배치(1000건+) 3건, 동시성(멀티스레드) 3건, 평가셋 검증 5건, 스트리밍 벤치마크 2건.
+- **POST /pseudonymize** — 텍스트 가역 가명화 API (CMP-367). session_id 자동 발급(UUID), 선택적 명시 지원.
+- **POST /deanonymize** — 가명화 서로게이트 원복 API (CMP-367). session_id 기반 Vault 조회로 원본 복원.
+- **DELETE /sessions/{session_id}** — 세션 종료 및 Vault 매핑 secure wipe API (CMP-367).
 
 ### Changed
 - **VERSION** — 0.9.0 → 0.10.0

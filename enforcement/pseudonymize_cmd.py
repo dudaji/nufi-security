@@ -26,6 +26,7 @@ def cmd_pseudonymize(args) -> int:
     """``nufi-egress pseudonymize`` CLI handler."""
     restore = getattr(args, "restore", False)
     check = getattr(args, "check", False)
+    stream = getattr(args, "stream", False)
     session_id = getattr(args, "session", None)
     text: Optional[str] = getattr(args, "text", None)
     file_path: Optional[str] = getattr(args, "file", None)
@@ -41,10 +42,56 @@ def cmd_pseudonymize(args) -> int:
         filenames = getattr(args, "filenames", [])
         return _do_check(filenames)
 
+    if stream:
+        return _do_stream(session_id, use_json)
     if restore:
         return _do_restore(text, file_path, output_path, session_id, use_json)
     return _do_pseudonymize(text, file_path, output_path, session_id, use_json,
                             quality_report=quality_report)
+
+
+def _do_stream(
+    session_id: Optional[str],
+    use_json: bool,
+) -> int:
+    """스트리밍 모드: stdin 에서 줄 단위로 읽고 가명화 후 즉시 출력.
+
+    LLM SSE/chunked 응답을 파이프로 받아 실시간 가명화하는 용도.
+    세션 ID 필수 (이미 가명화된 텍스트의 스트리밍 원복).
+    """
+    if not session_id:
+        print("오류: --stream 모드에서 --session 을 지정해야 합니다.", file=sys.stderr)
+        return 1
+
+    rev = ReversibleEgress(ner_backend="gazetteer")
+    restorer = rev.stream_restorer(session_id)
+
+    try:
+        for line in sys.stdin:
+            out = restorer.feed(line)
+            if out:
+                if use_json:
+                    print(json.dumps({"chunk": out}, ensure_ascii=False), flush=True)
+                else:
+                    sys.stdout.write(out)
+                    sys.stdout.flush()
+    except KeyboardInterrupt:
+        pass
+
+    tail = restorer.flush()
+    if tail:
+        if use_json:
+            print(json.dumps({"chunk": tail}, ensure_ascii=False), flush=True)
+        else:
+            sys.stdout.write(tail)
+            sys.stdout.flush()
+
+    if use_json:
+        print(json.dumps({"stats": restorer.stats}, ensure_ascii=False))
+    else:
+        print(f"\n[stream] stats: {restorer.stats}", file=sys.stderr)
+
+    return 0
 
 
 def _do_pseudonymize(

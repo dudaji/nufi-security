@@ -12,7 +12,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Optional, Tuple
+from typing import Iterable, Iterator, List, Optional, Tuple
 
 from .guard import EgressGuard
 from .pipeline import Finding
@@ -67,6 +67,23 @@ class ReversibleEgress:
 
     def stream_restorer(self, session_id: str) -> sg.StreamingDeanonymizer:
         return sg.StreamingDeanonymizer(self.vault, session_id)
+
+    def deanonymize_stream(
+        self, chunks: Iterable[str], session_id: str
+    ) -> Iterator[str]:
+        """스트리밍 원복 — 청크 이터러블을 받아 원복된 청크를 yield.
+
+        청크 경계에서 surrogate 토큰이 분할되는 경우 내부 버퍼링으로 처리.
+        마지막에 잔여 버퍼를 자동 flush.
+        """
+        restorer = self.stream_restorer(session_id)
+        for chunk in chunks:
+            out = restorer.feed(chunk)
+            if out:
+                yield out
+        tail = restorer.flush()
+        if tail:
+            yield tail
 
     def end_session(self, session_id: str) -> int:
         """라운드트립/세션 종료 시 매핑 즉시 폐기(secure wipe)."""
