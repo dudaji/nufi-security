@@ -52,9 +52,13 @@ _COMPOUND_SURNAMES = (
 _HONORIFICS = "님|씨|군|양"
 _TITLES = ("부장|과장|차장|대리|팀장|사원|대표|이사|사장|회장|부사장|상무|전무|"
            "선생|셰프|교수|박사|원장|의원|판사|검사|변호사|기자|감독|선수|작가|"
-           "대리님|기사|간호사|약사|의사")
+           "대리님|기사|간호사|약사|의사|"
+           # CMP-353: 문맥 후치 역할어(이름 뒤) — "김예린 환자" 등 탐지
+           "환자")
 _CONTEXT = ("고객|환자|담당자|직원|대표|발신자|발신|수신자|수신|성함|이름|사용자|회원|가입자|"
-            "신청자|지원자|보호자|의뢰인|수취인|예금주|명의자")
+            "신청자|지원자|보호자|의뢰인|수취인|예금주|명의자|"
+            # CMP-353: 문맥 전치 역할어(이름 앞) — "당사자 X", "입사자 X", "변호사 X" 등 탐지
+            "당사자|입사자|변호사")
 
 # 인명 후보: (성)(이름 1~2자). 게이팅 방식 3종.
 #  - 경칭이 바로 붙은 경우 (님/씨/군/양) — 뒤 조사 허용
@@ -85,10 +89,12 @@ _JOSA_END = rf"(?:{_JOSA})?(?![가-힣])"
 # 패스에서 조사 허용으로 처리한다(CMP-312).
 _PLACE_UNIT_RE = re.compile(r"(?<![가-힣])([가-힣]{1,4}(?:시|도|군|구|읍|면|동|리))(?![가-힣])")
 
-# 다토큰 행정 스팬(시 + 구)을 하나로 결합해 경계 품질을 보존한다(P1 §2.2 class d:
-# "성남시 분당구" 가 "성남시"+"분당구" 로 조각나던 문제). 단일 스팬으로 배출.
+# 다토큰 행정 스팬(시 + 구, 구 + 동)을 하나로 결합해 경계 품질을 보존한다(P1 §2.2
+# class d: "성남시 분당구" 가 "성남시"+"분당구" 로 조각나던 문제). 단일 스팬으로 배출.
+# CMP-354: 구+동("강남구 역삼동") 결합도 지원한다.
 _METRO_DISTRICT_RE = re.compile(
-    rf"(?<![가-힣])([가-힣]{{2,4}}시\s+[가-힣]{{2,4}}구){_JOSA_END}")
+    rf"(?<![가-힣])([가-힣]{{2,4}}(?:시)\s+[가-힣]{{2,4}}(?:구)){_JOSA_END}"
+    rf"|(?<![가-힣])([가-힣]{{2,4}}(?:구)\s+[가-힣]{{2,4}}(?:동)){_JOSA_END}")
 
 # --- 도로명주소 (CMP-221 P2 task 1) -----------------------------------------
 # <도로명: …대로|로|길> + 건물번호(숫자[-숫자], 번지/번길 허용). 건물번호를 필수로
@@ -129,6 +135,14 @@ _LANDMARK_SUFFIX = ("국제도시|신도시|테크노밸리|디자인플라자|�
 # CMP-312: 접두 + 선택적 공백 + 접미사 — "송지호 해수욕장"·"무창포해수욕장" 모두 매치.
 _LANDMARK_RE = re.compile(
     rf"(?<![가-힣])([가-힣]{{2,8}}\s?(?:{_LANDMARK_SUFFIX})){_JOSA_END}")
+# CMP-354: 한글 지명 + 영문 랜드마크/빌딩명 — "여의도 IFC", "판교 알파돔타워" 등
+# 알려진 영문 빌딩/시설명. 한글 2-4자 지명 + 공백 + 영문 약칭(2-10자).
+_KR_EN_LANDMARKS = frozenset(
+    "IFC COEX ASEM KTX SRT DDP DMC LCT BIFC".split())
+_KR_EN_LANDMARK_RE = re.compile(
+    r"(?<![가-힣])([가-힣]{2,4}\s+(?:" +
+    "|".join(re.escape(l) for l in sorted(_KR_EN_LANDMARKS, key=len, reverse=True)) +
+    r"))(?![A-Za-z])" + _JOSA_END)
 # 위 접미사를 갖지만 지명이 아닌 일반명사 복합어(호모그래프) — 오탐 차단.
 _LANDMARK_STOPWORDS = frozenset(
     "쇼핑몰 온라인몰 아울렛몰 오픈마켓몰 종합몰 스마트시티 데이터센터 고객센터 "
@@ -201,6 +215,12 @@ _KNOWN_PLACES = (
           "우한 방콕 캄보디아 터키 이란 이라크 멕시코 브라질 아르헨티나".split())
     # 역사·문화 지명
     | set("백제 가야 신라 고구려 동아시아 조선".split())
+    # CMP-354: 복합 지명(브랜드+지역) — 단일 스팬으로 탐지해야 하는 랜드마크
+    | {"스타필드 하남", "스타필드 고양", "스타필드 수원", "스타필드 안성",
+       "롯데몰 수지", "롯데몰 은평", "롯데몰 김포",
+       "현대백화점 판교", "현대백화점 목동",
+       "이케아 고양", "이케아 광명", "이케아 기흥", "이케아 동부산",
+       "코스트코 양재", "코스트코 하남", "코스트코 공세"}
 )
 # CMP-312: 동음이의 위험이 매우 높은 bare 지명 — 조사 또는 비-한글 경계 필수.
 # 예산=budget, 고려=consider, 인도=guidance, 경기=game/match, 광주=広州(일반어)
@@ -314,9 +334,13 @@ def detect_kr_locations(text: str, source: str = "ner:gazetteer") -> Iterator[Ra
         span = emit_loc(m.start(1), m.end(1), m.group(1), 0.8)
         if span:
             yield span
-    # 우선순위 3: 결합 행정 스팬(시 + 구) — 경계 품질(P1 class d)
+    # 우선순위 3: 결합 행정 스팬(시+구, 구+동) — 경계 품질(P1 class d, CMP-354)
     for m in _METRO_DISTRICT_RE.finditer(text):
-        span = emit_loc(m.start(1), m.end(1), m.group(1), 0.85)
+        # 두 대안 중 매치된 그룹을 선택 (시+구 = group 1, 구+동 = group 2)
+        matched = m.group(1) or m.group(2)
+        start = m.start(1) if m.group(1) else m.start(2)
+        end = m.end(1) if m.group(1) else m.end(2)
+        span = emit_loc(start, end, matched, 0.85)
         if span:
             yield span
     # 지명: 광역 접미사(특별시/광역시 등)
@@ -329,6 +353,11 @@ def detect_kr_locations(text: str, source: str = "ner:gazetteer") -> Iterator[Ra
         if m.group(1) in _LANDMARK_STOPWORDS:
             continue
         span = emit_loc(m.start(1), m.end(1), m.group(1), 0.7)
+        if span:
+            yield span
+    # CMP-354: 한글 지명 + 영문 랜드마크("여의도 IFC", "삼성 COEX" 등)
+    for m in _KR_EN_LANDMARK_RE.finditer(text):
+        span = emit_loc(m.start(1), m.end(1), m.group(1), 0.75)
         if span:
             yield span
     # 지명: 행정단위 접미사 (호모그래프 제외). 시군구 사전 등재 시 conf 승격.
