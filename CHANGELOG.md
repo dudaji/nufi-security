@@ -4,6 +4,20 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.9.0] - 2026-07-08
+
+> **v0.9.0 — E2E 가명화 품질 종합 리포트 문서화 + ROADMAP 갱신 + 릴리스 (CMP-358)**
+
+### Added
+- **E2E 가명화 품질 종합 리포트** — `docs/reports/PSEUDONYMIZE_E2E_REPORT.md`: 배경·방법론·결과 요약·타입/카테고리별 세부 분석·개선 이력(v0.8.0 FAIL→v0.8.1 PASS)·결론 및 향후 과제.
+
+### Changed
+- **README.md** — E2E 가명화 품질 지표 섹션 추가 (ROUGE-L 0.9871, PII Protection 1.0000, Roundtrip Fidelity 0.9655).
+- **ROADMAP.md §6** — v0.9.0 기준으로 갱신, E2E 종합 리포트 행 추가, 가역적 가명화 QA 진행 상태 반영.
+- **VERSION** — 0.8.1 → 0.9.0
+
+---
+
 ## [0.8.1] - 2026-07-08
 
 > **v0.8.1 — E2E 벤치마크 전 지표 PASS 달성 + 릴리스 (CMP-355)**

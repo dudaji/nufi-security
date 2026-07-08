@@ -71,6 +71,19 @@ CLI(`nufi-egress`)와 Python SDK(`from nufi import detect, Guard, pseudonymize`)
 Wilson CI95 하한은 점추정이 아닌 **통계적 하한**으로, 이 값이 목표 이상이면 작은 표본의
 행운이 아닌 실제 성능임을 보증합니다.
 
+### E2E 가명화 품질 (v0.9.0)
+
+가역적 가명화 파이프라인의 end-to-end 품질을 170건 한국어 PII QA 평가셋으로 측정했습니다.
+
+| 지표 | 값 | 목표 |
+|------|-----|------|
+| Utility Retention (ROUGE-L) | **0.9871** | ≥ 0.90 ✅ |
+| PII Protection Rate | **1.0000** (290/290) | == 1.00 ✅ |
+| Roundtrip Fidelity | **0.9655** (280/290) | ≥ 0.95 ✅ |
+| 가명화 레이턴시 p95 | **0.54 ms** | — |
+
+종합 리포트: [`docs/reports/PSEUDONYMIZE_E2E_REPORT.md`](docs/reports/PSEUDONYMIZE_E2E_REPORT.md)
+
 - **재현율(recall)** = 실제 개인정보 중 잡아낸 비율, **정밀도(precision)** = 잡아냈다고
   한 것 중 진짜인 비율, **p95** = 100건 중 95건이 이 시간 안에 처리됨.
 - 위 표의 전체 재현율·정밀도는 [`docs/reports/recall-int8.json`](docs/reports/recall-int8.json)
