@@ -4,6 +4,20 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.8.1] - 2026-07-08
+
+> **v0.8.1 — E2E 벤치마크 전 지표 PASS 달성 + 릴리스 (CMP-355)**
+
+### Changed
+- **E2E 벤치마크 재실행** — CMP-353(KR_PERSON 문맥 게이팅), CMP-354(KR_LOCATION 복합 지명) 반영 후 170건 전체 재실행.
+  - Utility Retention (ROUGE-L): **0.9871** (목표 ≥ 0.90 PASS).
+  - PII Protection Rate: **1.0000** (목표 == 1.00 PASS).
+  - Roundtrip Fidelity: **0.9655** (목표 ≥ 0.95 PASS).
+- **ROADMAP.md §6** — E2E 수치 갱신 (v0.8.1 기준, 3개 지표 전부 PASS).
+- **VERSION** — 0.8.0 → 0.8.1
+
+---
+
 ## [0.8.0] - 2026-07-08
 
 > **v0.8.0 — E2E 가명화 품질 벤치마크 실행 + 결과 리포트 + ROADMAP 갱신 (CMP-352)**

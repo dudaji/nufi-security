@@ -103,7 +103,7 @@ P0 (한국어 PII 정확도 엔진, M) ──▶ P1 (한국 규제 증빙 팩, S
 
 P0(코어 정확도)를 먼저 끌어올려 해자를 굳히고, P1로 한국 규제 증빙을 확장, P2로 SDK 사용성을 더한다. 차기 옵션 중 LLM 라우팅은 P0 PII 감지 자산을 레버리지하므로 P0 완료 이후 진행이 자연스럽다.
 
-## 6. 현재 달성 수치 (v0.8.0 기준)
+## 6. 현재 달성 수치 (v0.8.1 기준)
 
 아래 수치는 커밋된 측정 산출물(`docs/reports/`)에서 기계로 추출됩니다.
 
@@ -137,9 +137,9 @@ P0(코어 정확도)를 먼저 끌어올려 해자를 굳히고, P1로 한국 �
 | doctor 체크 | — | **11개** ✅ | 자가진단 체크 6→11개 강화 (v0.7.6) |
 | scan --profile | — | **v0.7.7** ✅ | 스캔 프로파일 프리셋 (strict/standard/minimal/financial) |
 | scan --summary | — | **v0.7.7** ✅ | 집계 대시보드 (타입별·심각도별 ASCII 바 차트) |
-| E2E 가명화 Utility (ROUGE-L) | ≥ 0.90 | **0.9820** ✅ | `pseudonymize-e2e-quality.json` (mock LLM) |
-| E2E PII Protection Rate | == 1.00 | 0.9138 ❌ | KR_PERSON 복합 성씨 탐지 보완 필요 |
-| E2E Roundtrip Fidelity | ≥ 0.95 | 0.8966 ❌ | KR_LOCATION·EMAIL 원복 개선 필요 |
+| E2E 가명화 Utility (ROUGE-L) | ≥ 0.90 | **0.9871** ✅ | `pseudonymize-e2e-quality.json` (mock LLM) |
+| E2E PII Protection Rate | == 1.00 | **1.0000** ✅ | CMP-353 KR_PERSON 문맥 게이팅 강화 |
+| E2E Roundtrip Fidelity | ≥ 0.95 | **0.9655** ✅ | CMP-354 KR_LOCATION 복합 지명 개선 |
 | E2E 벤치마크 파이프라인 | — | **v0.8.0** ✅ | `bench_pseudonymize_e2e.py` (mock/claude/openai) |
 | 한국어 PII QA 평가셋 | — | **170건** ✅ | `data/pii_qa_eval.jsonl` (6개 카테고리) |
 
