@@ -15,7 +15,7 @@ VALID_PII_TYPES = {"KR_PERSON", "KR_PHONE", "EMAIL", "KR_LOCATION", "KR_BRN"}
 VALID_CATEGORIES = {"customer_service", "document_summary", "payment", "hr", "medical", "legal"}
 
 MIN_SAMPLES = 100
-MAX_SAMPLES = 200
+MAX_SAMPLES = 300
 MIN_PII_TYPES = 5
 CONTROL_MIN_RATIO = 0.10
 CONTROL_MAX_RATIO = 0.20
