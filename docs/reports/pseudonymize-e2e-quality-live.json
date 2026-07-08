@@ -1,0 +1,174 @@
+{
+  "benchmark": "pseudonymize-e2e-quality",
+  "llm_backend": "claude",
+  "mock_fallback": true,
+  "eval_set": "data/pii_qa_eval.jsonl",
+  "n_samples": 170,
+  "n_pii_samples": 150,
+  "n_control_samples": 20,
+  "seed": 20260708,
+  "targets": {
+    "rouge_l": 0.9,
+    "pii_protection_rate": 1.0,
+    "roundtrip_fidelity": 0.95
+  },
+  "scores": {
+    "utility_retention_rouge_l": 0.9871,
+    "exact_match_rate": 0.9412,
+    "exact_match_n": "160/170",
+    "pii_protection_rate": 1.0,
+    "pii_protection_n": "290/290",
+    "roundtrip_fidelity": 0.9655,
+    "roundtrip_fidelity_n": "280/290"
+  },
+  "latency": {
+    "pseudonymize_ms": {
+      "p50": 0.42,
+      "p95": 0.54,
+      "p99": 0.65
+    },
+    "deanonymize_ms": {
+      "p50": 0.04,
+      "p95": 0.04,
+      "p99": 0.05
+    }
+  },
+  "by_type": {
+    "EMAIL": {
+      "total": 50,
+      "leaked": 0,
+      "restored": 45,
+      "protection_rate": 1.0,
+      "roundtrip_fidelity": 0.9
+    },
+    "KR_BRN": {
+      "total": 25,
+      "leaked": 0,
+      "restored": 25,
+      "protection_rate": 1.0,
+      "roundtrip_fidelity": 1.0
+    },
+    "KR_LOCATION": {
+      "total": 25,
+      "leaked": 0,
+      "restored": 25,
+      "protection_rate": 1.0,
+      "roundtrip_fidelity": 1.0
+    },
+    "KR_PERSON": {
+      "total": 135,
+      "leaked": 0,
+      "restored": 135,
+      "protection_rate": 1.0,
+      "roundtrip_fidelity": 1.0
+    },
+    "KR_PHONE": {
+      "total": 55,
+      "leaked": 0,
+      "restored": 50,
+      "protection_rate": 1.0,
+      "roundtrip_fidelity": 0.9091
+    }
+  },
+  "by_category": {
+    "customer_service": {
+      "n": 29,
+      "em": 29,
+      "avg_rouge_l": 1.0,
+      "em_rate": 1.0
+    },
+    "document_summary": {
+      "n": 29,
+      "em": 29,
+      "avg_rouge_l": 1.0,
+      "em_rate": 1.0
+    },
+    "hr": {
+      "n": 28,
+      "em": 28,
+      "avg_rouge_l": 1.0,
+      "em_rate": 1.0
+    },
+    "legal": {
+      "n": 28,
+      "em": 23,
+      "avg_rouge_l": 0.9394,
+      "em_rate": 0.8214
+    },
+    "medical": {
+      "n": 28,
+      "em": 23,
+      "avg_rouge_l": 0.9821,
+      "em_rate": 0.8214
+    },
+    "payment": {
+      "n": 28,
+      "em": 28,
+      "avg_rouge_l": 1.0,
+      "em_rate": 1.0
+    }
+  },
+  "degraded_samples": [
+    {
+      "id": "pii_qa_029",
+      "category": "legal",
+      "rouge_l": 0.6250000000000001,
+      "pii_leaked": [],
+      "pii_restored": [
+        "어금지원",
+        "수원시"
+      ],
+      "pii_total": 3
+    },
+    {
+      "id": "pii_qa_059",
+      "category": "legal",
+      "rouge_l": 0.7142857142857143,
+      "pii_leaked": [],
+      "pii_restored": [
+        "제갈준호",
+        "청주시"
+      ],
+      "pii_total": 3
+    },
+    {
+      "id": "pii_qa_089",
+      "category": "legal",
+      "rouge_l": 0.6250000000000001,
+      "pii_leaked": [],
+      "pii_restored": [
+        "몽소율",
+        "롯데월드타워"
+      ],
+      "pii_total": 3
+    },
+    {
+      "id": "pii_qa_119",
+      "category": "legal",
+      "rouge_l": 0.7142857142857143,
+      "pii_leaked": [],
+      "pii_restored": [
+        "동방서준",
+        "동대문디자인플라자"
+      ],
+      "pii_total": 3
+    },
+    {
+      "id": "pii_qa_149",
+      "category": "legal",
+      "rouge_l": 0.6250000000000001,
+      "pii_leaked": [],
+      "pii_restored": [
+        "절현서",
+        "부산광역시"
+      ],
+      "pii_total": 3
+    }
+  ],
+  "acceptance": {
+    "rouge_l>=0.9": true,
+    "pii_protection_rate==1.0": true,
+    "roundtrip_fidelity>=0.95": true
+  },
+  "acceptance_pass": true
+}

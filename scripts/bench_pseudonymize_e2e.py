@@ -256,12 +256,23 @@ def run_benchmark(
         raise ValueError(f"평가셋 비어 있음: {eval_path}")
 
     # LLM 초기화
+    mock_fallback = False
     if llm_backend == "mock":
         llm = MockLLM(samples)
     elif llm_backend == "claude":
-        llm = ClaudeLLM(model=llm_model or "claude-sonnet-4-20250514")
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            print("⚠ ANTHROPIC_API_KEY 미설정 → mock 모드로 폴백하여 파이프라인만 검증")
+            llm = MockLLM(samples)
+            mock_fallback = True
+        else:
+            llm = ClaudeLLM(model=llm_model or "claude-sonnet-4-20250514")
     elif llm_backend == "openai":
-        llm = OpenAILLM(model=llm_model or "gpt-4o-mini")
+        if not os.environ.get("OPENAI_API_KEY"):
+            print("⚠ OPENAI_API_KEY 미설정 → mock 모드로 폴백하여 파이프라인만 검증")
+            llm = MockLLM(samples)
+            mock_fallback = True
+        else:
+            llm = OpenAILLM(model=llm_model or "gpt-4o-mini")
     else:
         raise ValueError(f"지원하지 않는 LLM 백엔드: {llm_backend}")
 
@@ -331,10 +342,10 @@ def run_benchmark(
         results.append(sr)
         rev.end_session(sid)
 
-    return _aggregate(results, llm_backend)
+    return _aggregate(results, llm_backend, mock_fallback)
 
 
-def _aggregate(results: List[SampleResult], llm_backend: str) -> dict:
+def _aggregate(results: List[SampleResult], llm_backend: str, mock_fallback: bool = False) -> dict:
     """개별 결과를 집계."""
     n = len(results)
     if n == 0:
@@ -421,6 +432,7 @@ def _aggregate(results: List[SampleResult], llm_backend: str) -> dict:
     report = {
         "benchmark": "pseudonymize-e2e-quality",
         "llm_backend": llm_backend,
+        "mock_fallback": mock_fallback,
         "eval_set": str(EVAL_SET.relative_to(ROOT)),
         "n_samples": n,
         "n_pii_samples": len(pii_samples),
