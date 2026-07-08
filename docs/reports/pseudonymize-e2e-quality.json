@@ -1,0 +1,301 @@
+{
+  "benchmark": "pseudonymize-e2e-quality",
+  "llm_backend": "mock",
+  "eval_set": "data/pii_qa_eval.jsonl",
+  "n_samples": 170,
+  "n_pii_samples": 150,
+  "n_control_samples": 20,
+  "seed": 20260708,
+  "targets": {
+    "rouge_l": 0.9,
+    "pii_protection_rate": 1.0,
+    "roundtrip_fidelity": 0.95
+  },
+  "scores": {
+    "utility_retention_rouge_l": 0.982,
+    "exact_match_rate": 0.8294,
+    "exact_match_n": "141/170",
+    "pii_protection_rate": 0.9138,
+    "pii_protection_n": "265/290",
+    "roundtrip_fidelity": 0.8966,
+    "roundtrip_fidelity_n": "260/290"
+  },
+  "latency": {
+    "pseudonymize_ms": {
+      "p50": 0.41,
+      "p95": 0.53,
+      "p99": 0.72
+    },
+    "deanonymize_ms": {
+      "p50": 0.04,
+      "p95": 0.04,
+      "p99": 0.05
+    }
+  },
+  "by_type": {
+    "EMAIL": {
+      "total": 50,
+      "leaked": 0,
+      "restored": 45,
+      "protection_rate": 1.0,
+      "roundtrip_fidelity": 0.9
+    },
+    "KR_BRN": {
+      "total": 25,
+      "leaked": 0,
+      "restored": 25,
+      "protection_rate": 1.0,
+      "roundtrip_fidelity": 1.0
+    },
+    "KR_LOCATION": {
+      "total": 25,
+      "leaked": 0,
+      "restored": 21,
+      "protection_rate": 1.0,
+      "roundtrip_fidelity": 0.84
+    },
+    "KR_PERSON": {
+      "total": 135,
+      "leaked": 25,
+      "restored": 114,
+      "protection_rate": 0.8148,
+      "roundtrip_fidelity": 0.8444
+    },
+    "KR_PHONE": {
+      "total": 55,
+      "leaked": 0,
+      "restored": 55,
+      "protection_rate": 1.0,
+      "roundtrip_fidelity": 1.0
+    }
+  },
+  "by_category": {
+    "customer_service": {
+      "n": 29,
+      "em": 23,
+      "avg_rouge_l": 0.9838,
+      "em_rate": 0.7931
+    },
+    "document_summary": {
+      "n": 29,
+      "em": 23,
+      "avg_rouge_l": 0.9772,
+      "em_rate": 0.7931
+    },
+    "hr": {
+      "n": 28,
+      "em": 23,
+      "avg_rouge_l": 0.9786,
+      "em_rate": 0.8214
+    },
+    "legal": {
+      "n": 28,
+      "em": 23,
+      "avg_rouge_l": 0.9779,
+      "em_rate": 0.8214
+    },
+    "medical": {
+      "n": 28,
+      "em": 21,
+      "avg_rouge_l": 0.9746,
+      "em_rate": 0.75
+    },
+    "payment": {
+      "n": 28,
+      "em": 28,
+      "avg_rouge_l": 1.0,
+      "em_rate": 1.0
+    }
+  },
+  "degraded_samples": [
+    {
+      "id": "pii_qa_006",
+      "category": "document_summary",
+      "rouge_l": 0.875,
+      "pii_leaked": [
+        "갈성민"
+      ],
+      "pii_restored": [
+        "987-90-97033"
+      ],
+      "pii_total": 2
+    },
+    {
+      "id": "pii_qa_029",
+      "category": "legal",
+      "rouge_l": 0.8888888888888888,
+      "pii_leaked": [
+        "어금지원"
+      ],
+      "pii_restored": [
+        "010 1943 8997",
+        "수원시"
+      ],
+      "pii_total": 3
+    },
+    {
+      "id": "pii_qa_036",
+      "category": "document_summary",
+      "rouge_l": 0.875,
+      "pii_leaked": [
+        "강하준"
+      ],
+      "pii_restored": [
+        "478-38-21633"
+      ],
+      "pii_total": 2
+    },
+    {
+      "id": "pii_qa_046",
+      "category": "hr",
+      "rouge_l": 0.8666666666666667,
+      "pii_leaked": [
+        "윤민재"
+      ],
+      "pii_restored": [
+        "xgy58yc@kakao.com"
+      ],
+      "pii_total": 2
+    },
+    {
+      "id": "pii_qa_059",
+      "category": "legal",
+      "rouge_l": 0.8571428571428571,
+      "pii_leaked": [
+        "제갈준호"
+      ],
+      "pii_restored": [
+        "010-1401-8507",
+        "청주시"
+      ],
+      "pii_total": 3
+    },
+    {
+      "id": "pii_qa_066",
+      "category": "document_summary",
+      "rouge_l": 0.875,
+      "pii_leaked": [
+        "제갈태윤"
+      ],
+      "pii_restored": [
+        "659-64-40316"
+      ],
+      "pii_total": 2
+    },
+    {
+      "id": "pii_qa_076",
+      "category": "hr",
+      "rouge_l": 0.8666666666666667,
+      "pii_leaked": [
+        "사공태윤"
+      ],
+      "pii_restored": [
+        "c1.w5lxz@naver.com"
+      ],
+      "pii_total": 2
+    },
+    {
+      "id": "pii_qa_083",
+      "category": "medical",
+      "rouge_l": 0.8421052631578948,
+      "pii_leaked": [
+        "김예린"
+      ],
+      "pii_restored": [],
+      "pii_total": 2
+    },
+    {
+      "id": "pii_qa_089",
+      "category": "legal",
+      "rouge_l": 0.8888888888888888,
+      "pii_leaked": [
+        "몽소율"
+      ],
+      "pii_restored": [
+        "051 530 0121",
+        "롯데월드타워"
+      ],
+      "pii_total": 3
+    },
+    {
+      "id": "pii_qa_096",
+      "category": "document_summary",
+      "rouge_l": 0.875,
+      "pii_leaked": [
+        "강다인"
+      ],
+      "pii_restored": [
+        "803-57-47941"
+      ],
+      "pii_total": 2
+    },
+    {
+      "id": "pii_qa_106",
+      "category": "hr",
+      "rouge_l": 0.8666666666666667,
+      "pii_leaked": [
+        "경현우"
+      ],
+      "pii_restored": [
+        "4ldakwl4@company.co.kr"
+      ],
+      "pii_total": 2
+    },
+    {
+      "id": "pii_qa_119",
+      "category": "legal",
+      "rouge_l": 0.8571428571428571,
+      "pii_leaked": [
+        "동방서준"
+      ],
+      "pii_restored": [
+        "010-4365-0590",
+        "동대문디자인플라자"
+      ],
+      "pii_total": 3
+    },
+    {
+      "id": "pii_qa_126",
+      "category": "document_summary",
+      "rouge_l": 0.875,
+      "pii_leaked": [
+        "좌지우"
+      ],
+      "pii_restored": [
+        "738-36-06689"
+      ],
+      "pii_total": 2
+    },
+    {
+      "id": "pii_qa_136",
+      "category": "hr",
+      "rouge_l": 0.8666666666666667,
+      "pii_leaked": [
+        "동지원"
+      ],
+      "pii_restored": [
+        "9s13skt@naver.com"
+      ],
+      "pii_total": 2
+    },
+    {
+      "id": "pii_qa_149",
+      "category": "legal",
+      "rouge_l": 0.8888888888888888,
+      "pii_leaked": [
+        "절현서"
+      ],
+      "pii_restored": [
+        "031 290 9765",
+        "부산광역시"
+      ],
+      "pii_total": 3
+    }
+  ],
+  "acceptance": {
+    "rouge_l>=0.9": true,
+    "pii_protection_rate==1.0": false,
+    "roundtrip_fidelity>=0.95": false
+  },
+  "acceptance_pass": false
+}
