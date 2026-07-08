@@ -158,3 +158,80 @@ def test_badge_endpoint_invalid_type():
     """GET /badge/invalid returns 400 error."""
     resp = client.get("/badge/invalid")
     assert resp.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# Pseudonymize / Deanonymize / Session endpoints (CMP-367)
+# ---------------------------------------------------------------------------
+
+def test_pseudonymize_returns_session_and_transformed():
+    """POST /pseudonymize replaces PII with surrogates and returns session_id."""
+    resp = client.post("/pseudonymize", json={"text": "김철수에게 010-1234-5678로 연락하세요"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "transformed_text" in data
+    assert "session_id" in data
+    assert len(data["session_id"]) > 0
+    assert data["pseudonymized_count"] > 0
+    assert data["blocked"] is False
+    # Original PII should not appear in transformed text
+    assert "010-1234-5678" not in data["transformed_text"]
+
+
+def test_pseudonymize_with_explicit_session_id():
+    """POST /pseudonymize respects caller-supplied session_id."""
+    sid = "my-custom-session-42"
+    resp = client.post("/pseudonymize", json={"text": "010-9999-8888", "session_id": sid})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["session_id"] == sid
+
+
+def test_pseudonymize_and_deanonymize_roundtrip():
+    """Pseudonymize then deanonymize restores original text."""
+    original = "김철수에게 010-1234-5678로 연락하세요"
+    # Step 1: pseudonymize
+    resp1 = client.post("/pseudonymize", json={"text": original})
+    assert resp1.status_code == 200
+    d1 = resp1.json()
+    sid = d1["session_id"]
+    transformed = d1["transformed_text"]
+    assert transformed != original
+
+    # Step 2: deanonymize
+    resp2 = client.post("/deanonymize", json={"text": transformed, "session_id": sid})
+    assert resp2.status_code == 200
+    d2 = resp2.json()
+    assert d2["restored_text"] == original
+    assert d2["stats"]["restored"] > 0
+
+
+def test_delete_session():
+    """DELETE /sessions/{id} purges vault entries."""
+    # Create a session with data
+    resp1 = client.post("/pseudonymize", json={"text": "010-1111-2222"})
+    sid = resp1.json()["session_id"]
+
+    # Delete it
+    resp2 = client.request("DELETE", f"/sessions/{sid}")
+    assert resp2.status_code == 200
+    d2 = resp2.json()
+    assert d2["session_id"] == sid
+    assert d2["purged"] >= 0
+
+
+def test_deanonymize_after_session_delete_uses_fallback():
+    """After session delete, deanonymize returns surrogates as-is (fallback)."""
+    resp1 = client.post("/pseudonymize", json={"text": "010-3333-4444"})
+    d1 = resp1.json()
+    sid = d1["session_id"]
+    transformed = d1["transformed_text"]
+
+    # Delete session
+    client.request("DELETE", f"/sessions/{sid}")
+
+    # Deanonymize should fallback (surrogates stay)
+    resp2 = client.post("/deanonymize", json={"text": transformed, "session_id": sid})
+    assert resp2.status_code == 200
+    d2 = resp2.json()
+    assert d2["stats"].get("fallback", 0) >= 0

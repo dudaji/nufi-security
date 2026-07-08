@@ -1,27 +1,31 @@
-"""``nufi-egress serve`` — HTTP API 모드 (patch155/158/159/170/179).
+"""``nufi-egress serve`` — HTTP API 모드 (patch155/158/159/170/179/CMP-367).
 
 FastAPI 기반 REST API로 NuFi 탐지 기능을 마이크로서비스에 제공한다.
 
 Endpoints:
-  POST /detect    — PII 탐지
-  POST /route     — 라우팅 결정
-  POST /inspect   — 통합 분석
-  POST /mask      — PII 마스킹
-  POST /redact    — PII 리댁션
-  POST /injection — 프롬프트 인젝션 탐지
-  POST /pipeline  — 전체 파이프라인 실행
-  POST /explain   — 탐지 결과 상세 설명
-  POST /posture   — 보안 자세 스냅샷
-  GET  /summary   — 요약 대시보드
-  GET  /stats     — NuFi 통계
-  GET  /health    — 헬스 체크
-  GET  /docs      — Swagger UI (auto)
-  GET  /redoc     — ReDoc (auto)
+  POST   /detect        — PII 탐지
+  POST   /route         — 라우팅 결정
+  POST   /inspect       — 통합 분석
+  POST   /mask          — PII 마스킹
+  POST   /redact        — PII 리댁션
+  POST   /injection     — 프롬프트 인젝션 탐지
+  POST   /pipeline      — 전체 파이프라인 실행
+  POST   /explain       — 탐지 결과 상세 설명
+  POST   /posture       — 보안 자세 스냅샷
+  POST   /pseudonymize  — 가역 가명화 (CMP-367)
+  POST   /deanonymize   — 가명화 원복 (CMP-367)
+  DELETE /sessions/{id} — 세션 종료 (CMP-367)
+  GET    /summary       — 요약 대시보드
+  GET    /stats         — NuFi 통계
+  GET    /health        — 헬스 체크
+  GET    /docs          — Swagger UI (auto)
+  GET    /redoc         — ReDoc (auto)
 """
 from __future__ import annotations
 
 import json
 import sys
+import uuid
 from pathlib import Path
 from typing import List, Optional
 
@@ -144,6 +148,38 @@ class ScanRequest(BaseModel):
 class ExplainRequest(BaseModel):
     """Request body for /explain endpoint."""
     text: str = Field(..., description="Text to explain detection results for")
+
+
+class PseudonymizeRequest(BaseModel):
+    """Request body for /pseudonymize endpoint."""
+    text: str = Field(..., description="Text to pseudonymize")
+    session_id: Optional[str] = Field(None, description="Session ID (auto-generated if omitted)")
+
+
+class PseudonymizeResponse(BaseModel):
+    """Response from /pseudonymize endpoint."""
+    transformed_text: str = Field(..., description="Text with PII replaced by surrogates")
+    session_id: str = Field(..., description="Session ID for later deanonymization")
+    pseudonymized_count: int = Field(0, description="Number of PII tokens pseudonymized")
+    blocked: bool = Field(False, description="Whether the text was blocked (strong PII)")
+
+
+class DeanonymizeRequest(BaseModel):
+    """Request body for /deanonymize endpoint."""
+    text: str = Field(..., description="Text with surrogates to restore")
+    session_id: str = Field(..., description="Session ID from pseudonymize call")
+
+
+class DeanonymizeResponse(BaseModel):
+    """Response from /deanonymize endpoint."""
+    restored_text: str = Field(..., description="Text with surrogates replaced by originals")
+    stats: dict = Field(default_factory=dict, description="Restore stats (restored, fallback)")
+
+
+class SessionDeleteResponse(BaseModel):
+    """Response from DELETE /sessions/{session_id}."""
+    session_id: str = Field(..., description="Deleted session ID")
+    purged: int = Field(0, description="Number of vault entries purged")
 
 
 # Keep backward-compatible alias
@@ -410,6 +446,46 @@ def create_app() -> FastAPI:
             )
         svg = gen()
         return Response(content=svg, media_type="image/svg+xml")
+
+    # ------------------------------------------------------------------
+    # Pseudonymize / Deanonymize / Session endpoints (CMP-367)
+    # ------------------------------------------------------------------
+
+    _reversible_egress = None  # lazy singleton
+
+    def _get_egress():
+        nonlocal _reversible_egress
+        if _reversible_egress is None:
+            from egress_audit.reversible import ReversibleEgress
+            _reversible_egress = ReversibleEgress()
+        return _reversible_egress
+
+    @app.post("/pseudonymize", response_model=PseudonymizeResponse)
+    def pseudonymize(req: PseudonymizeRequest):
+        """Pseudonymize PII in text (reversible). Returns a session_id for later restore."""
+        egress = _get_egress()
+        sid = req.session_id or str(uuid.uuid4())
+        result = egress.pseudonymize(req.text, sid)
+        return {
+            "transformed_text": result.transformed_text,
+            "session_id": sid,
+            "pseudonymized_count": result.pseudonymized,
+            "blocked": result.blocked,
+        }
+
+    @app.post("/deanonymize", response_model=DeanonymizeResponse)
+    def deanonymize(req: DeanonymizeRequest):
+        """Restore pseudonymized surrogates back to originals."""
+        egress = _get_egress()
+        restored_text, stats = egress.deanonymize(req.text, req.session_id)
+        return {"restored_text": restored_text, "stats": stats}
+
+    @app.delete("/sessions/{session_id}", response_model=SessionDeleteResponse)
+    def delete_session(session_id: str):
+        """End a pseudonymization session and securely purge vault mappings."""
+        egress = _get_egress()
+        purged = egress.end_session(session_id)
+        return {"session_id": session_id, "purged": purged}
 
     return app
 

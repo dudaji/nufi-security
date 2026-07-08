@@ -4,6 +4,21 @@
 버전은 [Semantic Versioning](https://semver.org/) 을 따릅니다. 단일 권위 아키텍처 문서는
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) 입니다.
 
+## [0.10.0] - 2026-07-09
+
+> **v0.10.0 — 가명화 REST API 엔드포인트 추가 (CMP-367)**
+
+### Added
+- **POST /pseudonymize** — 텍스트 가역 가명화 API. session_id 자동 발급(UUID), 선택적 명시 지원. 응답: transformed_text, session_id, pseudonymized_count, blocked.
+- **POST /deanonymize** — 가명화 서로게이트 원복 API. session_id 기반 Vault 조회로 원본 복원. 응답: restored_text, stats(restored, fallback).
+- **DELETE /sessions/{session_id}** — 세션 종료 및 Vault 매핑 secure wipe API.
+- **테스트 5건** — pseudonymize/deanonymize 라운드트립, 명시적 session_id, 세션 삭제, 삭제 후 fallback 검증.
+
+### Changed
+- **VERSION** — 0.9.0 → 0.10.0
+
+---
+
 ## [0.9.0] - 2026-07-08
 
 > **v0.9.0 — E2E 가명화 품질 종합 리포트 문서화 + ROADMAP 갱신 + 릴리스 (CMP-358)**
