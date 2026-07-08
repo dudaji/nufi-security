@@ -12,24 +12,24 @@
     "roundtrip_fidelity": 0.95
   },
   "scores": {
-    "utility_retention_rouge_l": 0.982,
-    "exact_match_rate": 0.8294,
-    "exact_match_n": "141/170",
-    "pii_protection_rate": 0.9138,
-    "pii_protection_n": "265/290",
-    "roundtrip_fidelity": 0.8966,
-    "roundtrip_fidelity_n": "260/290"
+    "utility_retention_rouge_l": 0.9871,
+    "exact_match_rate": 0.9412,
+    "exact_match_n": "160/170",
+    "pii_protection_rate": 1.0,
+    "pii_protection_n": "290/290",
+    "roundtrip_fidelity": 0.9655,
+    "roundtrip_fidelity_n": "280/290"
   },
   "latency": {
     "pseudonymize_ms": {
-      "p50": 0.41,
-      "p95": 0.52,
-      "p99": 0.7
+      "p50": 0.85,
+      "p95": 1.13,
+      "p99": 1.22
     },
     "deanonymize_ms": {
-      "p50": 0.04,
-      "p95": 0.04,
-      "p99": 0.05
+      "p50": 0.1,
+      "p95": 0.11,
+      "p99": 0.15
     }
   },
   "by_type": {
@@ -50,55 +50,55 @@
     "KR_LOCATION": {
       "total": 25,
       "leaked": 0,
-      "restored": 21,
+      "restored": 25,
       "protection_rate": 1.0,
-      "roundtrip_fidelity": 0.84
+      "roundtrip_fidelity": 1.0
     },
     "KR_PERSON": {
       "total": 135,
-      "leaked": 25,
-      "restored": 114,
-      "protection_rate": 0.8148,
-      "roundtrip_fidelity": 0.8444
+      "leaked": 0,
+      "restored": 135,
+      "protection_rate": 1.0,
+      "roundtrip_fidelity": 1.0
     },
     "KR_PHONE": {
       "total": 55,
       "leaked": 0,
-      "restored": 55,
+      "restored": 50,
       "protection_rate": 1.0,
-      "roundtrip_fidelity": 1.0
+      "roundtrip_fidelity": 0.9091
     }
   },
   "by_category": {
     "customer_service": {
       "n": 29,
-      "em": 23,
-      "avg_rouge_l": 0.9838,
-      "em_rate": 0.7931
+      "em": 29,
+      "avg_rouge_l": 1.0,
+      "em_rate": 1.0
     },
     "document_summary": {
       "n": 29,
-      "em": 23,
-      "avg_rouge_l": 0.9772,
-      "em_rate": 0.7931
+      "em": 29,
+      "avg_rouge_l": 1.0,
+      "em_rate": 1.0
     },
     "hr": {
       "n": 28,
-      "em": 23,
-      "avg_rouge_l": 0.9786,
-      "em_rate": 0.8214
+      "em": 28,
+      "avg_rouge_l": 1.0,
+      "em_rate": 1.0
     },
     "legal": {
       "n": 28,
       "em": 23,
-      "avg_rouge_l": 0.9779,
+      "avg_rouge_l": 0.9394,
       "em_rate": 0.8214
     },
     "medical": {
       "n": 28,
-      "em": 21,
-      "avg_rouge_l": 0.9746,
-      "em_rate": 0.75
+      "em": 23,
+      "avg_rouge_l": 0.9821,
+      "em_rate": 0.8214
     },
     "payment": {
       "n": 28,
@@ -109,184 +109,56 @@
   },
   "degraded_samples": [
     {
-      "id": "pii_qa_006",
-      "category": "document_summary",
-      "rouge_l": 0.875,
-      "pii_leaked": [
-        "갈성민"
-      ],
-      "pii_restored": [
-        "987-90-97033"
-      ],
-      "pii_total": 2
-    },
-    {
       "id": "pii_qa_029",
       "category": "legal",
-      "rouge_l": 0.8888888888888888,
-      "pii_leaked": [
-        "어금지원"
-      ],
+      "rouge_l": 0.6250000000000001,
+      "pii_leaked": [],
       "pii_restored": [
-        "010 1943 8997",
+        "어금지원",
         "수원시"
       ],
       "pii_total": 3
     },
     {
-      "id": "pii_qa_036",
-      "category": "document_summary",
-      "rouge_l": 0.875,
-      "pii_leaked": [
-        "강하준"
-      ],
-      "pii_restored": [
-        "478-38-21633"
-      ],
-      "pii_total": 2
-    },
-    {
-      "id": "pii_qa_046",
-      "category": "hr",
-      "rouge_l": 0.8666666666666667,
-      "pii_leaked": [
-        "윤민재"
-      ],
-      "pii_restored": [
-        "xgy58yc@kakao.com"
-      ],
-      "pii_total": 2
-    },
-    {
       "id": "pii_qa_059",
       "category": "legal",
-      "rouge_l": 0.8571428571428571,
-      "pii_leaked": [
-        "제갈준호"
-      ],
+      "rouge_l": 0.7142857142857143,
+      "pii_leaked": [],
       "pii_restored": [
-        "010-1401-8507",
+        "제갈준호",
         "청주시"
       ],
       "pii_total": 3
     },
     {
-      "id": "pii_qa_066",
-      "category": "document_summary",
-      "rouge_l": 0.875,
-      "pii_leaked": [
-        "제갈태윤"
-      ],
-      "pii_restored": [
-        "659-64-40316"
-      ],
-      "pii_total": 2
-    },
-    {
-      "id": "pii_qa_076",
-      "category": "hr",
-      "rouge_l": 0.8666666666666667,
-      "pii_leaked": [
-        "사공태윤"
-      ],
-      "pii_restored": [
-        "c1.w5lxz@naver.com"
-      ],
-      "pii_total": 2
-    },
-    {
-      "id": "pii_qa_083",
-      "category": "medical",
-      "rouge_l": 0.8421052631578948,
-      "pii_leaked": [
-        "김예린"
-      ],
-      "pii_restored": [],
-      "pii_total": 2
-    },
-    {
       "id": "pii_qa_089",
       "category": "legal",
-      "rouge_l": 0.8888888888888888,
-      "pii_leaked": [
-        "몽소율"
-      ],
+      "rouge_l": 0.6250000000000001,
+      "pii_leaked": [],
       "pii_restored": [
-        "051 530 0121",
+        "몽소율",
         "롯데월드타워"
       ],
       "pii_total": 3
     },
     {
-      "id": "pii_qa_096",
-      "category": "document_summary",
-      "rouge_l": 0.875,
-      "pii_leaked": [
-        "강다인"
-      ],
-      "pii_restored": [
-        "803-57-47941"
-      ],
-      "pii_total": 2
-    },
-    {
-      "id": "pii_qa_106",
-      "category": "hr",
-      "rouge_l": 0.8666666666666667,
-      "pii_leaked": [
-        "경현우"
-      ],
-      "pii_restored": [
-        "4ldakwl4@company.co.kr"
-      ],
-      "pii_total": 2
-    },
-    {
       "id": "pii_qa_119",
       "category": "legal",
-      "rouge_l": 0.8571428571428571,
-      "pii_leaked": [
-        "동방서준"
-      ],
+      "rouge_l": 0.7142857142857143,
+      "pii_leaked": [],
       "pii_restored": [
-        "010-4365-0590",
+        "동방서준",
         "동대문디자인플라자"
       ],
       "pii_total": 3
     },
     {
-      "id": "pii_qa_126",
-      "category": "document_summary",
-      "rouge_l": 0.875,
-      "pii_leaked": [
-        "좌지우"
-      ],
-      "pii_restored": [
-        "738-36-06689"
-      ],
-      "pii_total": 2
-    },
-    {
-      "id": "pii_qa_136",
-      "category": "hr",
-      "rouge_l": 0.8666666666666667,
-      "pii_leaked": [
-        "동지원"
-      ],
-      "pii_restored": [
-        "9s13skt@naver.com"
-      ],
-      "pii_total": 2
-    },
-    {
       "id": "pii_qa_149",
       "category": "legal",
-      "rouge_l": 0.8888888888888888,
-      "pii_leaked": [
-        "절현서"
-      ],
+      "rouge_l": 0.6250000000000001,
+      "pii_leaked": [],
       "pii_restored": [
-        "031 290 9765",
+        "절현서",
         "부산광역시"
       ],
       "pii_total": 3
@@ -294,8 +166,8 @@
   ],
   "acceptance": {
     "rouge_l>=0.9": true,
-    "pii_protection_rate==1.0": false,
-    "roundtrip_fidelity>=0.95": false
+    "pii_protection_rate==1.0": true,
+    "roundtrip_fidelity>=0.95": true
   },
-  "acceptance_pass": false
+  "acceptance_pass": true
 }
